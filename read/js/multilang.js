@@ -280,16 +280,69 @@ async function fetchVariant() {
 
 const varResponse = fetchVariant();    
     
-  Promise.all([rootResponse, translationResponse, engtranslationResponse, htmlResponse, varResponse]).then(responses => {
+    Promise.all([rootResponse, translationResponse, engtranslationResponse, htmlResponse, varResponse]).then(responses => {
     const [paliData, transData, engTransData, htmlData, varData] = responses;
 
-    Object.keys(htmlData).forEach(segment => {
-      if (transData[segment] === undefined) {
-        transData[segment] = "";
+    const segments = Object.keys(htmlData);
+    
+    for (let i = 0; i < segments.length; i++) {
+      let segment = segments[i];
+
+      if (transData[segment] === undefined) transData[segment] = "";
+      if (engTransData[segment] === undefined) engTransData[segment] = ""; // На всякий случай для английского
+      if (paliData[segment] === undefined) paliData[segment] = "";
+
+      // === НАЧАЛО ЛОГИКИ ОБЪЕДИНЕНИЯ ГАТХ ===
+      let nextSegment = segments[i + 1];
+      
+      if (htmlData[segment] && htmlData[segment].includes('verse-line') &&
+          nextSegment && htmlData[nextSegment] && htmlData[nextSegment].includes('verse-line')) {
+          
+          let [nextOpen, nextClose] = htmlData[nextSegment].split(/{}/);
+          
+          if (!nextOpen.includes('<p>')) {
+              
+              // Универсальная функция для английского и русского языков
+              const toLower = (str) => {
+                  if (!str) return "";
+                  // Ищем первое слово (латиница или кириллица), пропуская начальные кавычки
+                  return str.replace(/[a-zA-Zа-яА-ЯёЁ]+/, word => {
+                      // Оставляем как есть английские I, O и русское О
+                      if (word === 'I' || word === 'O' || word === 'О') return word;
+                      return word.charAt(0).toLowerCase() + word.slice(1);
+                  });
+              };
+
+              // 1. Объединяем ПАЛИ
+              if (paliData[nextSegment]) {
+                  paliData[segment] = (paliData[segment] || "").trim() + " " + toLower(paliData[nextSegment].trim());
+              }
+
+              // 2. Объединяем ПЕРЕВОД (Русский)
+              if (transData[nextSegment]) {
+                  transData[segment] = (transData[segment] || "").trim() + " " + toLower(transData[nextSegment].trim());
+              }
+              
+              // 3. Объединяем ПЕРЕВОД (Английский)
+              if (engTransData[nextSegment]) {
+                  engTransData[segment] = (engTransData[segment] || "").trim() + " " + toLower(engTransData[nextSegment].trim());
+              }
+
+              // 4. Объединяем ВАРИАНТЫ (если есть)
+              if (varData[nextSegment]) {
+                  varData[segment] = (varData[segment] || "").trim() + " " + toLower(varData[nextSegment].trim());
+              }
+
+              // 5. Склеиваем HTML (оставляем обертку)
+              let [currOpen, currClose] = htmlData[segment].split(/{}/);
+              htmlData[segment] = (currOpen || '') + "{}" + (nextClose || '');
+              
+              // 6. Пропускаем следующий сегмент
+              i++; 
+          }
       }
-      if (transData[segment] === "") {
-        transData[segment] = "";
-      }    
+      // === КОНЕЦ ЛОГИКИ ОБЪЕДИНЕНИЯ ===
+      
       let [openHtml, closeHtml] = htmlData[segment].split(/{}/);
    openHtml = openHtml || ''; // Запасное значение
    closeHtml = closeHtml || ''; // Запасное значение
@@ -429,7 +482,7 @@ if (engTransData[segment] !== transData[segment] && varData[segment] !== undefin
     </span>${closeHtml}\n\n`;
 }
 
-    });
+    }
 
   if (slug.match(/bi-pm/)) {
      translator = "adelina";

@@ -252,7 +252,6 @@ Promise.all([rootResponse, translationResponse, htmlResponse, varResponse]).then
       if (htmlData[segment] && htmlData[segment].includes('verse-line') &&
           nextSegment && htmlData[nextSegment] && htmlData[nextSegment].includes('verse-line')) {
           
-      // ... внутри цикла for ...
           
           let [nextOpen, nextClose] = htmlData[nextSegment].split(/{}/);
           
