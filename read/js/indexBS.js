@@ -178,13 +178,76 @@ const varResponse = fetchVariant();
   Promise.all([rootResponse, translationResponse, htmlResponse, varResponse]).then(responses => {
     const [paliData, transData, htmlData, varData] = responses;
 
-    Object.keys(htmlData).forEach(segment => {
-      if (transData[segment] === undefined) {
-        transData[segment] = "";
+	
+// === НАЧАЛО ИЗМЕНЕНИЙ: Логика объединения Гатх ===
+    const segments = Object.keys(htmlData);
+    
+    for (let i = 0; i < segments.length; i++) {
+      let segment = segments[i];
+
+      // Проверки на undefined (как в оригинале)
+      if (transData[segment] === undefined) transData[segment] = "";
+      if (transData[segment] === "") transData[segment] = "";
+
+      // ЛОГИКА ОБЪЕДИНЕНИЯ (MERGE):
+      // Проверяем, является ли текущий сегмент частью стиха (verse-line)
+      // и есть ли следующий сегмент, который тоже часть стиха.
+      let nextSegment = segments[i + 1];
+      
+      if (htmlData[segment] && htmlData[segment].includes('verse-line') &&
+          nextSegment && htmlData[nextSegment] && htmlData[nextSegment].includes('verse-line')) {
+          
+          
+          let [nextOpen, nextClose] = htmlData[nextSegment].split(/{}/);
+          
+          // Проверяем, что следующий сегмент не начинает новый абзац
+          if (!nextOpen.includes('<p>')) {
+              
+              const toLower = (str) => {
+                  if (!str) return "";
+                  
+                  // Если строка начинается с I, I' (I'm, I'll) или O (возможно после кавычки) — не трогаем
+                  if (str.match(/^["“'‘]?(I\b|I'|O\b)/)) return str;
+                  
+                  // В остальных случаях просто делаем маленьким первый символ 
+                  // (кавычки не изменятся, и текст внутри останется с заглавной)
+                  return str.charAt(0).toLowerCase() + str.slice(1);
+              };
+
+    
+
+              // 1. Объединяем ПАЛИ
+              if (paliData[nextSegment]) {
+                  // trim() убирает пробелы по краям
+                  // " " добавляет ровно один пробел между частями
+                  // toLower() делает вторую часть с маленькой буквы
+                  paliData[segment] = (paliData[segment] || "").trim() + " " + toLower(paliData[nextSegment].trim());
+              }
+
+              // 2. Объединяем ПЕРЕВОД (Русский)
+              if (transData[nextSegment]) {
+                  transData[segment] = (transData[segment] || "").trim() + " " + toLower(transData[nextSegment].trim());
+              }
+
+              // 3. Объединяем ВАРИАНТЫ (если есть)
+              if (varData[nextSegment]) {
+                  varData[segment] = (varData[segment] || "").trim() + " " + toLower(varData[nextSegment].trim());
+              }
+
+              // 4. Склеиваем HTML (оставляем обертку)
+              let [currOpen, currClose] = htmlData[segment].split(/{}/);
+              
+              // Переписываем htmlData текущего сегмента: начало от первого, конец от второго
+              htmlData[segment] = (currOpen || '') + "{}" + (nextClose || '');
+              
+              // 5. Пропускаем следующий сегмент (мы его только что приклеили)
+              i++; 
+          }
       }
-      if (transData[segment] === "") {
-        transData[segment] = "";
-      }    
+      // === КОНЕЦ ЛОГИКИ ОБЪЕДИНЕНИЯ ===
+
+      
+      
       let [openHtml, closeHtml] = htmlData[segment].split(/{}/);
    openHtml = openHtml || ''; // Запасное значение
    closeHtml = closeHtml || ''; // Запасное значение
@@ -264,7 +327,7 @@ if (paliData[segment] !== undefined && transData[segment] !== undefined && varDa
       } else if (transData[segment] !== undefined) {
         html += openHtml + '<span id="' + anchor + '"><span class="eng-lang" lang="en">' + linkToCopyStart + transData[segment].trim() + linkToCopy + '</span></span>' + closeHtml + '\n\n';
       }
-});
+}
 
 
 //console.log('texttype ' + texttype + ' translator ' + translator);
