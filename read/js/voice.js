@@ -985,8 +985,18 @@ async function playCurrentSegment() {
 
   if (tryGoogle) {
       try {
+          // 1. ЗАПОМИНАЕМ, какой индекс мы собираемся озвучить
+          const targetIndex = ttsState.currentIndex; 
+
+          // Ждем ответа от серверов Google...
           const audioContent = await fetchGoogleAudio(item.text, targetLang, audioRateGoogle, googleKey);
           
+          // 2. ПРОВЕРЯЕМ: если пока мы ждали интернет, пользователь нажал Next/Prev,
+          // индекс изменился. Значит, эта скачанная аудиозапись уже устарела. Выкидываем её!
+          if (targetIndex !== ttsState.currentIndex || !ttsState.speaking) {
+              return; 
+          }
+
           if (audioContent) {
               const audio = new Audio("data:audio/mp3;base64," + audioContent);
               ttsState.googleAudio = audio;
