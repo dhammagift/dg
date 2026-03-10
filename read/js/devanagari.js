@@ -617,7 +617,7 @@ prevName = prevName.replace(/[0-9.]/g, '');
 
 // Отправка запроса по адресу http://localhost:8080/ru/?q= с использованием значения slug
 var xhr = new XMLHttpRequest();
-xhr.open("GET", "/d/?q=" + encodeURIComponent(slug), true);
+xhr.open("GET", "/?p=-kn&q=" + encodeURIComponent(slug), true);
 xhr.send();
 
 xhr.onreadystatechange = function() {
@@ -629,7 +629,7 @@ xhr.onreadystatechange = function() {
           !xhr.responseText.includes("404") &&
           xhr.responseText.trim().length > 0) {
         console.log(xhr.responseText);
-        window.location.href = "/d/?q=" + encodeURIComponent(slug);
+        window.location.href = "/?q=" + encodeURIComponent(slug);
       } else {
         console.log('Page not found or empty response');
       }

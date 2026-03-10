@@ -652,7 +652,7 @@ prevName = prevName.replace(/[0-9.]/g, '');
 
 // Отправка запроса по адресу http://localhost:8080/ru/?q= с использованием значения slug
 var xhr = new XMLHttpRequest();
-xhr.open("GET", "/?q=" + encodeURIComponent(slug), true);
+xhr.open("GET", "/?p=-kn&q=" + encodeURIComponent(slug), true);
 xhr.send();
 
 xhr.onreadystatechange = function() {

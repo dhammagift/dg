@@ -682,7 +682,7 @@ console.log('slug', slug);
   // Отправка запроса по адресу http://localhost:8080/?q= с использованием значения slug
 
 var xhr = new XMLHttpRequest();
-var targetUrl = "/?s=" + encodeURIComponent(sGetparam) + "&q=" + encodeURIComponent(slug) + "#" + anchorURL;
+var targetUrl = "/?s=" + encodeURIComponent(sGetparam) + "&p=-kn&q=" + encodeURIComponent(slug) + "#" + anchorURL;
 
 // Проверяем, не пытаемся ли мы загрузить тот же URL, на котором уже находимся
 if (window.location.href.split('#')[0] !== targetUrl.split('#')[0]) {
