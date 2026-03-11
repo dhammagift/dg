@@ -172,6 +172,9 @@ function highlightMultipleById(ids) {
 
 // Умный скролл при загрузке/изменении хеша
 function intelligentScrollToHash() {
+    // НОВОЕ: Отменяем скролл по хешу, если восстанавливается прогресс чтения
+    if (window.isRestoringProgress) return; 
+
     const hash = window.location.hash;
     if (!hash) return; 
 
@@ -297,21 +300,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-/**
- * Восстанавливает точную визуальную позицию текста.
- * Алгоритм:
- * 1. Ждем появления элемента по ID.
- * 2. Считаем его текущую абсолютную позицию в документе.
- * 3. Отнимаем сохраненный offset (смещение от верха экрана).
- * Результат: Элемент встает ровно на то же место экрана, где был.
- */
-
 // === АВТОСОХРАНЕНИЕ ПРОГРЕССА ЧТЕНИЯ (DEBOUNCE) ===
 let scrollSaveTimeout;
 const MAX_HISTORY_ITEMS = 20; // Лимит: храним позицию для последних 20 сутт
 
 function saveReadingProgress() {
-    // Получаем текущий слаг из URL
     const urlParams = new URLSearchParams(window.location.search);
     const slug = urlParams.get('q');
     if (!slug) return;
@@ -319,7 +312,6 @@ function saveReadingProgress() {
     const suttaContainer = document.getElementById('sutta');
     if (!suttaContainer) return;
 
-    // Ищем все элементы с ID внутри контейнера текста
     const elements = suttaContainer.querySelectorAll('[id]');
     if (elements.length === 0) return;
 
@@ -346,17 +338,15 @@ function saveReadingProgress() {
             progressData = {};
         }
 
-        // Записываем текущую позицию
         progressData[slug] = {
             id: bestElement.id,
             offset: bestElement.getBoundingClientRect().top,
-            time: Date.now() // Метка времени для удаления старых записей
+            time: Date.now()
         };
 
-        // Очистка старых записей, если превышен лимит
         const keys = Object.keys(progressData);
         if (keys.length > MAX_HISTORY_ITEMS) {
-            keys.sort((a, b) => progressData[b].time - progressData[a].time); // От новых к старым
+            keys.sort((a, b) => progressData[b].time - progressData[a].time);
             const newProgressData = {};
             for (let i = 0; i < MAX_HISTORY_ITEMS; i++) {
                 newProgressData[keys[i]] = progressData[keys[i]];
@@ -368,14 +358,15 @@ function saveReadingProgress() {
     }
 }
 
-// Слушаем скролл с задержкой 1 сек (чтобы не перегружать браузер во время прокрутки)
+// Слушаем скролл с задержкой 1 сек
 window.addEventListener('scroll', () => {
     clearTimeout(scrollSaveTimeout);
     scrollSaveTimeout = setTimeout(saveReadingProgress, 1000); 
 }, { passive: true });
 
-
-// === ОБНОВЛЕННАЯ ФУНКЦИЯ ВОССТАНОВЛЕНИЯ ПОЗИЦИИ ===
+/**
+ * Восстанавливает точную визуальную позицию текста.
+ */
 (function restoreExactPositionJump() {
     if ('scrollRestoration' in history) {
         history.scrollRestoration = 'manual';
@@ -387,7 +378,7 @@ window.addEventListener('scroll', () => {
 
     let anchor = null;
 
-    // 1. Высший приоритет: Точный якорь от настроек (одноразовый)
+    // 1. Приоритет 1: Точный якорь от настроек (одноразовый)
     const rawSettingsData = localStorage.getItem('exactScrollAnchor');
     if (rawSettingsData) {
         try {
@@ -396,9 +387,21 @@ window.addEventListener('scroll', () => {
         } catch(e) {}
     }
 
-    // 2. Второй приоритет: Автосохраненный прогресс
-    // Восстанавливаем, ТОЛЬКО если в URL нет прямого хэша (мы не перебиваем прямые ссылки на цитаты)
-    if (!anchor && !window.location.hash) {
+    // 2. Узнаем, как именно загрузилась страница (новая ссылка или перезагрузка/назад)
+    let isReloadOrHistory = false;
+    if (window.performance) {
+        const navEntries = performance.getEntriesByType("navigation");
+        if (navEntries.length > 0) {
+            isReloadOrHistory = (navEntries[0].type === 'reload' || navEntries[0].type === 'back_forward');
+        } else if (performance.navigation) { // Фолбэк для старых браузеров/iOS
+            isReloadOrHistory = (performance.navigation.type === 1 || performance.navigation.type === 2);
+        }
+    }
+
+    // 3. Приоритет 2: Автосохраненный прогресс
+    const hasHash = !!window.location.hash;
+
+    if (!anchor && (!hasHash || isReloadOrHistory)) {
         const urlParams = new URLSearchParams(window.location.search);
         const slug = urlParams.get('q');
         if (slug) {
@@ -406,6 +409,7 @@ window.addEventListener('scroll', () => {
                 const progressData = JSON.parse(localStorage.getItem('suttaProgress') || '{}');
                 if (progressData[slug]) {
                     anchor = progressData[slug];
+                    window.isRestoringProgress = true; // Отключаем intelligentScrollToHash
                 }
             } catch(e) {}
         }
@@ -427,14 +431,11 @@ window.addEventListener('scroll', () => {
         if (element) {
             clearInterval(intervalId);
 
-            // Абсолютная позиция
             const absoluteY = window.pageYOffset + element.getBoundingClientRect().top;
             const targetY = absoluteY - anchor.offset;
 
-            // Жесткий прыжок
             window.scrollTo(0, targetY);
 
-            // Контрольный добив
             requestAnimationFrame(() => {
                 const correctedY = window.pageYOffset + element.getBoundingClientRect().top - anchor.offset;
                 window.scrollTo(0, correctedY);
@@ -449,4 +450,3 @@ window.addEventListener('scroll', () => {
         }
     }, checkInterval);
 })();
-

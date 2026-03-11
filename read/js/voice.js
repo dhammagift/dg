@@ -1266,8 +1266,17 @@ async function handleSuttaClick(e) {
   if (e.target.closest('.close-tts-btn')) {
     e.preventDefault();
     stopPlayback();
+    
+    // --- НОВОЕ: Возвращаем кнопку, если есть выделенное слово ---
+    const activeWord = document.querySelector('.active-word');
+    if (activeWord) {
+        const rowContainer = activeWord.closest("[id]") || activeWord;
+        addTtsButton(rowContainer, activeWord);
+    }
+    // -------------------------------------------------------------
   }
 }
+
 
 
 function stopPlayback() {
@@ -2198,51 +2207,45 @@ function addTtsButton(containerElement, specificElement) {
     btnContainer.className = 'dynamic-tts-btn'; 
     btnContainer.innerHTML = `<img src="/assets/svg/play.svg" alt="Play">`;
 
+    // --- НОВОЕ: Проверка позиции сразу при создании ---
+    const scrollBtn = document.getElementById('scrollToTopBtn');
+    if (scrollBtn && window.getComputedStyle(scrollBtn).opacity > 0) {
+        btnContainer.classList.add('shifted');
+    }
+    // -------------------------------------------------
+
     document.body.appendChild(btnContainer);
 
     btnContainer.addEventListener('click', (e) => {
         e.stopPropagation(); 
         e.preventDefault();
-
+        // ... (остальной код внутри клика остается без изменений) ...
         let mode = localStorage.getItem(MODE_STORAGE_KEY) || 'trn';
-        
         if (mode !== 'pi-trn' && mode !== 'trn-pi') {
             const targetEl = specificElement || containerElement; 
             mode = targetEl.classList.contains('pli-lang') ? 'pi' : 'trn';
-            
             localStorage.setItem(MODE_STORAGE_KEY, mode);
             const modeSelect = document.getElementById('tts-mode-select');
             if (modeSelect) modeSelect.value = mode;
         }
-
         let slug = ttsState.currentSlug;
-        
         if (!slug) {
             const mainPlayBtn = document.querySelector('a.voice-link[data-slug]');
-            if (mainPlayBtn) {
-                slug = mainPlayBtn.dataset.slug;
-            }
+            if (mainPlayBtn) slug = mainPlayBtn.dataset.slug;
         }
-        
         if (!slug && isLegacyPage()) {
              slug = window.location.pathname.split('/').pop() || 'legacy_page';
         }
-        
-        if (!slug) {
-            console.warn("TTS: Не удалось найти slug сутты.");
-            return;
-        }
-
+        if (!slug) return;
         const player = getOrBuildPlayer();
         const internalPlayBtn = player.querySelector('.play-main-button');
         if (internalPlayBtn) internalPlayBtn.dataset.slug = slug;
-
         player.classList.add('active');
         startPlayback(document, mode, slug); 
-
         btnContainer.remove();
     });
 }
+
 
 // --- АДАПТЕР ДЛЯ THERAVADA.RU (LEGACY HTML) ---
 
@@ -2424,3 +2427,21 @@ function prepareGeneralArticleData() {
 
     return textData;
 }
+
+// Логика сдвига кнопки TTS при появлении кнопки ScrollToTop
+window.addEventListener('scroll', function() {
+    const scrollBtn = document.getElementById('scrollToTopBtn');
+    const ttsBtn = document.querySelector('.dynamic-tts-btn');
+    
+    if (!ttsBtn || !scrollBtn) return;
+
+    // Проверяем видимость стрелки "Вверх"
+    // Обычно она появляется, когда у неё opacity > 0 или display != none
+    const isScrollBtnVisible = window.getComputedStyle(scrollBtn).opacity > 0;
+
+    if (isScrollBtnVisible) {
+        ttsBtn.classList.add('shifted');
+    } else {
+        ttsBtn.classList.remove('shifted');
+    }
+});
