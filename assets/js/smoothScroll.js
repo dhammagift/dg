@@ -306,25 +306,116 @@ document.addEventListener('DOMContentLoaded', function() {
  * Результат: Элемент встает ровно на то же место экрана, где был.
  */
 
+// === АВТОСОХРАНЕНИЕ ПРОГРЕССА ЧТЕНИЯ (DEBOUNCE) ===
+let scrollSaveTimeout;
+const MAX_HISTORY_ITEMS = 20; // Лимит: храним позицию для последних 20 сутт
+
+function saveReadingProgress() {
+    // Получаем текущий слаг из URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const slug = urlParams.get('q');
+    if (!slug) return;
+
+    const suttaContainer = document.getElementById('sutta');
+    if (!suttaContainer) return;
+
+    // Ищем все элементы с ID внутри контейнера текста
+    const elements = suttaContainer.querySelectorAll('[id]');
+    if (elements.length === 0) return;
+
+    const eyeLevel = 120; // Точка фокуса от верха экрана
+    let bestElement = null;
+    let minDistance = Infinity;
+
+    for (const el of elements) {
+        const rect = el.getBoundingClientRect();
+        const distance = Math.abs(rect.top - eyeLevel);
+
+        if (distance < minDistance) {
+            minDistance = distance;
+            bestElement = el;
+        }
+    }
+
+    if (bestElement) {
+        let progressData = {};
+        try {
+            const stored = localStorage.getItem('suttaProgress');
+            if (stored) progressData = JSON.parse(stored);
+        } catch (e) {
+            progressData = {};
+        }
+
+        // Записываем текущую позицию
+        progressData[slug] = {
+            id: bestElement.id,
+            offset: bestElement.getBoundingClientRect().top,
+            time: Date.now() // Метка времени для удаления старых записей
+        };
+
+        // Очистка старых записей, если превышен лимит
+        const keys = Object.keys(progressData);
+        if (keys.length > MAX_HISTORY_ITEMS) {
+            keys.sort((a, b) => progressData[b].time - progressData[a].time); // От новых к старым
+            const newProgressData = {};
+            for (let i = 0; i < MAX_HISTORY_ITEMS; i++) {
+                newProgressData[keys[i]] = progressData[keys[i]];
+            }
+            progressData = newProgressData;
+        }
+
+        localStorage.setItem('suttaProgress', JSON.stringify(progressData));
+    }
+}
+
+// Слушаем скролл с задержкой 1 сек (чтобы не перегружать браузер во время прокрутки)
+window.addEventListener('scroll', () => {
+    clearTimeout(scrollSaveTimeout);
+    scrollSaveTimeout = setTimeout(saveReadingProgress, 1000); 
+}, { passive: true });
+
+
+// === ОБНОВЛЕННАЯ ФУНКЦИЯ ВОССТАНОВЛЕНИЯ ПОЗИЦИИ ===
 (function restoreExactPositionJump() {
-    // 1. Жёстко отключаем браузерное восстановление
     if ('scrollRestoration' in history) {
         history.scrollRestoration = 'manual';
     }
 
-    // 2. Принудительно отключаем smooth-scroll из CSS
     const html = document.documentElement;
     const prevScrollBehavior = html.style.scrollBehavior;
     html.style.scrollBehavior = 'auto';
 
-    const rawData = localStorage.getItem('exactScrollAnchor');
-    if (!rawData) {
+    let anchor = null;
+
+    // 1. Высший приоритет: Точный якорь от настроек (одноразовый)
+    const rawSettingsData = localStorage.getItem('exactScrollAnchor');
+    if (rawSettingsData) {
+        try {
+            anchor = JSON.parse(rawSettingsData);
+            localStorage.removeItem('exactScrollAnchor'); 
+        } catch(e) {}
+    }
+
+    // 2. Второй приоритет: Автосохраненный прогресс
+    // Восстанавливаем, ТОЛЬКО если в URL нет прямого хэша (мы не перебиваем прямые ссылки на цитаты)
+    if (!anchor && !window.location.hash) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const slug = urlParams.get('q');
+        if (slug) {
+            try {
+                const progressData = JSON.parse(localStorage.getItem('suttaProgress') || '{}');
+                if (progressData[slug]) {
+                    anchor = progressData[slug];
+                }
+            } catch(e) {}
+        }
+    }
+
+    // Если ничего не нашли, выходим
+    if (!anchor || !anchor.id) {
         html.style.scrollBehavior = prevScrollBehavior;
         return;
     }
-
-    const anchor = JSON.parse(rawData);
-    localStorage.removeItem('exactScrollAnchor'); // одноразово
 
     const maxWait = 7000;
     const checkInterval = 50;
@@ -336,22 +427,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (element) {
             clearInterval(intervalId);
 
-            // Абсолютная позиция элемента в документе
-            const absoluteY =
-                window.pageYOffset + element.getBoundingClientRect().top;
-
+            // Абсолютная позиция
+            const absoluteY = window.pageYOffset + element.getBoundingClientRect().top;
             const targetY = absoluteY - anchor.offset;
 
-            // 3. МГНОВЕННЫЙ ПРЫЖОК (самый надёжный вариант)
+            // Жесткий прыжок
             window.scrollTo(0, targetY);
 
-            // 4. Контрольный добив после layout-перерисовки
+            // Контрольный добив
             requestAnimationFrame(() => {
-                const correctedY =
-                    window.pageYOffset + element.getBoundingClientRect().top - anchor.offset;
+                const correctedY = window.pageYOffset + element.getBoundingClientRect().top - anchor.offset;
                 window.scrollTo(0, correctedY);
-
-                // возвращаем scroll-behavior
                 html.style.scrollBehavior = prevScrollBehavior;
             });
         }
@@ -363,3 +449,4 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, checkInterval);
 })();
+
