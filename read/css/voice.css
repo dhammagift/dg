@@ -156,7 +156,7 @@ transition: background-color 260ms ease-in-out;
     
     /* Сохраняем ваш дизайн */
     background: white;
-    padding: 20px;
+    padding: 10px;
     border: 1px solid #ddd;
     z-index: 999;
     min-width: 130px;

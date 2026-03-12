@@ -1494,7 +1494,7 @@ function getPlayerHtml() {
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-top: 15px;
+        margin-top: 5px;
         margin-bottom: 5px;
     }
 
