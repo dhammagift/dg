@@ -759,3 +759,7 @@
   width: 140px;
   max-width: 180px;
 }
+.btn-language {
+    text-decoration: none;
+    color: inherit !important; 
+}

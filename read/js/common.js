@@ -269,3 +269,36 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 });
+
+
+
+document.addEventListener('click', function(event) {
+    // Ищем, был ли клик по элементу с нужным классом (или внутри него)
+    const button = event.target.closest('.btn-language');
+
+    // Если кликнули не по кнопке языка — просто игнорируем и выходим
+    if (!button) return;
+
+    event.preventDefault(); // Отменяем стандартный переход href="#"
+
+    // Получаем язык из атрибута data-lang
+    const targetLang = button.getAttribute('data-lang');
+    if (!targetLang) return;
+
+    const url = new URL(window.location.href);
+    let newPath = '';
+
+    // Определяем нужный путь
+    if (targetLang === 'en') {
+        newPath = '/read/';
+    } else if (targetLang === 'ru') {
+        newPath = '/r/';
+    } else if (targetLang === 'th') {
+        newPath = '/th/read/';
+    } else {
+        return;
+    }
+
+    // Собираем и применяем новый URL
+    window.location.href = url.origin + newPath + url.search + url.hash;
+});
