@@ -1596,7 +1596,7 @@ function getPlayerHtml() {
     }
 
     .close-tts-btn {
-      transform: translate(-5px, -3px);
+      transform: translate(-5px, 0px);
     }
 
     #google-api-key-input {
