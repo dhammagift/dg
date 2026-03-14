@@ -204,7 +204,7 @@ transition: background-color 260ms ease-in-out;
 .tts-link {
   font-size: 0.7em;
   position: relative;
-  top: -2px;
+  top: 0px;
 }
     /* При активном состоянии на мобильных можно поднимать чуть меньше, если нужно */
     .voice-dropdown.active .voice-player {

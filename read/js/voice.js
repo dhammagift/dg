@@ -1867,7 +1867,7 @@ function getOrBuildPlayer() {
         const fileUrl = sourceLink.getAttribute('data-src');
         if (fileUrl) {
             placeholder.innerHTML = `<a class='tts-link' href='${fileUrl}' target='_blank'>File</a>`;
-            placeholder.style.display = "inline"; 
+            placeholder.style.display = "flex"; 
         } else {
              placeholder.style.display = "none";
         }
