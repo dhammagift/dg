@@ -1009,10 +1009,12 @@ async function playCurrentSegment() {
                   }
               };
               
-              audio.onerror = (err) => {
-                  console.error("Google Audio playback error", err);
-                  playBrowserTTS(item.text, targetLang, audioRateBrowser, isPali); 
-              };
+audio.onerror = (err) => {
+    console.error("Google Audio playback error", err);
+    // Вместо безусловного перехода к следующему, можно либо вызвать фолбэк на нативный:
+    playBrowserTTS(item.text, targetLang, audioRateBrowser, isPali); 
+    // Либо, если мы понимаем что это ошибка доступа, просто паузить.
+};
 
               if (!ttsState.paused) {
                   const playPromise = audio.play();
@@ -1056,8 +1058,27 @@ function playBrowserTTS(text, langKey, rate, isPali) {
   };
 
   utterance.onerror = (e) => {
-    console.error('Browser TTS Error', e);
+    // 1. БЛОКИРОВКА БРАУЗЕРОМ (Autoplay blocked)
+    // Хром выдает 'not-allowed', если юзер еще не кликнул по странице.
+    if (e.error === 'not-allowed') {
+      console.warn('TTS: Autoplay blocked by browser policy.');
+      ttsState.paused = true;
+      setButtonIcon('play');
+      return; // ОСТАНАВЛИВАЕМСЯ. Индекс не растет, ждем клика (forceUnlock подхватит).
+    }
+
+    // 2. КРИТИЧЕСКИЕ СИСТЕМНЫЕ ОШИБКИ
+    // Если упал сервис речи в Windows/Android или нет сети для облачного голоса.
+    if (e.error === 'audio-busy' || e.error === 'network') {
+      console.error('TTS: Critical system error:', e.error);
+      ttsState.paused = true;
+      setButtonIcon('play');
+      return; 
+    }
+
+    console.error('Browser TTS Error:', e);
     
+    // 3. ЛОГИКА ФОЛБЭКОВ ДЛЯ ПАЛИ (Sanskrit -> Hindi -> English)
     if (langKey === 'pi-dev') {
       const currentAttempt = utterance._fallbackAttempt || 0;
       
@@ -1095,17 +1116,21 @@ function playBrowserTTS(text, langKey, rate, isPali) {
       }
     }
     
+    // 4. ПРЕРЫВАНИЕ ИЛИ СКРЫТИЕ ВКЛАДКИ
     if (document.hidden || e.error === 'interrupted') {
       ttsState.paused = true;
       setButtonIcon('play');
       return; 
     }
 
+    // 5. ПРОПУСК СЕГМЕНТА (для мелких ошибок)
+    // Переходим к следующей фразе, только если это не блокировка и не пауза.
     if (ttsState.speaking && !ttsState.paused) {
       ttsState.currentIndex++;
       playCurrentSegment();
     }
   };
+
   
   ttsState.utterance = utterance;
   
@@ -1730,21 +1755,33 @@ function getPlayerHtml() {
           
           <br>
 
-          <label class="tts-checkbox-custom" style="margin-right: 3px;">
-            <input type="checkbox" id="tts-scroll-toggle" ${ttsState.autoScroll ? 'checked' : ''}>
-            Scroll
-          </label>
+          <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 5px;">
+            <label class="tts-checkbox-custom">
+              <input type="checkbox" id="tts-scroll-toggle" ${ttsState.autoScroll ? 'checked' : ''}>
+              Scroll
+            </label>
+            <label class="tts-checkbox-custom">
+              <input type="checkbox" id="tts-autoplay-toggle" ${localStorage.getItem('ttsMode') === 'true' ? 'checked' : ''}>
+              Autoplay
+            </label>
+          </div>
 
-          <a href="/tts.php${window.location.search}" class="tts-link tts-text-link" style="margin-right: 3px;">TTS</a>
-          <a class="tts-link" title='sc-voice.net' href='https://www.sc-voice.net/?src=sc#/sutta/$fromjs' style="margin-right: 3px;">VSC</a>
+          <div style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 8px; flex-wrap: wrap;">
           
-          <span id="audio-file-link-placeholder" style="display: none; margin-right: 3px;"></span>
-          
-          <a href="${helpUrl}" target="_blank" class="tts-link" title="Help" style="text-decoration: none;">?</a>
+                      <button id="tts-advanced-toggle-btn" class="extra-settings-toggle" style="width: auto; margin: 0; padding: 0; display: inline-flex;">
+                🔧 Google Voice
+            </button>
+            
+            <a href="/tts.php${window.location.search}" class="tts-link tts-text-link">TTS</a>
+            <a class="tts-link" title='sc-voice.net' href='https://www.sc-voice.net/?src=sc#/sutta/$fromjs'>VSC</a>
+            
+            <span id="audio-file-link-placeholder" style="display: none;"></span>
+            
+            <a href="${helpUrl}" target="_blank" class="tts-link" title="Help" style="text-decoration: none;">?</a>
 
-          <button id="tts-advanced-toggle-btn" class="extra-settings-toggle">
-              🔧 Google Voice Settings
-          </button>
+
+          </div>
+
 
           <div id="tts-advanced-settings">
               <div class="api-key-row">
@@ -2038,6 +2075,22 @@ const resetMessage = isRuLike
         }
      }
   }
+  
+    // 6. Autoplay (связка с ttsMode)
+  if (e.target.id === 'tts-autoplay-toggle') {
+     const isChecked = e.target.checked;
+     const isRu = window.location.pathname.match(/\/(ru|r|ml)\//);
+     
+     if (isChecked) {
+         localStorage.setItem('ttsMode', 'true');
+    //     showToast(isRu ? "Автоплей включен" : "Autoplay enabled");
+     } else {
+         localStorage.removeItem('ttsMode');
+   //      showToast(isRu ? "Автоплей выключен" : "Autoplay disabled");
+     }
+     return;
+  }
+
 }
 
 document.addEventListener('change', handleTTSSettingChange);
@@ -2111,9 +2164,13 @@ document.addEventListener('DOMContentLoaded', () => {
               startPlayback(document, mode, slug, 0);
 
               // 4. СТРАХОВКА ОТ БЛОКИРОВКИ (Firefox/Chrome)
-              const forceUnlock = () => {
-                  if (ttsState.speaking && ttsState.paused) {
-                      console.log("🔓 Audio Unlocked by User Action!");
+              const forceUnlock = (e) => {
+                  // Если клик пришел из самого плеера, ничего не делаем здесь.
+                  // Основной обработчик handleSuttaClick сам всё включит.
+                  const isPlayerClick = e && e.target && e.target.closest('.voice-player');
+                  
+                  if (ttsState.speaking && ttsState.paused && !isPlayerClick) {
+                      console.log("🔓 Audio Unlocked by Background Action!");
                       ttsState.paused = false;
                       setButtonIcon('pause');
                       toggleSilence(true); 
@@ -2124,10 +2181,18 @@ document.addEventListener('DOMContentLoaded', () => {
                           playCurrentSegment();
                       }
                   }
+
+                  // Удаляем слушателей в любом случае, так как взаимодействие произошло
                   ['click', 'touchstart', 'scroll', 'keydown'].forEach(evt => 
                       document.removeEventListener(evt, forceUnlock)
                   );
               };
+
+              // Важно: убираем { once: true }, так как мы сами удаляем слушателей внутри функции
+              ['click', 'touchstart', 'scroll', 'keydown'].forEach(evt => 
+                  document.addEventListener(evt, forceUnlock, { passive: true })
+              );
+
 
               ['click', 'touchstart', 'scroll', 'keydown'].forEach(evt => 
                   document.addEventListener(evt, forceUnlock, { once: true, passive: true })
