@@ -199,7 +199,7 @@ if (savedDict.includes("dpd")) {
   }
 
   if (savedDict.includes("full")) {
-  dictUrl += "/?silent&theme=${theme}&q=";
+  dictUrl += `/?silent&theme=${theme}&q=`;
 //    dictUrl += "/?q=";
 
   } else if (savedDict.includes("compact")) {
@@ -215,10 +215,10 @@ if (savedDict.includes("dpd")) {
     externalDict = true;
   dictUrl = "mdict://mdict.cn/search?text=";
 } else if (savedDict === "newwindow") {
- dictUrl = "https://dict.dhamma.gift/?silent&theme=${theme}&q=";
+ dictUrl = `https://dict.dhamma.gift/?silent&theme=${theme}&q=`;
    //   dictUrl = "https://dict.dhamma.gift/?q=";
 } else if (savedDict === "newwindowru") {
-  dictUrl = "https://dict.dhamma.gift/ru/?silent&theme=${theme}&q=";
+  dictUrl = `https://dict.dhamma.gift/ru/?silent&theme=${theme}&q=`;
   //dictUrl = "https://dict.dhamma.gift/ru/?q=";
 // before this line:
 }
@@ -247,7 +247,21 @@ const requestIdleCallback = window.requestIdleCallback ||
 
 function handleWordLookup(word, event) {
 
-     if (!dictionaryVisible) return;
+    if (!dictionaryVisible) return;
+
+    // Получаем актуальную тему прямо в момент клика по слову
+    const currentTheme = getEffectiveTheme();
+    
+    if (savedDict.includes("full")) {
+        dictUrl = `https://dict.dhamma.gift/${savedDict.includes("ru") ? "ru/" : ""}?silent&theme=${currentTheme}&q=`;
+    } else if (savedDict === "newwindow") {
+        dictUrl = `https://dict.dhamma.gift/?silent&theme=${currentTheme}&q=`;
+    } else if (savedDict === "newwindowru") {
+        dictUrl = `https://dict.dhamma.gift/ru/?silent&theme=${currentTheme}&q=`;
+    }
+    // --- КОНЕЦ НОВОГО БЛОКА ---
+
+
 
 const { popup, overlay, iframe } = getPopup();
 
