@@ -2132,11 +2132,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   synth.getVoices();
   
-  // --- AUTOPLAY LOGIC (Вставить перед закрывающей скобкой DOMContentLoaded) ---
+  // --- AUTOPLAY LOGIC ---
   const urlParams = new URLSearchParams(window.location.search);
   
   if (urlParams.has('autoplay') || localStorage.getItem('ttsMode') === 'true') {
-      setTimeout(() => {
+      
+      // We create a function to attempt autoplay that can call itself if the DOM isn't ready
+      const attemptAutoplay = (retriesLeft) => {
+          if (retriesLeft <= 0) {
+              console.warn("Autoplay aborted: Content took too long to load or voice-link not found.");
+              return;
+          }
+
           let slug = null;
           
           // 1. Ищем ID сутты
@@ -2147,70 +2154,67 @@ document.addEventListener('DOMContentLoaded', () => {
               slug = window.location.pathname.split('/').pop() || 'legacy_page';
           }
 
-          if (slug) {
-              console.log("🚀 Autoplay: Starting logic for", slug);
+          // Если элемента еще нет, ждем 300мс и пробуем снова
+          if (!slug) {
+              setTimeout(() => attemptAutoplay(retriesLeft - 1), 300);
+              return;
+          }
+
+          // Если нашли - запускаем!
+          console.log("🚀 Autoplay: Starting logic for", slug);
+          
+          const player = getOrBuildPlayer();
+          player.classList.add('active'); 
+          const internalPlayBtn = player.querySelector('.play-main-button');
+          if (internalPlayBtn) internalPlayBtn.dataset.slug = slug;
+
+          // 2. ОПРЕДЕЛЕНИЕ РЕЖИМА
+          let mode = urlParams.get('mode');
+          const validModes = ['pi', 'trn', 'pi-trn', 'trn-pi'];
+
+          if (!mode || !validModes.includes(mode)) {
+              mode = localStorage.getItem(MODE_STORAGE_KEY) || 'trn';
+          } else {
+              const modeSelect = document.getElementById('tts-mode-select');
+              if (modeSelect) modeSelect.value = mode;
+              localStorage.setItem(MODE_STORAGE_KEY, mode);
+          }
+
+          // 3. ЗАПУСК
+          startPlayback(document, mode, slug, 0);
+
+          // 4. СТРАХОВКА ОТ БЛОКИРОВКИ (Firefox/Chrome)
+          const forceUnlock = (e) => {
+              const isPlayerClick = e && e.target && e.target.closest('.voice-player');
               
-              const player = getOrBuildPlayer();
-              player.classList.add('active'); 
-              const internalPlayBtn = player.querySelector('.play-main-button');
-              if (internalPlayBtn) internalPlayBtn.dataset.slug = slug;
+              if (ttsState.speaking && ttsState.paused && !isPlayerClick) {
+                  console.log("🔓 Audio Unlocked by Background Action!");
+                  ttsState.paused = false;
+                  setButtonIcon('pause');
+                  toggleSilence(true); 
 
-              // 2. ОПРЕДЕЛЕНИЕ РЕЖИМА (Приоритет: URL -> Память -> 'trn')
-              let mode = urlParams.get('mode');
-              const validModes = ['pi', 'trn', 'pi-trn', 'trn-pi'];
-
-              // Если в URL мусор или пусто, берем из памяти
-              if (!mode || !validModes.includes(mode)) {
-                  mode = localStorage.getItem(MODE_STORAGE_KEY) || 'trn';
-              } else {
-                  // Если режим задан в URL, обновляем выпадающий список в плеере визуально
-                  const modeSelect = document.getElementById('tts-mode-select');
-                  if (modeSelect) modeSelect.value = mode;
-                  // И запоминаем на будущее (опционально, можно убрать если не хотите сбивать настройки)
-                  localStorage.setItem(MODE_STORAGE_KEY, mode);
+                  if (ttsState.googleAudio) {
+                      ttsState.googleAudio.play().catch(e => console.warn(e));
+                  } else {
+                      playCurrentSegment();
+                  }
               }
 
-              // 3. ЗАПУСК
-              startPlayback(document, mode, slug, 0);
-
-              // 4. СТРАХОВКА ОТ БЛОКИРОВКИ (Firefox/Chrome)
-              const forceUnlock = (e) => {
-                  // Если клик пришел из самого плеера, ничего не делаем здесь.
-                  // Основной обработчик handleSuttaClick сам всё включит.
-                  const isPlayerClick = e && e.target && e.target.closest('.voice-player');
-                  
-                  if (ttsState.speaking && ttsState.paused && !isPlayerClick) {
-                      console.log("🔓 Audio Unlocked by Background Action!");
-                      ttsState.paused = false;
-                      setButtonIcon('pause');
-                      toggleSilence(true); 
-
-                      if (ttsState.googleAudio) {
-                          ttsState.googleAudio.play().catch(e => console.warn(e));
-                      } else {
-                          playCurrentSegment();
-                      }
-                  }
-
-                  // Удаляем слушателей в любом случае, так как взаимодействие произошло
-                  ['click', 'touchstart', 'scroll', 'keydown'].forEach(evt => 
-                      document.removeEventListener(evt, forceUnlock)
-                  );
-              };
-
-              // Важно: убираем { once: true }, так как мы сами удаляем слушателей внутри функции
               ['click', 'touchstart', 'scroll', 'keydown'].forEach(evt => 
-                  document.addEventListener(evt, forceUnlock, { passive: true })
+                  document.removeEventListener(evt, forceUnlock)
               );
+          };
 
+          ['click', 'touchstart', 'scroll', 'keydown'].forEach(evt => 
+              document.addEventListener(evt, forceUnlock, { passive: true })
+          );
+      };
 
-              ['click', 'touchstart', 'scroll', 'keydown'].forEach(evt => 
-                  document.addEventListener(evt, forceUnlock, { once: true, passive: true })
-              );
-          }
-      }, 1000); 
+      // Запускаем первую попытку. Даем ей 10 попыток по 300мс (всего до 3 секунд ожидания)
+      attemptAutoplay(15); 
   }
   // --- END AUTOPLAY ---
+
 
   
 });
