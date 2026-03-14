@@ -1766,7 +1766,7 @@ function getPlayerHtml() {
             </label>
           </div>
 
-          <div style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 8px; flex-wrap: wrap;">
+          <div style="display: flex; justify-content: center; align-items: center; gap: 5px; margin-top: 8px; flex-wrap: wrap;">
           
                       <button id="tts-advanced-toggle-btn" class="extra-settings-toggle" style="width: auto; margin: 0; padding: 0; display: inline-flex;">
                 🔧 Google Voice
