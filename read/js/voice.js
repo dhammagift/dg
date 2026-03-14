@@ -912,9 +912,12 @@ async function playCurrentSegment() {
         item.element.classList.add('tts-active');
     }
     
-    if (ttsState.autoScroll) {
-      item.element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (ttsState.autoScroll) {
+      // Скроллим к контейнеру (id), так как само слово может быть скрыто
+      const scrollTarget = document.getElementById(item.id) || item.element;
+      scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+
   }
 
   let uiRate = 1.0;     
@@ -1217,8 +1220,10 @@ async function handleSuttaClick(e) {
       if (item && item.element) {
         item.element.classList.add('tts-active');
         if (ttsState.autoScroll) {
-          item.element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          const scrollTarget = document.getElementById(item.id) || item.element;
+          scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+
       }
     } else {
       playCurrentSegment();
@@ -2027,9 +2032,11 @@ const resetMessage = isRuLike
         const item = ttsState.playlist[ttsState.currentIndex];
         if (item && item.element) {
           item.element.classList.add('tts-active');
-          if (ttsState.autoScroll) {
-            item.element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
+        if (ttsState.autoScroll) {
+          const scrollTarget = document.getElementById(item.id) || item.element;
+          scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
         }
       }
     }
@@ -2068,12 +2075,15 @@ const resetMessage = isRuLike
   if (e.target.id === 'tts-scroll-toggle') {
      ttsState.autoScroll = e.target.checked;
      localStorage.setItem(SCROLL_STORAGE_KEY, e.target.checked);
+
      if (ttsState.autoScroll && (ttsState.speaking || ttsState.paused)) {
         const item = ttsState.playlist[ttsState.currentIndex];
         if (item && item.element) {
-           item.element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+           const scrollTarget = document.getElementById(item.id) || item.element;
+           scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
      }
+
   }
   
     // 6. Autoplay (связка с ttsMode)

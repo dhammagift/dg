@@ -384,7 +384,8 @@ transition: background-color 260ms ease-in-out;
 /* 1. Сам блок-контейнер */
 #sutta span[id]:has(.tts-active) {
     display: block; 
-    
+        scroll-margin-top: 15vh;
+
     /* Зеленоватый цвет (тот же тон, что и active-word), прозрачность 0.15 */
     background-color: rgba(var(--bs-primary-rgb), 0.25);
     border-radius: 6px;
