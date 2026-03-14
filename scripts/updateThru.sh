@@ -81,7 +81,7 @@ echo "--- Готово! Ссылки исправлены, скрипты под
 exit 0
 
 
-добавмть в ui3xta css
+добавмть в uiexta css
 
 .ext-links {
   font-size: 0.85em;      /* общий размер */
