@@ -1307,7 +1307,7 @@ function createQuickModal() {
 
   // URL для DPD iframe
   const dpdTheme = isDark ? "dark" : "light";
-  const dpdUrl = `https://dict.dhamma.gift${isRu ? '/ru/' : '/'}?silent&theme=${dpdTheme}`;
+  const dpdUrl = `https://dict.dhamma.gift${isRu ? '/ru/' : '/'}?theme=${dpdTheme}`;
 
 
   // --- СОЗДАНИЕ ОВЕРЛЕЯ ---
