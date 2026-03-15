@@ -1380,6 +1380,16 @@ function createQuickModal() {
     .quick-tab-content.active { display: block; animation: fadeIn 0.3s ease; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
+    /* === ОГРАНИЧЕНИЕ ВЫСОТЫ И СКРОЛЛ ДЛЯ СПИСКОВ === */
+    #quick-favorites-container, #quick-history-container {
+        max-height: 260px; /* Высота примерно на 7-8 элементов */
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+    /* Стилизация внутренних скроллбаров */
+    #quick-favorites-container::-webkit-scrollbar, #quick-history-container::-webkit-scrollbar { width: 4px; }
+    #quick-favorites-container::-webkit-scrollbar-thumb, #quick-history-container::-webkit-scrollbar-thumb { background: rgba(136, 136, 136, 0.4); border-radius: 4px; }
+
     .compact-list { list-style: none; padding: 0; margin: 0; }
     .compact-list li { 
       padding: 8px 0; border-bottom: 1px dashed ${borderColor}; 
@@ -1464,9 +1474,15 @@ function createQuickModal() {
         height: 10px; 
         flex-grow: 1; 
       }
+      
+      /* Увеличиваем высоту списков на мобильных для удобства */
+      #quick-favorites-container, #quick-history-container {
+        max-height: 28vh; 
+      }
     }
   `;
   document.head.appendChild(styleTag);
+
 
   // --- ВНУТРЕННИЙ HTML МОДАЛКИ ---
   quickModal.innerHTML = `
@@ -1639,8 +1655,9 @@ function createQuickModal() {
     
     let dataToRender = [...favData];
     if (favAlphaSort) {
-      dataToRender.sort((a, b) => (a.title || a.slug || '').localeCompare(b.title || b.slug || ''));
+      dataToRender.sort((a, b) => (a.title || a.slug || '').localeCompare(b.title || b.slug || '', undefined, { numeric: true }));
     }
+
 
     let favHtml = '<ul class="compact-list">';
     dataToRender.forEach(fav => {
@@ -1673,8 +1690,9 @@ function createQuickModal() {
 
     let dataToRender = [...histData];
     if (histAlphaSort) {
-      dataToRender.sort((a, b) => (a[0] || '').localeCompare(b[0] || ''));
+      dataToRender.sort((a, b) => (a[0] || '').localeCompare(b[0] || '', undefined, { numeric: true }));
     }
+
 
     let histHtml = '<ul class="compact-list">';
     dataToRender.slice(0, 84).forEach(h => {
@@ -1696,11 +1714,14 @@ function createQuickModal() {
       const currentStarTitle = isFav ? titleRemove : titleAdd;
 
       histHtml += `<li>
-        <span class="hist-icon">🕒</span> 
+        <span class="hist-icon" style="display: flex; align-items: center; margin-right: 5px;">
+            <img src="/assets/svg/clock-rotate-left.svg" width="14" height="14" alt="history" style="${isDark ? 'filter: invert(0.7);' : 'opacity: 0.6;'}">
+        </span> 
         <a href="${urlString}">${displayKey}</a>
         <span class="item-date">${dateStr}</span>
         <span class="${starClass}" data-slug="${realSlug}" data-display="${displayKey}" data-url="${urlString}" title="${currentStarTitle}">${starIcon}</span>
       </li>`;
+
     });
     histHtml += '</ul>';
     
