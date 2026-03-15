@@ -422,7 +422,7 @@ body[data-theme="dark"] #sutta span[id]:has(.tts-active) {
 }
 
 /* Выравнивание плеера и боковых кнопок в одну горизонтальную линию на широких экранах */
-@media (min-width: 450px) {
+@media (min-width: 460px) {
     .voice-dropdown.active .voice-player {
         transform: translate(-50%, 25px);
     }
