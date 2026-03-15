@@ -204,7 +204,7 @@ transition: background-color 260ms ease-in-out;
 .tts-link {
   font-size: 0.7em;
   position: relative;
-  top: 0px;
+  top: -2px;
 }
     /* При активном состоянии на мобильных можно поднимать чуть меньше, если нужно */
     .voice-dropdown.active .voice-player {
@@ -419,4 +419,14 @@ body[data-theme="dark"] #sutta span[id]:has(.tts-active) {
 /* 4. Исправление для режима колонок */
 .column-view #sutta span[id]:has(.tts-active) {
     display: flow-root;
+}
+
+/* Выравнивание плеера и боковых кнопок в одну горизонтальную линию на широких экранах */
+@media (min-width: 409px) {
+    .voice-dropdown.active .voice-player {
+        /* Опускаем плеер (изначально он на bottom: 50px). 
+           translateY(15px) смещает его вниз, делая визуальный отступ снизу около 35px, 
+           что идеально ровняет его с центрами боковых кнопок (у которых bottom: 30px). */
+        transform: translate(-50%, 25px);
+    }
 }
