@@ -55,7 +55,7 @@ function checkStorage(key) {
   }
 })();
 
-const MAX_HISTORY = 84;
+const MAX_HISTORY = 8400;
 let textinfoCache = null; // Кеш для данных сутт
 
 async function addToSearchHistory() {
@@ -1309,11 +1309,12 @@ function createQuickModal() {
   const dpdTheme = isDark ? "dark" : "light";
   const dpdUrl = `https://dict.dhamma.gift${isRu ? '/ru/' : '/'}?silent&theme=${dpdTheme}`;
 
+
   // --- СОЗДАНИЕ ОВЕРЛЕЯ ---
   quickOverlay = document.createElement("div");
   quickOverlay.className = "quick-overlay-element";
   quickOverlay.style.cssText = `
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    position: fixed; top: -20vh; left: -20vw; width: 140vw; height: 140vh;
     z-index: 9999; background-color: rgba(0, 0, 0, 0.7);
     opacity: 0; transition: opacity 0.4s ease;
   `;
@@ -1326,16 +1327,32 @@ function createQuickModal() {
     transform: translate(-50%, -50%) scale(0.95);
     z-index: 10000; opacity: 0;
     transition: opacity 0.4s ease, transform 0.4s ease;
-    width: 95%; max-width: 600px;
-    display: flex; flex-direction: column;
+    width: 95%; max-width: 600px; max-height: 90vh;
+    overflow-y: auto; display: flex; flex-direction: column;
   `;
 
   // --- ДОБАВЛЕНИЕ CSS СТИЛЕЙ ---
   const styleTag = document.createElement("style");
   styleTag.textContent = `
-    /* УМНЫЕ ОТСТУПЫ (Позволяют словарю быть на всю ширину) */
+    /* УМНЫЕ ОТСТУПЫ */
     .quick-pad-lr { box-sizing: border-box; padding-left: 1.5rem; padding-right: 1.5rem; }
     .quick-pad-b { padding-bottom: 1.5rem; }
+
+    /* Жестко задаем отступы для контента */
+    #tab-fav, #tab-4as {
+        box-sizing: border-box;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+    #tab-dpd {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    /* ОТДВИГАЕМ КНОПКУ ПОИСКА ОТ КРЕСТИКА (ДЕСКТОП) */
+    #quickSearchForm {
+        padding-right: 3.5rem; 
+    }
 
     .quick-tabs-wrapper { 
       display: flex; justify-content: space-between; align-items: center; 
@@ -1356,6 +1373,7 @@ function createQuickModal() {
       height: 55vh; 
       min-height: 420px; 
       overflow-y: auto; 
+      box-sizing: border-box;
     }
     .quick-tab-content::-webkit-scrollbar { width: 5px; }
     .quick-tab-content::-webkit-scrollbar-thumb { background: rgba(136, 136, 136, 0.4); border-radius: 4px; }
@@ -1403,16 +1421,44 @@ function createQuickModal() {
     /* МОБИЛЬНАЯ ВЕРСИЯ */
     @media (max-width: 500px) {
       .quick-modal-container {
-        top: 0 !important; left: 0 !important; transform: none !important;
-        width: 100% !important; height: 100% !important; max-width: none !important;
-        max-height: none !important; border-radius: 0 !important;
+        width: 94% !important; 
+        height: 90% !important; 
+        max-width: none !important;
+        max-height: none !important; 
       }
       .quick-modal-content-wrapper {
-        width: 100% !important; height: 100% !important; border-radius: 0 !important;
-        padding: 1rem 0 0 0 !important; /* Отступ только сверху */
+        width: 100% !important; 
+        height: 100% !important; 
+        border-radius: 1.2rem !important; 
+        padding: 1rem 0 0 0 !important; 
         display: flex; flex-direction: column;
+        box-sizing: border-box !important;
       }
-      .quick-pad-lr { padding-left: 1rem !important; padding-right: 1rem !important; }
+      
+      #tab-fav, #tab-4as {
+        box-sizing: border-box !important;
+        padding-left: 1.2rem !important;
+        padding-right: 1.2rem !important;
+      }
+      
+      #tab-dpd {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+      
+      .quick-pad-lr, .quick-tabs-wrapper { 
+        box-sizing: border-box !important;
+        padding-left: 1.2rem !important; 
+        padding-right: 1.2rem !important; 
+      }
+      
+      /* ОТДВИГАЕМ КНОПКУ ПОИСКА ОТ КРЕСТИКА (МОБИЛКИ) */
+      #quickSearchForm {
+        box-sizing: border-box !important;
+        padding-left: 1.2rem !important;
+        padding-right: 3.5rem !important; 
+      }
+      
       .quick-pad-b { padding-bottom: 1rem !important; }
       .quick-tab-content {
         height: 10px; 
@@ -1423,11 +1469,10 @@ function createQuickModal() {
   document.head.appendChild(styleTag);
 
   // --- ВНУТРЕННИЙ HTML МОДАЛКИ ---
-  // Обрати внимание: у wrapper убран общий padding, добавлен padding-top и overflow: hidden
   quickModal.innerHTML = `
     <div class="quick-modal-content-wrapper" style="
       background-color: ${bgColor}; color: ${textColor};
-      padding-top: 1.5rem; width: 100%; border-radius: 1rem; overflow: hidden;
+      padding: 1.5rem; width: 100%; border-radius: 1rem;
       box-shadow: 0 8px 24px rgba(0,0,0,0.3); font-family: sans-serif; position: relative;
     ">
       <button id="quickCloseModalBtn" style="
@@ -1437,7 +1482,7 @@ function createQuickModal() {
         box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 10;
       " title="(Esc)">×</button>
 
-      <form id="quickSearchForm" class="quick-pad-lr" action="${formAction}" method="GET" style="box-sizing: border-box; display: flex; gap: 8px; margin-bottom: 1rem; margin-top: 10px; flex-shrink: 0;">
+      <form id="quickSearchForm" action="${formAction}" method="GET" style="display: flex; gap: 8px; margin-bottom: 1rem; margin-top: 10px;">
           <input type="search" name="q" id="quickSearchInput" placeholder="e.g. Kāyagatā or sn56.11" autocomplete="off" style="
               flex-grow: 1; border: 1px solid ${borderColor}; background-color: ${isDark ? '#2c3a47' : '#f8f9fa'};
               color: ${textColor}; padding: 10px 14px; border-radius: 20px; font-size: 0.95rem; outline: none;
@@ -1450,7 +1495,7 @@ function createQuickModal() {
           </button>
       </form>
 
-      <div class="quick-tabs-wrapper quick-pad-lr" style="box-sizing: border-box; flex-shrink: 0;">
+      <div class="quick-tabs-wrapper">
         <div class="quick-tabs">
           <button class="quick-tab-btn active" data-tab="tab-fav">${tabFavText}</button>
           <button class="quick-tab-btn" data-tab="tab-4as">${tabLinksText}</button>
@@ -1459,7 +1504,7 @@ function createQuickModal() {
         <span class="clear-all-btn" id="main-trash-icon" title="${titleClearAll}">🗑️</span>
       </div>
 
-      <div id="tab-fav" class="quick-tab-content active quick-pad-lr quick-pad-b">
+      <div id="tab-fav" class="quick-tab-content active">
         <h6 id="fav-header" class="sortable-header">
           <span class="header-title" title="Сортировать">${favTitleText}</span>
           <div class="header-actions">
@@ -1477,11 +1522,11 @@ function createQuickModal() {
         <div id="quick-history-container"></div>
       </div>
 
-      <div id="tab-dpd" class="quick-tab-content">
-        <iframe src="${dpdUrl}" style="width: 100%; height: 100%; border: none; display: block; background: transparent;"></iframe>
+      <div id="tab-dpd" class="quick-tab-content" style="height: 60vh; min-height: 450px;">
+        <iframe src="${dpdUrl}" style="width: 100%; height: 100%; border: none; border-radius: 8px; background: transparent;"></iframe>
       </div>
 
-      <div id="tab-4as" class="quick-tab-content quick-pad-lr quick-pad-b">
+      <div id="tab-4as" class="quick-tab-content">
         <div class="quick-links-container" style="display: flex; gap: 1.2rem; flex-wrap: wrap; justify-content: space-between;">
           <div class="quick-links-column" style="flex: 1 1 45%; min-width: 200px;">
             <p><strong>1st priority:</strong></p>
@@ -1632,7 +1677,7 @@ function createQuickModal() {
     }
 
     let histHtml = '<ul class="compact-list">';
-    dataToRender.slice(0, 10).forEach(h => {
+    dataToRender.slice(0, 84).forEach(h => {
       const dateStr = h[2] ? new Date(h[2]).toLocaleDateString() : "";
       const displayKey = h[0]; 
       const urlString = h[1];  
@@ -1659,7 +1704,7 @@ function createQuickModal() {
     });
     histHtml += '</ul>';
     
-    if (histData.length > 10) {
+    if (histData.length > 84) {
       const historyUrl = isRu ? "/ru/history.php" : "/history.php";
       histHtml += `<div style="text-align: right; margin-top: 10px;"><a href="${historyUrl}" style="font-size: 0.85rem; color: ${linkColorPrimary}; text-decoration: none;">${allHistText}</a></div>`;
     }
@@ -1675,11 +1720,12 @@ function createQuickModal() {
           const slug = e.target.dataset.slug;
           
           if (confirm(confirmRemoveFavText)) {
+              // Запрашиваем самые свежие данные из памяти браузера
               let currentFavs = JSON.parse(localStorage.getItem('dg_favorites')) || [];
               currentFavs = currentFavs.filter(f => f.slug !== slug);
               
               localStorage.setItem('dg_favorites', JSON.stringify(currentFavs));
-              favData = currentFavs; 
+              favData = currentFavs; // Синхронизируем локальную переменную
               
               renderFavs();
               renderHist(); 
@@ -1696,6 +1742,7 @@ function createQuickModal() {
           const displayKey = e.target.dataset.display;
           const url = e.target.dataset.url;
           
+          // Запрашиваем самые свежие данные из памяти браузера для надежности
           let currentFavs = JSON.parse(localStorage.getItem('dg_favorites')) || [];
           const existingIndex = currentFavs.findIndex(f => f.slug === slug);
           
@@ -1724,13 +1771,13 @@ function createQuickModal() {
                  timestamp: Date.now()
              };
 
-             if (currentFavs.length >= 50) currentFavs.pop();
+      //       if (currentFavs.length >= 84) currentFavs.pop();
              currentFavs.unshift(newItem);
              localStorage.setItem('dg_favorites', JSON.stringify(currentFavs));
              if (typeof showBubbleNotification === 'function') showBubbleNotification(textSaved);
           }
           
-          favData = currentFavs; 
+          favData = currentFavs; // Синхронизируем локальную переменную
           
           renderFavs();
           renderHist(); 
@@ -1809,7 +1856,6 @@ function createQuickModal() {
       window.initPaliAutocomplete('#quickSearchInput');
   }
 }
-
 
 function toggleQuickModal() {
   if (quickModalIsOpen) {
@@ -2172,7 +2218,7 @@ function toggleFavoriteGlobal(itemData) {
         favs.splice(existingIndex, 1); // Удаляем
         if (typeof showBubbleNotification === 'function') showBubbleNotification(textRemoved);
     } else {
-        if (favs.length >= 50) favs.pop(); // Лимит 50
+    //    if (favs.length >= 84) favs.pop(); // Лимит 84
         itemData.timestamp = Date.now();
         favs.unshift(itemData); // Добавляем
         isAdded = true;

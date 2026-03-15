@@ -761,5 +761,42 @@
 }
 .btn-language {
     text-decoration: none;
-    color: inherit !important; 
+    color: white !important; 
+}
+
+
+@media (orientation: landscape) and (max-height: 520px) {
+  #smart-gear-container {
+    top: 8px;
+    right: max(20px, env(safe-area-inset-right, 0px));
+    align-items: flex-end;
+    pointer-events: none;
+    z-index: 1002;
+  }
+
+  #smart-gear-btn {
+    width: 36px;
+    height: 36px;
+    opacity: 0.95;
+    transform: translateY(0) scale(1);
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  #smart-panel {
+    position: fixed;
+    top: 52px;
+    right: max(20px, env(safe-area-inset-right, 0px));
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    transform-origin: top right;
+    box-sizing: border-box;
+    pointer-events: auto;
+  }
+
+  #smart-panel .smart-btn {
+    white-space: normal;
+    word-break: break-word;
+  }
 }
