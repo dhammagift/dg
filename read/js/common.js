@@ -302,3 +302,121 @@ document.addEventListener('click', function(event) {
     // Собираем и применяем новый URL
     window.location.href = url.origin + newPath + url.search + url.hash;
 });
+
+// ==========================================
+// UI ИЗБРАННОГО ДЛЯ ЧИТАЛКИ И СИНХРОНИЗАЦИЯ (SPA)
+// ==========================================
+
+// 1. Собираем данные о текущем месте в тексте
+async function getCurrentReadingPosition() {
+    const path = window.location.pathname;
+    const search = window.location.search;
+    const urlParams = new URLSearchParams(search);
+    const q = urlParams.get('q');
+    
+    if (!q) return null;
+
+    let exactId = null;
+    const activeWord = document.querySelector('.active-word');
+    if (activeWord) {
+        exactId = activeWord.id || activeWord.closest('[id]')?.id;
+    }
+
+    if (!exactId) {
+        const suttaContainer = document.getElementById('sutta');
+        if (suttaContainer) {
+            const elements = suttaContainer.querySelectorAll('[id]');
+            const eyeLevel = 120;
+            let minDistance = Infinity;
+            for (const el of elements) {
+                const distance = Math.abs(el.getBoundingClientRect().top - eyeLevel);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    exactId = el.id;
+                }
+            }
+        }
+    }
+
+    let title = q;
+    try {
+        if (typeof textinfoCache !== 'undefined' && textinfoCache) {
+            const suttaName = textinfoCache[q.split(/\s+/)[0]]?.pi; 
+            if (suttaName) title = `${q} ${suttaName}`;
+        } else if (typeof loadTextData === 'function') {
+            const textinfo = await loadTextData();
+            const suttaName = textinfo[q.split(/\s+/)[0]]?.pi; 
+            if (suttaName) title = `${q} ${suttaName}`;
+        }
+    } catch(e) {}
+
+    return {
+        slug: q,
+        id: exactId || q,
+        title: title,
+        path: path,
+        search: search,
+        timestamp: Date.now()
+    };
+}
+
+// 2. Обновляем визуальное состояние звездочек
+function updateFavoriteIconState() {
+    const favBtnImg = document.querySelector('.fav-icon-img');
+    const smartPanelFavImg = document.querySelector('.smart-btn[data-target="#toggle-favorite"] img');
+    
+    if (!favBtnImg || typeof isFavorite !== 'function') return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentQ = urlParams.get('q');
+    
+    const saved = isFavorite(currentQ); 
+    const iconPath = saved ? '/assets/svg/star-solid.svg' : '/assets/svg/star.svg';
+    
+    favBtnImg.src = iconPath;
+    if (smartPanelFavImg) smartPanelFavImg.src = iconPath;
+}
+
+// 3. Инициализация клика по звездочке
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(updateFavoriteIconState, 100);
+
+    const favButton = document.getElementById('toggle-favorite');
+    if (favButton) {
+        favButton.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const positionData = await getCurrentReadingPosition(); 
+            if (positionData && typeof toggleFavoriteGlobal === 'function') {
+                toggleFavoriteGlobal(positionData); 
+                updateFavoriteIconState(); 
+                
+                if (typeof window.syncSmartIcons === 'function') {
+                    setTimeout(window.syncSmartIcons, 50);
+                }
+            }
+        });
+    }
+});
+
+// 4. Синхронизация при переходах Вперед/Назад или по стрелочкам внутри читалки
+const originalPushState = history.pushState;
+history.pushState = function() {
+    originalPushState.apply(this, arguments);
+    if (typeof updateFavoriteIconState === 'function') {
+        setTimeout(updateFavoriteIconState, 50);
+    }
+};
+
+window.addEventListener('popstate', () => {
+    if (typeof updateFavoriteIconState === 'function') {
+        setTimeout(updateFavoriteIconState, 50);
+    }
+});
+
+// 5. Синхронизация при открытии смарт-панели (шестеренки)
+document.addEventListener('click', (e) => {
+    const isGearClick = e.target.closest('#smart-gear-btn') || e.target.closest('.smart-btn');
+    if (isGearClick && typeof updateFavoriteIconState === 'function') {
+        updateFavoriteIconState();
+    }
+});

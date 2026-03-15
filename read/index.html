@@ -170,6 +170,16 @@ function cleanPaliText(text) {
   <img src="/assets/svg/select-slash.svg" class="common-size-icon4" style="margin-top: 0px;">
 </a>
 
+    <div id="favorite-button" style="display: none;">
+        <a title="Add to favorites (Alt+F)" id="toggle-favorite" href="javascript:void(0);" class="toggle-icon text-decoration-none text-black">
+            <img alt="Favorite" src="/assets/svg/star.svg" class="common-size-icon4 fav-icon-img">
+        </a>
+    </div>
+
+    <div style="display: none;">
+        <a id="toggle-compass" href="javascript:void(0);" onclick="toggleQuickModal()"></a>
+    </div>
+
     <!-- Settings Button -->
     <a alt="Settings" title="Settings (Alt+S)" id="settingsButton" data-bs-toggle="modal" data-bs-target="#settings" href="javascript:void(0);" class="toggle-icon text-decoration-none text-muted">
       <img id="gearRead" src="/assets/svg/gear.svg" class="common-size-icon4">
@@ -476,7 +486,7 @@ More help
 
         <div class="ms-auto d-inline-flex align-items-center">
    <span>en</span>
-   <a class="btn btn-sm btn-secondary btn-language rounded-pill text-decoration-none ms-1" href="#" data-lang="ru">ru</a>
+   <a style="color:#fff !important;" class="btn btn-sm btn-secondary btn-language rounded-pill text-decoration-none text-white ms-1" href="#" data-lang="ru">ru</a>
 <span class="mx-1 text-muted">Ctrl+1</span>
             
      </div>        
@@ -756,6 +766,15 @@ alt="DPPN search icon"></a>
         <button class="smart-btn" data-target="#toggle-multiselect" title="Multiselect for dictionary">
              <img src="/assets/svg/select-slash.svg" alt="Select">
         </button>
+        
+        <button class="smart-btn" data-target="#toggle-favorite" title="Favorites (Alt+F)">
+            <img src="/assets/svg/star.svg" alt="Favorite">
+        </button>
+
+        <button class="smart-btn" data-target="#toggle-compass" title="History and Quick Links">
+            <img src="/assets/svg/compass.svg" alt="Compass">
+        </button>
+
         
         <button class="smart-btn" data-target="#settingsButton" title="Settings (Alt+S)">
              <img src="/assets/svg/gear.svg" alt="Settings">
