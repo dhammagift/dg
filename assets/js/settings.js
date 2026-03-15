@@ -1402,9 +1402,16 @@ function createQuickModal() {
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .compact-list a:hover { color: ${linkColorPrimary}; }
-    
+ 
+     /* Желтая звездочка только для вкладки Избранное */
     .fav-star-icon { color: #f39c12; font-size: 1.4rem; }
-    .toggle-fav-btn-hist { color: #f39c12; font-size: 1.4rem; }
+    
+    /* Серая звездочка-переключатель для Истории (как крестик) */
+    .toggle-fav-btn-hist { color: #888; font-size: 1.4rem; }
+    
+    /* (Опционально) Она будет слегка желтеть при наведении, чтобы было понятно, что на нее можно нажать */
+    .toggle-fav-btn-hist:hover { color: #f39c12; }
+
     .hist-icon { color: #888; font-size: 0.9rem; }
     .item-date { font-size: 0.75rem; color: #888; min-width: 65px; text-align: right; }
 
