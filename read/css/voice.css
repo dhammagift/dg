@@ -422,11 +422,8 @@ body[data-theme="dark"] #sutta span[id]:has(.tts-active) {
 }
 
 /* Выравнивание плеера и боковых кнопок в одну горизонтальную линию на широких экранах */
-@media (min-width: 440px) {
+@media (min-width: 450px) {
     .voice-dropdown.active .voice-player {
-        /* Опускаем плеер (изначально он на bottom: 50px). 
-           translateY(15px) смещает его вниз, делая визуальный отступ снизу около 35px, 
-           что идеально ровняет его с центрами боковых кнопок (у которых bottom: 30px). */
         transform: translate(-50%, 25px);
     }
 }
