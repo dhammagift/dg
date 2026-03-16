@@ -124,8 +124,14 @@
             .dark .mem-pick-btn.set { border-color: rgb(122, 122, 249); color: #fff; }
             .dark .mem-status { color: rgb(122, 122, 249); }
 
-            .memorize-highlight { border-left: 3px solid var(--blue, #3434be) !important; background-color: rgba(52, 52, 190, 0.05); padding-left: 5px !important; }
-            .dark .memorize-highlight { border-left: 3px solid rgb(122, 122, 249) !important; background-color: rgba(122, 122, 249, 0.1); }
+            /* Только линия слева, БЕЗ ФОНА для совместимости с tts-active */
+            .memorize-highlight { 
+                border-left: 3px solid var(--blue, #3434be) !important; 
+                padding-left: 5px !important; 
+            }
+            .dark .memorize-highlight { 
+                border-left: 3px solid rgb(122, 122, 249) !important; 
+            }
             
             /* Железобетонная защита синей линии от сброса (border: none !important) во время чтения TTS */
             #sutta span[id]:has(.tts-active) .memorize-highlight.tts-active,
@@ -137,8 +143,6 @@
             .dark #sutta span[id]:has(.tts-active) .memorize-highlight.active-word {
                 border-left: 3px solid rgb(122, 122, 249) !important;
             }
-
-
 
             .mem-label { font-size: 11px; color: #aaa; margin: 0; display: flex; align-items: center; gap: 5px; }
             .mem-input { width: 42px; background: #eee; border: 1px solid #ccc; color: #333; border-radius: 4px; padding: 2px; font-size: 11px; text-align: center; transition: background 0.3s, color 0.3s; }
