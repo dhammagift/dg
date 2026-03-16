@@ -485,6 +485,7 @@
                         const id = activeWord.id || activeWord.closest('[id]')?.id;
                         if (id) {
                             setLine('A', id, activeWord);
+                            pauseTTS(); // <--- ДОБАВЛЕНО: Ставим на паузу, так как А успешно захвачена
                             activatePickMode('B');
                         } else {
                             activatePickMode('A'); 
@@ -514,7 +515,9 @@
                     const id = textEl.id || textEl.closest('[id]')?.id;
                     if (id) {
                         setLine(memState.pickMode, id, textEl);
+                        
                         if (memState.pickMode === 'A' && !memState.lineB) {
+                            pauseTTS(); // <--- ДОБАВЛЕНО: Пользователь кликнул на А, ставим на паузу и ждем Б
                             activatePickMode('B');
                         } else {
                             memState.pickMode = null;
@@ -531,15 +534,13 @@
                                     updateABTimerDisplay();
                                 }
                                 armLoopInPlayer(true, true); 
-                                playCurrentRange(); 
+                                playCurrentRange(); // <--- Здесь уже автоматически запускается цикл после установки Б
                             }
                         }
                     }
-                } else if (!e.target.closest('#memorize-panel') && !e.target.closest('.voice-player')) {
-                    memState.pickMode = null;
-                    updateUI();
                 }
             }
+
         }, { capture: true });
 
         document.addEventListener('contextmenu', (e) => {
@@ -608,10 +609,8 @@
         updateABTimerDisplay();
     }
 
-    function activatePickMode(line) {
-        if (memState.isActive) {
-            stopCycle(); 
-        } else if (window.ttsAPI) {
+    function pauseTTS() {
+        if (window.ttsAPI) {
             const state = window.ttsAPI.getState();
             if (state.speaking && !state.paused) {
                 memState.ignoreNextPlayClick = true; 
@@ -619,6 +618,13 @@
                 if (playBtn) playBtn.click();
             }
         }
+    }
+
+    function activatePickMode(line) {
+        if (memState.isActive) {
+            stopCycle(); 
+        }
+        // Пауза отсюда удалена! Теперь плеер продолжает играть, пока мы ищем точку A
         memState.pickMode = line;
         updateUI();
     }

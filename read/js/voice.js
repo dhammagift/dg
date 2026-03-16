@@ -274,7 +274,7 @@ function cleanTextForTTS(text) {
   let clean = text
     .replace(/[Пп]ер\./g, 'Перевод') 
     .replace(/Англ,/g, 'английского,') 
-    .replace(/[Рр]ед\./g, 'отредактировано') 
+    .replace(/ [Рр]ед\./g, ' отредактировано') 
 
     .replace(/Trn:/g, 'Translated by') 
     .replace(/Pāḷi MS/g, 'पालि महासङ्गीति')
