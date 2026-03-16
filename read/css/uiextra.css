@@ -774,14 +774,6 @@
     z-index: 1002;
   }
 
-  #smart-gear-btn {
-    width: 36px;
-    height: 36px;
-    opacity: 0.95;
-    transform: translateY(0) scale(1);
-    visibility: visible;
-    pointer-events: auto;
-  }
 
   #smart-panel {
     position: fixed;

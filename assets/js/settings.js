@@ -1383,7 +1383,7 @@ function createQuickModal() {
     /* === ОГРАНИЧЕНИЕ ВЫСОТЫ И СКРОЛЛ ДЛЯ СПИСКОВ === */
     #quick-favorites-container, #quick-history-container {
         max-height: 520px; /* Увеличено до ~16 элементов */
-        overflow-y: auto;
+        overflow-y: hidden;
         padding-right: 5px;
     }
     
@@ -1501,6 +1501,57 @@ function createQuickModal() {
         max-height: 45vh; 
       }
     }
+    
+        /* АЛЬБОМНАЯ ОРИЕНТАЦИЯ (Ноутбуки и планшеты с небольшой высотой) */
+    @media (min-width: 501px) and (max-height: 850px) and (orientation: landscape) {
+      /* Делаем само окно чуть более компактным по максимальной высоте */
+      .quick-modal-container {
+         max-height: 85vh !important;
+      }
+      
+      /* Уменьшаем высоту стандартных вкладок */
+      .quick-tab-content { 
+        height: 45vh !important; 
+        min-height: 280px !important; 
+      }
+      
+      /* Переопределяем жесткие инлайн-стили вкладки со словарем */
+      #tab-dpd {
+        height: 50vh !important;
+        min-height: 320px !important;
+      }
+      
+      /* Ограничиваем высоту списков истории и избранного, чтобы они не выталкивали контент */
+      #quick-favorites-container, #quick-history-container {
+        max-height: 40vh !important; 
+      }
+    }
+
+        /* АЛЬБОМНАЯ ОРИЕНТАЦИЯ (Ноутбуки и планшеты с небольшой высотой) */
+    @media (min-width: 501px) and (max-height: 850px) and (orientation: landscape) {
+      /* Делаем само окно чуть более компактным по максимальной высоте */
+      .quick-modal-container {
+         max-height: 75vh !important;
+      }
+      
+      /* Уменьшаем высоту стандартных вкладок */
+      .quick-tab-content { 
+        height: 40vh !important; 
+        min-height: 280px !important; 
+      }
+      
+      /* Переопределяем жесткие инлайн-стили вкладки со словарем */
+      #tab-dpd {
+        height: 40vh !important;
+        min-height: 320px !important;
+      }
+      
+      /* Ограничиваем высоту списков истории и избранного, чтобы они не выталкивали контент */
+      #quick-favorites-container, #quick-history-container {
+        max-height: 40vh !important; 
+      }
+    }
+
   `;
   document.head.appendChild(styleTag);
 
