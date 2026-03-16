@@ -134,7 +134,6 @@
             .memorize-highlight { 
                 border-left: 3px solid var(--blue, #3434be) !important; 
                 padding-left: 5px !important; 
-                /* Магия слияния линии: внешний отступ делаем внутренним */
                 margin-bottom: 0 !important;
                 padding-bottom: 4px !important;
             }
@@ -142,7 +141,7 @@
                 border-left: 3px solid rgb(122, 122, 249) !important; 
             }
             
-            /* Железобетонная защита синей линии от сброса (border: none !important) во время чтения TTS */
+            /* Железобетонная защита синей линии от сброса во время чтения TTS */
             #sutta span[id]:has(.tts-active) .memorize-highlight.tts-active,
             #sutta span[id]:has(.tts-active) .memorize-highlight.active-word {
                 border-left: 3px solid var(--blue, #3434be) !important;
@@ -208,7 +207,7 @@
                     </div>
                     
                     <div class="mem-row" style="justify-content: space-around; gap: 5px;">
-                        <label class="mem-label">⌛ <input id="mem-interval" class="mem-input" type="number" min="0" step="0.1" value="${memState.intervalMinutes}"> ${L.interval}</label>
+                        <label class="mem-label">⌛ <input id="mem-interval" class="mem-input" type="number" min="0" step="0.5" value="${memState.intervalMinutes}"> ${L.interval}</label>
                         <label class="mem-label">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.2v-2a4 4 0 0 1 4-4h12.8M7 21.9l-4-4 4-4"/><path d="M21 11.8v2a4 4 0 0 1-4 4H4.2"/></svg> 
                             <input id="mem-reps" class="mem-input" type="${repsType}" min="0" step="1" value="${memState.repsInput}">
@@ -304,32 +303,36 @@
         }
     }
 
-    function armLoopInPlayer(isNewStart = false) {
+    // Добавлен флаг forceJumpToLoop, который запрещает "Умный выход" и заставляет плеер подчиниться А-Б циклу
+    function armLoopInPlayer(isNewStart = false, forceJumpToLoop = false) {
         if (!memState.lineA || !window.ttsAPI) return;
         const state = window.ttsAPI.getState();
-        if (!state.playlist || !state.playlist.length) return;
         
-        const targetB = memState.lineB || memState.lineA;
-        let sIdx = state.playlist.findIndex(item => item.id === memState.lineA);
-        let eIdx = state.playlist.findIndex(item => item.id === targetB);
-        
-        if (sIdx === -1) sIdx = 0;
-        if (eIdx === -1) eIdx = state.playlist.length - 1;
+        // Если плейлист уже существует (воспроизведение было активно)
+        if (state.playlist && state.playlist.length) {
+            const targetB = memState.lineB || memState.lineA;
+            let sIdx = state.playlist.findIndex(item => item.id === memState.lineA);
+            let eIdx = state.playlist.findIndex(item => item.id === targetB);
+            
+            if (sIdx === -1) sIdx = 0;
+            if (eIdx === -1) eIdx = state.playlist.length - 1;
 
-        // --- УМНЫЙ ВЫХОД (Smart Exit) ---
-        // Если пользователь запустил аудио за пределами границ лупа
-        if (isNewStart && (state.currentIndex < sIdx || state.currentIndex > eIdx)) {
-            clearLineAction('ALL', true); // Очищаем АБ, но оставляем музыку играть
-            return;
+            // --- УМНЫЙ ВЫХОД (Smart Exit) ---
+            // Срабатывает только если мы НЕ форсируем переход (то есть пользователь кликнул сам)
+            if (!forceJumpToLoop && isNewStart && (state.currentIndex < sIdx || state.currentIndex > eIdx)) {
+                clearLineAction('ALL', true); // Очищаем АБ, но оставляем музыку играть
+                return;
+            }
+
+            state.startIndex = sIdx;
+            state.endIndex = eIdx;
+            
+            if (forceJumpToLoop || isNewStart || state.currentIndex < sIdx || state.currentIndex > eIdx) {
+                state.currentIndex = sIdx;
+            }
         }
 
-        state.startIndex = sIdx;
-        state.endIndex = eIdx;
-        
-        if (isNewStart || state.currentIndex < sIdx || state.currentIndex > eIdx) {
-            state.currentIndex = sIdx;
-        }
-
+        // Железобетонно включаем статус
         memState.isActive = true;
         if (isNewStart) {
             memState.repsPlayed = 0;
@@ -349,7 +352,8 @@
     function setupListeners() {
         document.addEventListener('tts-playback-started', () => {
             if (memState.lineA) {
-                armLoopInPlayer(true);
+                // Если старт пошел сам по себе (клик по слову), допускаем умный выход
+                armLoopInPlayer(true, false);
             }
         });
 
@@ -434,22 +438,25 @@
                 if (window.ttsAPI) {
                     const state = window.ttsAPI.getState();
 
+                    // Если цикл не активен или плеер молчит (новый старт из панели А-Б)
                     if (!memState.isActive || !state.speaking) {
                         e.preventDefault();
                         e.stopPropagation(); 
                         
-                        armLoopInPlayer(true);
+                        // ФОРСИРУЕМ запуск внутри цикла, отменяя Smart Exit
+                        armLoopInPlayer(true, true);
                         playCurrentRange();
                         return;
                     }
 
+                    // Если цикл активен и стоял на паузе
                     if (state.paused) {
-                        armLoopInPlayer(false);
+                        armLoopInPlayer(false, true);
                     }
                 }
             }
 
-            // Мягкий выход по нажатию на корзину (true = оставить плеер включенным)
+            // Нажатие на корзину
             if (e.target.closest('#mem-clear-btn')) {
                 e.preventDefault();
                 clearLineAction('ALL', true);
@@ -513,6 +520,7 @@
                             memState.pickMode = null;
                             updateUI();
                             
+                            // Когда выбраны обе границы, ФОРСИРУЕМ цикл (Smart Exit не сработает)
                             if (memState.lineA && memState.lineB) {
                                 if (memState.countdownId) {
                                     clearInterval(memState.countdownId);
@@ -522,6 +530,7 @@
                                     memState.currentCountdownTime = null;
                                     updateABTimerDisplay();
                                 }
+                                armLoopInPlayer(true, true); 
                                 playCurrentRange(); 
                             }
                         }
@@ -560,7 +569,6 @@
         document.addEventListener('tts-range-finished', handleRangeFinished);
     }
 
-    // Умный выход с флагом keepPlaying
     function clearLineAction(line, keepPlaying = false) {
         if (memState.isActive) {
             if (!keepPlaying) {
@@ -589,7 +597,6 @@
             if (memState.pickMode === line) memState.pickMode = null;
         }
         
-        // Разблокируем чтение за пределы, убирая индексы из voice.js
         if (!memState.lineA && window.ttsAPI) {
             const state = window.ttsAPI.getState();
             state.startIndex = undefined;
