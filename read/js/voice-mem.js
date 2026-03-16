@@ -23,8 +23,8 @@
         lineB: null,
         snippetA: '', 
         snippetB: '', 
-        intervalMinutes: 1,
-        repsInput: '10', 
+        intervalMinutes: 0,
+        repsInput: '∞', 
         repsPlayed: 0,   
         repsLeft: 0,     
         isActive: false,
@@ -38,8 +38,14 @@
         isPanelOpen: false 
     };
 
-    const getSlug = () => window.location.pathname.replace(/[^a-zA-Z0-9]/g, '_');
-    const STORAGE_KEY = () => `mem_state_${getSlug()}`;
+    const getSlug = () => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('q')) return params.get('q').toLowerCase();
+        return window.location.pathname.replace(/[^a-zA-Z0-9]/g, '_');
+    };
+
+    const MEMORY_KEY = 'tts_ab_memory';
+    const MAX_SAVED_TEXTS = 28;
 
     // --- Инициализация и UI ---
     function init() {
@@ -124,10 +130,13 @@
             .dark .mem-pick-btn.set { border-color: rgb(122, 122, 249); color: #fff; }
             .dark .mem-status { color: rgb(122, 122, 249); }
 
-            /* Только линия слева, БЕЗ ФОНА для совместимости с tts-active */
+            /* Слитная линия слева, БЕЗ ФОНА для совместимости с tts-active */
             .memorize-highlight { 
                 border-left: 3px solid var(--blue, #3434be) !important; 
                 padding-left: 5px !important; 
+                /* Магия слияния линии: внешний отступ делаем внутренним */
+                margin-bottom: 0 !important;
+                padding-bottom: 4px !important;
             }
             .dark .memorize-highlight { 
                 border-left: 3px solid rgb(122, 122, 249) !important; 
@@ -138,6 +147,8 @@
             #sutta span[id]:has(.tts-active) .memorize-highlight.active-word {
                 border-left: 3px solid var(--blue, #3434be) !important;
                 padding-left: 5px !important;
+                margin-bottom: 0 !important;
+                padding-bottom: 4px !important;
             }
             .dark #sutta span[id]:has(.tts-active) .memorize-highlight.tts-active,
             .dark #sutta span[id]:has(.tts-active) .memorize-highlight.active-word {
@@ -216,27 +227,49 @@
 
     function loadState() {
         try {
-            const saved = JSON.parse(localStorage.getItem(STORAGE_KEY()));
+            const slug = getSlug();
+            const memory = JSON.parse(localStorage.getItem(MEMORY_KEY)) || {};
+            const saved = memory[slug];
+            
             if (saved) {
                 memState.lineA = saved.lineA;
                 memState.lineB = saved.lineB;
                 memState.snippetA = saved.snippetA || '';
                 memState.snippetB = saved.snippetB || '';
-                memState.intervalMinutes = saved.intervalMinutes !== undefined ? saved.intervalMinutes : 1;
-                memState.repsInput = saved.repsInput || '10'; 
+                memState.intervalMinutes = saved.intervalMinutes !== undefined ? saved.intervalMinutes : 0;
+                memState.repsInput = saved.repsInput || '∞'; 
             }
         } catch(e) {}
     }
 
     function saveState() {
-        localStorage.setItem(STORAGE_KEY(), JSON.stringify({
-            lineA: memState.lineA,
-            lineB: memState.lineB,
-            snippetA: memState.snippetA,
-            snippetB: memState.snippetB,
-            intervalMinutes: memState.intervalMinutes,
-            repsInput: memState.repsInput
-        }));
+        try {
+            const slug = getSlug();
+            let memory = JSON.parse(localStorage.getItem(MEMORY_KEY)) || {};
+            
+            memory[slug] = {
+                lineA: memState.lineA,
+                lineB: memState.lineB,
+                snippetA: memState.snippetA,
+                snippetB: memState.snippetB,
+                intervalMinutes: memState.intervalMinutes,
+                repsInput: memState.repsInput,
+                timestamp: Date.now()
+            };
+
+            if (!memState.lineA && !memState.lineB) {
+                delete memory[slug];
+            }
+
+            const keys = Object.keys(memory);
+            if (keys.length > MAX_SAVED_TEXTS) {
+                const sortedKeys = keys.sort((a, b) => (memory[a].timestamp || 0) - (memory[b].timestamp || 0));
+                const keysToRemove = sortedKeys.slice(0, keys.length - MAX_SAVED_TEXTS);
+                keysToRemove.forEach(k => delete memory[k]);
+            }
+
+            localStorage.setItem(MEMORY_KEY, JSON.stringify(memory));
+        } catch(e) {}
     }
 
     function extractSnippet(el) {
@@ -261,7 +294,6 @@
         }
     }
 
-    // Динамический пересчет "Осталось раз"
     function updateRepsLeft() {
         if (memState.repsInput === '∞' || memState.repsInput === '' || memState.repsInput === '0') {
             memState.repsLeft = Infinity;
@@ -272,7 +304,7 @@
         }
     }
 
-    function armLoopInPlayer() {
+    function armLoopInPlayer(isNewStart = false) {
         if (!memState.lineA || !window.ttsAPI) return;
         const state = window.ttsAPI.getState();
         if (!state.playlist || !state.playlist.length) return;
@@ -284,15 +316,25 @@
         if (sIdx === -1) sIdx = 0;
         if (eIdx === -1) eIdx = state.playlist.length - 1;
 
+        // --- УМНЫЙ ВЫХОД (Smart Exit) ---
+        // Если пользователь запустил аудио за пределами границ лупа
+        if (isNewStart && (state.currentIndex < sIdx || state.currentIndex > eIdx)) {
+            clearLineAction('ALL', true); // Очищаем АБ, но оставляем музыку играть
+            return;
+        }
+
         state.startIndex = sIdx;
         state.endIndex = eIdx;
         
-        if (state.currentIndex < sIdx || state.currentIndex > eIdx) {
+        if (isNewStart || state.currentIndex < sIdx || state.currentIndex > eIdx) {
             state.currentIndex = sIdx;
         }
 
         memState.isActive = true;
-        memState.repsPlayed = 0; // Сбрасываем счетчик при новом старте
+        if (isNewStart) {
+            memState.repsPlayed = 0;
+        }
+        
         updateRepsLeft();
         
         memState.currentCountdownTime = null; 
@@ -307,7 +349,7 @@
     function setupListeners() {
         document.addEventListener('tts-playback-started', () => {
             if (memState.lineA) {
-                armLoopInPlayer();
+                armLoopInPlayer(true);
             }
         });
 
@@ -339,9 +381,7 @@
                     memState.repsInput = e.target.value;
                 }
                 
-                // РУЧНОЕ ИЗМЕНЕНИЕ ПОВТОРОВ = СБРОС ПРОИГРАННЫХ РАЗ
                 memState.repsPlayed = 0; 
-                
                 updateRepsLeft();
                 if (memState.isActive && !memState.currentCountdownTime) {
                     const statusEl = document.getElementById('mem-status');
@@ -367,7 +407,6 @@
                     e.target.type = 'text';
                     e.target.value = '∞';
                     memState.repsInput = '∞';
-                    
                     memState.repsPlayed = 0;
                     updateRepsLeft();
                     saveState();
@@ -392,14 +431,28 @@
                     updateABTimerDisplay();
                 }
 
-                if (window.ttsAPI && window.ttsAPI.getState().paused) {
-                    armLoopInPlayer();
+                if (window.ttsAPI) {
+                    const state = window.ttsAPI.getState();
+
+                    if (!memState.isActive || !state.speaking) {
+                        e.preventDefault();
+                        e.stopPropagation(); 
+                        
+                        armLoopInPlayer(true);
+                        playCurrentRange();
+                        return;
+                    }
+
+                    if (state.paused) {
+                        armLoopInPlayer(false);
+                    }
                 }
             }
 
+            // Мягкий выход по нажатию на корзину (true = оставить плеер включенным)
             if (e.target.closest('#mem-clear-btn')) {
                 e.preventDefault();
-                clearLineAction('ALL');
+                clearLineAction('ALL', true);
                 return;
             }
 
@@ -418,7 +471,6 @@
                 
                 updateABTimerDisplay(); 
                 
-                // --- УМНАЯ АВТОПОДСТАНОВКА (Только active-word) ---
                 if (memState.isPanelOpen && !memState.lineA) {
                     const activeWord = document.querySelector('.active-word');
 
@@ -426,18 +478,16 @@
                         const id = activeWord.id || activeWord.closest('[id]')?.id;
                         if (id) {
                             setLine('A', id, activeWord);
-                            activatePickMode('B'); // Слово выделено -> просим Б
+                            activatePickMode('B');
                         } else {
-                            activatePickMode('A'); // Защита от ошибок
+                            activatePickMode('A'); 
                         }
                     } else {
-                        // Ничего не выделено -> просим выбрать А
                         activatePickMode('A');
                     }
                 }
                 return;
             }
-
 
             const btnA = e.target.closest('#mem-btn-a');
             const btnB = e.target.closest('#mem-btn-b');
@@ -457,10 +507,23 @@
                     const id = textEl.id || textEl.closest('[id]')?.id;
                     if (id) {
                         setLine(memState.pickMode, id, textEl);
-                        if (memState.pickMode === 'A' && !memState.lineB) activatePickMode('B');
-                        else {
+                        if (memState.pickMode === 'A' && !memState.lineB) {
+                            activatePickMode('B');
+                        } else {
                             memState.pickMode = null;
                             updateUI();
+                            
+                            if (memState.lineA && memState.lineB) {
+                                if (memState.countdownId) {
+                                    clearInterval(memState.countdownId);
+                                    memState.countdownId = null;
+                                    memState.pauseStartedAt = null;
+                                    memState.targetTimestamp = null;
+                                    memState.currentCountdownTime = null;
+                                    updateABTimerDisplay();
+                                }
+                                playCurrentRange(); 
+                            }
                         }
                     }
                 } else if (!e.target.closest('#memorize-panel') && !e.target.closest('.voice-player')) {
@@ -474,7 +537,7 @@
             const btn = e.target.closest('.mem-pick-btn');
             if (btn) {
                 e.preventDefault();
-                clearLineAction(btn.id === 'mem-btn-a' ? 'A' : 'B');
+                clearLineAction(btn.id === 'mem-btn-a' ? 'A' : 'B', true);
             }
         });
 
@@ -484,7 +547,7 @@
             if (btn) {
                 pressTimer = setTimeout(() => {
                     memState.justCleared = true; 
-                    clearLineAction(btn.id === 'mem-btn-a' ? 'A' : 'B');
+                    clearLineAction(btn.id === 'mem-btn-a' ? 'A' : 'B', true);
                     if (navigator.vibrate) navigator.vibrate(50);
                     setTimeout(() => memState.justCleared = false, 500); 
                 }, 600);
@@ -497,8 +560,20 @@
         document.addEventListener('tts-range-finished', handleRangeFinished);
     }
 
-    function clearLineAction(line) {
-        if (memState.isActive) stopCycle(); 
+    // Умный выход с флагом keepPlaying
+    function clearLineAction(line, keepPlaying = false) {
+        if (memState.isActive) {
+            if (!keepPlaying) {
+                stopCycle(); 
+            } else {
+                clearInterval(memState.countdownId);
+                memState.countdownId = null;
+                memState.pauseStartedAt = null;
+                memState.targetTimestamp = null;
+                memState.currentCountdownTime = null;
+                memState.isActive = false;
+            }
+        } 
         
         if (line === 'ALL') {
             setLine('A', null, null);
@@ -514,6 +589,7 @@
             if (memState.pickMode === line) memState.pickMode = null;
         }
         
+        // Разблокируем чтение за пределы, убирая индексы из voice.js
         if (!memState.lineA && window.ttsAPI) {
             const state = window.ttsAPI.getState();
             state.startIndex = undefined;
@@ -576,8 +652,13 @@
         
         elements.forEach(el => {
             const id = el.id || el.closest('[id]')?.id;
+            
             if (id === memState.lineA) inRange = true;
-            if (inRange) el.classList.add('memorize-highlight');
+            
+            if (inRange || id === targetB) {
+                el.classList.add('memorize-highlight');
+            }
+            
             if (id === targetB) inRange = false;
         });
     }
@@ -640,7 +721,7 @@
     }
 
     function playCurrentRange() {
-        if (!memState.isActive || !window.ttsAPI) return;
+        if (!memState.lineA || !window.ttsAPI) return; 
         
         memState.currentCountdownTime = null; 
         updateABTimerDisplay();
