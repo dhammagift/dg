@@ -24,16 +24,18 @@
         snippetA: '', 
         snippetB: '', 
         intervalMinutes: 1,
-        repsInput: '10',
-        repsLeft: 0,
+        repsInput: '10', 
+        repsPlayed: 0,   
+        repsLeft: 0,     
         isActive: false,
         pickMode: null, 
-        timerId: null,
         countdownId: null,
+        pauseStartedAt: null,   
+        targetTimestamp: null,  
         justCleared: false,
         currentCountdownTime: null,
         ignoreNextPlayClick: false,
-        isPanelOpen: false // Флаг: открыто ли меню пользователем
+        isPanelOpen: false 
     };
 
     const getSlug = () => window.location.pathname.replace(/[^a-zA-Z0-9]/g, '_');
@@ -50,7 +52,6 @@
     function injectStyles() {
         const style = document.createElement('style');
         style.textContent = `
-            /* Компактная "парящая" кнопка AB */
             .ab-loop-toggle-btn {
                 position: absolute;
                 right: 20px; 
@@ -75,7 +76,6 @@
             .dark .ab-loop-toggle-btn { border-color: #555; color: #aaa; }
             .dark .ab-loop-toggle-btn:hover { background: #444; color: #fff; border-color: #777; }
             
-            /* Подсветка активного состояния цикла */
             .ab-loop-toggle-btn.loop-active {
                 color: var(--blue, #3434be);
                 border-color: var(--blue, #3434be);
@@ -87,8 +87,9 @@
                 background: rgba(122, 122, 249, 0.1);
             }
 
-            /* Панель настроек A-B */
             #memorize-panel {
+                width: 100%;
+                box-sizing: border-box;
                 max-height: 0; opacity: 0; overflow: hidden;
                 transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
                 border-top: 1px dashed #555;
@@ -98,10 +99,17 @@
             #memorize-panel.visible {
                 max-height: 400px; opacity: 1; margin-top: 10px; padding-top: 8px;
             }
-            .mem-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; }
+            .mem-row { 
+                width: 100%; box-sizing: border-box; 
+                display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; 
+            }
             
+            .mem-btn-wrapper { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; }
+            .mem-btn-label { color: #aaa; font-size: 11px; flex-shrink: 0; font-weight: 600; }
+
             .mem-pick-btn {
-                flex: 1; background: #eee; border: 1px dashed #ccc; color: #555;
+                flex: 1; min-width: 0; 
+                background: #eee; border: 1px dashed #ccc; color: #555;
                 padding: 4px; border-radius: 4px; font-size: 11px; cursor: pointer;
                 transition: all 0.2s; text-align: left; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
                 user-select: none; -webkit-user-select: none; 
@@ -111,15 +119,29 @@
             .mem-pick-btn.picking { border-color: var(--blue, #3434be); background: rgba(52, 52, 190, 0.1); animation: memPulseLight 1.5s infinite; color: #333; }
             .mem-pick-btn.set { border-color: var(--blue, #3434be); border-style: solid; color: #000; }
             .mem-status { font-size: 11px; color: var(--blue, #3434be); text-align: center; margin-top: 2px; min-height: 14px; }
-            .memorize-highlight { border-left: 3px solid var(--blue, #3434be); background-color: rgba(52, 52, 190, 0.05); padding-left: 5px; }
-            
+
             .dark .mem-pick-btn.picking { border-color: rgb(122, 122, 249); background: rgba(122, 122, 249, 0.15); animation: memPulseDark 1.5s infinite; color: #fff; }
             .dark .mem-pick-btn.set { border-color: rgb(122, 122, 249); color: #fff; }
             .dark .mem-status { color: rgb(122, 122, 249); }
-            .dark .memorize-highlight { border-left: 3px solid rgb(122, 122, 249); background-color: rgba(122, 122, 249, 0.1); }
+
+            .memorize-highlight { border-left: 3px solid var(--blue, #3434be) !important; background-color: rgba(52, 52, 190, 0.05); padding-left: 5px !important; }
+            .dark .memorize-highlight { border-left: 3px solid rgb(122, 122, 249) !important; background-color: rgba(122, 122, 249, 0.1); }
             
+            /* Железобетонная защита синей линии от сброса (border: none !important) во время чтения TTS */
+            #sutta span[id]:has(.tts-active) .memorize-highlight.tts-active,
+            #sutta span[id]:has(.tts-active) .memorize-highlight.active-word {
+                border-left: 3px solid var(--blue, #3434be) !important;
+                padding-left: 5px !important;
+            }
+            .dark #sutta span[id]:has(.tts-active) .memorize-highlight.tts-active,
+            .dark #sutta span[id]:has(.tts-active) .memorize-highlight.active-word {
+                border-left: 3px solid rgb(122, 122, 249) !important;
+            }
+
+
+
             .mem-label { font-size: 11px; color: #aaa; margin: 0; display: flex; align-items: center; gap: 5px; }
-            .mem-input { width: 36px; background: #eee; border: 1px solid #ccc; color: #333; border-radius: 4px; padding: 2px 2px; font-size: 11px; text-align: center; transition: background 0.3s, color 0.3s; }
+            .mem-input { width: 42px; background: #eee; border: 1px solid #ccc; color: #333; border-radius: 4px; padding: 2px; font-size: 11px; text-align: center; transition: background 0.3s, color 0.3s; }
             .dark .mem-input { background: #333; border: 1px solid #555; color: #ccc; }
 
             .mem-clear-btn {
@@ -134,7 +156,6 @@
         document.head.appendChild(style);
     }
 
-    // --- Умное внедрение интерфейса ---
     function injectUI() {
         setInterval(() => {
             const mainRow = document.querySelector('.tts-main-row');
@@ -142,7 +163,6 @@
                 
                 mainRow.style.position = 'relative';
 
-                // Парящая кнопка с местом под таймер
                 const abBtn = document.createElement('button');
                 abBtn.id = 'ab-loop-toggle-btn';
                 abBtn.className = `ab-loop-toggle-btn ${memState.lineA ? 'loop-active' : ''}`;
@@ -154,23 +174,29 @@
                 `;
                 mainRow.appendChild(abBtn);
 
-                // Панель настроек (без Play, но с Корзиной)
                 const panel = document.createElement('div');
                 panel.id = 'memorize-panel';
-                // Меню разворачивается только если флаг isPanelOpen = true
                 if (memState.isPanelOpen) panel.classList.add('visible');
                 
+                const repsType = memState.repsInput === '∞' ? 'text' : 'number';
+
                 panel.innerHTML = `
                     <div class="mem-row">
-                        <button id="mem-btn-a" class="mem-pick-btn" title="${L.titlePick}">${L.a} <span>${L.notSet}</span></button>
-                        <button id="mem-btn-b" class="mem-pick-btn" title="${L.titlePick}">${L.b} <span>${L.notSet}</span></button>
+                        <div class="mem-btn-wrapper">
+                            <span class="mem-btn-label">${L.a}</span>
+                            <button id="mem-btn-a" class="mem-pick-btn" title="${L.titlePick}"><span>${L.notSet}</span></button>
+                        </div>
+                        <div class="mem-btn-wrapper">
+                            <span class="mem-btn-label">${L.b}</span>
+                            <button id="mem-btn-b" class="mem-pick-btn" title="${L.titlePick}"><span>${L.notSet}</span></button>
+                        </div>
                     </div>
                     
                     <div class="mem-row" style="justify-content: space-around; gap: 5px;">
                         <label class="mem-label">⌛ <input id="mem-interval" class="mem-input" type="number" min="0" step="0.1" value="${memState.intervalMinutes}"> ${L.interval}</label>
                         <label class="mem-label">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.2v-2a4 4 0 0 1 4-4h12.8M7 21.9l-4-4 4-4"/><path d="M21 11.8v2a4 4 0 0 1-4 4H4.2"/></svg> 
-                            <input id="mem-reps" class="mem-input" type="text" value="${memState.repsInput}">
+                            <input id="mem-reps" class="mem-input" type="${repsType}" min="0" step="1" value="${memState.repsInput}">
                         </label>
                         <button id="mem-clear-btn" class="mem-clear-btn" title="Сбросить цикл">🗑️</button>
                     </div>
@@ -193,7 +219,7 @@
                 memState.snippetA = saved.snippetA || '';
                 memState.snippetB = saved.snippetB || '';
                 memState.intervalMinutes = saved.intervalMinutes !== undefined ? saved.intervalMinutes : 1;
-                memState.repsInput = saved.repsInput || '10';
+                memState.repsInput = saved.repsInput || '10'; 
             }
         } catch(e) {}
     }
@@ -231,7 +257,17 @@
         }
     }
 
-    // --- Центральный инжектор рамок цикла ---
+    // Динамический пересчет "Осталось раз"
+    function updateRepsLeft() {
+        if (memState.repsInput === '∞' || memState.repsInput === '' || memState.repsInput === '0') {
+            memState.repsLeft = Infinity;
+        } else {
+            let r = parseInt(memState.repsInput);
+            memState.repsLeft = (isNaN(r) ? Infinity : r) - memState.repsPlayed;
+            if (memState.repsLeft < 0) memState.repsLeft = 0;
+        }
+    }
+
     function armLoopInPlayer() {
         if (!memState.lineA || !window.ttsAPI) return;
         const state = window.ttsAPI.getState();
@@ -252,29 +288,90 @@
         }
 
         memState.isActive = true;
-        
-        if (memState.repsLeft <= 0 || memState.repsLeft === Infinity) {
-            const repsVal = document.getElementById('mem-reps').value.trim();
-            memState.repsLeft = (repsVal === '∞' || repsVal === '' || isNaN(repsVal)) ? Infinity : parseInt(repsVal);
-        }
+        memState.repsPlayed = 0; // Сбрасываем счетчик при новом старте
+        updateRepsLeft();
         
         memState.currentCountdownTime = null; 
         updateABTimerDisplay();
-        document.getElementById('mem-status').innerText = `${L.playing}${memState.repsLeft === Infinity ? '∞' : memState.repsLeft})`;
+        
+        const statusEl = document.getElementById('mem-status');
+        if (statusEl) statusEl.innerText = `${L.playing}${memState.repsLeft === Infinity ? '∞' : memState.repsLeft})`;
+        
         updateUI();
     }
 
     function setupListeners() {
-        // Умный перехват событий старта
         document.addEventListener('tts-playback-started', () => {
             if (memState.lineA) {
                 armLoopInPlayer();
             }
         });
 
+        document.addEventListener('focusin', (e) => {
+            if (e.target.id === 'mem-reps') {
+                if (e.target.value === '∞') {
+                    e.target.type = 'number';
+                    e.target.value = '0';
+                }
+            }
+        });
+
+        document.addEventListener('input', (e) => {
+            if (e.target.id === 'mem-interval') {
+                let val = parseFloat(e.target.value);
+                memState.intervalMinutes = isNaN(val) ? 0 : val;
+                
+                if (memState.countdownId && memState.pauseStartedAt) {
+                    memState.targetTimestamp = memState.pauseStartedAt + (memState.intervalMinutes * 60 * 1000);
+                }
+            }
+            if (e.target.id === 'mem-reps') {
+                if (e.target.value === '0') {
+                    e.target.type = 'text';
+                    e.target.value = '∞';
+                    memState.repsInput = '∞';
+                    e.target.blur(); 
+                } else {
+                    memState.repsInput = e.target.value;
+                }
+                
+                // РУЧНОЕ ИЗМЕНЕНИЕ ПОВТОРОВ = СБРОС ПРОИГРАННЫХ РАЗ
+                memState.repsPlayed = 0; 
+                
+                updateRepsLeft();
+                if (memState.isActive && !memState.currentCountdownTime) {
+                    const statusEl = document.getElementById('mem-status');
+                    if (statusEl) statusEl.innerText = `${L.playing}${memState.repsLeft === Infinity ? '∞' : memState.repsLeft})`;
+                }
+            }
+            saveState();
+        });
+
+        document.addEventListener('change', (e) => {
+            if (e.target.id === 'mem-interval') {
+                if (e.target.value.trim() === '') {
+                    e.target.value = '0';
+                    memState.intervalMinutes = 0;
+                    if (memState.countdownId && memState.pauseStartedAt) {
+                        memState.targetTimestamp = memState.pauseStartedAt;
+                    }
+                    saveState();
+                }
+            }
+            if (e.target.id === 'mem-reps') {
+                if (e.target.value.trim() === '' || e.target.value === '0') {
+                    e.target.type = 'text';
+                    e.target.value = '∞';
+                    memState.repsInput = '∞';
+                    
+                    memState.repsPlayed = 0;
+                    updateRepsLeft();
+                    saveState();
+                }
+            }
+        });
+
         document.addEventListener('click', (e) => {
-            
-            // --- ПЕРЕХВАТ КЛИКА ПО PLAY ДЛЯ ПАУЗЫ ИЛИ ВОЗОБНОВЛЕНИЯ ---
             const mainPlayBtn = e.target.closest('.play-main-button');
             if (mainPlayBtn && memState.lineA) {
                 if (memState.ignoreNextPlayClick) {
@@ -283,10 +380,10 @@
                 }
                 
                 if (memState.countdownId) {
-                    clearTimeout(memState.timerId);
                     clearInterval(memState.countdownId);
                     memState.countdownId = null;
-                    memState.timerId = null;
+                    memState.pauseStartedAt = null;
+                    memState.targetTimestamp = null;
                     memState.currentCountdownTime = null;
                     updateABTimerDisplay();
                 }
@@ -296,7 +393,6 @@
                 }
             }
 
-            // --- КОРЗИНА: Сброс в один клик со сворачиванием меню ---
             if (e.target.closest('#mem-clear-btn')) {
                 e.preventDefault();
                 clearLineAction('ALL');
@@ -308,30 +404,36 @@
                 stopCycle();
             }
             
-            // Открытие / закрытие панели
             if (e.target.closest('#ab-loop-toggle-btn')) {
                 e.preventDefault();
                 const panel = document.getElementById('memorize-panel');
                 if (!panel) return;
                 
                 panel.classList.toggle('visible');
-                // Сохраняем состояние, чтобы не сворачивалось при перерисовке плеера
                 memState.isPanelOpen = panel.classList.contains('visible'); 
                 
                 updateABTimerDisplay(); 
                 
+                // --- УМНАЯ АВТОПОДСТАНОВКА (Только active-word) ---
                 if (memState.isPanelOpen && !memState.lineA) {
                     const activeWord = document.querySelector('.active-word');
+
                     if (activeWord) {
                         const id = activeWord.id || activeWord.closest('[id]')?.id;
                         if (id) {
                             setLine('A', id, activeWord);
-                            activatePickMode('B');
+                            activatePickMode('B'); // Слово выделено -> просим Б
+                        } else {
+                            activatePickMode('A'); // Защита от ошибок
                         }
+                    } else {
+                        // Ничего не выделено -> просим выбрать А
+                        activatePickMode('A');
                     }
                 }
                 return;
             }
+
 
             const btnA = e.target.closest('#mem-btn-a');
             const btnB = e.target.closest('#mem-btn-b');
@@ -363,36 +465,6 @@
                 }
             }
         }, { capture: true });
-
-        // Мгновенное сохранение инпутов
-        document.addEventListener('input', (e) => {
-            if (e.target.id === 'mem-interval') {
-                let val = parseFloat(e.target.value);
-                memState.intervalMinutes = isNaN(val) ? 0 : val;
-            }
-            if (e.target.id === 'mem-reps') {
-                memState.repsInput = e.target.value;
-            }
-            saveState();
-        });
-
-        // Умная подстановка 0 и ∞, если стереть значения
-        document.addEventListener('change', (e) => {
-            if (e.target.id === 'mem-interval') {
-                if (e.target.value.trim() === '') {
-                    e.target.value = '0';
-                    memState.intervalMinutes = 0;
-                    saveState();
-                }
-            }
-            if (e.target.id === 'mem-reps') {
-                if (e.target.value.trim() === '') {
-                    e.target.value = '∞';
-                    memState.repsInput = '∞';
-                    saveState();
-                }
-            }
-        });
 
         document.addEventListener('contextmenu', (e) => {
             const btn = e.target.closest('.mem-pick-btn');
@@ -429,7 +501,6 @@
             setLine('B', null, null);
             memState.pickMode = null;
             
-            // Сворачиваем меню
             memState.isPanelOpen = false;
             const panel = document.getElementById('memorize-panel');
             if (panel) panel.classList.remove('visible');
@@ -439,7 +510,6 @@
             if (memState.pickMode === line) memState.pickMode = null;
         }
         
-        // Очищаем рамки в самом плеере, чтобы вернулось обычное чтение
         if (!memState.lineA && window.ttsAPI) {
             const state = window.ttsAPI.getState();
             state.startIndex = undefined;
@@ -522,25 +592,31 @@
         const dispA = memState.lineA ? (memState.snippetA || memState.lineA.split(':').pop()) : L.notSet;
         const dispB = memState.lineB ? (memState.snippetB || memState.lineB.split(':').pop()) : L.notSet;
 
-        btnA.innerHTML = `${L.a} <span>${dispA}</span>`;
-        btnB.innerHTML = `${L.b} <span>${dispB}</span>`;
+        btnA.innerHTML = `<span>${dispA}</span>`;
+        btnB.innerHTML = `<span>${dispB}</span>`;
 
         btnA.className = `mem-pick-btn ${memState.pickMode === 'A' ? 'picking' : ''} ${memState.lineA ? 'set' : ''}`;
         btnB.className = `mem-pick-btn ${memState.pickMode === 'B' ? 'picking' : ''} ${memState.lineB ? 'set' : ''}`;
 
         document.getElementById('mem-interval').value = memState.intervalMinutes;
-        document.getElementById('mem-reps').value = memState.repsInput;
+        
+        const repsInput = document.getElementById('mem-reps');
+        repsInput.type = memState.repsInput === '∞' ? 'text' : 'number';
+        repsInput.value = memState.repsInput;
 
         if (!memState.isActive) {
-            document.getElementById('mem-status').innerText = '';
+            const statusEl = document.getElementById('mem-status');
+            if (statusEl) statusEl.innerText = '';
         }
         highlightRange();
     }
 
     function stopCycle() {
         memState.isActive = false;
-        clearTimeout(memState.timerId);
         clearInterval(memState.countdownId);
+        memState.countdownId = null;
+        memState.pauseStartedAt = null;
+        memState.targetTimestamp = null;
         
         if (window.ttsAPI) {
             const state = window.ttsAPI.getState();
@@ -566,7 +642,8 @@
         updateABTimerDisplay();
         
         const targetB = memState.lineB || memState.lineA; 
-        document.getElementById('mem-status').innerText = `${L.playing}${memState.repsLeft === Infinity ? '∞' : memState.repsLeft})`;
+        const statusEl = document.getElementById('mem-status');
+        if (statusEl) statusEl.innerText = `${L.playing}${memState.repsLeft === Infinity ? '∞' : memState.repsLeft})`;
         
         const imgs = document.querySelectorAll('.play-main-button img');
         imgs.forEach(img => img.src = '/assets/svg/pause-grey.svg');
@@ -577,9 +654,12 @@
     function handleRangeFinished() {
         if (!memState.isActive) return;
 
-        if (memState.repsLeft !== Infinity) memState.repsLeft--;
+        memState.repsPlayed++;
+        updateRepsLeft();
+
         if (memState.repsLeft <= 0) {
-            document.getElementById('mem-status').innerText = '✅';
+            const statusEl = document.getElementById('mem-status');
+            if (statusEl) statusEl.innerText = '✅';
             stopCycle();
             return;
         }
@@ -591,31 +671,43 @@
             return;
         }
         
-        let timeLeft = msInterval;
+        memState.pauseStartedAt = Date.now();
+        memState.targetTimestamp = memState.pauseStartedAt + msInterval;
         
         if (window.ttsAPI.keepSilenceAlive) window.ttsAPI.keepSilenceAlive(true);
 
-        const updateCountdown = () => {
+        if (memState.countdownId) clearInterval(memState.countdownId);
+
+        const tick = () => {
+            if (!memState.isActive) {
+                clearInterval(memState.countdownId);
+                return;
+            }
+            
+            let timeLeft = memState.targetTimestamp - Date.now();
+            
+            if (timeLeft <= 0) {
+                clearInterval(memState.countdownId);
+                memState.countdownId = null;
+                playCurrentRange();
+                return;
+            }
+            
             const mins = Math.floor(timeLeft / 60000);
             const secs = Math.floor((timeLeft % 60000) / 1000);
             const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
             
             memState.currentCountdownTime = timeStr;
-            document.getElementById('mem-status').innerText = `${L.paused}${timeStr}`;
+            const statusEl = document.getElementById('mem-status');
+            if (statusEl) statusEl.innerText = `${L.paused}${timeStr}`;
             updateABTimerDisplay();
             
             const imgs = document.querySelectorAll('.play-main-button img');
             imgs.forEach(img => img.src = '/assets/svg/pause-grey.svg');
         };
 
-        updateCountdown();
-        memState.countdownId = setInterval(() => {
-            timeLeft -= 1000;
-            if (timeLeft <= 0) clearInterval(memState.countdownId);
-            else updateCountdown();
-        }, 1000);
-
-        memState.timerId = setTimeout(playCurrentRange, msInterval);
+        tick(); 
+        memState.countdownId = setInterval(tick, 1000);
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
