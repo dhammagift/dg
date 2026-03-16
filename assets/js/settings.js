@@ -1382,10 +1382,24 @@ function createQuickModal() {
 
     /* === ОГРАНИЧЕНИЕ ВЫСОТЫ И СКРОЛЛ ДЛЯ СПИСКОВ === */
     #quick-favorites-container, #quick-history-container {
-        max-height: 260px; /* Высота примерно на 7-8 элементов */
+        max-height: 520px; /* Увеличено до ~16 элементов */
         overflow-y: auto;
         padding-right: 5px;
     }
+    
+    /* Стили для заголовков (добавляем стрелочку сворачивания) */
+    .header-title { cursor: pointer; transition: color 0.2s; display: flex; align-items: center; }
+    .header-title::before {
+        content: '▼';
+        display: inline-block;
+        margin-right: 6px;
+        font-size: 0.75rem;
+        transition: transform 0.2s;
+    }
+    .header-title.collapsed::before {
+        transform: rotate(-90deg);
+    }
+
     /* Стилизация внутренних скроллбаров */
     #quick-favorites-container::-webkit-scrollbar, #quick-history-container::-webkit-scrollbar { width: 4px; }
     #quick-favorites-container::-webkit-scrollbar-thumb, #quick-history-container::-webkit-scrollbar-thumb { background: rgba(136, 136, 136, 0.4); border-radius: 4px; }
@@ -1484,7 +1498,7 @@ function createQuickModal() {
       
       /* Увеличиваем высоту списков на мобильных для удобства */
       #quick-favorites-container, #quick-history-container {
-        max-height: 28vh; 
+        max-height: 45vh; 
       }
     }
   `;
@@ -1647,18 +1661,30 @@ function createQuickModal() {
   const histHeader = quickModal.querySelector('#hist-header');
   const favSortIcon = quickModal.querySelector('.sort-icon-fav');
   const histSortIcon = quickModal.querySelector('.sort-icon-hist');
-
+  
   let favAlphaSort = false;
   let histAlphaSort = false;
+  
+  // Читаем сохраненное состояние из localStorage
+  let favCollapsed = localStorage.getItem('dg_favCollapsed') === 'true';
+  let histCollapsed = localStorage.getItem('dg_histCollapsed') === 'true';
+
 
   // --- РЕНДЕР ИЗБРАННОГО ---
-  function renderFavs() {
+    function renderFavs() {
     if (favData.length === 0) {
       favContainer.innerHTML = `<p style="font-size: 0.9rem; color: #888; font-style: italic; margin: 0;">${noFavsText}</p>`;
       favHeader.style.display = 'none';
+      favContainer.style.display = 'block'; // Гарантируем видимость текста
       return;
     }
     favHeader.style.display = 'flex';
+    favContainer.style.display = favCollapsed ? 'none' : 'block';
+    
+    // Восстанавливаем правильный класс для стрелочки
+    const favTitle = favHeader.querySelector('.header-title');
+    if (favTitle) favTitle.classList.toggle('collapsed', favCollapsed);
+
     
     let dataToRender = [...favData];
     if (favAlphaSort) {
@@ -1691,9 +1717,15 @@ function createQuickModal() {
     if (histData.length === 0) {
       histContainer.innerHTML = `<p style="font-size: 0.9rem; color: #888; font-style: italic; margin: 0;">${noHistText}</p>`;
       histHeader.style.display = 'none';
+      histContainer.style.display = 'block'; // Гарантируем видимость текста
       return;
     }
     histHeader.style.display = 'flex';
+    histContainer.style.display = histCollapsed ? 'none' : 'block';
+    
+    // Восстанавливаем правильный класс для стрелочки
+    const histTitle = histHeader.querySelector('.header-title');
+    if (histTitle) histTitle.classList.toggle('collapsed', histCollapsed);
 
     let dataToRender = [...histData];
     if (histAlphaSort) {
@@ -1814,16 +1846,34 @@ function createQuickModal() {
   });
 
   favHeader.addEventListener('click', (e) => {
-      if (e.target.classList.contains('header-title') || e.target.classList.contains('sort-trigger')) {
+      // Клик по кнопке сортировки
+      if (e.target.classList.contains('sort-trigger')) {
           favAlphaSort = !favAlphaSort;
           renderFavs();
+      } 
+      // Клик по заголовку (сворачивание)
+      else if (e.target.closest('.header-title')) {
+          favCollapsed = !favCollapsed;
+          localStorage.setItem('dg_favCollapsed', favCollapsed); // Сохраняем!
+          
+          favContainer.style.display = favCollapsed ? 'none' : 'block';
+          const title = e.target.closest('.header-title');
+          if (title) title.classList.toggle('collapsed', favCollapsed);
       }
   });
 
   histHeader.addEventListener('click', (e) => {
-      if (e.target.classList.contains('header-title') || e.target.classList.contains('sort-trigger')) {
+      if (e.target.classList.contains('sort-trigger')) {
           histAlphaSort = !histAlphaSort;
           renderHist();
+      } 
+      else if (e.target.closest('.header-title')) {
+          histCollapsed = !histCollapsed;
+          localStorage.setItem('dg_histCollapsed', histCollapsed); // Сохраняем!
+          
+          histContainer.style.display = histCollapsed ? 'none' : 'block';
+          const title = e.target.closest('.header-title');
+          if (title) title.classList.toggle('collapsed', histCollapsed);
       }
   });
 
