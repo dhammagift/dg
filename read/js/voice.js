@@ -115,6 +115,8 @@ const ttsState = {
   langSettings: null,
   autoScroll: localStorage.getItem(SCROLL_STORAGE_KEY) !== 'false', 
   currentSlug: null,
+  endIndex: undefined,
+  startIndex: undefined, 
   isNavigating: false 
 };
 
@@ -1006,10 +1008,18 @@ async function playCurrentSegment() {
               
               audio.onended = () => {
                   ttsState.googleAudio = null;
-                  if (ttsState.speaking && !ttsState.paused) {
-                      ttsState.currentIndex++;
-                      playCurrentSegment();
-                  }
+if (ttsState.speaking && !ttsState.paused) {
+    // Проверяем, не достигли ли мы конца диапазона (для режима заучивания)
+    if (ttsState.endIndex !== undefined && ttsState.currentIndex >= ttsState.endIndex) {
+        ttsState.speaking = false;
+        setButtonIcon('play');
+        document.dispatchEvent(new CustomEvent('tts-range-finished')); // Сигнал для memorize.js
+    } else {
+        ttsState.currentIndex++;
+        playCurrentSegment();
+    }
+}
+
               };
               
 audio.onerror = (err) => {
@@ -1054,10 +1064,18 @@ function playBrowserTTS(text, langKey, rate, isPali) {
   utterance.rate = rate;
 
   utterance.onend = () => {
-    if (ttsState.speaking && !ttsState.paused) {
-      ttsState.currentIndex++;
-      playCurrentSegment();
+if (ttsState.speaking && !ttsState.paused) {
+    // Проверяем, не достигли ли мы конца диапазона (для режима заучивания)
+    if (ttsState.endIndex !== undefined && ttsState.currentIndex >= ttsState.endIndex) {
+        ttsState.speaking = false;
+        setButtonIcon('play');
+        document.dispatchEvent(new CustomEvent('tts-range-finished')); // Сигнал для memorize.js
+    } else {
+        ttsState.currentIndex++;
+        playCurrentSegment();
     }
+}
+
   };
 
   utterance.onerror = (e) => {
@@ -1199,8 +1217,23 @@ async function handleSuttaClick(e) {
     e.preventDefault();
     if (!ttsState.speaking || ttsState.playlist.length === 0) return;
     
-    let direction = navBtn.classList.contains('prev-main-button') ? -1 : 1;
+        let direction = navBtn.classList.contains('prev-main-button') ? -1 : 1;
     let newIndex = ttsState.currentIndex + direction;
+    
+    // --- ИЗМЕНЕНИЕ: ЛОГИКА ДЛЯ A-B LOOP ---
+    if (ttsState.startIndex !== undefined && ttsState.endIndex !== undefined) {
+        if (direction > 0 && newIndex > ttsState.endIndex) {
+            newIndex = ttsState.startIndex; // Вперед -> Прыгаем в начало
+        } else if (direction < 0 && newIndex < ttsState.startIndex) {
+            newIndex = ttsState.endIndex;   // Назад -> Прыгаем в конец
+        }
+    } else {
+        // Обычное поведение плеера
+        if (direction < 0 && newIndex < 0) newIndex = 0;
+        else if (direction > 0 && newIndex >= ttsState.playlist.length) newIndex = ttsState.playlist.length - 1;
+    }
+    // --------------------------------------
+
     
     if (direction < 0 && newIndex < 0) newIndex = 0;
     else if (direction > 0 && newIndex >= ttsState.playlist.length) newIndex = ttsState.playlist.length - 1;
@@ -1391,6 +1424,10 @@ async function startPlayback(container, mode, slug, startIndex = 0) {
   ttsState.playlist = playlist;
   ttsState.currentIndex = actualStartIndex;
   ttsState.currentSlug = slug;
+  
+  ttsState.endIndex = undefined; // Сброс границы заучивания
+  document.dispatchEvent(new CustomEvent('tts-playback-started')); // Сигнал отключения цикла
+  
   ttsState.langSettings = mode;
   ttsState.speaking = true;
   ttsState.paused = false;
@@ -1773,9 +1810,11 @@ function getPlayerHtml() {
 
           <div style="display: flex; justify-content: center; align-items: center; gap: 5px; margin-top: 8px; flex-wrap: wrap;">
           
-                      <button id="tts-advanced-toggle-btn" class="extra-settings-toggle" style="width: auto; margin: 0; padding: 0; display: inline-flex;">
-                🔧 Google Voice
-            </button>
+<button id="tts-advanced-toggle-btn" class="extra-settings-toggle" style="width: auto; margin: 0; padding: 0; display: inline-flex;">
+    🔧 Google Voice
+</button>
+
+
             
             <a href="/tts.php${window.location.search}" class="tts-link tts-text-link">TTS</a>
             <a class="tts-link" title='sc-voice.net' href='https://www.sc-voice.net/?src=sc#/sutta/$fromjs'>VSC</a>
@@ -1867,7 +1906,7 @@ function getOrBuildPlayer() {
         const fileUrl = sourceLink.getAttribute('data-src');
         if (fileUrl) {
             placeholder.innerHTML = `<a class='tts-link' href='${fileUrl}' target='_blank'>File</a>`;
-            placeholder.style.display = "flex"; 
+            placeholder.style.display = "inline"; 
         } else {
              placeholder.style.display = "none";
         }
@@ -2132,18 +2171,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   synth.getVoices();
   
-  // --- AUTOPLAY LOGIC ---
+  // --- AUTOPLAY LOGIC (Вставить перед закрывающей скобкой DOMContentLoaded) ---
   const urlParams = new URLSearchParams(window.location.search);
   
   if (urlParams.has('autoplay') || localStorage.getItem('ttsMode') === 'true') {
-      
-      // We create a function to attempt autoplay that can call itself if the DOM isn't ready
-      const attemptAutoplay = (retriesLeft) => {
-          if (retriesLeft <= 0) {
-              console.warn("Autoplay aborted: Content took too long to load or voice-link not found.");
-              return;
-          }
-
+      setTimeout(() => {
           let slug = null;
           
           // 1. Ищем ID сутты
@@ -2154,67 +2186,70 @@ document.addEventListener('DOMContentLoaded', () => {
               slug = window.location.pathname.split('/').pop() || 'legacy_page';
           }
 
-          // Если элемента еще нет, ждем 300мс и пробуем снова
-          if (!slug) {
-              setTimeout(() => attemptAutoplay(retriesLeft - 1), 300);
-              return;
-          }
-
-          // Если нашли - запускаем!
-          console.log("🚀 Autoplay: Starting logic for", slug);
-          
-          const player = getOrBuildPlayer();
-          player.classList.add('active'); 
-          const internalPlayBtn = player.querySelector('.play-main-button');
-          if (internalPlayBtn) internalPlayBtn.dataset.slug = slug;
-
-          // 2. ОПРЕДЕЛЕНИЕ РЕЖИМА
-          let mode = urlParams.get('mode');
-          const validModes = ['pi', 'trn', 'pi-trn', 'trn-pi'];
-
-          if (!mode || !validModes.includes(mode)) {
-              mode = localStorage.getItem(MODE_STORAGE_KEY) || 'trn';
-          } else {
-              const modeSelect = document.getElementById('tts-mode-select');
-              if (modeSelect) modeSelect.value = mode;
-              localStorage.setItem(MODE_STORAGE_KEY, mode);
-          }
-
-          // 3. ЗАПУСК
-          startPlayback(document, mode, slug, 0);
-
-          // 4. СТРАХОВКА ОТ БЛОКИРОВКИ (Firefox/Chrome)
-          const forceUnlock = (e) => {
-              const isPlayerClick = e && e.target && e.target.closest('.voice-player');
+          if (slug) {
+              console.log("🚀 Autoplay: Starting logic for", slug);
               
-              if (ttsState.speaking && ttsState.paused && !isPlayerClick) {
-                  console.log("🔓 Audio Unlocked by Background Action!");
-                  ttsState.paused = false;
-                  setButtonIcon('pause');
-                  toggleSilence(true); 
+              const player = getOrBuildPlayer();
+              player.classList.add('active'); 
+              const internalPlayBtn = player.querySelector('.play-main-button');
+              if (internalPlayBtn) internalPlayBtn.dataset.slug = slug;
 
-                  if (ttsState.googleAudio) {
-                      ttsState.googleAudio.play().catch(e => console.warn(e));
-                  } else {
-                      playCurrentSegment();
-                  }
+              // 2. ОПРЕДЕЛЕНИЕ РЕЖИМА (Приоритет: URL -> Память -> 'trn')
+              let mode = urlParams.get('mode');
+              const validModes = ['pi', 'trn', 'pi-trn', 'trn-pi'];
+
+              // Если в URL мусор или пусто, берем из памяти
+              if (!mode || !validModes.includes(mode)) {
+                  mode = localStorage.getItem(MODE_STORAGE_KEY) || 'trn';
+              } else {
+                  // Если режим задан в URL, обновляем выпадающий список в плеере визуально
+                  const modeSelect = document.getElementById('tts-mode-select');
+                  if (modeSelect) modeSelect.value = mode;
+                  // И запоминаем на будущее (опционально, можно убрать если не хотите сбивать настройки)
+                  localStorage.setItem(MODE_STORAGE_KEY, mode);
               }
 
+              // 3. ЗАПУСК
+              startPlayback(document, mode, slug, 0);
+
+              // 4. СТРАХОВКА ОТ БЛОКИРОВКИ (Firefox/Chrome)
+              const forceUnlock = (e) => {
+                  // Если клик пришел из самого плеера, ничего не делаем здесь.
+                  // Основной обработчик handleSuttaClick сам всё включит.
+                  const isPlayerClick = e && e.target && e.target.closest('.voice-player');
+                  
+                  if (ttsState.speaking && ttsState.paused && !isPlayerClick) {
+                      console.log("🔓 Audio Unlocked by Background Action!");
+                      ttsState.paused = false;
+                      setButtonIcon('pause');
+                      toggleSilence(true); 
+
+                      if (ttsState.googleAudio) {
+                          ttsState.googleAudio.play().catch(e => console.warn(e));
+                      } else {
+                          playCurrentSegment();
+                      }
+                  }
+
+                  // Удаляем слушателей в любом случае, так как взаимодействие произошло
+                  ['click', 'touchstart', 'scroll', 'keydown'].forEach(evt => 
+                      document.removeEventListener(evt, forceUnlock)
+                  );
+              };
+
+              // Важно: убираем { once: true }, так как мы сами удаляем слушателей внутри функции
               ['click', 'touchstart', 'scroll', 'keydown'].forEach(evt => 
-                  document.removeEventListener(evt, forceUnlock)
+                  document.addEventListener(evt, forceUnlock, { passive: true })
               );
-          };
 
-          ['click', 'touchstart', 'scroll', 'keydown'].forEach(evt => 
-              document.addEventListener(evt, forceUnlock, { passive: true })
-          );
-      };
 
-      // Запускаем первую попытку. Даем ей 10 попыток по 300мс (всего до 3 секунд ожидания)
-      attemptAutoplay(15); 
+              ['click', 'touchstart', 'scroll', 'keydown'].forEach(evt => 
+                  document.addEventListener(evt, forceUnlock, { once: true, passive: true })
+              );
+          }
+      }, 1000); 
   }
   // --- END AUTOPLAY ---
-
 
   
 });
@@ -2524,3 +2559,39 @@ window.addEventListener('scroll', function() {
         ttsBtn.classList.remove('shifted');
     }
 });
+
+
+// Экспорт API для внешних модулей (memorize.js)
+window.ttsAPI = {
+    getState: () => ttsState,
+    playRange: async function(startId, endId) {
+        const mode = document.getElementById('tts-mode-select')?.value || localStorage.getItem(MODE_STORAGE_KEY) || 'trn';
+        let slug = ttsState.currentSlug || window.location.pathname.replace(/[^a-zA-Z0-9]/g, '_');
+        
+        const textData = await prepareTextData(slug);
+        const playlist = createPlaylistFromData(textData, mode);
+        
+        if (!playlist.length) return;
+
+        let sIdx = playlist.findIndex(item => item.id === startId);
+        let eIdx = playlist.findIndex(item => item.id === endId);
+        
+        if (sIdx === -1) sIdx = 0;
+        if (eIdx === -1) eIdx = playlist.length - 1;
+
+        ttsState.playlist = playlist;
+        ttsState.currentIndex = sIdx;
+        ttsState.startIndex = sIdx;
+        ttsState.endIndex = eIdx;
+        ttsState.currentSlug = slug;
+        ttsState.langSettings = mode;
+        ttsState.speaking = true;
+        ttsState.paused = false;
+        
+        setButtonIcon('pause');
+        toggleSilence(true);
+        playCurrentSegment();
+    },
+    stop: stopPlayback,
+    keepSilenceAlive: toggleSilence
+};
