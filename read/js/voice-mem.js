@@ -586,6 +586,26 @@
                 const panel = document.getElementById('memorize-panel');
                 if (!panel) return;
                 
+                // --- НАЧАЛО: Эффект вкладок (закрываем настройки шестеренки) ---
+                const settingsPanel = document.getElementById('tts-settings-panel');
+                if (settingsPanel && settingsPanel.classList.contains('visible')) {
+                    settingsPanel.classList.remove('visible');
+                    const icon = document.getElementById('tts-settings-icon');
+                    if (icon) icon.style.transform = 'rotate(0deg)';
+                    
+                    // Заодно сворачиваем продвинутые настройки Google Voice
+                    const advSettings = document.getElementById('tts-advanced-settings');
+                    if (advSettings) advSettings.classList.remove('visible');
+                    
+                    // И возвращаем базовые настройки на место
+                    const basicPanel = document.getElementById('tts-basic-settings');
+                    if (basicPanel) {
+                        basicPanel.style.maxHeight = '200px';
+                        basicPanel.style.opacity = '1';
+                    }
+                }
+                // --- КОНЕЦ: Эффект вкладок ---
+
                 panel.classList.toggle('visible');
                 memState.isPanelOpen = panel.classList.contains('visible'); 
                 
@@ -598,7 +618,7 @@
                         const id = activeWord.id || activeWord.closest('[id]')?.id;
                         if (id) {
                             setLine('A', id, activeWord);
-                            pauseTTS(); // <--- ДОБАВЛЕНО: Ставим на паузу, так как А успешно захвачена
+                            pauseTTS(); // Ставим на паузу, так как А успешно захвачена
                             activatePickMode('B');
                         } else {
                             activatePickMode('A'); 
@@ -609,6 +629,8 @@
                 }
                 return;
             }
+
+
 
             const btnA = e.target.closest('#mem-btn-a');
             const btnB = e.target.closest('#mem-btn-b');

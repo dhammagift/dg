@@ -1180,16 +1180,56 @@ async function handleSuttaClick(e) {
     e.preventDefault();
     const panel = document.getElementById('tts-settings-panel');
     const icon = document.getElementById('tts-settings-icon');
+    const abPanel = document.getElementById('memorize-panel');
+    
+    // Проверяем, открыто ли сейчас меню АБ
+    let wasAbPanelOpen = false;
+    if (abPanel && abPanel.classList.contains('visible')) {
+        wasAbPanelOpen = true;
+        abPanel.classList.remove('visible'); // Закрываем АБ
+    }
+
+    // Если меню АБ было открыто, мы просто всё сворачиваем и выходим
+    if (wasAbPanelOpen) {
+        if (panel && panel.classList.contains('visible')) {
+            panel.classList.remove('visible');
+        }
+        if (icon) icon.style.transform = 'rotate(0deg)';
+        
+        const advSettings = document.getElementById('tts-advanced-settings');
+        if (advSettings) advSettings.classList.remove('visible');
+
+        const basicPanel = document.getElementById('tts-basic-settings');
+        if (basicPanel) {
+            basicPanel.style.maxHeight = '200px';
+            basicPanel.style.opacity = '1';
+        }
+        return; // <--- Прерываем выполнение, чтобы шестеренка не открылась
+    }
+
+    // Стандартное поведение (если АБ не была открыта): открываем/закрываем саму шестеренку
     if (panel) {
         panel.classList.toggle('visible');
         if (panel.classList.contains('visible')) {
             if (icon) icon.style.transform = 'rotate(90deg)';
         } else {
             if (icon) icon.style.transform = 'rotate(0deg)';
+            
+            // Автоматически сворачиваем Google Voice при закрытии настроек
+            const advSettings = document.getElementById('tts-advanced-settings');
+            if (advSettings) advSettings.classList.remove('visible');
+            
+            // И возвращаем базовые настройки, чтобы при следующем открытии они были на месте
+            const basicPanel = document.getElementById('tts-basic-settings');
+            if (basicPanel) {
+                basicPanel.style.maxHeight = '200px';
+                basicPanel.style.opacity = '1';
+            }
         }
     }
     return;
   }
+
 
   const container = e.target.closest('.sutta-container') || document;
   const voiceLink = e.target.closest('.voice-link');
@@ -1791,33 +1831,34 @@ function getPlayerHtml() {
 
         <a href="javascript:void(0)" class="tts-top-btn close-tts-btn">&times;</a>
     </div>
-
+    
     <div id="tts-settings-panel">
-          <select id="tts-mode-select" class="tts-mode-select">
-            ${Object.entries(modeLabels).map(([val, label]) =>
-              `<option value="${val}" ${savedMode === val ? 'selected' : ''}>${label}</option>`
-            ).join('')}
-          </select>
+          <div id="tts-basic-settings" style="overflow: hidden; transition: max-height 0.4s ease, opacity 0.4s ease; max-height: 200px; opacity: 1;">
+              <select id="tts-mode-select" class="tts-mode-select">
+                ${Object.entries(modeLabels).map(([val, label]) =>
+                  `<option value="${val}" ${savedMode === val ? 'selected' : ''}>${label}</option>`
+                ).join('')}
+              </select>
 
-          <select id="tts-rate-select" class="tts-rate-select" title="${savedMode === 'pi' ? 'Speed (Pali)' : 'Speed (Translation)'}">
-            ${currentRatesList.map(r =>
-              `<option value="${r}" ${initialRate == r ? 'selected' : ''}>${r}x</option>`
-            ).join('')}
-          </select>
-          
-          <br>
+              <select id="tts-rate-select" class="tts-rate-select" title="${savedMode === 'pi' ? 'Speed (Pali)' : 'Speed (Translation)'}">
+                ${currentRatesList.map(r =>
+                  `<option value="${r}" ${initialRate == r ? 'selected' : ''}>${r}x</option>`
+                ).join('')}
+              </select>
+              
+              <br>
 
-          <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 5px;">
-            <label class="tts-checkbox-custom">
-              <input type="checkbox" id="tts-scroll-toggle" ${ttsState.autoScroll ? 'checked' : ''}>
-              Scroll
-            </label>
-            <label class="tts-checkbox-custom">
-              <input type="checkbox" id="tts-autoplay-toggle" ${localStorage.getItem('ttsMode') === 'true' ? 'checked' : ''}>
-              Autoplay
-            </label>
+              <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 5px;">
+                <label class="tts-checkbox-custom">
+                  <input type="checkbox" id="tts-scroll-toggle" ${ttsState.autoScroll ? 'checked' : ''}>
+                  Scroll
+                </label>
+                <label class="tts-checkbox-custom">
+                  <input type="checkbox" id="tts-autoplay-toggle" ${localStorage.getItem('ttsMode') === 'true' ? 'checked' : ''}>
+                  Autoplay
+                </label>
+              </div>
           </div>
-
           <div style="display: flex; justify-content: center; align-items: center; gap: 5px; margin-top: 8px; flex-wrap: wrap;">
           
 <button id="tts-advanced-toggle-btn" class="extra-settings-toggle" style="width: auto; margin: 0; padding: 0; display: inline-flex;">
@@ -1935,15 +1976,30 @@ function getTTSInterfaceHTML(texttype, slugReady, slug) {
 // --- Обработчик изменения настроек ---
 async function handleTTSSettingChange(e) {
 
-  // --- Toggle Advanced Settings ---
+    // --- Toggle Advanced Settings ---
   if (e.target.id === 'tts-advanced-toggle-btn') {
       e.preventDefault();
       const advancedPanel = document.getElementById('tts-advanced-settings');
+      const basicPanel = document.getElementById('tts-basic-settings'); // Находим базовую панель
+      
       if (advancedPanel) {
+          const isOpening = !advancedPanel.classList.contains('visible');
           advancedPanel.classList.toggle('visible');
+          
+          // Сворачиваем базовые настройки, когда открываем Google Voice, и наоборот
+          if (basicPanel) {
+              if (isOpening) {
+                  basicPanel.style.maxHeight = '0px';
+                  basicPanel.style.opacity = '0';
+              } else {
+                  basicPanel.style.maxHeight = '200px';
+                  basicPanel.style.opacity = '1';
+              }
+          }
       }
       return;
   }
+
   
   // 0. RESET BUTTON (Сброс всего)
   if (e.target.id === 'reset-tts-btn') {
