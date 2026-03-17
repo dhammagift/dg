@@ -132,6 +132,7 @@
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
+                width: 40px;
             }
 
             .dark .mem-pick-btn { background: #333; border-color: #555; color: #aaa; }
