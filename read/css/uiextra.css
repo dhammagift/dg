@@ -692,9 +692,12 @@
     background-color: #42426a;
     border-color: #5a5a5a;
 }
+
+
 .dark #smart-gear-btn img {
-    filter: invert(1);
+    filter: brightness(0) invert(0.7) !important;
 }
+
 
 /* Панель с кнопками */
 #smart-panel {
