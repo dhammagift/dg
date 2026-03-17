@@ -229,34 +229,35 @@
                 memoBtn.addEventListener('click', function(e) {
                     let textToPass = '';
                     
-                    // Ищем элементы по приоритетам
-                    const activeWord = document.querySelector('.active-word'); // Приоритет 1
-                    const highlighted = Array.from(document.querySelectorAll('.memorize-highlight')); // Приоритет 2
-                    const ttsActive = document.querySelector('.tts-active'); // Приоритет 3
+                    const activeWord = document.querySelector('.active-word');
+                    const highlighted = Array.from(document.querySelectorAll('.memorize-highlight'));
+                    const ttsActive = document.querySelector('.tts-active');
 
-                    // 1. ПРИОРИТЕТ: Активное слово
-                    if (activeWord) {
+                    // Проверяем, находится ли активное слово внутри диапазона А-Б
+                    let isWordInsideAB = false;
+                    if (activeWord && highlighted.length > 0) {
+                        isWordInsideAB = activeWord.closest('.memorize-highlight') !== null;
+                    }
+
+                    // 1. ПРИОРИТЕТ: Активное слово ВНЕ диапазона А-Б
+                    if (activeWord && !isWordInsideAB) {
                         textToPass = activeWord.innerText || activeWord.textContent;
                     } 
-                    // 2. ПРИОРИТЕТ: Цикл А-Б
+                    // 2. ПРИОРИТЕТ: Весь диапазон А-Б (если кликнули внутри него или активного слова нет)
                     else if (highlighted.length > 0) {
                         const ttsMode = localStorage.getItem('tts_preferred_mode') || 'pi';
                         let filtered = highlighted;
 
-                        // Фильтруем строки в зависимости от того, что сейчас играет в плеере
                         if (ttsMode === 'pi') {
                             filtered = highlighted.filter(el => el.classList.contains('pli-lang'));
                         } else if (ttsMode === 'trn') {
                             filtered = highlighted.filter(el => !el.classList.contains('pli-lang'));
                         }
-                        // Для режимов pi-trn / trn-pi фильтр не применяем, берем оба языка
                         
-                        // Защита: если фильтр отсёк всё (например, нет перевода), берем всё что есть
                         if (filtered.length === 0) filtered = highlighted;
-                        
                         textToPass = filtered.map(el => el.innerText || el.textContent).join('\n');
                     } 
-                    // 3. ПРИОРИТЕТ: Строка, которая прямо сейчас читается (TTS)
+                    // 3. ПРИОРИТЕТ: Текущая читаемая строка (TTS)
                     else if (ttsActive) {
                         textToPass = ttsActive.innerText || ttsActive.textContent;
                     }
@@ -268,13 +269,14 @@
                                      window.location.pathname.includes('/ru/');
                     const baseUrl = isRuPath ? '/ru/assets/memo.html' : '/assets/memo.html';
                     
-                    // Подставляем текст в ссылку в самый последний момент
+                    // Если текст есть - передаем параметр, если нет - чистая ссылка
                     if (textToPass) {
                         this.href = `${baseUrl}?text=${encodeURIComponent(textToPass)}`;
                     } else {
                         this.href = baseUrl;
                     }
                 });
+
                 
                 // Дефолтная ссылка
                 const isRuPathBase = window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/') || window.location.pathname.includes('/ru/');

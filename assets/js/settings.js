@@ -2210,7 +2210,12 @@ window.openMemoApp = function(e) {
     const highlighted = Array.from(document.querySelectorAll('.memorize-highlight'));
     const ttsActive = document.querySelector('.tts-active');
 
-    if (activeWord) {
+    let isWordInsideAB = false;
+    if (activeWord && highlighted.length > 0) {
+        isWordInsideAB = activeWord.closest('.memorize-highlight') !== null;
+    }
+
+    if (activeWord && !isWordInsideAB) {
         textToPass = activeWord.innerText || activeWord.textContent;
     } else if (highlighted.length > 0) {
         const ttsMode = localStorage.getItem('tts_preferred_mode') || 'pi';
@@ -2229,18 +2234,16 @@ window.openMemoApp = function(e) {
     }
     
     textToPass = textToPass ? textToPass.trim() : '';
-    
-    if (!textToPass) {
-        console.warn('Нет активного текста для передачи в Memo');
-        return; 
-    }
 
     const isRuPath = window.location.pathname.includes('/r/') || 
                      window.location.pathname.includes('/ml/') || 
                      window.location.pathname.includes('/ru/');
                      
     const baseUrl = isRuPath ? '/ru/assets/memo.html' : '/assets/memo.html';
-    const finalUrl = `${baseUrl}?text=${encodeURIComponent(textToPass)}`;
     
-    window.open(finalUrl, '_blank');
+    if (textToPass) {
+        window.open(`${baseUrl}?text=${encodeURIComponent(textToPass)}`, '_blank');
+    } else {
+        window.open(baseUrl, '_blank');
+    }
 };
