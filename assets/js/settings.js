@@ -2199,3 +2199,48 @@ function toggleFavoriteGlobal(itemData) {
 document.addEventListener("DOMContentLoaded", () => {
     if (typeof addToSearchHistory === 'function') addToSearchHistory();
 });
+
+
+window.openMemoApp = function(e) {
+    if (e) e.preventDefault();
+    
+    let textToPass = '';
+    
+    const activeWord = document.querySelector('.active-word');
+    const highlighted = Array.from(document.querySelectorAll('.memorize-highlight'));
+    const ttsActive = document.querySelector('.tts-active');
+
+    if (activeWord) {
+        textToPass = activeWord.innerText || activeWord.textContent;
+    } else if (highlighted.length > 0) {
+        const ttsMode = localStorage.getItem('tts_preferred_mode') || 'pi';
+        let filtered = highlighted;
+
+        if (ttsMode === 'pi') {
+            filtered = highlighted.filter(el => el.classList.contains('pli-lang'));
+        } else if (ttsMode === 'trn') {
+            filtered = highlighted.filter(el => !el.classList.contains('pli-lang'));
+        }
+        
+        if (filtered.length === 0) filtered = highlighted;
+        textToPass = filtered.map(el => el.innerText || el.textContent).join('\n');
+    } else if (ttsActive) {
+        textToPass = ttsActive.innerText || ttsActive.textContent;
+    }
+    
+    textToPass = textToPass ? textToPass.trim() : '';
+    
+    if (!textToPass) {
+        console.warn('Нет активного текста для передачи в Memo');
+        return; 
+    }
+
+    const isRuPath = window.location.pathname.includes('/r/') || 
+                     window.location.pathname.includes('/ml/') || 
+                     window.location.pathname.includes('/ru/');
+                     
+    const baseUrl = isRuPath ? '/ru/assets/memo.html' : '/assets/memo.html';
+    const finalUrl = `${baseUrl}?text=${encodeURIComponent(textToPass)}`;
+    
+    window.open(finalUrl, '_blank');
+};

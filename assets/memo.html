@@ -309,6 +309,8 @@ ${text}`;
 
         // --- ЛОКАЛИЗАЦИЯ ИНТЕРФЕЙСА ---
         window.addEventListener('DOMContentLoaded', () => {
+          
+          
             if (window.memoLang === 'ru') {
                 document.getElementById('page_h1').innerHTML = 'Медитация и Запоминание';
                 document.getElementById('page_desc').innerHTML = 'Прилежно стремитесь к цели';
@@ -447,13 +449,22 @@ ${text}`;
         function очистить() {
             const msg = window.memoLang === 'ru' ? 'Это удалит текст. Уверены?' : 'This will erase the text. Sure?';
             if (confirm(msg)) {
+                // Очищаем поля и память
                 document.getElementById("inputText").value = "";
                 document.getElementById("результат").innerText = "";
                 document.getElementById("lbl_result").style.display = 'none'; 
                 localStorage.removeItem("входнойТекст");
                 localStorage.removeItem("результат");
+                
+                // Очищаем GET-параметр text из URL без перезагрузки страницы
+                const url = new URL(window.location.href);
+                if (url.searchParams.has('text')) {
+                    url.searchParams.delete('text');
+                    window.history.replaceState({}, document.title, url.toString());
+                }
             }
         }
+
 
         function копироватьРезультат() {
             const результат = document.getElementById("результат").innerText;
@@ -476,12 +487,26 @@ ${text}`;
 
         // --- ЛОГИКА СОХРАНЕНИЯ СОСТОЯНИЯ ---
         window.addEventListener('load', function() {
-            const входнойТекст = localStorage.getItem("входнойТекст");
-            const результат = localStorage.getItem("результат");
-            if (входнойТекст) document.getElementById("inputText").value = входнойТекст;
-            if (результат && результат.trim() !== "") {
-                document.getElementById("результат").innerText = результат;
-                document.getElementById("lbl_result").style.display = 'block';
+            // Сначала проверяем URL параметры
+            const urlParams = new URLSearchParams(window.location.search);
+            const textParam = urlParams.get('text');
+            
+            if (textParam) {
+                // Если пришли по ссылке с текстом — используем его
+                document.getElementById("inputText").value = textParam;
+                localStorage.setItem("входнойТекст", textParam); // Сразу сохраняем
+                // Очищаем старый результат
+                document.getElementById("результат").innerText = "";
+                document.getElementById("lbl_result").style.display = 'none';
+            } else {
+                // Если открыли просто так — грузим из памяти
+                const входнойТекст = localStorage.getItem("входнойТекст");
+                const результат = localStorage.getItem("результат");
+                if (входнойТекст) document.getElementById("inputText").value = входнойТекст;
+                if (результат && результат.trim() !== "") {
+                    document.getElementById("результат").innerText = результат;
+                    document.getElementById("lbl_result").style.display = 'block';
+                }
             }
 
             const isTrn = localStorage.getItem('memo_is_translation') === 'true';

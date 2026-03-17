@@ -58,6 +58,32 @@
     function injectStyles() {
         const style = document.createElement('style');
         style.textContent = `
+        
+            .memo-app-btn {
+                position: absolute;
+                left: 20px;  /* Симметрично кнопке AB (которая right: 20px) */
+                top: 34px;   /* На том же уровне, что и AB, чтобы быть ВНИЗУ плеера */
+                background: transparent;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                color: #777;
+                font-size: 9px;
+                font-family: sans-serif;
+                font-weight: 700;
+                padding: 2px 4px;
+                cursor: pointer;
+                transition: all 0.3s;
+                display: inline-flex;
+                align-items: center;
+                text-decoration: none;
+                z-index: 10;
+                line-height: 1;
+            }
+            .memo-app-btn:hover { background: #eee; color: #333; border-color: #bbb; }
+            .dark .memo-app-btn { border-color: #555; color: #aaa; }
+            .dark .memo-app-btn:hover { background: #444; color: #fff; border-color: #777; }
+
+        
             .ab-loop-toggle-btn {
                 position: absolute;
                 right: 20px; 
@@ -191,6 +217,72 @@
             if (mainRow && !document.getElementById('ab-loop-toggle-btn')) {
                 
                 mainRow.style.position = 'relative';
+
+                // --- ДОБАВЛЯЕМ КНОПКУ MEMO СЛЕВА ВНИЗУ ---
+                const memoBtn = document.createElement('a');
+                memoBtn.id = 'memo-app-btn';
+                memoBtn.className = 'memo-app-btn';
+                memoBtn.title = 'Открыть в Memo';
+                memoBtn.innerHTML = 'memo';
+                memoBtn.target = '_blank';
+                
+                memoBtn.addEventListener('click', function(e) {
+                    let textToPass = '';
+                    
+                    // Ищем элементы по приоритетам
+                    const activeWord = document.querySelector('.active-word'); // Приоритет 1
+                    const highlighted = Array.from(document.querySelectorAll('.memorize-highlight')); // Приоритет 2
+                    const ttsActive = document.querySelector('.tts-active'); // Приоритет 3
+
+                    // 1. ПРИОРИТЕТ: Активное слово
+                    if (activeWord) {
+                        textToPass = activeWord.innerText || activeWord.textContent;
+                    } 
+                    // 2. ПРИОРИТЕТ: Цикл А-Б
+                    else if (highlighted.length > 0) {
+                        const ttsMode = localStorage.getItem('tts_preferred_mode') || 'pi';
+                        let filtered = highlighted;
+
+                        // Фильтруем строки в зависимости от того, что сейчас играет в плеере
+                        if (ttsMode === 'pi') {
+                            filtered = highlighted.filter(el => el.classList.contains('pli-lang'));
+                        } else if (ttsMode === 'trn') {
+                            filtered = highlighted.filter(el => !el.classList.contains('pli-lang'));
+                        }
+                        // Для режимов pi-trn / trn-pi фильтр не применяем, берем оба языка
+                        
+                        // Защита: если фильтр отсёк всё (например, нет перевода), берем всё что есть
+                        if (filtered.length === 0) filtered = highlighted;
+                        
+                        textToPass = filtered.map(el => el.innerText || el.textContent).join('\n');
+                    } 
+                    // 3. ПРИОРИТЕТ: Строка, которая прямо сейчас читается (TTS)
+                    else if (ttsActive) {
+                        textToPass = ttsActive.innerText || ttsActive.textContent;
+                    }
+                    
+                    textToPass = textToPass ? textToPass.trim() : '';
+                    
+                    const isRuPath = window.location.pathname.includes('/r/') || 
+                                     window.location.pathname.includes('/ml/') || 
+                                     window.location.pathname.includes('/ru/');
+                    const baseUrl = isRuPath ? '/ru/assets/memo.html' : '/assets/memo.html';
+                    
+                    // Подставляем текст в ссылку в самый последний момент
+                    if (textToPass) {
+                        this.href = `${baseUrl}?text=${encodeURIComponent(textToPass)}`;
+                    } else {
+                        this.href = baseUrl;
+                    }
+                });
+                
+                // Дефолтная ссылка
+                const isRuPathBase = window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/') || window.location.pathname.includes('/ru/');
+                memoBtn.href = isRuPathBase ? '/ru/assets/memo.html' : '/assets/memo.html';
+                
+                mainRow.appendChild(memoBtn);
+                // -----------------------------------------
+
 
                 const abBtn = document.createElement('button');
                 abBtn.id = 'ab-loop-toggle-btn';
