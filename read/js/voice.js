@@ -125,7 +125,7 @@ const synth = window.speechSynthesis;
 // --- Утилиты ---
 
 // --- "Вечная Тишина" (Heartbeat Audio) ---
-const SILENCE_URL = '/assets/common/silence.mp3';
+const SILENCE_URL = '/assets/sounds/silence.mp3';
 let silenceAudio = new Audio(SILENCE_URL);
 silenceAudio.loop = true; 
 silenceAudio.volume = 0.05;
@@ -1026,6 +1026,7 @@ async function playCurrentSegment() {
                   }
               };
 
+              
 audio.onerror = (err) => {
     console.error("Google Audio playback error", err);
     // Вместо безусловного перехода к следующему, можно либо вызвать фолбэк на нативный:
@@ -1067,7 +1068,7 @@ function playBrowserTTS(text, langKey, rate, isPali) {
 
   utterance.rate = rate;
 
-  utterance.onend = () => {
+    utterance.onend = () => {
       if (ttsState.speaking && !ttsState.paused) {
           if (ttsState.endIndex !== undefined && ttsState.currentIndex >= ttsState.endIndex) {
               ttsState.speaking = false;
@@ -1085,6 +1086,7 @@ function playBrowserTTS(text, langKey, rate, isPali) {
           }
       }
   };
+
 
   utterance.onerror = (e) => {
     // 1. БЛОКИРОВКА БРАУЗЕРОМ (Autoplay blocked)

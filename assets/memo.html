@@ -22,6 +22,27 @@
             border-radius: 5px;
             display: none;
         }
+
+        /* --- ВСТРОЕННЫЙ ТАЙМЕР (НЕ ПЕРЕКРЫВАЕТ ТЕКСТ) --- */
+        #memo-timer-status {
+            display: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #0d6efd;
+            background: rgba(13, 110, 253, 0.1);
+            padding: 6px 16px;
+            border-radius: 8px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(13, 110, 253, 0.2);
+            width: fit-content;
+        }
+        
+        .dark #memo-timer-status {
+            color: #6ea8fe;
+            background: rgba(13, 110, 253, 0.15);
+            border-color: rgba(110, 168, 254, 0.2);
+        }
     </style>
 </head>
 <body>
@@ -85,77 +106,151 @@
                 </div>
 
                 <div class="collapse mt-3" id="ttsSettings">
-                    <div class="p-3 text-start mx-auto" style="background: rgba(128,128,128,0.05); border: 1px dashed #ccc; border-radius: 8px; max-width: 500px;">
+                    <div class="p-3 text-start mx-auto" style="background: rgba(128,128,128,0.05); border: 1px dashed #ccc; border-radius: 8px; max-width: 600px;">
                         <h6 class="mb-2" id="tts_header">Voice Settings (TTS)</h6>
-                        <div class="row g-2 align-items-center">
+                        <div class="row g-2 align-items-end">
                             <div class="col-auto">
                                 <label style="font-size: 12px; color: #888;" id="tts_delim_label">Split by:</label><br>
-                                <input type="text" id="ttsDelimiter" class="form-control form-control-sm" value=".,:;?!—… |\n" style="width: 130px;" title="Characters to split segments">
+                                <input type="text" id="ttsDelimiter" class="form-control form-control-sm" value=".,:;?!—… | \n" style="width: 100px;" title="Characters to split segments">
                             </div>
                             <div class="col-auto">
                                 <label style="font-size: 12px; color: #888;" id="tts_delay_label">Pause (sec):</label><br>
-                                <input type="number" id="ttsDelay" class="form-control form-control-sm" value="0" min="0" step="0.5" style="width: 70px;">
+                                <input type="number" id="ttsDelay" class="form-control form-control-sm" value="0" min="0" step="0.5" style="width: 60px;">
                             </div>
                             <div class="col-auto">
-                                <div class="form-check mt-3 ms-2">
+                                <label style="font-size: 12px; color: #888;" id="tts_sound_label">End Sound:</label><br>
+                                <select id="ttsSound" class="form-select form-select-sm" style="width: 80px;">
+                                    <option value="tick.mp3">Tick</option>
+                                    <option value="gong.mp3">Gong</option>
+                                    <option value="none" id="tts_sound_none">None</option>
+                                </select>
+                            </div>
+                            <div class="col-auto pb-1">
+                                <div class="form-check ms-1 me-1 mb-0">
                                     <input class="form-check-input" type="checkbox" id="ttsIsTranslation">
-                                    <label class="form-check-label" for="ttsIsTranslation" style="font-size: 14px;" id="tts_trn_label">Translation</label>
+                                    <label class="form-check-label" for="ttsIsTranslation" style="font-size: 13px;" id="tts_trn_label">Translation</label>
                                 </div>
                             </div>
-                            <div class="col-auto">
-                                <div class="form-check mt-3 ms-2">
-                                    <input class="form-check-input" type="checkbox" id="ttsIsLoop" checked>
-                                    <label class="form-check-label" for="ttsIsLoop" style="font-size: 14px;" id="tts_loop_label">Loop</label>
+                            <div class="col-auto pb-1">
+                                <div class="form-check ms-1 mb-0 d-flex align-items-center gap-1">
+                                    <input class="form-check-input" type="checkbox" id="ttsIsLoop" checked style="margin-top: 0;">
+                                    <label class="form-check-label" for="ttsIsLoop" style="font-size: 13px; margin-right: 2px;" id="tts_loop_label">Loop</label>
+                                    <input type="text" id="ttsLoopCount" value="∞" class="form-control form-control-sm text-center px-1" style="width: 36px; height: 22px; font-size: 12px;" title="Repetitions">
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-2 text-start">
+                <div class="mt-3 text-start">
                     <h5 class="text-center text-muted" id="lbl_result" style="display: none;">Result:</h5>
                     <div id="результат" class="display-7 mb-4 text-center"></div>
                 </div>
                 
                 <a href="javascript:void(0)" class="voice-link" data-slug="memo_custom" id="hiddenVoiceLink" style="display:none;"></a>
-                <div id="tts-virtual-container" class="sutta-container text-start mt-4" style="display:none; padding-bottom: 50px;"></div>
+                
+                <div id="tts-virtual-container" class="sutta-container text-start mt-4" style="display:none;"></div>
+                
+                <div class="d-flex justify-content-center">
+                    <div id="memo-timer-status"></div>
+                </div>
 
             </div>
         </div>
     </div>
-    
+
     <div class="copy-success" id="lbl_copied">Copied to Clipboard</div>
 
     <script>
+        // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ---
+        window.memoLoopsPlayed = 0;
+        window.memoCountdownInterval = null; 
+        window.memoLoopTimeout = null;
+        window.memoRestartTimeout = null;
+        window.isLoopingPause = false; 
+        window.memoLang = window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/') || window.location.pathname.includes('/ru/') ? 'ru' : 'en';
+
         // --- ЛОКАЛИЗАЦИЯ ИНТЕРФЕЙСА ---
         window.addEventListener('DOMContentLoaded', () => {
-            const path = window.location.pathname;
-            const isRu = path.includes('/r/') || path.includes('/ml/') || path.includes('/ru/');
-            
-            if (isRu) {
+            if (window.memoLang === 'ru') {
                 document.getElementById('page_desc').innerHTML = 'Слушайте и запоминайте';
                 document.getElementById('inputText').placeholder = 'Вставьте текст, который хотите выучить';
-                
                 document.getElementById('tts_header').innerText = 'Настройки голоса (TTS)';
                 document.getElementById('tts_delim_label').innerText = 'Разделитель:';
                 document.getElementById('tts_delay_label').innerText = 'Пауза (сек):';
+                document.getElementById('tts_sound_label').innerText = 'Звук:';
+                document.getElementById('tts_sound_none').innerText = 'Ничего';
                 document.getElementById('tts_trn_label').innerText = 'Перевод';
-                document.getElementById('tts_loop_label').innerText = 'Зациклить';
-                
+                document.getElementById('tts_loop_label').innerText = 'Цикл';
                 document.getElementById('btn_play').title = 'Слушать';
                 document.getElementById('btn_stop').title = 'Стоп';
                 document.getElementById('btn_transform').innerText = 'Преобразовать';
                 document.getElementById('btn_copy').innerText = 'Копировать';
                 document.getElementById('btn_clear').title = 'Очистить';
                 document.getElementById('btn_settings').title = 'Настройки';
-                
                 document.getElementById('link_tips').childNodes[0].nodeValue = 'Советы и хитрости заучивания ';
                 document.getElementById('link_open_any').innerText = 'Открыть любую Сутту в этом режиме';
-                
                 document.getElementById('lbl_result').innerText = 'Результат:';
                 document.getElementById('lbl_copied').innerText = 'Скопировано в буфер';
             }
         });
+
+        // --- МАГИЯ: БЕЗОПАСНЫЙ ГЕТТЕР ДЛЯ ИНТЕРВАЛОВ ---
+        // voice.js читает эту переменную каждый раз, когда нужно сделать паузу.
+        Object.defineProperty(window, 'TTS_SEGMENT_DELAY', {
+            get: function() {
+                const delayInput = document.getElementById("ttsDelay");
+                if (!delayInput) return 0;
+                
+                const delaySec = parseFloat(delayInput.value) || 0;
+                const delayMs = delaySec * 1000;
+                
+                // Если плеер спросил задержку, значит он собирается сделать паузу!
+                if (delayMs > 0 && window.ttsAPI) {
+                    const state = window.ttsAPI.getState();
+                    // voice.js УЖЕ увеличил currentIndex, когда спрашивает эту переменную.
+                    const maxIndex = state.endIndex !== undefined ? state.endIndex : state.playlist.length - 1;
+                    
+                    if (state.speaking && !window.isLoopingPause && state.currentIndex <= maxIndex) {
+                        // Запускаем таймер асинхронно, чтобы не блокировать плеер
+                        setTimeout(() => window.startMemoVisualTimer(delayMs, ''), 0);
+                    }
+                }
+                return delayMs;
+            },
+            set: function(val) {
+                // Пустой сеттер защищает наш геттер от случайного перезаписывания (которое ломало логику)
+            },
+            configurable: true
+        });
+
+        // --- ВИЗУАЛЬНЫЙ ТАЙМЕР ---
+        window.startMemoVisualTimer = function(durationMs, textPrefix) {
+            if (window.memoCountdownInterval) clearInterval(window.memoCountdownInterval);
+            const statusEl = document.getElementById('memo-timer-status');
+            if (!statusEl) return;
+            
+            statusEl.style.display = 'inline-block';
+            const endTime = Date.now() + durationMs;
+            
+            const tick = () => {
+                const left = endTime - Date.now();
+                if (left <= 0) {
+                    clearInterval(window.memoCountdownInterval);
+                    statusEl.style.display = 'none';
+                    return;
+                }
+                const mins = Math.floor(left / 60000);
+                const secs = Math.floor((left % 60000) / 1000);
+                const timeStr = mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}`;
+                
+                // Простой лаконичный текст: "⏳ 0:05" или "⏳ Конец. 0:05"
+                const prefixHtml = textPrefix ? `<span style="margin-right:4px;">${textPrefix}</span>` : '';
+                statusEl.innerHTML = `⏳ ${prefixHtml}<span style="font-variant-numeric: tabular-nums;">${timeStr}</span>`;
+            };
+            tick();
+            window.memoCountdownInterval = setInterval(tick, 1000);
+        };
 
         // --- ЛОГИКА ТРАНСФОРМАЦИИ ---
         function преобразоватьТекст() {
@@ -183,9 +278,7 @@
         }
 
         function очистить() {
-            const path = window.location.pathname;
-            const isRu = path.includes('/r/') || path.includes('/ml/') || path.includes('/ru/');
-            const msg = isRu ? 'Это удалит текст. Уверены?' : 'This will erase the text. Sure?';
+            const msg = window.memoLang === 'ru' ? 'Это удалит текст. Уверены?' : 'This will erase the text. Sure?';
             if (confirm(msg)) {
                 document.getElementById("inputText").value = "";
                 document.getElementById("результат").innerText = "";
@@ -214,7 +307,7 @@
             setTimeout(function() { copySuccess.style.display = 'none'; }, 1500);
         }
 
-        // --- ЛОГИКА СОХРАНЕНИЯ СОСТОЯНИЯ И ВОССТАНОВЛЕНИЯ ---
+        // --- ЛОГИКА СОХРАНЕНИЯ СОСТОЯНИЯ ---
         window.addEventListener('load', function() {
             const входнойТекст = localStorage.getItem("входнойТекст");
             const результат = localStorage.getItem("результат");
@@ -231,38 +324,56 @@
             if (savedDelim !== null) document.getElementById('ttsDelimiter').value = savedDelim;
 
             const savedDelay = localStorage.getItem('memo_tts_delay');
-            if (savedDelay !== null) document.getElementById('ttsDelay').value = savedDelay;
+            if (savedDelay !== null) {
+                document.getElementById('ttsDelay').value = savedDelay;
+                // Не пытаемся жестко присвоить window.TTS_SEGMENT_DELAY, геттер сам всё сделает
+            }
 
             const savedLoop = localStorage.getItem('memo_tts_loop');
             const isLoop = savedLoop === null ? true : savedLoop === 'true';
             document.getElementById('ttsIsLoop').checked = isLoop;
+
+            const savedLoopCount = localStorage.getItem('memo_tts_loop_count');
+            if (savedLoopCount) document.getElementById('ttsLoopCount').value = savedLoopCount;
+            document.getElementById('ttsLoopCount').type = document.getElementById('ttsLoopCount').value === '∞' ? 'text' : 'number';
+
+            const savedSound = localStorage.getItem('memo_tts_sound');
+            if (savedSound) document.getElementById('ttsSound').value = savedSound;
+
+            toggleLoopInputVisibility();
         });
 
-        // Динамическое обновление и сохранение настроек
-        document.getElementById('ttsIsTranslation').addEventListener('change', (e) => {
-            localStorage.setItem('memo_is_translation', e.target.checked);
-        });
-        document.getElementById('ttsDelimiter').addEventListener('input', (e) => {
-            localStorage.setItem('memo_tts_delimiter', e.target.value);
-        });
+        function toggleLoopInputVisibility() {
+            const loopInput = document.getElementById('ttsLoopCount');
+            const isLoopChecked = document.getElementById('ttsIsLoop').checked;
+            loopInput.style.display = isLoopChecked ? 'inline-block' : 'none';
+        }
+
+        // Динамическое сохранение
+        document.getElementById('ttsIsTranslation').addEventListener('change', (e) => localStorage.setItem('memo_is_translation', e.target.checked));
+        document.getElementById('ttsDelimiter').addEventListener('input', (e) => localStorage.setItem('memo_tts_delimiter', e.target.value));
+        document.getElementById('ttsSound').addEventListener('change', (e) => localStorage.setItem('memo_tts_sound', e.target.value));
+        document.getElementById('ttsDelay').addEventListener('input', (e) => localStorage.setItem('memo_tts_delay', parseFloat(e.target.value) || 0));
+
         document.getElementById('ttsIsLoop').addEventListener('change', (e) => {
             localStorage.setItem('memo_tts_loop', e.target.checked);
+            toggleLoopInputVisibility();
+        });
+
+        const loopCountInput = document.getElementById('ttsLoopCount');
+        loopCountInput.addEventListener('focus', (e) => {
+            if (e.target.value === '∞') { e.target.type = 'number'; e.target.value = '0'; }
+        });
+        loopCountInput.addEventListener('blur', (e) => {
+            if (e.target.value === '0' || e.target.value.trim() === '') {
+                e.target.type = 'text'; e.target.value = '∞';
+            }
+            localStorage.setItem('memo_tts_loop_count', e.target.value);
         });
         
-        // Мгновенное применение интервала для следующего фрагмента (без перезапуска)
-        document.getElementById('ttsDelay').addEventListener('input', (e) => {
-            const val = parseFloat(e.target.value) || 0;
-            localStorage.setItem('memo_tts_delay', val);
-            window.TTS_SEGMENT_DELAY = val * 1000;
-        });
+        document.getElementById('inputText').addEventListener('input', () => stopMemoTTS());
 
-        // Сброс прогресса и остановка при редактировании текста
-        document.getElementById('inputText').addEventListener('input', () => {
-            stopMemoTTS();
-        });
-
-
-        // --- ЛОГИКА TTS ПЛЕЕРА ---
+        // --- ЛОГИКА ФЕЙКОВОГО JSON ---
         window.mockPaliJson = {};
         const originalFetch = window.fetch;
         window.fetch = async function() {
@@ -310,10 +421,7 @@
                         i++;
                     } else if (!v || (v !== ' ' && !v.match(/[.,;!?\n]/))) {
                         res += '्'; 
-                        
-                        if (v === 'h' && char === 'm') {
-                            res += ' '; 
-                        }
+                        if (v === 'h' && char === 'm') res += ' '; 
                     }
                     continue;
                 }
@@ -322,8 +430,13 @@
             return res;
         }
 
-        function startMemoTTS() {
-            // Закрываем меню настроек при старте
+        function startMemoTTS(isRestart = false) {
+            if (isRestart !== true) {
+                window.memoLoopsPlayed = 0;
+                if (window.memoCountdownInterval) clearInterval(window.memoCountdownInterval);
+                document.getElementById('memo-timer-status').style.display = 'none';
+            }
+
             const settingsPanel = document.getElementById('ttsSettings');
             if (settingsPanel && settingsPanel.classList.contains('show')) {
                 const bsCollapse = bootstrap.Collapse.getInstance(settingsPanel);
@@ -351,8 +464,7 @@
 
             if (segments.length === 0) return;
 
-            const delaySec = parseFloat(document.getElementById("ttsDelay").value) || 0;
-            window.TTS_SEGMENT_DELAY = delaySec * 1000;
+            window.isLoopingPause = false;
 
             const isTranslation = document.getElementById("ttsIsTranslation").checked;
             const container = document.getElementById("tts-virtual-container");
@@ -392,51 +504,92 @@
 
             document.getElementById('hiddenVoiceLink').click();
 
-            // Плавный отступ под высоту плеера
             document.body.style.transition = 'padding-bottom 0.4s ease';
             document.body.style.paddingBottom = '120px';
 
-            // Инициализация границ для работы цикла (запускает tts-range-finished в конце)
             setTimeout(() => {
                 if (window.ttsAPI) {
                     const state = window.ttsAPI.getState();
                     if (state.playlist && state.playlist.length > 0) {
                         state.startIndex = 0;
                         state.endIndex = state.playlist.length - 1;
-                        state.currentIndex = 0; // Сбрасываем индекс на начало
+                        state.currentIndex = 0; 
                     }
                 }
             }, 400);
         }
 
         function stopMemoTTS() {
+            window.isLoopingPause = false;
             if (window.ttsAPI) {
                 const state = window.ttsAPI.getState();
-                state.currentIndex = 0; // Сброс прогресса
+                state.currentIndex = 0; 
                 if (window.ttsAPI.stop) window.ttsAPI.stop();
             }
             const container = document.getElementById("tts-virtual-container");
             container.innerHTML = '';
             container.style.display = 'none';
-
             document.body.style.paddingBottom = '0px';
+
+            if (window.memoCountdownInterval) {
+                clearInterval(window.memoCountdownInterval);
+                window.memoCountdownInterval = null;
+            }
+            if (window.memoLoopTimeout) clearTimeout(window.memoLoopTimeout);
+            if (window.memoRestartTimeout) clearTimeout(window.memoRestartTimeout);
+
+            const statusEl = document.getElementById('memo-timer-status');
+            if (statusEl) statusEl.style.display = 'none';
+            
+            window.memoLoopsPlayed = 0;
         }
 
-        // --- ЛОГИКА ЗАЦИКЛИВАНИЯ ---
+        // --- ЛОГИКА ЗАЦИКЛИВАНИЯ И ЗВУКОВ В КОНЦЕ ---
         document.addEventListener('tts-range-finished', () => {
             const isLoop = document.getElementById('ttsIsLoop').checked;
-            if (isLoop) {
-                const delaySec = parseFloat(document.getElementById("ttsDelay").value) || 0;
-                // Задержка перед повторным стартом (если пауза 0, то ждем полсекунды)
-                const waitTime = delaySec > 0 ? delaySec * 1000 : 500;
-                
-                setTimeout(() => {
+            const soundChoice = document.getElementById('ttsSound').value;
+            const delaySec = parseFloat(document.getElementById("ttsDelay").value) || 0;
+            const intervalMs = delaySec * 1000;
+            
+            window.isLoopingPause = true;
+
+            if (!isLoop) {
+                if (soundChoice !== 'none') new Audio(`/assets/sounds/${soundChoice}`).play().catch(e => console.warn(e));
+                stopMemoTTS();
+                return;
+            }
+
+            const loopInput = document.getElementById('ttsLoopCount').value;
+            let targetLoops = loopInput === '∞' ? Infinity : parseInt(loopInput) || Infinity;
+            window.memoLoopsPlayed = (window.memoLoopsPlayed || 0) + 1;
+
+            if (window.memoLoopsPlayed >= targetLoops) {
+                if (soundChoice !== 'none') new Audio(`/assets/sounds/${soundChoice}`).play().catch(e => console.warn(e));
+                stopMemoTTS();
+                return;
+            }
+
+            const FIXED_PAUSE = 5000; 
+            const lCycle = window.memoLang === 'ru' ? 'Конец.' : 'End.';
+
+            const startLoopRestart = () => {
+                window.startMemoVisualTimer(FIXED_PAUSE, lCycle);
+                window.memoRestartTimeout = setTimeout(() => {
                     const container = document.getElementById("tts-virtual-container");
-                    // Если контейнер скрыт, значит пользователь нажал Стоп вручную — прерываем цикл
-                    if (container.style.display !== 'none' && document.getElementById('ttsIsLoop').checked) {
-                        startMemoTTS();
-                    }
-                }, waitTime);
+                    if (container.style.display === 'none' || !document.getElementById('ttsIsLoop').checked) return;
+                    startMemoTTS(true); 
+                }, FIXED_PAUSE);
+            };
+
+            if (intervalMs > 0) {
+                window.startMemoVisualTimer(intervalMs, '');
+                window.memoLoopTimeout = setTimeout(() => {
+                    if (soundChoice !== 'none') new Audio(`/assets/sounds/${soundChoice}`).play().catch(e => console.warn(e));
+                    startLoopRestart();
+                }, intervalMs);
+            } else {
+                if (soundChoice !== 'none') new Audio(`/assets/sounds/${soundChoice}`).play().catch(e => console.warn(e));
+                startLoopRestart();
             }
         });
 
@@ -445,26 +598,18 @@
             const playMainBtn = e.target.closest('.play-main-button');
             const closeMainBtn = e.target.closest('.close-tts-btn');
             
-            // Если нажали "Play" внутри voice.js
             if (playMainBtn) {
                 if (window.ttsAPI) {
                     const state = window.ttsAPI.getState();
-                    // Если сейчас ничего не воспроизводится (полностью остановлено),
-                    // мы перехватываем клик и заставляем его заново нарезать текст из инпута.
                     if (!state.speaking) {
                         e.preventDefault();
                         e.stopPropagation();
                         startMemoTTS();
                     }
-                    // Если уже играет/на паузе - не мешаем, voice.js сам снимет с паузы.
                 }
             }
-            
-            // Если закрыли плеер крестиком внутри voice.js - сбрасываем всё
-            if (closeMainBtn) {
-                stopMemoTTS();
-            }
-        }, { capture: true }); // capture: true позволяет перехватить клик до того, как до него доберется voice.js
+            if (closeMainBtn) stopMemoTTS();
+        }, { capture: true }); 
 
     </script>
 
