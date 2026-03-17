@@ -1008,20 +1008,24 @@ async function playCurrentSegment() {
               
               audio.onended = () => {
                   ttsState.googleAudio = null;
-if (ttsState.speaking && !ttsState.paused) {
-    // Проверяем, не достигли ли мы конца диапазона (для режима заучивания)
-    if (ttsState.endIndex !== undefined && ttsState.currentIndex >= ttsState.endIndex) {
-        ttsState.speaking = false;
-        setButtonIcon('play');
-        document.dispatchEvent(new CustomEvent('tts-range-finished')); // Сигнал для memorize.js
-    } else {
-        ttsState.currentIndex++;
-        playCurrentSegment();
-    }
-}
-
+                  if (ttsState.speaking && !ttsState.paused) {
+                      if (ttsState.endIndex !== undefined && ttsState.currentIndex >= ttsState.endIndex) {
+                          ttsState.speaking = false;
+                          setButtonIcon('play');
+                          document.dispatchEvent(new CustomEvent('tts-range-finished'));
+                      } else {
+                          ttsState.currentIndex++;
+                          // --- НОВОЕ: Интервал между сегментами ---
+                          const delay = window.TTS_SEGMENT_DELAY || 0;
+                          if (delay > 0) {
+                              setTimeout(playCurrentSegment, delay);
+                          } else {
+                              playCurrentSegment();
+                          }
+                      }
+                  }
               };
-              
+
 audio.onerror = (err) => {
     console.error("Google Audio playback error", err);
     // Вместо безусловного перехода к следующему, можно либо вызвать фолбэк на нативный:
@@ -1064,18 +1068,22 @@ function playBrowserTTS(text, langKey, rate, isPali) {
   utterance.rate = rate;
 
   utterance.onend = () => {
-if (ttsState.speaking && !ttsState.paused) {
-    // Проверяем, не достигли ли мы конца диапазона (для режима заучивания)
-    if (ttsState.endIndex !== undefined && ttsState.currentIndex >= ttsState.endIndex) {
-        ttsState.speaking = false;
-        setButtonIcon('play');
-        document.dispatchEvent(new CustomEvent('tts-range-finished')); // Сигнал для memorize.js
-    } else {
-        ttsState.currentIndex++;
-        playCurrentSegment();
-    }
-}
-
+      if (ttsState.speaking && !ttsState.paused) {
+          if (ttsState.endIndex !== undefined && ttsState.currentIndex >= ttsState.endIndex) {
+              ttsState.speaking = false;
+              setButtonIcon('play');
+              document.dispatchEvent(new CustomEvent('tts-range-finished'));
+          } else {
+              ttsState.currentIndex++;
+              // --- НОВОЕ: Интервал между сегментами ---
+              const delay = window.TTS_SEGMENT_DELAY || 0;
+              if (delay > 0) {
+                  setTimeout(playCurrentSegment, delay);
+              } else {
+                  playCurrentSegment();
+              }
+          }
+      }
   };
 
   utterance.onerror = (e) => {

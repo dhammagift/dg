@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="/assets/img/favico-noglass.png" />
     <title>Modify Text for Memorisation</title>
     <link href="/assets/css/styles.css" rel="stylesheet" />
     <link href="/assets/css/extrastyles.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/read/css/voice.css">
+
     <style>
         .copy-success {
             z-index: 1000;
@@ -30,11 +31,9 @@
                 <a href="/read.php" title="Sutta and Vinaya reading" rel="noreferrer" class="me-1">
                     <svg fill="#979797" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="26px" viewBox="0 0 547.596 547.596" xml:space="preserve" stroke="#979797"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#CCCCCC" stroke-width="3.285576"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M540.76,254.788L294.506,38.216c-11.475-10.098-30.064-10.098-41.386,0L6.943,254.788 c-11.475,10.098-8.415,18.284,6.885,18.284h75.964v221.773c0,12.087,9.945,22.108,22.108,22.108h92.947V371.067 c0-12.087,9.945-22.108,22.109-22.108h93.865c12.239,0,22.108,9.792,22.108,22.108v145.886h92.947 c12.24,0,22.108-9.945,22.108-22.108v-221.85h75.965C549.021,272.995,552.081,264.886,540.76,254.788z"></path> </g> </g></svg>
                 </a>
-
                 <a href="/ru" title="Sutta and Vinaya search" rel="noreferrer" class="me-1">
                     <img width="24px" alt="dhamma.gift icon" src="/assets/img/gray-white.png">
                 </a>
-
                 <div class="ms-1 form-check form-switch">
                     <input type="checkbox" class="form-check-input" id="darkSwitch">
                 </div>
@@ -48,37 +47,36 @@
         <div class="row ">
             <div class="col-12 text-center">
                 <h1 class="mt-3 mb-4">Memorizer</h1>
-                <p class="text-muted">To speed up memorization of some text it is helpful to reduce it to first letters only. Give it a try. E.g.: Yaṁ kiñci samudayadhammaṁ sabbaṁ taṁ nirodhadhamman.
-                    <br><br>Will become: Y k s s t n.</p>
+                <p class="text-muted" id="page_desc">Listen and memorize</p>
 
-                <h5 class="mb-4">Open Any Sutta this way <a href="/memorize/">Here</a></h5>
-                <h6 class="mb-4"><a href="/memorize/?q=sn47.42&lang=pli-eng">Example on sn47.42</a></h6>
+                <textarea id="inputText" class="form-control mb-3 inputdiv" rows="10" placeholder="Paste text that you want to memorize">atthi imasmiṁ kāye kesā lomā nakhā dantā taco maṁsaṁ nhāru aṭṭhi aṭṭhimiñjaṁ vakkaṁ hadayaṁ yakanaṁ kilomakaṁ pihakaṁ papphāsaṁ antaṁ antaguṇaṁ udariyaṁ karīsaṁ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā lasikā muttanti |</textarea>
 
-                <textarea id="inputText" class="form-control mb-3 inputdiv" rows="10" placeholder="Paste text that you want to memorize"></textarea>
+                <div class="d-flex flex-wrap justify-content-center align-items-center gap-2 mt-2">
+                    <button class="btn btn-success px-0" onclick="startMemoTTS()" id="btn_play" title="Play" style="width: 42px;">▶</button>
+                    <button class="btn btn-secondary px-0" onclick="stopMemoTTS()" id="btn_stop" title="Stop" style="width: 42px;">■</button>
+                    
+                    <button class="btn btn-primary" onclick="преобразоватьТекст()" id="btn_transform">Transform</button>
+                    <button class="btn btn-primary" onclick="копироватьРезультат()" id="btn_copy">Copy</button>
+                    
+                    <button class="btn btn-danger px-0" onclick="очистить()" id="btn_clear" title="Clear" style="width: 42px;">✖</button>
+                    <button type="button" class="btn btn-secondary px-0" data-bs-toggle="collapse" data-bs-target="#ttsSettings" aria-expanded="false" id="btn_settings" title="Settings" style="width: 42px;">⚙️</button>
+                    <button type="button" class="btn btn-secondary px-0" data-bs-toggle="collapse" data-bs-target="#linkList" aria-expanded="false" id="btn_links" style="width: 42px;">?</button>                  
+                </div>
 
-                <button class="btn btn-primary mt-3" onclick="преобразоватьТекст()">Transform</button>
-                <button class="btn btn-primary mt-3" onclick="копироватьРезультат()">Copy</button>
-                <button type="button" class="btn btn-secondary mt-3" data-bs-toggle="collapse" data-bs-target="#linkList" aria-expanded="false">
-                    Links
-                </button>
-                <button class="btn btn-danger mt-3" onclick="очистить()">Clear</button>
-
-                <div class="collapse mt-2" id="linkList">
+                <div class="collapse mt-3" id="linkList">
                     <ul class="list-group">
-					
-
-                        <li class="list-group-item">Tips & Tricks for Memorizaiton
-						<a href="https://docs.google.com/document/d/1JWHEFqcaNhYwYneWBnTp9rkgWecDB4IIHX1l3AxSiWM/edit?tab=t.0#heading=h.j8yrupzfcw9i">Eng</a>
-						<a href="https://docs.google.com/document/d/12A4jNFrSQywZubM7bL2pgQK0fOtr6LEBJMjGb7nTNlw/edit?tab=t.0#heading=h.j8yrupzfcw9i">Rus</a>
-						
-						</li>
-                        <li class="list-group-item"><a href="/memorize/">Open any Sutta in this way</a></li>
+                        <li class="list-group-item">To speed up memorization of some text it is helpful to reduce it to first letters only. Give it a try. E.g.: Yaṁ kiñci samudayadhammaṁ sabbaṁ taṁ nirodhadhamman.
+                        Will become: Y k s s t n.</li>
+                        <li class="list-group-item" id="link_tips">Tips & Tricks for Memorizaiton
+                            <a href="https://docs.google.com/document/d/1JWHEFqcaNhYwYneWBnTp9rkgWecDB4IIHX1l3AxSiWM/edit?tab=t.0#heading=h.j8yrupzfcw9i">Eng</a>
+                            <a href="https://docs.google.com/document/d/12A4jNFrSQywZubM7bL2pgQK0fOtr6LEBJMjGb7nTNlw/edit?tab=t.0#heading=h.j8yrupzfcw9i">Rus</a>
+                        </li>
+                        <li class="list-group-item"><a href="/memorize/" id="link_open_any">Open any Sutta in this way</a></li>
                         <li class="list-group-item"><a href="/ru/assets/texts/pm.php">Bhikkhupātimokkha</a></li>
                         <li class="list-group-item"><a href="/ru/assets/texts/bipm.php">Bhikkhunīpātimokkha</a></li>
                         <li class="list-group-item"><a href="/ru/assets/materials/prat.html">Dhamma.ru Patimokkha</a></li>
                         <li class="list-group-item"><a href="/bw/vi/vi.html#content">TBW Patimokkha</a></li>
                         <li class="list-group-item"><a href="/accesstoinsight.org/tipitaka/vin/sv/index.html">ATI Patimokkha</a></li>
-
                         <li class="list-group-item">
                             Selfcheck: <a href="./rr.html">Bhikkhu</a>
                             <a href="./rrbi.html">Bhikkhuni</a>
@@ -86,74 +84,112 @@
                     </ul>
                 </div>
 
-                <div class="mt-4">
-                    <h3>Result:</h3>
-                    <div id="результат" class="display-7 mb-5"></div>
+                <div class="collapse mt-3" id="ttsSettings">
+                    <div class="p-3 text-start mx-auto" style="background: rgba(128,128,128,0.05); border: 1px dashed #ccc; border-radius: 8px; max-width: 500px;">
+                        <h6 class="mb-2" id="tts_header">Voice Settings (TTS)</h6>
+                        <div class="row g-2 align-items-center">
+                            <div class="col-auto">
+                                <label style="font-size: 12px; color: #888;" id="tts_delim_label">Split by:</label><br>
+                                <input type="text" id="ttsDelimiter" class="form-control form-control-sm" value=".,:;?!—… |\n" style="width: 130px;" title="Characters to split segments">
+                            </div>
+                            <div class="col-auto">
+                                <label style="font-size: 12px; color: #888;" id="tts_delay_label">Pause (sec):</label><br>
+                                <input type="number" id="ttsDelay" class="form-control form-control-sm" value="0" min="0" step="0.5" style="width: 70px;">
+                            </div>
+                            <div class="col-auto">
+                                <div class="form-check mt-3 ms-2">
+                                    <input class="form-check-input" type="checkbox" id="ttsIsTranslation">
+                                    <label class="form-check-label" for="ttsIsTranslation" style="font-size: 14px;" id="tts_trn_label">Translation</label>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <div class="form-check mt-3 ms-2">
+                                    <input class="form-check-input" type="checkbox" id="ttsIsLoop" checked>
+                                    <label class="form-check-label" for="ttsIsLoop" style="font-size: 14px;" id="tts_loop_label">Loop</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <div class="mt-2 text-start">
+                    <h5 class="text-center text-muted" id="lbl_result" style="display: none;">Result:</h5>
+                    <div id="результат" class="display-7 mb-4 text-center"></div>
+                </div>
+                
+                <a href="javascript:void(0)" class="voice-link" data-slug="memo_custom" id="hiddenVoiceLink" style="display:none;"></a>
+                <div id="tts-virtual-container" class="sutta-container text-start mt-4" style="display:none; padding-bottom: 50px;"></div>
+
             </div>
         </div>
     </div>
     
-    <div class="copy-success">Copied to Clipboard</div>
+    <div class="copy-success" id="lbl_copied">Copied to Clipboard</div>
 
     <script>
+        // --- ЛОКАЛИЗАЦИЯ ИНТЕРФЕЙСА ---
+        window.addEventListener('DOMContentLoaded', () => {
+            const path = window.location.pathname;
+            const isRu = path.includes('/r/') || path.includes('/ml/') || path.includes('/ru/');
+            
+            if (isRu) {
+                document.getElementById('page_desc').innerHTML = 'Слушайте и запоминайте';
+                document.getElementById('inputText').placeholder = 'Вставьте текст, который хотите выучить';
+                
+                document.getElementById('tts_header').innerText = 'Настройки голоса (TTS)';
+                document.getElementById('tts_delim_label').innerText = 'Разделитель:';
+                document.getElementById('tts_delay_label').innerText = 'Пауза (сек):';
+                document.getElementById('tts_trn_label').innerText = 'Перевод';
+                document.getElementById('tts_loop_label').innerText = 'Зациклить';
+                
+                document.getElementById('btn_play').title = 'Слушать';
+                document.getElementById('btn_stop').title = 'Стоп';
+                document.getElementById('btn_transform').innerText = 'Преобразовать';
+                document.getElementById('btn_copy').innerText = 'Копировать';
+                document.getElementById('btn_clear').title = 'Очистить';
+                document.getElementById('btn_settings').title = 'Настройки';
+                
+                document.getElementById('link_tips').childNodes[0].nodeValue = 'Советы и хитрости заучивания ';
+                document.getElementById('link_open_any').innerText = 'Открыть любую Сутту в этом режиме';
+                
+                document.getElementById('lbl_result').innerText = 'Результат:';
+                document.getElementById('lbl_copied').innerText = 'Скопировано в буфер';
+            }
+        });
+
+        // --- ЛОГИКА ТРАНСФОРМАЦИИ ---
         function преобразоватьТекст() {
             const входнойТекст = document.getElementById("inputText").value;
             localStorage.setItem("входнойТекст", входнойТекст);
-
-            // Разбиваем текст на строки
             const строкиСКавычками = входнойТекст.split('\n');
-
             const строки = строкиСКавычками.map(строка => {
                 return строка.replace(/"/g, ' " ').replace(/—/g, ' — ').replace(/“/g, ' “ ').replace(/‘/g, " ‘ ").replace(/\?/g, " ? ").replace(/,/g, " , ").replace(/\./g, " . ").replace(/:/g, " : ").replace(/;/g, " ; ");
             });
-
             const результат = строки.map(строка => {
-                // Разбиваем каждую строку на слова
                 const слова = строка.split(/\s+/);
-
-                // Преобразуем каждое слово в первую букву или пустую строку
                 const преобразованныеСлова = слова.map(word => {
-                    const перваяБуква = word.match(/^\p{L}/u); // Используйте \p{L} для букв из разных языков
-                    if (перваяБуква) {
-                        return перваяБуква[0];
-                    } else {
+                    const перваяБуква = word.match(/^\p{L}/u); 
+                    if (перваяБуква) return перваяБуква[0];
+                    else {
                         const диакритическиеСимволы = word.match(/^[\p{M}\p{N}\p{S}\p{P}]/u);
                         return диакритическиеСимволы ? диакритическиеСимволы[0] : '';
                     }
                 });
-
-                // Объединяем преобразованные слова снова в строку
                 return преобразованныеСлова.join(' ').replace(/ \?/g, "?").replace(/“ /g, '').replace(/ ,/g, ", ").replace(/ \. /g, ". ").replace(/ : /g, ": ").replace(/ ; /g, "; ").replace(/ ‘ /g, " ");
-            }).join('\n'); // Объединяем строки с переносами
-
+            }).join('\n'); 
             document.getElementById("результат").innerText = результат;
-
-            // Сохраняем результат в Local Storage
+            document.getElementById("lbl_result").style.display = 'block'; 
             localStorage.setItem("результат", результат);
         }
 
-
-        window.addEventListener('load', function() {
-            const входнойТекст = localStorage.getItem("входнойТекст");
-            const результат = localStorage.getItem("результат");
-
-            if (входнойТекст) {
-                document.getElementById("inputText").value = входнойТекст;
-            }
-
-            if (результат) {
-                document.getElementById("результат").innerText = результат;
-            }
-        });
-
         function очистить() {
-            // Очищаем поле ввода и результат
-            if (confirm('This will erase the text. Sure?')) {
+            const path = window.location.pathname;
+            const isRu = path.includes('/r/') || path.includes('/ml/') || path.includes('/ru/');
+            const msg = isRu ? 'Это удалит текст. Уверены?' : 'This will erase the text. Sure?';
+            if (confirm(msg)) {
                 document.getElementById("inputText").value = "";
                 document.getElementById("результат").innerText = "";
-
-                // Очищаем данные в Local Storage
+                document.getElementById("lbl_result").style.display = 'none'; 
                 localStorage.removeItem("входнойТекст");
                 localStorage.removeItem("результат");
             }
@@ -161,39 +197,279 @@
 
         function копироватьРезультат() {
             const результат = document.getElementById("результат").innerText;
-
             if (результат) {
-                // Create a temporary textarea element to hold the result text
                 const tempTextarea = document.createElement("textarea");
                 tempTextarea.value = результат;
-
-                // Append the textarea to the document
                 document.body.appendChild(tempTextarea);
-
-                // Select and copy the text
                 tempTextarea.select();
                 document.execCommand("copy");
-
-                // Remove the temporary textarea
                 document.body.removeChild(tempTextarea);
-
-                // Показываем новое уведомление (как в makelist)
                 showCopySuccess();
             }
         }
 
-        // Новая функция из makelist.html
         function showCopySuccess() {
             var copySuccess = document.querySelector('.copy-success');
             copySuccess.style.display = 'block';
-            setTimeout(function() {
-                copySuccess.style.display = 'none';
-            }, 1500);
+            setTimeout(function() { copySuccess.style.display = 'none'; }, 1500);
         }
+
+        // --- ЛОГИКА СОХРАНЕНИЯ СОСТОЯНИЯ И ВОССТАНОВЛЕНИЯ ---
+        window.addEventListener('load', function() {
+            const входнойТекст = localStorage.getItem("входнойТекст");
+            const результат = localStorage.getItem("результат");
+            if (входнойТекст) document.getElementById("inputText").value = входнойТекст;
+            if (результат && результат.trim() !== "") {
+                document.getElementById("результат").innerText = результат;
+                document.getElementById("lbl_result").style.display = 'block';
+            }
+
+            const isTrn = localStorage.getItem('memo_is_translation') === 'true';
+            document.getElementById('ttsIsTranslation').checked = isTrn;
+
+            const savedDelim = localStorage.getItem('memo_tts_delimiter');
+            if (savedDelim !== null) document.getElementById('ttsDelimiter').value = savedDelim;
+
+            const savedDelay = localStorage.getItem('memo_tts_delay');
+            if (savedDelay !== null) document.getElementById('ttsDelay').value = savedDelay;
+
+            const savedLoop = localStorage.getItem('memo_tts_loop');
+            const isLoop = savedLoop === null ? true : savedLoop === 'true';
+            document.getElementById('ttsIsLoop').checked = isLoop;
+        });
+
+        // Динамическое обновление и сохранение настроек
+        document.getElementById('ttsIsTranslation').addEventListener('change', (e) => {
+            localStorage.setItem('memo_is_translation', e.target.checked);
+        });
+        document.getElementById('ttsDelimiter').addEventListener('input', (e) => {
+            localStorage.setItem('memo_tts_delimiter', e.target.value);
+        });
+        document.getElementById('ttsIsLoop').addEventListener('change', (e) => {
+            localStorage.setItem('memo_tts_loop', e.target.checked);
+        });
+        
+        // Мгновенное применение интервала для следующего фрагмента (без перезапуска)
+        document.getElementById('ttsDelay').addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value) || 0;
+            localStorage.setItem('memo_tts_delay', val);
+            window.TTS_SEGMENT_DELAY = val * 1000;
+        });
+
+        // Сброс прогресса и остановка при редактировании текста
+        document.getElementById('inputText').addEventListener('input', () => {
+            stopMemoTTS();
+        });
+
+
+        // --- ЛОГИКА TTS ПЛЕЕРА ---
+        window.mockPaliJson = {};
+        const originalFetch = window.fetch;
+        window.fetch = async function() {
+            const url = arguments[0];
+            if (typeof url === 'string' && url.includes('memo_custom_rootd-pli-ms.json')) {
+                return new Response(JSON.stringify(window.mockPaliJson), {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
+            return originalFetch.apply(this, arguments);
+        };
+
+        function convertPaliToDevanagari(str) {
+            const mapping = {
+                'kh':'ख', 'gh':'घ', 'ch':'छ', 'jh':'झ', 'ṭh':'ठ', 'ḍh':'ढ', 'th':'थ', 'dh':'ध', 'ph':'फ', 'bh':'भ',
+                'k':'क', 'g':'ग', 'ṅ':'ङ', 'c':'च', 'j':'ज', 'ñ':'ञ', 'ṭ':'ट', 'ḍ':'ड', 'ṇ':'ण', 't':'त', 'd':'द', 'n':'न',
+                'p':'प', 'b':'ब', 'm':'म', 'y':'य', 'r':'र', 'l':'ल', 'ḷ':'ळ', 'v':'व', 's':'स', 'h':'ह'
+            };
+            const vowels = {'a':'अ', 'ā':'आ', 'i':'इ', 'ī':'ई', 'u':'उ', 'ū':'ऊ', 'e':'ए', 'o':'ओ'};
+            const marks = {'ā':'ा', 'i':'ि', 'ī':'ी', 'u':'ु', 'ū':'ू', 'e':'े', 'o':'ो'};
+            let res = ""; let i = 0; str = str.toLowerCase();
+
+            while (i < str.length) {
+                let char = str[i]; let nextChar = str[i+1] || ''; let doubleChar = char + nextChar;
+                
+                if (char === 'ṃ' || char === 'ṁ') { 
+                    if (i === str.length - 1) {
+                        res += 'ङ्'; 
+                    } else {
+                        res += 'ं'; 
+                    }
+                    i++; continue; 
+                }
+                
+                if (vowels[char]) {
+                    if (i === 0 || !str[i-1].match(/[a-zāīūṭḍṇṅñṃḷ]/i) || vowels[str[i-1]]) res += vowels[char];
+                    i++; continue;
+                }
+                let cons = mapping[doubleChar] ? doubleChar : (mapping[char] ? char : null);
+                if (cons) {
+                    res += mapping[cons]; i += cons.length; let v = str[i];
+                    if (vowels[v]) {
+                        if (v !== 'a') res += marks[v];
+                        i++;
+                    } else if (!v || (v !== ' ' && !v.match(/[.,;!?\n]/))) {
+                        res += '्'; 
+                        
+                        if (v === 'h' && char === 'm') {
+                            res += ' '; 
+                        }
+                    }
+                    continue;
+                }
+                res += char; i++;
+            }
+            return res;
+        }
+
+        function startMemoTTS() {
+            // Закрываем меню настроек при старте
+            const settingsPanel = document.getElementById('ttsSettings');
+            if (settingsPanel && settingsPanel.classList.contains('show')) {
+                const bsCollapse = bootstrap.Collapse.getInstance(settingsPanel);
+                if (bsCollapse) bsCollapse.hide();
+                else settingsPanel.classList.remove('show');
+            }
+
+            let text = document.getElementById("inputText").value.trim();
+            if (!text) return;
+
+            let rawDelim = document.getElementById("ttsDelimiter").value;
+            rawDelim = rawDelim.replace(/\\n/g, '\n'); 
+            
+            let segments = [text];
+            if (rawDelim) {
+                for (let char of rawDelim) {
+                    let newSegments = [];
+                    for (let seg of segments) {
+                        newSegments.push(...seg.split(char));
+                    }
+                    segments = newSegments;
+                }
+            }
+            segments = segments.map(s => s.trim()).filter(s => s.length > 0);
+
+            if (segments.length === 0) return;
+
+            const delaySec = parseFloat(document.getElementById("ttsDelay").value) || 0;
+            window.TTS_SEGMENT_DELAY = delaySec * 1000;
+
+            const isTranslation = document.getElementById("ttsIsTranslation").checked;
+            const container = document.getElementById("tts-virtual-container");
+            container.innerHTML = ''; 
+            container.style.display = 'block'; 
+            window.mockPaliJson = {}; 
+
+            segments.forEach((seg, index) => {
+                const id = `memo_custom:1.${index+1}`; 
+                const span = document.createElement('span');
+                span.id = id;
+                span.style.display = 'inline-block';
+                span.style.margin = '2px 4px';
+                
+                if (isTranslation) {
+                    if (/[а-яА-ЯёЁ]/.test(seg)) span.className = 'rus-lang';
+                    else if (/[\u0E00-\u0E7F]/.test(seg)) span.className = 'tha-lang';
+                    else span.className = 'eng-lang';
+                    span.textContent = seg;
+                } else {
+                    span.className = 'pli-lang';
+                    span.textContent = seg; 
+                    
+                    if (/[\u0900-\u097F]/.test(seg)) {
+                        window.mockPaliJson[id] = seg + " ।";
+                    } else {
+                        window.mockPaliJson[id] = convertPaliToDevanagari(seg) + " ।"; 
+                    }
+                }
+                container.appendChild(span);
+            });
+
+            const targetMode = isTranslation ? 'trn' : 'pi';
+            localStorage.setItem('tts_preferred_mode', targetMode);
+            const modeSelect = document.getElementById('tts-mode-select');
+            if (modeSelect) modeSelect.value = targetMode;
+
+            document.getElementById('hiddenVoiceLink').click();
+
+            // Плавный отступ под высоту плеера
+            document.body.style.transition = 'padding-bottom 0.4s ease';
+            document.body.style.paddingBottom = '120px';
+
+            // Инициализация границ для работы цикла (запускает tts-range-finished в конце)
+            setTimeout(() => {
+                if (window.ttsAPI) {
+                    const state = window.ttsAPI.getState();
+                    if (state.playlist && state.playlist.length > 0) {
+                        state.startIndex = 0;
+                        state.endIndex = state.playlist.length - 1;
+                        state.currentIndex = 0; // Сбрасываем индекс на начало
+                    }
+                }
+            }, 400);
+        }
+
+        function stopMemoTTS() {
+            if (window.ttsAPI) {
+                const state = window.ttsAPI.getState();
+                state.currentIndex = 0; // Сброс прогресса
+                if (window.ttsAPI.stop) window.ttsAPI.stop();
+            }
+            const container = document.getElementById("tts-virtual-container");
+            container.innerHTML = '';
+            container.style.display = 'none';
+
+            document.body.style.paddingBottom = '0px';
+        }
+
+        // --- ЛОГИКА ЗАЦИКЛИВАНИЯ ---
+        document.addEventListener('tts-range-finished', () => {
+            const isLoop = document.getElementById('ttsIsLoop').checked;
+            if (isLoop) {
+                const delaySec = parseFloat(document.getElementById("ttsDelay").value) || 0;
+                // Задержка перед повторным стартом (если пауза 0, то ждем полсекунды)
+                const waitTime = delaySec > 0 ? delaySec * 1000 : 500;
+                
+                setTimeout(() => {
+                    const container = document.getElementById("tts-virtual-container");
+                    // Если контейнер скрыт, значит пользователь нажал Стоп вручную — прерываем цикл
+                    if (container.style.display !== 'none' && document.getElementById('ttsIsLoop').checked) {
+                        startMemoTTS();
+                    }
+                }, waitTime);
+            }
+        });
+
+        // --- СИНХРОНИЗАЦИЯ С КНОПКАМИ VOICE.JS ---
+        document.addEventListener('click', (e) => {
+            const playMainBtn = e.target.closest('.play-main-button');
+            const closeMainBtn = e.target.closest('.close-tts-btn');
+            
+            // Если нажали "Play" внутри voice.js
+            if (playMainBtn) {
+                if (window.ttsAPI) {
+                    const state = window.ttsAPI.getState();
+                    // Если сейчас ничего не воспроизводится (полностью остановлено),
+                    // мы перехватываем клик и заставляем его заново нарезать текст из инпута.
+                    if (!state.speaking) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        startMemoTTS();
+                    }
+                    // Если уже играет/на паузе - не мешаем, voice.js сам снимет с паузы.
+                }
+            }
+            
+            // Если закрыли плеер крестиком внутри voice.js - сбрасываем всё
+            if (closeMainBtn) {
+                stopMemoTTS();
+            }
+        }, { capture: true }); // capture: true позволяет перехватить клик до того, как до него доберется voice.js
+
     </script>
 
     <script src="/assets/js/bootstrap.bundle.5.3.1.min.js"></script>
     <script src="/assets/js/dark-mode-switch/dark-mode-switch.js"></script>
-
+    <script src="/read/js/voice.js" defer></script>
 </body>
 </html>
