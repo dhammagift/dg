@@ -110,16 +110,30 @@
                 display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; 
             }
             
-            .mem-btn-wrapper { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; }
+            .mem-btn-wrapper { 
+                display: flex; align-items: center; gap: 4px; 
+                flex: 1; min-width: 0; width: 50%; /* Жестко делим пространство пополам */
+            }
             .mem-btn-label { color: #aaa; font-size: 11px; flex-shrink: 0; font-weight: 600; }
 
             .mem-pick-btn {
-                flex: 1; min-width: 0; 
+                flex: 1; min-width: 0; width: 100%; /* Запрещаем кнопке вылезать за пределы обертки */
                 background: #eee; border: 1px dashed #ccc; color: #555;
                 padding: 4px; border-radius: 4px; font-size: 11px; cursor: pointer;
-                transition: all 0.2s; text-align: left; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+                transition: all 0.2s; text-align: left; 
+                overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
                 user-select: none; -webkit-user-select: none; 
+                display: block; /* Меняем на block для правильной работы обрезки текста */
             }
+            
+            /* Жестко обрезаем текст внутри спана, чтобы он не распирал кнопку */
+            .mem-pick-btn span {
+                display: block;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
             .dark .mem-pick-btn { background: #333; border-color: #555; color: #aaa; }
             
             .mem-pick-btn.picking { border-color: var(--blue, #3434be); background: rgba(52, 52, 190, 0.1); animation: memPulseLight 1.5s infinite; color: #333; }
