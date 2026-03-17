@@ -174,6 +174,12 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
         </svg>
     </button>
     
+    
+    <button class="btn btn-warning text" onclick="expandWithAI()" id="btn_ai" style="background-color: #6f42c1; border-color: #6f42c1; color: white;">
+   ✨ AI  Expand
+</button>
+
+    
     <!-- Settings -->
     <button type="button" class="btn btn-secondary icon" data-bs-toggle="collapse" data-bs-target="#ttsSettings" aria-expanded="false" id="btn_settings" title="Settings">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -268,6 +274,31 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
     <div class="copy-success" id="lbl_copied">Copied to Clipboard</div>
 
     <script>
+function expandWithAI() {
+    const text = document.getElementById("inputText").value.trim();
+    if (!text) return;
+
+    // Улучшенный промпт с подсказками по спискам Дхаммы
+    const prompt = `You are an expert philologist and Tipitaka scholar. 
+The provided text contains repetition markers (such as "...pe...", "...", "и т.д.", "etc."). 
+
+1. Identify the language and the specific pattern. 
+2. If it is a Dhamma sequence, recognize the list: 5 aggregates (khandhas), 6 sense bases (ayatanas), 12 links of dependent origination (nidanas), 18 elements (dhatu), 32 parts of the body, etc.
+3. Expand the sequence to its full version, strictly following the grammatical rules, case endings, and style of the input language (Pali, Russian, English, etc.).
+4. Replace the markers with the complete iterations.
+Output ONLY the fully expanded text without any introductory or concluding remarks:
+
+${text}`;
+
+    const encodedPrompt = encodeURIComponent(prompt);
+
+    // Открываем Gemini (он лучше всего держит длинные контексты)
+  //  const url = `https://gemini.google.com/app?q=${encodedPrompt}`;
+   const url = `https://chatgpt.com/?q=${encodedPrompt}`; 
+    window.open(url, '_blank');
+}
+
+      
         // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ---
         window.memoLoopsPlayed = 0;
         window.memoCountdownInterval = null; 
@@ -599,6 +630,17 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
             let text = document.getElementById("inputText").value.trim();
             if (!text) return;
 
+            // --- 1. ЖЕЛЕЗНАЯ ЛОГИКА: ОПРЕДЕЛЯЕМ ЯЗЫК ОДИН РАЗ ПО ВСЕМУ ТЕКСТУ ---
+            let detectedLang = 'en'; // по умолчанию английский
+            if (/[а-яА-ЯёЁ]/.test(text)) {
+                detectedLang = 'ru'; // Если есть хоть одна русская буква — это русский
+            } else if (/[\u0E00-\u0E7F]/.test(text)) {
+                detectedLang = 'th'; // Тайский
+            }
+            // Сохраняем глобально, чтобы voice.js мог это считать
+            window.memoDetectedTrnLang = detectedLang; 
+            // -------------------------------------------------------------------
+
             let rawDelim = document.getElementById("ttsDelimiter").value;
             rawDelim = rawDelim.replace(/\\n/g, '\n'); 
             
@@ -623,12 +665,11 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
             const isTranslation = document.getElementById("ttsIsTranslation").checked;
             const container = document.getElementById("tts-virtual-container");
             
-            // Защита: Если контейнер не пуст, значит мы просто снимаем с паузы или восстанавливаем плеер,
-            // не пересобираем DOM (позволяя voice.js подхватить старый индекс).
+            // Если контейнер пуст, пересобираем DOM с правильными классами
             if (!container.innerHTML) {
                 container.style.display = 'block'; 
                 window.mockPaliJson = {}; 
-
+                
                 segments.forEach((seg, index) => {
                     const id = `memo_custom:1.${index+1}`; 
                     const span = document.createElement('span');
@@ -636,29 +677,34 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
                     span.style.display = 'inline-block';
                     span.style.margin = '2px 4px';
                     
-                    if (isTranslation) {
-                        if (/[а-яА-ЯёЁ]/.test(seg)) span.className = 'rus-lang';
-                        else if (/[\u0E00-\u0E7F]/.test(seg)) span.className = 'tha-lang';
-                        else span.className = 'eng-lang';
-                        span.textContent = seg;
-                } else {
-                    span.className = 'pli-lang';
-                    span.textContent = seg; 
-                    
-                    let converted;
                     if (/[\u0900-\u097F]/.test(seg)) {
-                        converted = seg;
+                        // Деванагари -> всегда читается как Пали
+                        span.className = 'pli-lang';
+                        span.textContent = seg;
+                        window.mockPaliJson[id] = "“" + seg + "”"; 
                     } else {
-                        converted = convertPaliToDevanagari(seg);
+                        // Для всех остальных алфавитов смотрим на галку "Перевод"
+                        if (isTranslation) {
+                            if (detectedLang === 'ru') span.className = 'rus-lang';
+                            else if (detectedLang === 'th') span.className = 'tha-lang';
+                            else span.className = 'eng-lang';
+                            
+                            span.textContent = seg;
+                        } else {
+                            // Если галка снята, считаем это латинским Пали
+                            span.className = 'pli-lang';
+                            span.textContent = seg; 
+                            window.mockPaliJson[id] = "“" + convertPaliToDevanagari(seg) + "”"; 
+                        }
                     }
-                    
-                    // Оборачиваем в кавычки для стабильности чтения коротких слов
-                    // Кавычки заставляют TTS читать сегмент как отдельную цитату
-                    window.mockPaliJson[id] = "“" + converted + "”"; 
-                }
 
                     container.appendChild(span);
                 });
+
+                // ХАК: Подсовываем voice.js наш язык, который мы определили выше
+                window.detectTranslationLang = function() {
+                    return window.memoDetectedTrnLang;
+                };
             }
 
             const targetMode = isTranslation ? 'trn' : 'pi';
@@ -677,11 +723,12 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
                     if (state.playlist && state.playlist.length > 0) {
                         state.startIndex = 0;
                         state.endIndex = state.playlist.length - 1;
-                        // state.currentIndex = 0; -> УДАЛЕНО: Теперь voice.js сам восстановит индекс из памяти!
                     }
                 }
             }, 400);
         }
+
+
 
         // Централизованная функция ОСТАНОВКИ (с поддержкой сброса)
         function stopMemoTTS(fullReset = true) {
