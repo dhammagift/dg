@@ -567,6 +567,7 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
                         i++;
                     } else if (!v || (v !== ' ' && !v.match(/[.,;!?\n]/))) {
                         res += '्'; 
+                        if (v === 'h' && char === 'm') res += '\u200C';
                     }
                     continue;
                 }
@@ -641,16 +642,22 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
                         else if (/[\u0E00-\u0E7F]/.test(seg)) span.className = 'tha-lang';
                         else span.className = 'eng-lang';
                         span.textContent = seg;
+                } else {
+                    span.className = 'pli-lang';
+                    span.textContent = seg; 
+                    
+                    let converted;
+                    if (/[\u0900-\u097F]/.test(seg)) {
+                        converted = seg;
                     } else {
-                        span.className = 'pli-lang';
-                        span.textContent = seg; 
-                        
-                        if (/[\u0900-\u097F]/.test(seg)) {
-                            window.mockPaliJson[id] = seg + " ।";
-                        } else {
-                            window.mockPaliJson[id] = convertPaliToDevanagari(seg) + " ।"; 
-                        }
+                        converted = convertPaliToDevanagari(seg);
                     }
+                    
+                    // Оборачиваем в кавычки для стабильности чтения коротких слов
+                    // Кавычки заставляют TTS читать сегмент как отдельную цитату
+                    window.mockPaliJson[id] = "“" + converted + "”"; 
+                }
+
                     container.appendChild(span);
                 });
             }
