@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="/assets/img/favico-noglass.png" />
-    <title>Meditation & Memorisation</title>
+    <title>Memorize & Meditate</title>
     <link href="/assets/css/styles.css" rel="stylesheet" />
     <link href="/assets/css/extrastyles.css" rel="stylesheet" />
     <link rel="stylesheet" href="/read/css/voice.css">
@@ -113,9 +113,18 @@
                 <a href="/read.php" title="Sutta and Vinaya reading" rel="noreferrer" class="me-1">
                     <svg fill="#979797" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="26px" viewBox="0 0 547.596 547.596" xml:space="preserve" stroke="#979797"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#CCCCCC" stroke-width="3.285576"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M540.76,254.788L294.506,38.216c-11.475-10.098-30.064-10.098-41.386,0L6.943,254.788 c-11.475,10.098-8.415,18.284,6.885,18.284h75.964v221.773c0,12.087,9.945,22.108,22.108,22.108h92.947V371.067 c0-12.087,9.945-22.108,22.109-22.108h93.865c12.239,0,22.108,9.792,22.108,22.108v145.886h92.947 c12.24,0,22.108-9.945,22.108-22.108v-221.85h75.965C549.021,272.995,552.081,264.886,540.76,254.788z"></path> </g> </g></svg>
                 </a>
-                <a href="/ru" title="Sutta and Vinaya search" rel="noreferrer" class="me-1">
+                <a href="/" title="Sutta and Vinaya search" rel="noreferrer" class="me-1">
                     <img width="24px" alt="dhamma.gift icon" src="/assets/img/gray-white.png">
                 </a>
+               
+<a onclick="toggleQuickModal()" 
+   aria-label="Open Cattāri Ariyasaccāni"
+   style="cursor: pointer;" 
+   class="me-1 d-flex align-items-center ms-1 ">
+    <img src="/assets/svg/compass.svg" style="width: 22px; height: 22px;">
+</a>
+
+
                 <div class="ms-1 form-check form-switch">
                     <input type="checkbox" class="form-check-input" id="darkSwitch">
                 </div>
@@ -128,10 +137,10 @@
     <div class="container mt-1">
         <div class="row ">
             <div class="col-12 text-center">
-                <h1 id="page_h1" class="mt-3 mb-4">Meditate & Memorize</h1>
+                <h1 id="page_h1" class="mt-3 mb-4">Memorize & Meditate </h1>
                 <p class="text-muted" id="page_desc">Persist with diligence</p>
 
-                <textarea id="inputText" class="form-control mb-3 inputdiv" rows="10" placeholder="Paste text that you want to memorize">atthi imasmiṁ kāye kesā lomā nakhā dantā 
+                <textarea id="inputText" class="form-control mb-3 inputdiv" rows="10" placeholder="Paste text that you want to memorize or ponder on">atthi imasmiṁ kāye kesā lomā nakhā dantā 
 taco maṁsaṁ nhāru aṭṭhi aṭṭhimiñjaṁ 
 vakkaṁ hadayaṁ yakanaṁ kilomakaṁ pihakaṁ papphāsaṁ antaṁ antaguṇaṁ udariyaṁ karīsaṁ 
 pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā lasikā muttanti |</textarea>
@@ -329,10 +338,10 @@ ${text}`;
         // --- ЛОКАЛИЗАЦИЯ ИНТЕРФЕЙСА ---
         window.addEventListener('DOMContentLoaded', () => {
             if (window.memoLang === 'ru') {
-              document.title = 'Медитация и Память';
-                document.getElementById('page_h1').innerHTML = 'Медитация и Запоминание';
+              document.title = 'Память и Медитация';
+                document.getElementById('page_h1').innerHTML = 'Памятование и Медитация';
                 document.getElementById('page_desc').innerHTML = 'Прилежно стремитесь к цели';
-                document.getElementById('inputText').placeholder = 'Вставьте текст, который хотите выучить';
+                document.getElementById('inputText').placeholder = 'Вставьте текст, который хотите выучить или изучить в медитации';
                 document.getElementById('tts_header').innerText = 'Настройки голоса (TTS)';
                 document.getElementById('tts_delim_label').innerText = 'Разделитель:';
                 document.getElementById('tts_delay_label').innerText = 'Интервал (сек):';
@@ -967,6 +976,8 @@ ${text}`;
 
     <script src="/assets/js/bootstrap.bundle.5.3.1.min.js"></script>
     <script src="/assets/js/dark-mode-switch/dark-mode-switch.js"></script>
+    <script src="/assets/js/settings.js" defer></script>
+
     <script src="/read/js/voice.js" defer></script>
 </body>
 </html>

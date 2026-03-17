@@ -1493,7 +1493,9 @@ function createQuickModal() {
           <button class="quick-tab-btn" data-tab="tab-memo">${tabMemoText}</button>
           <button class="quick-tab-btn" data-tab="tab-dpd">${tabDpdText}</button>
         </div>
-        <span class="clear-all-btn" id="main-trash-icon" title="${titleClearAll}">🗑️</span>
+        <span class="clear-all-btn" id="main-trash-icon" title="${titleClearAll}">
+           <img src="/assets/svg/trash-can-regular-full.svg" width="25" height="25" alt="Reset">
+</span>
       </div>
 
       <div id="tab-fav" class="quick-tab-content active">
