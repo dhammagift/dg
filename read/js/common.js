@@ -420,3 +420,67 @@ document.addEventListener('click', (e) => {
         updateFavoriteIconState();
     }
 });
+
+
+// ==========================================
+// ГЛОБАЛЬНЫЙ ПЕРЕХВАТЧИК ДЛЯ ССЫЛОК MEMO
+// ==========================================
+document.addEventListener('click', function(e) {
+    // Ищем, кликнули ли мы по ссылке (или внутри ссылки), ведущей на memo.html
+    const memoLink = e.target.closest('a[href*="memo.html"]');
+    
+    // Игнорируем кнопку плеера (у нее свой обработчик в voice-mem.js) и iframe
+    if (memoLink && memoLink.id !== 'memo-app-btn') {
+        let textToPass = '';
+        
+        const activeWord = document.querySelector('.active-word');
+        const highlighted = Array.from(document.querySelectorAll('.memorize-highlight'));
+        const ttsActive = document.querySelector('.tts-active');
+
+        // Проверяем, находится ли активное слово внутри диапазона А-Б
+        let isWordInsideAB = false;
+        if (activeWord && highlighted.length > 0) {
+            isWordInsideAB = activeWord.closest('.memorize-highlight') !== null;
+        }
+
+        // 1. ПРИОРИТЕТ: Активное слово ВНЕ диапазона А-Б
+        if (activeWord && !isWordInsideAB) {
+            textToPass = activeWord.innerText || activeWord.textContent;
+        } 
+        // 2. ПРИОРИТЕТ: Весь диапазон А-Б
+        else if (highlighted.length > 0) {
+            const ttsMode = localStorage.getItem('tts_preferred_mode') || 'pi';
+            let filtered = highlighted;
+
+            if (ttsMode === 'pi') {
+                filtered = highlighted.filter(el => el.classList.contains('pli-lang'));
+            } else if (ttsMode === 'trn') {
+                filtered = highlighted.filter(el => !el.classList.contains('pli-lang'));
+            }
+            
+            if (filtered.length === 0) filtered = highlighted;
+            textToPass = filtered.map(el => el.innerText || el.textContent).join('\n');
+        } 
+        // 3. ПРИОРИТЕТ: Текущая читаемая строка (TTS)
+        else if (ttsActive) {
+            textToPass = ttsActive.innerText || ttsActive.textContent;
+        }
+        
+        textToPass = textToPass ? textToPass.trim() : '';
+
+        // Определяем базовый URL в зависимости от языка интерфейса
+        const isRuPath = window.location.pathname.includes('/r/') || 
+                         window.location.pathname.includes('/ml/') || 
+                         window.location.pathname.includes('/ru/');
+                         
+        const baseUrl = isRuPath ? '/ru/assets/memo.html' : '/assets/memo.html';
+        
+        // Динамически обновляем href прямо перед тем, как браузер по нему перейдет!
+        if (textToPass) {
+            memoLink.href = `${baseUrl}?text=${encodeURIComponent(textToPass)}`;
+        } else {
+            memoLink.href = baseUrl;
+        }
+        // Браузер сам откроет обновленную ссылку (т.к. мы не делаем e.preventDefault())
+    }
+});
