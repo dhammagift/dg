@@ -1884,8 +1884,13 @@ function getPlayerHtml() {
                        value="${savedKey}" 
                        placeholder="Google API Key" 
                        title="Enter Google Cloud TTS API Key for premium voices">
-                <button id="refresh-voices-btn" class="refresh-api-btn" title="Refresh Voice List">↻</button>
-                <button id="reset-tts-btn" class="reset-tts-btn" title="Full Reset (Clear Data)">🗑️</button>
+                <button id="refresh-voices-btn" class="refresh-api-btn" title="Refresh Voice List">
+        <img src="/assets/svg/rotate-right-solid-full.svg" width="16" height="16" alt="Refresh">     
+                </button>
+<button id="reset-tts-btn" class="reset-tts-btn" title="Full Reset (Clear Data)">
+    <img src="/assets/svg/trash-can-regular-full.svg" width="16" height="16" alt="Reset">
+</button>
+
               </div>
 
               <div id="google-voice-settings-container" style="display:none; margin-top: 8px;">
