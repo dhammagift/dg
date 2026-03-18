@@ -323,7 +323,7 @@
 
                         <label class="mem-label">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.2v-2a4 4 0 0 1 4-4h12.8M7 21.9l-4-4 4-4"/><path d="M21 11.8v2a4 4 0 0 1-4 4H4.2"/></svg> 
-                            <input id="mem-reps" class="mem-input" type="${repsType}" min="0" step="1" value="${memState.repsInput}">
+                            <input id="mem-reps" class="mem-input" type="${repsType}" min="0" step="1" value="${memState.repsInput}" autocomplete="off">
                         </label>
                         <button id="mem-clear-btn" class="mem-clear-btn" title="Сбросить цикл">️
     <img src="/assets/svg/trash-can-regular-full.svg" width="16" height="16" alt="Reset"></button>
@@ -858,6 +858,8 @@
         const repsInput = document.getElementById('mem-reps');
         repsInput.type = memState.repsInput === '∞' ? 'text' : 'number';
         repsInput.value = memState.repsInput;
+        
+        repsInput.setAttribute('autocomplete', 'off');
 
         if (!memState.isActive) {
             const statusEl = document.getElementById('mem-status');
