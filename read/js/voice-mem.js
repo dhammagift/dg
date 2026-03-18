@@ -300,8 +300,6 @@
                 const panel = document.createElement('div');
                 panel.id = 'memorize-panel';
                 if (memState.isPanelOpen) panel.classList.add('visible');
-                
-                const repsType = memState.repsInput === '∞' ? 'text' : 'number';
 
                 panel.innerHTML = `
                     <div class="mem-row">
@@ -324,8 +322,7 @@
 
                         <label class="mem-label">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.2v-2a4 4 0 0 1 4-4h12.8M7 21.9l-4-4 4-4"/><path d="M21 11.8v2a4 4 0 0 1-4 4H4.2"/></svg> 
-<input id="mem-reps" class="mem-input" type="${repsType}" min="0" step="1" value="${memState.repsInput}" autocomplete="off" data-lpignore="true">
-
+<input id="mem-reps" class="mem-input" type="text" inputmode="numeric" value="${memState.repsInput}" autocomplete="off" data-lpignore="true" spellcheck="false">
                         </label>
                         <button id="mem-clear-btn" class="mem-clear-btn" title="Сбросить цикл">️
     <img src="/assets/svg/trash-can-regular-full.svg" width="16" height="16" alt="Reset"></button>
@@ -473,15 +470,6 @@
             }
         });
 
-        document.addEventListener('focusin', (e) => {
-            if (e.target.id === 'mem-reps') {
-                if (e.target.value === '∞') {
-                    e.target.type = 'number';
-                    e.target.value = '0';
-                }
-            }
-        });
-
         document.addEventListener('input', (e) => {
             if (e.target.id === 'mem-interval') {
                 let val = parseFloat(e.target.value);
@@ -492,15 +480,14 @@
                 }
             }
             if (e.target.id === 'mem-reps') {
-                if (e.target.value === '0') {
-                    e.target.type = 'text';
+                let val = e.target.value.replace(/[^0-9∞]/g, ''); 
+                if (val === '0') {
                     e.target.value = '∞';
                     memState.repsInput = '∞';
-                    e.target.blur(); 
                 } else {
-                    memState.repsInput = e.target.value;
+                    e.target.value = val;
+                    memState.repsInput = val || '∞';
                 }
-                
                 memState.repsPlayed = 0; 
                 updateRepsLeft();
                 if (memState.isActive && !memState.currentCountdownTime) {
@@ -524,7 +511,6 @@
             }
             if (e.target.id === 'mem-reps') {
                 if (e.target.value.trim() === '' || e.target.value === '0') {
-                    e.target.type = 'text';
                     e.target.value = '∞';
                     memState.repsInput = '∞';
                     memState.repsPlayed = 0;
@@ -858,7 +844,6 @@
         document.getElementById('mem-interval').value = memState.intervalMinutes;
         
         const repsInput = document.getElementById('mem-reps');
-        repsInput.type = memState.repsInput === '∞' ? 'text' : 'number';
         repsInput.value = memState.repsInput;
         
         repsInput.setAttribute('autocomplete', 'off');
