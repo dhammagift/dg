@@ -11,7 +11,7 @@
         b: isRu ? 'Б:' : 'B:',
         notSet: isRu ? 'не выбрана' : 'not set',
         titlePick: isRu ? 'Нажмите для выбора. ПКМ или долгое нажатие для сброса.' : 'Click to select. Right-Click / Long-Press to clear.',
-        interval: isRu ? 'мин' : 'min',
+        interval: isRu ? 'сек' : 'sec', // Изменено на секунды
         playing: isRu ? 'Проигрывание... (осталось: ' : 'Playing... (left: ',
         paused: isRu ? 'Пауза... Старт через ' : 'Paused... Next in ',
         abLoopTitle: 'AB'
@@ -23,7 +23,7 @@
         lineB: null,
         snippetA: '', 
         snippetB: '', 
-        intervalMinutes: 0,
+        intervalSeconds: 0, // Изменено название переменной на секунды
         repsInput: '∞', 
         repsPlayed: 0,   
         repsLeft: 0,     
@@ -289,7 +289,7 @@
                 panel.id = 'memorize-panel';
                 if (memState.isPanelOpen) panel.classList.add('visible');
                 
-                // ТЕПЕРЬ ОБА ПОЛЯ (минуты и повторы) — ЭТО SPAN 
+                // ТЕПЕРЬ ОБА ПОЛЯ (минуты/секунды и повторы) — ЭТО SPAN 
                 panel.innerHTML = `
                     <div class="mem-row">
                         <div class="mem-btn-wrapper">
@@ -305,7 +305,7 @@
                     <div class="mem-row" style="justify-content: space-around; gap: 5px;">
                         <label class="mem-label">
                             <img src="/assets/svg/hourglass-regular-full.svg" width="14" height="14" alt="timer" style="margin-right: 4px; vertical-align: text-bottom;">
-<span id="mem-interval" class="mem-input" contenteditable="true" inputmode="decimal" spellcheck="false" style="display:inline-block; box-sizing:border-box; min-width: 42px; outline: none; line-height: 1.6; cursor: text;">${memState.intervalMinutes}</span> ${L.interval}
+<span id="mem-interval" class="mem-input" contenteditable="true" inputmode="decimal" spellcheck="false" style="display:inline-block; box-sizing:border-box; min-width: 42px; outline: none; line-height: 1.6; cursor: text;">${memState.intervalSeconds}</span> ${L.interval}
                         </label>
 
                         <label class="mem-label" title="0 = Бесконечно">
@@ -338,7 +338,7 @@
                 memState.lineB = saved.lineB;
                 memState.snippetA = saved.snippetA || '';
                 memState.snippetB = saved.snippetB || '';
-                memState.intervalMinutes = saved.intervalMinutes !== undefined ? saved.intervalMinutes : 0;
+                memState.intervalSeconds = saved.intervalSeconds !== undefined ? saved.intervalSeconds : 0;
                 memState.repsInput = saved.repsInput || '∞'; 
             }
         } catch(e) {}
@@ -357,7 +357,7 @@
                 lineB: memState.lineB,
                 snippetA: memState.snippetA,
                 snippetB: memState.snippetB,
-                intervalMinutes: memState.intervalMinutes,
+                intervalSeconds: memState.intervalSeconds,
                 repsInput: memState.repsInput,
                 timestamp: Date.now()
             };
@@ -499,10 +499,11 @@
                 }
 
                 let val = parseFloat(text);
-                memState.intervalMinutes = isNaN(val) ? 0 : val;
+                memState.intervalSeconds = isNaN(val) ? 0 : val;
                 
                 if (memState.countdownId && memState.pauseStartedAt) {
-                    memState.targetTimestamp = memState.pauseStartedAt + (memState.intervalMinutes * 60 * 1000);
+                    // Умножаем на 1000 для перевода секунд в миллисекунды (раньше было * 60 * 1000)
+                    memState.targetTimestamp = memState.pauseStartedAt + (memState.intervalSeconds * 1000);
                 }
                 // saveState();
             }
@@ -539,7 +540,7 @@
                 let val = parseFloat(e.target.innerText);
                 if (e.target.innerText.trim() === '' || isNaN(val)) {
                     e.target.innerText = '0';
-                    memState.intervalMinutes = 0;
+                    memState.intervalSeconds = 0;
                 }
                 if (memState.countdownId && memState.pauseStartedAt) {
                     memState.targetTimestamp = memState.pauseStartedAt;
@@ -864,7 +865,7 @@
         btnB.className = `mem-pick-btn ${memState.pickMode === 'B' ? 'picking' : ''} ${memState.lineB ? 'set' : ''}`;
 
         const intervalSpan = document.getElementById('mem-interval');
-        if (intervalSpan) intervalSpan.innerText = memState.intervalMinutes;
+        if (intervalSpan) intervalSpan.innerText = memState.intervalSeconds;
         
         const repsSpan = document.getElementById('mem-repeat-times');
         if (repsSpan) repsSpan.innerText = memState.repsInput;
@@ -929,7 +930,8 @@
             return;
         }
 
-        const msInterval = memState.intervalMinutes * 60 * 1000;
+        // Перевод секунд в миллисекунды (было * 60 * 1000)
+        const msInterval = memState.intervalSeconds * 1000;
         
         if (msInterval <= 0) {
             playCurrentRange();
@@ -958,6 +960,7 @@
                 return;
             }
             
+            // Формат отображения таймера оставил как ММ:СС (например, если поставить 65 сек, будет 1:05)
             const mins = Math.floor(timeLeft / 60000);
             const secs = Math.floor((timeLeft % 60000) / 1000);
             const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
