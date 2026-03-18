@@ -61,8 +61,8 @@
         
             .memo-app-btn {
                 position: absolute;
-                left: 20px;  /* Симметрично кнопке AB (которая right: 20px) */
-                top: 34px;   /* На том же уровне, что и AB, чтобы быть ВНИЗУ плеера */
+                left: 20px;
+                top: 34px;
                 background: transparent;
                 border: 1px solid #ccc;
                 border-radius: 4px;
@@ -138,21 +138,20 @@
             
             .mem-btn-wrapper { 
                 display: flex; align-items: center; gap: 4px; 
-                flex: 1; min-width: 0; width: 50%; /* Жестко делим пространство пополам */
+                flex: 1; min-width: 0; width: 50%;
             }
             .mem-btn-label { color: #aaa; font-size: 11px; flex-shrink: 0; font-weight: 600; }
 
             .mem-pick-btn {
-                flex: 1; min-width: 0; width: 100%; /* Запрещаем кнопке вылезать за пределы обертки */
+                flex: 1; min-width: 0; width: 100%; 
                 background: #eee; border: 1px dashed #ccc; color: #555;
                 padding: 4px; border-radius: 4px; font-size: 11px; cursor: pointer;
                 transition: all 0.2s; text-align: left; 
                 overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
                 user-select: none; -webkit-user-select: none; 
-                display: block; /* Меняем на block для правильной работы обрезки текста */
+                display: block; 
             }
             
-            /* Жестко обрезаем текст внутри спана, чтобы он не распирал кнопку */
             .mem-pick-btn span {
                 display: block;
                 overflow: hidden;
@@ -171,7 +170,6 @@
             .dark .mem-pick-btn.set { border-color: rgb(122, 122, 249); color: #fff; }
             .dark .mem-status { color: rgb(122, 122, 249); }
 
-            /* Слитная линия слева, БЕЗ ФОНА для совместимости с tts-active */
             .memorize-highlight { 
                 border-left: 3px solid var(--blue, #3434be) !important; 
                 padding-left: 5px !important; 
@@ -182,7 +180,6 @@
                 border-left: 3px solid rgb(122, 122, 249) !important; 
             }
             
-            /* Железобетонная защита синей линии от сброса во время чтения TTS */
             #sutta span[id]:has(.tts-active) .memorize-highlight.tts-active,
             #sutta span[id]:has(.tts-active) .memorize-highlight.active-word {
                 border-left: 3px solid var(--blue, #3434be) !important;
@@ -218,7 +215,6 @@
                 
                 mainRow.style.position = 'relative';
 
-                // --- ДОБАВЛЯЕМ КНОПКУ MEMO СЛЕВА ВНИЗУ ---
                 const memoBtn = document.createElement('a');
                 memoBtn.id = 'memo-app-btn';
                 memoBtn.className = 'memo-app-btn';
@@ -233,17 +229,14 @@
                     const highlighted = Array.from(document.querySelectorAll('.memorize-highlight'));
                     const ttsActive = document.querySelector('.tts-active');
 
-                    // Проверяем, находится ли активное слово внутри диапазона А-Б
                     let isWordInsideAB = false;
                     if (activeWord && highlighted.length > 0) {
                         isWordInsideAB = activeWord.closest('.memorize-highlight') !== null;
                     }
 
-                    // 1. ПРИОРИТЕТ: Активное слово ВНЕ диапазона А-Б
                     if (activeWord && !isWordInsideAB) {
                         textToPass = activeWord.innerText || activeWord.textContent;
                     } 
-                    // 2. ПРИОРИТЕТ: Весь диапазон А-Б (если кликнули внутри него или активного слова нет)
                     else if (highlighted.length > 0) {
                         const ttsMode = localStorage.getItem('tts_preferred_mode') || 'pi';
                         let filtered = highlighted;
@@ -257,7 +250,6 @@
                         if (filtered.length === 0) filtered = highlighted;
                         textToPass = filtered.map(el => el.innerText || el.textContent).join('\n');
                     } 
-                    // 3. ПРИОРИТЕТ: Текущая читаемая строка (TTS)
                     else if (ttsActive) {
                         textToPass = ttsActive.innerText || ttsActive.textContent;
                     }
@@ -269,21 +261,17 @@
                                      window.location.pathname.includes('/ru/');
                     const baseUrl = isRuPath ? '/ru/assets/memo.html' : '/assets/memo.html';
                     
-                    // Если текст есть - передаем параметр, если нет - чистая ссылка
                     if (textToPass) {
                         this.href = `${baseUrl}?text=${encodeURIComponent(textToPass)}`;
                     } else {
                         this.href = baseUrl;
                     }
                 });
-
                 
-                // Дефолтная ссылка
                 const isRuPathBase = window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/') || window.location.pathname.includes('/ru/');
                 memoBtn.href = isRuPathBase ? '/ru/assets/memo.html' : '/assets/memo.html';
                 
                 mainRow.appendChild(memoBtn);
-                // -----------------------------------------
 
 
                 const abBtn = document.createElement('button');
@@ -301,8 +289,7 @@
                 panel.id = 'memorize-panel';
                 if (memState.isPanelOpen) panel.classList.add('visible');
                 
-                const repsType = memState.repsInput === '∞' ? 'text' : 'number';
-
+                // ЗАМЕНЯЕМ ИНПУТ НА SPAN CONTENTEDITABLE (АБСОЛЮТНЫЙ ИММУНИТЕТ К МЕНЕДЖЕРАМ ПАРОЛЕЙ)
                 panel.innerHTML = `
                     <div class="mem-row">
                         <div class="mem-btn-wrapper">
@@ -322,10 +309,9 @@
  ${L.interval}
                         </label>
 
-                        <label class="mem-label">
+                        <label class="mem-label" title="0 = Бесконечно">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.2v-2a4 4 0 0 1 4-4h12.8M7 21.9l-4-4 4-4"/><path d="M21 11.8v2a4 4 0 0 1-4 4H4.2"/></svg> 
-<input id="mem-repeat-times" class="mem-input" type="${repsType}" min="0" step="1" value="${memState.repsInput}" autocomplete="off" data-lpignore="true">
-
+<span id="mem-repeat-times" class="mem-input" contenteditable="true" inputmode="numeric" spellcheck="false" style="display:inline-block; box-sizing:border-box; min-width: 42px; outline: none; line-height: 1.6; cursor: text;">${memState.repsInput}</span>
                         </label>
                         <button id="mem-clear-btn" class="mem-clear-btn" title="Сбросить цикл">️
     <img src="/assets/svg/trash-can-regular-full.svg" width="16" height="16" alt="Reset"></button>
@@ -419,12 +405,10 @@
         }
     }
 
-    // Добавлен флаг forceJumpToLoop, который запрещает "Умный выход" и заставляет плеер подчиниться А-Б циклу
     function armLoopInPlayer(isNewStart = false, forceJumpToLoop = false) {
         if (!memState.lineA || !window.ttsAPI) return;
         const state = window.ttsAPI.getState();
         
-        // Если плейлист уже существует (воспроизведение было активно)
         if (state.playlist && state.playlist.length) {
             const targetB = memState.lineB || memState.lineA;
             let sIdx = state.playlist.findIndex(item => item.id === memState.lineA);
@@ -433,10 +417,8 @@
             if (sIdx === -1) sIdx = 0;
             if (eIdx === -1) eIdx = state.playlist.length - 1;
 
-            // --- УМНЫЙ ВЫХОД (Smart Exit) ---
-            // Срабатывает только если мы НЕ форсируем переход (то есть пользователь кликнул сам)
             if (!forceJumpToLoop && isNewStart && (state.currentIndex < sIdx || state.currentIndex > eIdx)) {
-                clearLineAction('ALL', true); // Очищаем АБ, но оставляем музыку играть
+                clearLineAction('ALL', true); 
                 return;
             }
 
@@ -448,7 +430,6 @@
             }
         }
 
-        // Железобетонно включаем статус
         memState.isActive = true;
         if (isNewStart) {
             memState.repsPlayed = 0;
@@ -468,16 +449,27 @@
     function setupListeners() {
         document.addEventListener('tts-playback-started', () => {
             if (memState.lineA) {
-                // Если старт пошел сам по себе (клик по слову), допускаем умный выход
                 armLoopInPlayer(true, false);
             }
         });
 
+        // Удобство для SPAN: при фокусе выделяем весь текст
         document.addEventListener('focusin', (e) => {
             if (e.target.id === 'mem-repeat-times') {
-                if (e.target.value === '∞') {
-                    e.target.type = 'number';
-                    e.target.value = '0';
+                const range = document.createRange();
+                range.selectNodeContents(e.target);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+        });
+
+        // Блокируем Enter в SPAN, чтобы не создавались новые строки
+        document.addEventListener('keydown', (e) => {
+            if (e.target.id === 'mem-repeat-times') {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.target.blur();
                 }
             }
         });
@@ -492,23 +484,47 @@
                 }
             }
             if (e.target.id === 'mem-repeat-times') {
-                if (e.target.value === '0') {
-                    e.target.type = 'text';
-                    e.target.value = '∞';
-                    memState.repsInput = '∞';
-                    e.target.blur(); 
-                } else {
-                    memState.repsInput = e.target.value;
+                // Очищаем ввод от лишних символов на лету
+                let text = e.target.innerText.replace(/[^0-9∞]/g, '');
+                
+                if (text !== e.target.innerText) {
+                    e.target.innerText = text;
+                    const range = document.createRange();
+                    range.selectNodeContents(e.target);
+                    range.collapse(false);
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
                 }
                 
+                let val = parseInt(text, 10);
+                if (isNaN(val) || val < 0) val = 0;
+                
+                memState.repsInput = val === 0 ? '∞' : val;
                 memState.repsPlayed = 0; 
                 updateRepsLeft();
+                
                 if (memState.isActive && !memState.currentCountdownTime) {
                     const statusEl = document.getElementById('mem-status');
                     if (statusEl) statusEl.innerText = `${L.playing}${memState.repsLeft === Infinity ? '∞' : memState.repsLeft})`;
                 }
             }
             saveState();
+        });
+
+        // SPAN не триггерит change, используем focusout (blur)
+        document.addEventListener('focusout', (e) => {
+            if (e.target.id === 'mem-repeat-times') {
+                let val = parseInt(e.target.innerText, 10);
+                // Если пусто или 0 - превращаем в бесконечность
+                if (e.target.innerText.trim() === '' || isNaN(val) || val === 0) {
+                    e.target.innerText = '∞';
+                    memState.repsInput = '∞';
+                }
+                memState.repsPlayed = 0;
+                updateRepsLeft();
+                saveState();
+            }
         });
 
         document.addEventListener('change', (e) => {
@@ -522,23 +538,12 @@
                     saveState();
                 }
             }
-            if (e.target.id === 'mem-repeat-times') {
-                if (e.target.value.trim() === '' || e.target.value === '0') {
-                    e.target.type = 'text';
-                    e.target.value = '∞';
-                    memState.repsInput = '∞';
-                    memState.repsPlayed = 0;
-                    updateRepsLeft();
-                    saveState();
-                }
-            }
         });
 
         document.addEventListener('click', (e) => {
             const mainPlayBtn = e.target.closest('.play-main-button');
-            const navBtn = e.target.closest('.prev-main-button, .next-main-button'); // <-- ДОБАВЛЕНО: ловим кнопки навигации
+            const navBtn = e.target.closest('.prev-main-button, .next-main-button'); 
 
-            // Обрабатываем и Play, и Вперед/Назад, если мы находимся в А-Б режиме
             if ((mainPlayBtn || navBtn) && memState.lineA) {
                 
                 if (mainPlayBtn && memState.ignoreNextPlayClick) {
@@ -546,7 +551,6 @@
                     return; 
                 }
                 
-                // Если тикает таймер ожидания — убиваем его
                 if (memState.countdownId) {
                     clearInterval(memState.countdownId);
                     memState.countdownId = null;
@@ -555,46 +559,37 @@
                     memState.currentCountdownTime = null;
                     updateABTimerDisplay();
 
-                    // <-- НОВОЕ: Если нажали Вперед/Назад во время таймера
                     if (navBtn && window.ttsAPI) {
                         const state = window.ttsAPI.getState();
-                        // Искусственно "будим" плеер, чтобы voice.js не проигнорировал этот клик
                         state.speaking = true;
                         state.paused = false;
                         
-                        // Возвращаем иконку паузы (плеер снова активен)
                         const imgs = document.querySelectorAll('.play-main-button img');
                         imgs.forEach(img => img.src = '/assets/svg/pause-grey.svg');
 
-                        // Обновляем статус: убираем таймер и пишем "Проигрывание..."
                         const statusEl = document.getElementById('mem-status');
                         if (statusEl) statusEl.innerText = `${L.playing}${memState.repsLeft === Infinity ? '∞' : memState.repsLeft})`;
                     }
                 }
 
-                // Логика конкретно для кнопки Play остается без изменений
                 if (mainPlayBtn && window.ttsAPI) {
                     const state = window.ttsAPI.getState();
 
-                    // Если цикл не активен или плеер молчит (новый старт из панели А-Б)
                     if (!memState.isActive || !state.speaking) {
                         e.preventDefault();
                         e.stopPropagation(); 
                         
-                        // ФОРСИРУЕМ запуск внутри цикла, отменяя Smart Exit
                         armLoopInPlayer(true, true);
                         playCurrentRange();
                         return;
                     }
 
-                    // Если цикл активен и стоял на паузе
                     if (state.paused) {
                         armLoopInPlayer(false, true);
                     }
                 }
             }
 
-            // Нажатие на корзину
             if (e.target.closest('#mem-clear-btn')) {
                 e.preventDefault();
                 clearLineAction('ALL', true);
@@ -611,25 +606,21 @@
                 const panel = document.getElementById('memorize-panel');
                 if (!panel) return;
                 
-                // --- НАЧАЛО: Эффект вкладок (закрываем настройки шестеренки) ---
                 const settingsPanel = document.getElementById('tts-settings-panel');
                 if (settingsPanel && settingsPanel.classList.contains('visible')) {
                     settingsPanel.classList.remove('visible');
                     const icon = document.getElementById('tts-settings-icon');
                     if (icon) icon.style.transform = 'rotate(0deg)';
                     
-                    // Заодно сворачиваем продвинутые настройки Google Voice
                     const advSettings = document.getElementById('tts-advanced-settings');
                     if (advSettings) advSettings.classList.remove('visible');
                     
-                    // И возвращаем базовые настройки на место
                     const basicPanel = document.getElementById('tts-basic-settings');
                     if (basicPanel) {
                         basicPanel.style.maxHeight = '200px';
                         basicPanel.style.opacity = '1';
                     }
                 }
-                // --- КОНЕЦ: Эффект вкладок ---
 
                 panel.classList.toggle('visible');
                 memState.isPanelOpen = panel.classList.contains('visible'); 
@@ -643,7 +634,7 @@
                         const id = activeWord.id || activeWord.closest('[id]')?.id;
                         if (id) {
                             setLine('A', id, activeWord);
-                            pauseTTS(); // Ставим на паузу, так как А успешно захвачена
+                            pauseTTS(); 
                             activatePickMode('B');
                         } else {
                             activatePickMode('A'); 
@@ -675,13 +666,12 @@
                         setLine(memState.pickMode, id, textEl);
                         
                         if (memState.pickMode === 'A' && !memState.lineB) {
-                            pauseTTS(); // <--- ДОБАВЛЕНО: Пользователь кликнул на А, ставим на паузу и ждем Б
+                            pauseTTS(); 
                             activatePickMode('B');
                         } else {
                             memState.pickMode = null;
                             updateUI();
                             
-                            // Когда выбраны обе границы, ФОРСИРУЕМ цикл (Smart Exit не сработает)
                             if (memState.lineA && memState.lineB) {
                                 if (memState.countdownId) {
                                     clearInterval(memState.countdownId);
@@ -692,7 +682,7 @@
                                     updateABTimerDisplay();
                                 }
                                 armLoopInPlayer(true, true); 
-                                playCurrentRange(); // <--- Здесь уже автоматически запускается цикл после установки Б
+                                playCurrentRange(); 
                             }
                         }
                     }
@@ -783,7 +773,6 @@
         if (memState.isActive) {
             stopCycle(); 
         }
-        // Пауза отсюда удалена! Теперь плеер продолжает играть, пока мы ищем точку A
         memState.pickMode = line;
         updateUI();
     }
@@ -857,11 +846,10 @@
 
         document.getElementById('mem-interval').value = memState.intervalMinutes;
         
-        const repsInput = document.getElementById('mem-repeat-times');
-        repsInput.type = memState.repsInput === '∞' ? 'text' : 'number';
-        repsInput.value = memState.repsInput;
-        
-        repsInput.setAttribute('autocomplete', 'off');
+        const repsSpan = document.getElementById('mem-repeat-times');
+        if (repsSpan) {
+            repsSpan.innerText = memState.repsInput;
+        }
 
         if (!memState.isActive) {
             const statusEl = document.getElementById('mem-status');
