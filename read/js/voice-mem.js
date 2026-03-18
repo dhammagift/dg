@@ -975,6 +975,77 @@
         memState.countdownId = setInterval(tick, 1000);
     }
 
+    // === ИНТЕРСЕПТОР ПАУЗЫ МЕЖДУ СЕГМЕНТАМИ (Без вмешательства в voice.js) ===
+    let _segmentTimerId = null;
+    let _internalDelayValue = (parseFloat(localStorage.getItem('tts_segment_delay')) || 0) * 1000;
+
+    Object.defineProperty(window, 'TTS_SEGMENT_DELAY', {
+        get: function() {
+            if (_internalDelayValue > 0 && window.ttsAPI) {
+                const state = window.ttsAPI.getState();
+                const maxIndex = state.endIndex !== undefined ? state.endIndex : state.playlist.length - 1;
+                
+                // Перехватываем только в момент перехода к следующей фразе
+                if (state.speaking && !state.paused && state.currentIndex <= maxIndex) {
+                    setTimeout(() => startSegmentVisualTimer(_internalDelayValue), 0);
+                }
+            }
+            return _internalDelayValue;
+        },
+        set: function(val) {
+            _internalDelayValue = val;
+        },
+        configurable: true
+    });
+
+    function startSegmentVisualTimer(delayMs) {
+        if (_segmentTimerId) clearInterval(_segmentTimerId);
+        
+        const timerSpan = document.getElementById('ab-btn-timer');
+        if (!timerSpan) return;
+
+        if (memState && memState.countdownId) return;
+
+        const endTime = Date.now() + delayMs;
+        
+        const tick = () => {
+            const timeLeft = endTime - Date.now();
+            if (timeLeft <= 0) {
+                stopSegmentVisualTimer();
+                return;
+            }
+            const mins = Math.floor(timeLeft / 60000);
+            const secs = Math.floor((timeLeft % 60000) / 1000);
+            
+            timerSpan.style.setProperty('display', 'inline-block', 'important');
+            // Убрали иконку, оставили чистый формат A-B режима
+            timerSpan.innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
+        };
+
+        tick();
+        _segmentTimerId = setInterval(tick, 1000);
+    }
+
+    function stopSegmentVisualTimer() {
+        if (_segmentTimerId) {
+            clearInterval(_segmentTimerId);
+            _segmentTimerId = null;
+        }
+        const timerSpan = document.getElementById('ab-btn-timer');
+        if (timerSpan && (!memState || !memState.countdownId)) {
+            timerSpan.style.display = 'none';
+            timerSpan.innerText = '';
+            if (typeof updateABTimerDisplay === 'function') updateABTimerDisplay(); 
+        }
+    }
+
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.prev-main-button, .next-main-button, .play-main-button, .close-tts-btn')) {
+            stopSegmentVisualTimer();
+        }
+    }, { capture: true });
+    // =========================================================================
+
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
 })();

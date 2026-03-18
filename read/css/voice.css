@@ -333,6 +333,48 @@ transition: background-color 260ms ease-in-out;
   filter: invert(1);
 }
 
+    /* Лейбл точь-в-точь как Scroll и Autoplay */
+    .tts-delay-label { 
+        font-size: 14px; 
+        color: #666; 
+        margin: 0; 
+        display: inline-flex; 
+        align-items: center; 
+        justify-content: center;
+        gap: 6px; 
+        line-height: 1;
+        padding: 2px 6px;
+    }
+
+    .dark .tts-delay-label {
+        color: #ccc;
+    }
+
+    /* Инпут прозрачный, с цветами как у остального текста */
+    .tts-delay-input { 
+        width: 38px; 
+        height: 22px; 
+        box-sizing: border-box;
+        background: transparent; 
+        border: 1px solid #ccc; 
+        color: #666; 
+        border-radius: 4px; 
+        padding: 0; 
+        margin: 0;
+        font-size: 14px; 
+        text-align: center; 
+        outline: none;
+        -webkit-appearance: none; 
+        appearance: none;
+        box-shadow: none;
+    }
+    
+    .dark .tts-delay-input { 
+        background: #333; /* Как у селектов в темной теме */
+        border-color: #555; 
+        color: #ccc; 
+    }
+
 /* 1. Контейнер лейбла */
 .tts-checkbox-custom {
   display: inline-flex;

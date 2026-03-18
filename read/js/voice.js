@@ -41,6 +41,7 @@ const makeJsonUrl = (slug) => {
 let wakeLock = null; 
 
 const SCROLL_STORAGE_KEY = 'tts_auto_scroll'; 
+const SEGMENT_DELAY_KEY = 'tts_segment_delay';
 const MODE_STORAGE_KEY = 'tts_preferred_mode';
 const NATIVE_PALI_KEY  = 'tts_native_pali_enabled'; 
 const NATIVE_TRN_KEY = 'tts_native_trn_enabled'; 
@@ -119,6 +120,9 @@ const ttsState = {
   startIndex: undefined, 
   isNavigating: false 
 };
+
+// Восстанавливаем сохраненную задержку (в миллисекундах)
+window.TTS_SEGMENT_DELAY = (parseFloat(localStorage.getItem(SEGMENT_DELAY_KEY)) || 0) * 1000;
 
 const synth = window.speechSynthesis;
 
@@ -1193,23 +1197,6 @@ async function handleSuttaClick(e) {
         abPanel.classList.remove('visible'); // Закрываем АБ
     }
 
-    // Если меню АБ было открыто, мы просто всё сворачиваем и выходим
-    if (wasAbPanelOpen) {
-        if (panel && panel.classList.contains('visible')) {
-            panel.classList.remove('visible');
-        }
-        if (icon) icon.style.transform = 'rotate(0deg)';
-        
-        const advSettings = document.getElementById('tts-advanced-settings');
-        if (advSettings) advSettings.classList.remove('visible');
-
-        const basicPanel = document.getElementById('tts-basic-settings');
-        if (basicPanel) {
-            basicPanel.style.maxHeight = '200px';
-            basicPanel.style.opacity = '1';
-        }
-        return; // <--- Прерываем выполнение, чтобы шестеренка не открылась
-    }
 
     // Стандартное поведение (если АБ не была открыта): открываем/закрываем саму шестеренку
     if (panel) {
@@ -1874,6 +1861,18 @@ function getPlayerHtml() {
                 </label>
               </div>
           </div>
+  
+
+              <div style="display: flex; justify-content: center; margin-bottom: 8px;">
+                  <label class="tts-delay-label" title="Пауза между фразами (секунды)">
+                            <img src="/assets/svg/hourglass-regular-full.svg" width="14" height="14" alt="timer" style=" vertical-align: text-bottom;">
+                    Delay
+                      <input type="number" id="tts-segment-delay-input" class="tts-delay-input" value="${localStorage.getItem('tts_segment_delay') || 0}" min="0">
+                      sec
+                  </label>
+              </div>
+
+      
           <div style="display: flex; justify-content: center; align-items: center; gap: 5px; margin-top: 8px; flex-wrap: wrap;">
           
 <button id="tts-advanced-toggle-btn" class="extra-settings-toggle" style="width: auto; margin: 0; padding: 0; display: inline-flex;">
@@ -2225,6 +2224,19 @@ const resetMessage = isRuLike
      }
      return;
   }
+
+  // 7. Segment Delay
+  if (e.target.id === 'tts-segment-delay-input') {
+      let val = parseFloat(e.target.value);
+      if (isNaN(val) || val < 0) {
+          val = 0;
+          e.target.value = 0;
+      }
+      localStorage.setItem(SEGMENT_DELAY_KEY, val);
+      window.TTS_SEGMENT_DELAY = val * 1000; // переводим в миллисекунды для setTimeout
+      return;
+  }
+
 
 }
 
