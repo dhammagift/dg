@@ -160,10 +160,14 @@ function showToast(message) {
 
 function toggleSilence(enable) {
     if (enable) {
-        if (!silenceAudio.paused) return;
-        if (!silenceAudio.src || silenceAudio.src === '') {
+        // --- ИСПРАВЛЕНИЕ ---
+        // Проверяем, что загружен именно наш mp3, иначе перезаряжаем его
+        if (!silenceAudio.src || !silenceAudio.src.includes('silence.mp3')) {
              silenceAudio.src = SILENCE_URL;
         }
+        
+        if (!silenceAudio.paused) return;
+        // -------------------
 
         const playPromise = silenceAudio.play();
 
@@ -171,6 +175,8 @@ function toggleSilence(enable) {
             playPromise.then(() => {
                 // Media Session Setup
                 if ('mediaSession' in navigator) {
+                    // ЯВНО ГОВОРИМ ANDROID, ЧТО МЫ ИГРАЕМ (убираем баги анимации)
+                    navigator.mediaSession.playbackState = 'playing';
                   
                     const slug = new URLSearchParams(location.search).get('q')?.toLowerCase() || ttsState.currentSlug || '';
 
@@ -179,7 +185,7 @@ function toggleSilence(enable) {
                     const paliH1 = paliNode ? paliNode.innerText.trim() : '';            
                   
                     navigator.mediaSession.metadata = new MediaMetadata({
-                        title: `${slug} ${paliH1}`.trim(), // <-- Исправлено здесь
+                        title: `${slug} ${paliH1}`.trim(),
                         artist: "Dhamma.gift Voice",
                         artwork: [{ src: '/assets/img/albumart.png', sizes: '1024x1024', type: 'image/png' }]
                     });
@@ -202,16 +208,16 @@ function toggleSilence(enable) {
             });
         }
     } else {
+        // --- PAUSE ---
         if (!silenceAudio.paused) {
             silenceAudio.pause();
-            silenceAudio.currentTime = 0;
             
             if ('mediaSession' in navigator) {
-                navigator.mediaSession.metadata = null;
-                navigator.mediaSession.setActionHandler('play', null);
-                navigator.mediaSession.setActionHandler('pause', null);
-                navigator.mediaSession.setActionHandler('previoustrack', null);
-                navigator.mediaSession.setActionHandler('nexttrack', null);
+                // ЯВНО ГОВОРИМ ANDROID, ЧТО МЫ НА ПАУЗЕ (останавливает "змейку")
+                navigator.mediaSession.playbackState = 'paused'; 
+                
+                // ВАЖНО: Мы БОЛЬШЕ НЕ удаляем метаданные и кнопки здесь!
+                // Иначе плеер в шторке станет пустым и перестанет реагировать.
             }
         }
     }
@@ -1361,6 +1367,9 @@ async function handleSuttaClick(e) {
           if (ttsState.googleAudio) {
               ttsState.googleAudio.pause();
           }
+          
+          toggleSilence(false); // <--- ДОБАВЬТЕ ЭТУ СТРОКУ
+          
           setButtonIcon('play');
         }
       } else {
@@ -1386,10 +1395,9 @@ async function handleSuttaClick(e) {
         const rowContainer = activeWord.closest("[id]") || activeWord;
         addTtsButton(rowContainer, activeWord);
     }
-    // -------------------------------------------------------------
+    // -----------------------
   }
 }
-
 
 function stopPlayback() {
   if (window.ttsDelayTimeout) clearTimeout(window.ttsDelayTimeout); // УБИВАЕМ ПРИЗРАКА
@@ -1398,27 +1406,50 @@ function stopPlayback() {
   
   if (ttsState.googleAudio) {
       ttsState.googleAudio.pause();
+      ttsState.googleAudio.src = ''; // Выгружаем из памяти
+      ttsState.googleAudio.load();
       ttsState.googleAudio = null;
   }
   
-  toggleSilence(false);
+  // --- ПОЛНАЯ ОСТАНОВКА ФОНОВОЙ ТИШИНЫ ---
+  // Вместо toggleSilence(false) мы жестко отвязываем файл:
+  silenceAudio.pause();
+  silenceAudio.src = ''; // Отвязываем mp3 файл
+  silenceAudio.load();   // Заставляем браузер забыть его. Это действие закроет шторку Android!
+  // ---------------------------------------
+
+  // --- ПОЛНАЯ ОЧИСТКА ПЛЕЕРА ИЗ ТРЕЯ ---
+  if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'none';
+      navigator.mediaSession.metadata = null;
+      navigator.mediaSession.setActionHandler('play', null);
+      navigator.mediaSession.setActionHandler('pause', null);
+      navigator.mediaSession.setActionHandler('previoustrack', null);
+      navigator.mediaSession.setActionHandler('nexttrack', null);
+  }
+  // -----------------------------------------------
 
   ttsState.speaking = false;
   ttsState.paused = false;
   ttsState.isNavigating = false;
   releaseWakeLock();
+  
   const player = document.getElementById('voice-player-container');
   if (player) {
     player.classList.remove('active');
   }
+  
   if (ttsState.utterance) {
     ttsState.utterance.onend = null;
     ttsState.utterance.onerror = null;
     ttsState.utterance = null;
   }
+  
   setButtonIcon('play');
   resetUI();
 }
+
+
 
 async function startPlayback(container, mode, slug, startIndex = 0) {
   const textData = await prepareTextData(slug);
