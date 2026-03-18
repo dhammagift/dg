@@ -532,6 +532,52 @@ document.addEventListener("keydown", (event) => {
     }
   }
 
+    // === УНИВЕРСАЛЬНОЕ ДОБАВЛЕНИЕ В ИЗБРАННОЕ (Alt+Shift+P или Alt+F) ===
+    if ((event.altKey && event.shiftKey && event.code === "KeyP") || 
+        (event.altKey && event.code === "KeyF" && !event.shiftKey)) { // Alt+F без шифта
+        
+        // Игнорируем, если фокус в поле ввода (чтобы не мешать печатать)
+        const activeTag = document.activeElement.tagName;
+        if (['INPUT', 'TEXTAREA'].includes(activeTag) || document.activeElement.isContentEditable) {
+            return;
+        }
+
+        event.preventDefault();
+
+        // 1. Попытка для Memo (эмулируем клик по кнопке в memo.html)
+        const memoFavBtn = document.getElementById('toggle-memo-favorite');
+        if (memoFavBtn) {
+            memoFavBtn.click();
+            return;
+        }
+
+        // 2. Попытка для Читалки (эмулируем клик по скрытой/видимой кнопке в read.php)
+        const readerFavBtn = document.getElementById('toggle-favorite');
+        if (readerFavBtn) {
+            readerFavBtn.click(); 
+            return;
+        }
+
+        // 3. Фолбэк: Страница поиска (если кнопок нет, сохраняем поисковый запрос)
+        const urlParams = new URLSearchParams(window.location.search);
+        const q = urlParams.get('q');
+
+        if (q && typeof toggleFavoriteGlobal === 'function') {
+            const searchData = {
+                slug: q,
+                id: q,
+                title: "🔎 " + q, // Лупа покажет, что это поисковый запрос
+                path: window.location.pathname,
+                search: window.location.search,
+                timestamp: Date.now()
+            };
+            
+            toggleFavoriteGlobal(searchData);
+        }
+    }
+
+
+
 //open Dict.Dhamma.Gift New Window
   if (event.altKey && event.code === "KeyN") {
     const inputEl = document.getElementById('paliauto');
@@ -1733,7 +1779,7 @@ function createQuickModal() {
       }
   });
 
-  histContainer.addEventListener('click', (e) => {
+    histContainer.addEventListener('click', (e) => {
       if (e.target.classList.contains('toggle-fav-btn-hist')) {
           const slug = e.target.dataset.slug;
           const displayKey = e.target.dataset.display;
@@ -1745,10 +1791,22 @@ function createQuickModal() {
              currentFavs.splice(idx, 1);
           } else {
              const parser = new URL(url, window.location.origin);
+             
+             // Определяем, ведет ли ссылка на страницу поиска
+             const isSearchPage = parser.pathname === '/' || 
+                                  parser.pathname === '/ru/' || 
+                                  parser.pathname.endsWith('index.php');
+             
+             // Если это поиск и лупы еще нет, добавляем её
+             let finalTitle = displayKey;
+             if (isSearchPage && !finalTitle.startsWith("🔎")) {
+                 finalTitle = "🔎 " + finalTitle;
+             }
+
              currentFavs.unshift({
                  slug: slug,
                  id: slug, 
-                 title: displayKey,
+                 title: finalTitle, // Используем обновленный заголовок
                  path: parser.pathname,
                  search: parser.search,
                  timestamp: Date.now()
@@ -1760,6 +1818,7 @@ function createQuickModal() {
           renderHist();
       }
   });
+
 
   favHeader.addEventListener('click', (e) => {
       if (e.target.classList.contains('sort-trigger')) {
