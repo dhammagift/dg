@@ -533,8 +533,7 @@ document.addEventListener("keydown", (event) => {
   }
 
     // === УНИВЕРСАЛЬНОЕ ДОБАВЛЕНИЕ В ИЗБРАННОЕ (Alt+Shift+P или Alt+F) ===
-    if ((event.altKey && event.shiftKey && event.code === "KeyP") || 
-        (event.altKey && event.code === "KeyF" && !event.shiftKey)) { // Alt+F без шифта
+    if ((event.altKey && event.code === "KeyF" && !event.shiftKey)) { // Alt+F без шифта
         
         // Игнорируем, если фокус в поле ввода (чтобы не мешать печатать)
         const activeTag = document.activeElement.tagName;
@@ -566,7 +565,7 @@ document.addEventListener("keydown", (event) => {
             const searchData = {
                 slug: q,
                 id: q,
-                title: "🔎 " + q, // Лупа покажет, что это поисковый запрос
+                title: "" + q, // Лупа покажет, что это поисковый запрос 🔎
                 path: window.location.pathname,
                 search: window.location.search,
                 timestamp: Date.now()
@@ -1799,8 +1798,8 @@ function createQuickModal() {
              
              // Если это поиск и лупы еще нет, добавляем её
              let finalTitle = displayKey;
-             if (isSearchPage && !finalTitle.startsWith("🔎")) {
-                 finalTitle = "🔎 " + finalTitle;
+             if (isSearchPage && !finalTitle.startsWith("")) {
+                 finalTitle = "🔎 " + finalTitle; // была лупа ("🔎")) { finalTitle = "🔎 " + finalTitle;
              }
 
              currentFavs.unshift({
