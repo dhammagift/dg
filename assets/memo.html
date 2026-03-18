@@ -94,6 +94,13 @@
         .memo-controls .btn.icon{ width:42px; padding:0; }
         .memo-controls .btn.text{ min-width:88px; padding:0 14px; }
         .dark .memo-controls .btn{ border-color: rgba(255,255,255,0.06); }
+        
+        .dark #copy_icon_btn {
+    filter: invert(1);
+}
+#copy_icon_btn:hover {
+    opacity: 1;
+}
     </style>
 </head>
 <body>
@@ -114,7 +121,6 @@
     <img src="/assets/svg/compass.svg" style="width: 22px; height: 22px;">
 </a>
 
-    <!-- Dictionary OnClick Popup -->
     <a alt="Onclick popup dictionary" title="Onclick popup dictionary (Alt+A)" class="mx-1 common-size-icon4 toggle-dict-btn text-decoration-none text-black">
       <img src="/assets/svg/comment.svg" class="dictIcon">
     </a>
@@ -152,10 +158,6 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
     
     <button class="btn btn-primary text" onclick="преобразоватьТекст()" id="btn_transform">
         Transform
-    </button>
-
-    <button class="btn btn-primary text" onclick="копироватьРезультат()" id="btn_copy">
-        Copy
     </button>
     
     <button class="btn btn-danger icon" onclick="очистить()" id="btn_clear" title="Clear">
@@ -279,7 +281,15 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
                 </div>
 
                 <div class="mt-3 text-start">
-                    <h5 class="text-center text-muted" id="lbl_result" style="display: none;">Result:</h5>
+<div id="result_header" style="display:none; align-items:center; justify-content:center; gap:8px;">
+    <h5 class="text-muted mb-0" id="lbl_result">Result:</h5>
+    
+    <img src="/assets/svg/copy.svg" 
+         id="copy_icon_btn"
+         style="width:18px; height:18px; cursor:pointer; opacity:0.6; transition:0.2s;"
+         onclick="копироватьРезультат()"
+         title="Copy result">
+</div>
                     <div id="результат" class="display-7 mb-4 text-center"></div>
                 </div>
                 
@@ -303,14 +313,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Собирает данные для URL и Избранного
     function getMemoData() {
-        // Текст тримим (убираем лишние пробелы по краям текста)
         const currentText = textInput.value.trim();
         if (!currentText) return null;
 
         const memoSlug = "memo_" + currentText.substring(0, 50).replace(/\s+/g, '_'); 
         const memoTitle = "📝 " + currentText.substring(0, 35) + (currentText.length > 35 ? "..." : "");
 
-        // Используем стандартный класс для сборки параметров
         const params = new URLSearchParams();
         params.set('text', currentText);
         params.set('delay', document.getElementById("ttsDelay").value || "0");
@@ -319,8 +327,6 @@ document.addEventListener("DOMContentLoaded", () => {
         params.set('loop', document.getElementById("ttsIsLoop").checked ? "1" : "0");
         params.set('lc', document.getElementById("ttsLoopCount").value || "∞");
         params.set('snd', document.getElementById("ttsSound").value || "none");
-        
-        // РАЗДЕЛИТЕЛЬ: берем "как есть", без trim(). URLSearchParams сам закодирует пробелы.
         params.set('sep', document.getElementById("ttsDelimiter").value || "");
 
         return {
@@ -328,12 +334,11 @@ document.addEventListener("DOMContentLoaded", () => {
             id: memoSlug,
             title: memoTitle,
             path: window.location.pathname,
-            search: "?" + params.toString(), // Выдаст: ?text=...&delay=60&end=10&trn=0...
+            search: "?" + params.toString(), 
             timestamp: Date.now()
         };
     }
 
-    // --- ЛОГИКА "В ИЗБРАННОЕ" ---
     if (favBtn) {
         function updateMemoIcon() {
             const data = getMemoData();
@@ -364,7 +369,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // --- ЛОГИКА "ПОДЕЛИТЬСЯ" ---
     if (shareBtn) {
         shareBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -375,13 +379,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            // Умная замена локального хоста на боевой домен
             let origin = window.location.origin;
             if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
                 origin = 'https://f.dhamma.gift';
             }
 
-            // Формируем полную готовую ссылку
             const fullUrl = origin + data.path + data.search;
 
             navigator.clipboard.writeText(fullUrl).then(() => {
@@ -396,10 +398,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
-
-        // --- ПЕРЕХВАТЧИК MEDIA SESSION (ОБХОД VOICE.JS) ---
-        // Заменяем дефолтное название memo_custom на первые слова текста,
-        // чтобы в самом начале не мелькало техническое название
         if (window.MediaMetadata) {
             const OriginalMediaMetadata = window.MediaMetadata;
             window.MediaMetadata = function(options) {
@@ -418,7 +416,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 return new OriginalMediaMetadata(options);
             };
         }
-        // ---------------------------------------------------
 
         function expandWithAI() {
             const text = document.getElementById("inputText").value.trim();
@@ -449,6 +446,10 @@ ${text}`;
         window.memoLang = window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/') || window.location.pathname.includes('/ru/') ? 'ru' : 'en';
         window.isMemoPlaying = false; 
 
+        // --- ГЛОБАЛЬНАЯ БЛОКИРОВКА (ГЕЙТКИПЕР) ---
+        window.memoNextAllowedTime = 0;
+        window.memoLockId = 0;
+
         // --- ЛОКАЛИЗАЦИЯ ИНТЕРФЕЙСА ---
         window.addEventListener('DOMContentLoaded', () => {
             if (window.memoLang === 'ru') {
@@ -477,7 +478,6 @@ ${text}`;
                 document.getElementById('help_text_1').innerHTML = 'Сокращайте текст до первых букв для быстрого заучивания (напр. "Sabbaṁ taṁ" → "S t").<br><b>AI Expand</b> попросить ИИ заполнить сокращенный текст (peyyāla)<br><b>TTS:</b> <b>Разделитель</b> режет текст на части. <b>Пауза</b> добавляет задержку между ними. <b>Звук</b> играет в конце. <b>Цикл</b> повторяет.';
             }
 
-            // --- ДИНАМИЧЕСКИЕ "СУБТИТРЫ" В ПЛЕЕРЕ ОС ---
             if ('mediaSession' in navigator) {
                 const container = document.getElementById('tts-virtual-container');
                 if (container) {
@@ -485,15 +485,12 @@ ${text}`;
                         for (let mutation of mutations) {
                             if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
                                 const el = mutation.target;
-                                // Отлавливаем момент, когда voice.js подсвечивает новое слово
                                 if (el.classList.contains('active-word')) {
                                     const activeText = el.textContent.trim();
                                     if (activeText) {
-                                        // Обновляем плеер динамически!
                                         navigator.mediaSession.metadata = new MediaMetadata({
                                             title: activeText,
                                             artist: 'Dhamma.gift Voice',
-                                            // Оставляем картинку ракушки
                                             artwork: [{ src: '/assets/img/albumart.png', sizes: '1024x1024', type: 'image/png' }]
                                         });
                                     }
@@ -501,13 +498,11 @@ ${text}`;
                             }
                         }
                     });
-                    // Слушаем изменения классов у всех спанов внутри контейнера
                     observer.observe(container, { attributes: true, subtree: true, attributeFilter: ['class'] });
                 }
             }
         });
 
-        // --- ЛОГИКА КНОПКИ PLAY/STOP ---
         function toggleMemoTTS() {
             if (window.isMemoPlaying) {
                 stopMemoTTS(true);
@@ -539,7 +534,6 @@ ${text}`;
             }
         }
 
-        // --- МАГИЯ: БЕЗОПАСНЫЙ ГЕТТЕР ДЛЯ ИНТЕРВАЛОВ ---
         Object.defineProperty(window, 'TTS_SEGMENT_DELAY', {
             get: function() {
                 const delayInput = document.getElementById("ttsDelay");
@@ -562,7 +556,7 @@ ${text}`;
             configurable: true
         });
 
-        // --- ПЕРЕХВАТЧИК АУДИО (РЕЖИМ ОЖИДАНИЯ ПРИ ЧТЕНИИ) ---
+        // --- ПЕРЕХВАТЧИК АУДИО (СТРОГИЙ КОНТРОЛЬ ТАЙМЕРА) ---
         (function interceptAudioForTimer() {
             const originalPlay = Audio.prototype.play;
             Audio.prototype.play = function() {
@@ -570,10 +564,26 @@ ${text}`;
                     return originalPlay.apply(this, arguments);
                 }
 
-                const statusEl = document.getElementById('memo-timer-status');
-                if (statusEl && statusEl.style.display !== 'none') {
-                    statusEl.innerHTML = `⏳`; 
+                const now = Date.now();
+                if (window.memoNextAllowedTime > now) {
+                    const waitTime = window.memoNextAllowedTime - now;
+                    const lockIdAtRequest = window.memoLockId;
+                    
+                    return new Promise((resolve) => {
+                        setTimeout(() => {
+                            if (lockIdAtRequest !== window.memoLockId) return resolve();
+                            
+                            const statusEl = document.getElementById('memo-timer-status');
+                            if (statusEl && statusEl.style.display !== 'none') statusEl.innerHTML = `⏳`;
+                            if (window.memoCountdownInterval) clearInterval(window.memoCountdownInterval);
+                            resolve(originalPlay.apply(this));
+                        }, waitTime);
+                    });
                 }
+
+                window.memoNextAllowedTime = 0;
+                const statusEl = document.getElementById('memo-timer-status');
+                if (statusEl && statusEl.style.display !== 'none') statusEl.innerHTML = `⏳`; 
                 if (window.memoCountdownInterval) clearInterval(window.memoCountdownInterval);
                 
                 return originalPlay.apply(this, arguments);
@@ -582,14 +592,30 @@ ${text}`;
             if (window.speechSynthesis) {
                 const originalSpeak = window.speechSynthesis.speak;
                 window.speechSynthesis.speak = function(utterance) {
-                    utterance.addEventListener('start', () => {
-                        const statusEl = document.getElementById('memo-timer-status');
-                        if (statusEl && statusEl.style.display !== 'none') {
-                            statusEl.innerHTML = `⏳`;
-                        }
-                        if (window.memoCountdownInterval) clearInterval(window.memoCountdownInterval);
-                    });
-                    return originalSpeak.apply(this, arguments);
+                    const now = Date.now();
+                    
+                    const doSpeak = () => {
+                        window.memoNextAllowedTime = 0;
+                        utterance.addEventListener('start', () => {
+                            const statusEl = document.getElementById('memo-timer-status');
+                            if (statusEl && statusEl.style.display !== 'none') statusEl.innerHTML = `⏳`;
+                            if (window.memoCountdownInterval) clearInterval(window.memoCountdownInterval);
+                        });
+                        return originalSpeak.apply(window.speechSynthesis, [utterance]);
+                    };
+
+                    if (window.memoNextAllowedTime > now) {
+                        const waitTime = window.memoNextAllowedTime - now;
+                        const lockIdAtRequest = window.memoLockId;
+                        
+                        setTimeout(() => {
+                            if (lockIdAtRequest !== window.memoLockId) return;
+                            doSpeak();
+                        }, waitTime);
+                        return;
+                    }
+
+                    return doSpeak();
                 };
             }
         })();
@@ -602,6 +628,9 @@ ${text}`;
             
             statusEl.style.display = 'inline-flex';
             const endTime = Date.now() + durationMs;
+            
+            window.memoNextAllowedTime = endTime; 
+            window.memoLockId++;
             
             const tick = () => {
                 const left = endTime - Date.now();
@@ -621,7 +650,6 @@ ${text}`;
             window.memoCountdownInterval = setInterval(tick, 1000);
         };
 
-        // --- ЛОГИКА ТРАНСФОРМАЦИИ ---
         function преобразоватьТекст() {
             const входнойТекст = document.getElementById("inputText").value;
             localStorage.setItem("входнойТекст", входнойТекст);
@@ -642,7 +670,7 @@ ${text}`;
                 return преобразованныеСлова.join(' ').replace(/ \?/g, "?").replace(/“ /g, '').replace(/ ,/g, ", ").replace(/ \. /g, ". ").replace(/ : /g, ": ").replace(/ ; /g, "; ").replace(/ ‘ /g, " ");
             }).join('\n'); 
             document.getElementById("результат").innerText = результат;
-            document.getElementById("lbl_result").style.display = 'block'; 
+            document.getElementById("result_header").style.display = 'flex';
             localStorage.setItem("результат", результат);
         }
 
@@ -651,7 +679,7 @@ ${text}`;
             if (confirm(msg)) {
                 document.getElementById("inputText").value = "";
                 document.getElementById("результат").innerText = "";
-                document.getElementById("lbl_result").style.display = 'none'; 
+                document.getElementById("result_header").style.display = 'none';
                 localStorage.removeItem("входнойТекст");
                 localStorage.removeItem("результат");
                 
@@ -673,7 +701,6 @@ ${text}`;
                 document.execCommand("copy");
                 document.body.removeChild(tempTextarea);
                 
-                // Вызываем красивый глобальный бабл
                 if (typeof showBubbleNotification === 'function') {
                     showBubbleNotification(window.memoLang === 'ru' ? 'Скопировано в буфер' : 'Copied to Clipboard');
                 } else {
@@ -689,29 +716,25 @@ ${text}`;
             setTimeout(function() { copySuccess.style.display = 'none'; }, 1500);
         }
 
-        // --- ЛОГИКА СОХРАНЕНИЯ И ВОССТАНОВЛЕНИЯ СОСТОЯНИЯ ---
         window.addEventListener('load', function() {
             const urlParams = new URLSearchParams(window.location.search);
             const textParam = urlParams.get('text');
             
-            // 1. Восстанавливаем текст
             if (textParam) {
                 document.getElementById("inputText").value = textParam;
                 localStorage.setItem("входнойТекст", textParam); 
                 document.getElementById("результат").innerText = "";
-                document.getElementById("lbl_result").style.display = 'none';
+                document.getElementById("result_header").style.display = 'none'; // ИСПРАВЛЕНА ОШИБКА ЗДЕСЬ
             } else {
                 const входнойТекст = localStorage.getItem("входнойТекст");
                 const результат = localStorage.getItem("результат");
                 if (входнойТекст) document.getElementById("inputText").value = входнойТекст;
                 if (результат && результат.trim() !== "") {
                     document.getElementById("результат").innerText = результат;
-                    document.getElementById("lbl_result").style.display = 'block';
+                    document.getElementById("result_header").style.display = 'none';
                 }
             }
 
-            // 2. Распаковываем отдельные параметры настроек из URL (если они там есть)
-            // И сразу сохраняем их в localStorage, как будто мы ввели их руками
             if (urlParams.has('delay')) localStorage.setItem('memo_tts_delay', urlParams.get('delay'));
             if (urlParams.has('end'))   localStorage.setItem('memo_tts_end_delay', urlParams.get('end'));
             if (urlParams.has('trn'))   localStorage.setItem('memo_is_translation', urlParams.get('trn') === '1');
@@ -719,11 +742,9 @@ ${text}`;
             if (urlParams.has('lc'))    localStorage.setItem('memo_tts_loop_count', urlParams.get('lc'));
             if (urlParams.has('snd'))   localStorage.setItem('memo_tts_sound', urlParams.get('snd'));
             if (urlParams.has('sep'))   {
-                // Важно: мы берем значение как есть, сохраняя пробелы!
                 localStorage.setItem('memo_tts_delimiter', urlParams.get('sep'));
             }
 
-            // 3. Применяем настройки из localStorage к интерфейсу
             const isTrn = localStorage.getItem('memo_is_translation') === 'true';
             document.getElementById('ttsIsTranslation').checked = isTrn;
 
@@ -796,7 +817,6 @@ ${text}`;
         
         document.getElementById('inputText').addEventListener('input', () => stopMemoTTS(true));
 
-        // --- ЛОГИКА ФЕЙКОВОГО JSON ---
         window.mockPaliJson = {};
         const originalFetch = window.fetch;
         window.fetch = async function() {
@@ -966,6 +986,10 @@ ${text}`;
             updatePlayButtonState(false); 
             window.isLoopingPause = false;
             
+            // Сбрасываем блокировку таймера
+            window.memoNextAllowedTime = 0; 
+            window.memoLockId++;
+            
             if (window.ttsAPI) {
                 if (fullReset) {
                     const state = window.ttsAPI.getState();
@@ -1002,7 +1026,6 @@ ${text}`;
             window.memoLoopsPlayed = 0;
         }
 
-        // --- ЛОГИКА ЗАЦИКЛИВАНИЯ И ЗВУКОВ В КОНЦЕ ---
         document.addEventListener('tts-range-finished', () => {
             const isLoop = document.getElementById('ttsIsLoop').checked;
             const soundChoice = document.getElementById('ttsSound').value;
@@ -1058,8 +1081,11 @@ ${text}`;
             }
         });
 
-        // --- СИНХРОНИЗАЦИЯ С КНОПКАМИ VOICE.JS ---
         document.addEventListener('click', (e) => {
+            // Сбрасываем блокировку при любом клике пользователя
+            window.memoNextAllowedTime = 0; 
+            window.memoLockId++; 
+            
             const playMainBtn = e.target.closest('.play-main-button');
             const closeMainBtn = e.target.closest('.close-tts-btn');
             
@@ -1079,7 +1105,6 @@ ${text}`;
             if (closeMainBtn) stopMemoTTS(false); 
         }, { capture: true }); 
 
-        // --- ФУНКЦИЯ СБРОСА НАСТРОЕК ---
         window.resetTTSSettings = function() {
             const msg = window.memoLang === 'ru' ? 'Сбросить настройки TTS по умолчанию?' : 'Reset TTS settings to default?';
             if (confirm(msg)) {
