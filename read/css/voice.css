@@ -494,3 +494,8 @@ body[data-theme="dark"] #sutta span[id]:has(.tts-active) {
         border: 1px solid #555; 
         color: #ccc; 
     }
+
+.refresh-api-btn img, 
+.reset-tts-btn img {
+    pointer-events: none;
+}
