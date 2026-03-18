@@ -289,7 +289,7 @@
                 panel.id = 'memorize-panel';
                 if (memState.isPanelOpen) panel.classList.add('visible');
                 
-                // ЗАМЕНЯЕМ ИНПУТ НА SPAN CONTENTEDITABLE (АБСОЛЮТНЫЙ ИММУНИТЕТ К МЕНЕДЖЕРАМ ПАРОЛЕЙ)
+                // ТЕПЕРЬ ОБА ПОЛЯ (минуты и повторы) — ЭТО SPAN 
                 panel.innerHTML = `
                     <div class="mem-row">
                         <div class="mem-btn-wrapper">
@@ -305,8 +305,7 @@
                     <div class="mem-row" style="justify-content: space-around; gap: 5px;">
                         <label class="mem-label">
                             <img src="/assets/svg/hourglass-regular-full.svg" width="14" height="14" alt="timer" style="margin-right: 4px; vertical-align: text-bottom;">
-<input id="mem-interval" class="mem-input" type="number" min="0" step="0.5" value="${memState.intervalMinutes}" autocomplete="off" data-lpignore="true">
- ${L.interval}
+<span id="mem-interval" class="mem-input" contenteditable="true" inputmode="decimal" spellcheck="false" style="display:inline-block; box-sizing:border-box; min-width: 42px; outline: none; line-height: 1.6; cursor: text;">${memState.intervalMinutes}</span> ${L.interval}
                         </label>
 
                         <label class="mem-label" title="0 = Бесконечно">
@@ -327,6 +326,8 @@
     }
 
     function loadState() {
+        // ЗАКОММЕНТИРОВАНО: Сбрасываем A-B цикл при обновлении страницы 
+        /*
         try {
             const slug = getSlug();
             const memory = JSON.parse(localStorage.getItem(MEMORY_KEY)) || {};
@@ -341,9 +342,12 @@
                 memState.repsInput = saved.repsInput || '∞'; 
             }
         } catch(e) {}
+        */
     }
 
     function saveState() {
+        // ЗАКОММЕНТИРОВАНО: Сбрасываем A-B цикл при обновлении страницы 
+        /*
         try {
             const slug = getSlug();
             let memory = JSON.parse(localStorage.getItem(MEMORY_KEY)) || {};
@@ -371,6 +375,7 @@
 
             localStorage.setItem(MEMORY_KEY, JSON.stringify(memory));
         } catch(e) {}
+        */
     }
 
     function extractSnippet(el) {
@@ -453,9 +458,8 @@
             }
         });
 
-        // Удобство для SPAN: при фокусе выделяем весь текст
         document.addEventListener('focusin', (e) => {
-            if (e.target.id === 'mem-repeat-times') {
+            if (e.target.id === 'mem-repeat-times' || e.target.id === 'mem-interval') {
                 const range = document.createRange();
                 range.selectNodeContents(e.target);
                 const sel = window.getSelection();
@@ -464,9 +468,8 @@
             }
         });
 
-        // Блокируем Enter в SPAN, чтобы не создавались новые строки
         document.addEventListener('keydown', (e) => {
-            if (e.target.id === 'mem-repeat-times') {
+            if (e.target.id === 'mem-repeat-times' || e.target.id === 'mem-interval') {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     e.target.blur();
@@ -476,15 +479,34 @@
 
         document.addEventListener('input', (e) => {
             if (e.target.id === 'mem-interval') {
-                let val = parseFloat(e.target.value);
+                // Разрешаем цифры, точку и запятую. Запятую сразу меняем на точку
+                let text = e.target.innerText.replace(/[^0-9.,]/g, '').replace(',', '.');
+                
+                // Оставляем только одну точку, если ввели несколько
+                let parts = text.split('.');
+                if (parts.length > 2) {
+                    text = parts[0] + '.' + parts.slice(1).join('');
+                }
+
+                if (text !== e.target.innerText) {
+                    e.target.innerText = text;
+                    const range = document.createRange();
+                    range.selectNodeContents(e.target);
+                    range.collapse(false);
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                }
+
+                let val = parseFloat(text);
                 memState.intervalMinutes = isNaN(val) ? 0 : val;
                 
                 if (memState.countdownId && memState.pauseStartedAt) {
                     memState.targetTimestamp = memState.pauseStartedAt + (memState.intervalMinutes * 60 * 1000);
                 }
+                // saveState();
             }
             if (e.target.id === 'mem-repeat-times') {
-                // Очищаем ввод от лишних символов на лету
                 let text = e.target.innerText.replace(/[^0-9∞]/g, '');
                 
                 if (text !== e.target.innerText) {
@@ -508,35 +530,32 @@
                     const statusEl = document.getElementById('mem-status');
                     if (statusEl) statusEl.innerText = `${L.playing}${memState.repsLeft === Infinity ? '∞' : memState.repsLeft})`;
                 }
+                // saveState();
             }
-            saveState();
         });
 
-        // SPAN не триггерит change, используем focusout (blur)
         document.addEventListener('focusout', (e) => {
+            if (e.target.id === 'mem-interval') {
+                let val = parseFloat(e.target.innerText);
+                if (e.target.innerText.trim() === '' || isNaN(val)) {
+                    e.target.innerText = '0';
+                    memState.intervalMinutes = 0;
+                }
+                if (memState.countdownId && memState.pauseStartedAt) {
+                    memState.targetTimestamp = memState.pauseStartedAt;
+                }
+                // saveState();
+            }
+            
             if (e.target.id === 'mem-repeat-times') {
                 let val = parseInt(e.target.innerText, 10);
-                // Если пусто или 0 - превращаем в бесконечность
                 if (e.target.innerText.trim() === '' || isNaN(val) || val === 0) {
                     e.target.innerText = '∞';
                     memState.repsInput = '∞';
                 }
                 memState.repsPlayed = 0;
                 updateRepsLeft();
-                saveState();
-            }
-        });
-
-        document.addEventListener('change', (e) => {
-            if (e.target.id === 'mem-interval') {
-                if (e.target.value.trim() === '') {
-                    e.target.value = '0';
-                    memState.intervalMinutes = 0;
-                    if (memState.countdownId && memState.pauseStartedAt) {
-                        memState.targetTimestamp = memState.pauseStartedAt;
-                    }
-                    saveState();
-                }
+                // saveState();
             }
         });
 
@@ -799,7 +818,7 @@
                 [memState.snippetA, memState.snippetB] = [memState.snippetB, memState.snippetA];
             }
         }
-        saveState();
+        // saveState();
         highlightRange();
     }
 
@@ -844,12 +863,11 @@
         btnA.className = `mem-pick-btn ${memState.pickMode === 'A' ? 'picking' : ''} ${memState.lineA ? 'set' : ''}`;
         btnB.className = `mem-pick-btn ${memState.pickMode === 'B' ? 'picking' : ''} ${memState.lineB ? 'set' : ''}`;
 
-        document.getElementById('mem-interval').value = memState.intervalMinutes;
+        const intervalSpan = document.getElementById('mem-interval');
+        if (intervalSpan) intervalSpan.innerText = memState.intervalMinutes;
         
         const repsSpan = document.getElementById('mem-repeat-times');
-        if (repsSpan) {
-            repsSpan.innerText = memState.repsInput;
-        }
+        if (repsSpan) repsSpan.innerText = memState.repsInput;
 
         if (!memState.isActive) {
             const statusEl = document.getElementById('mem-status');
