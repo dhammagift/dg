@@ -193,8 +193,6 @@
             }
 
             .mem-label { font-size: 11px; color: #aaa; margin: 0; display: flex; align-items: center; gap: 5px; }
-            .mem-input { width: 42px; background: #eee; border: 1px solid #ccc; color: #333; border-radius: 4px; padding: 2px; font-size: 11px; text-align: center; transition: background 0.3s, color 0.3s; }
-            .dark .mem-input { background: #333; border: 1px solid #555; color: #ccc; }
 
             .mem-clear-btn {
                 background: transparent; border: none; font-size: 14px; cursor: pointer; padding: 2px;
@@ -305,12 +303,14 @@
                     <div class="mem-row" style="justify-content: space-around; gap: 5px;">
                         <label class="mem-label">
                             <img src="/assets/svg/hourglass-regular-full.svg" width="14" height="14" alt="timer" style="margin-right: 4px; vertical-align: text-bottom;">
-<span id="mem-interval" class="mem-input" contenteditable="true" inputmode="decimal" spellcheck="false" style="display:inline-block; box-sizing:border-box; min-width: 42px; outline: none; line-height: 1.6; cursor: text;">${memState.intervalSeconds}</span> ${L.interval}
+<span id="mem-interval" class="tts-editable-span" contenteditable="true" inputmode="decimal" spellcheck="false">${memState.intervalSeconds}</span>
+ ${L.interval}
                         </label>
 
                         <label class="mem-label" title="0 = Бесконечно">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.2v-2a4 4 0 0 1 4-4h12.8M7 21.9l-4-4 4-4"/><path d="M21 11.8v2a4 4 0 0 1-4 4H4.2"/></svg> 
-<span id="mem-repeat-times" class="mem-input" contenteditable="true" inputmode="numeric" spellcheck="false" style="display:inline-block; box-sizing:border-box; min-width: 42px; outline: none; line-height: 1.6; cursor: text;">${memState.repsInput}</span>
+<span id="mem-repeat-times" class="tts-editable-span" contenteditable="true" inputmode="numeric" spellcheck="false">${memState.repsInput}</span>
+
                         </label>
                         <button id="mem-clear-btn" class="mem-clear-btn" title="Сбросить цикл">️
     <img src="/assets/svg/trash-can-regular-full.svg" width="16" height="16" alt="Reset"></button>

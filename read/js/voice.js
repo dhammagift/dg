@@ -1867,7 +1867,9 @@ function getPlayerHtml() {
                   <label class="tts-delay-label" title="Пауза между фразами (секунды)">
                             <img src="/assets/svg/hourglass-regular-full.svg" width="14" height="14" alt="timer" style=" vertical-align: text-bottom;">
                     Delay
-                      <input type="number" id="tts-segment-delay-input" class="tts-delay-input" value="${localStorage.getItem('tts_segment_delay') || 0}" min="0">
+<span id="tts-segment-delay-input" class="tts-editable-span" contenteditable="true" inputmode="decimal" spellcheck="false">${localStorage.getItem('tts_segment_delay') || 0}</span>
+
+
                       sec
                   </label>
               </div>
@@ -2223,18 +2225,6 @@ const resetMessage = isRuLike
    //      showToast(isRu ? "Автоплей выключен" : "Autoplay disabled");
      }
      return;
-  }
-
-  // 7. Segment Delay
-  if (e.target.id === 'tts-segment-delay-input') {
-      let val = parseFloat(e.target.value);
-      if (isNaN(val) || val < 0) {
-          val = 0;
-          e.target.value = 0;
-      }
-      localStorage.setItem(SEGMENT_DELAY_KEY, val);
-      window.TTS_SEGMENT_DELAY = val * 1000; // переводим в миллисекунды для setTimeout
-      return;
   }
 
 
@@ -2693,3 +2683,56 @@ window.ttsAPI = {
     stop: stopPlayback,
     keepSilenceAlive: toggleSilence
 };
+
+// --- Обработка поля Delay (Span ContentEditable) ---
+document.addEventListener('input', (e) => {
+    if (e.target.id === 'tts-segment-delay-input') {
+        let text = e.target.innerText.replace(/[^0-9.,]/g, '').replace(',', '.');
+        let parts = text.split('.');
+        if (parts.length > 2) text = parts[0] + '.' + parts.slice(1).join('');
+        
+        if (text !== e.target.innerText) {
+            e.target.innerText = text;
+            const range = document.createRange();
+            range.selectNodeContents(e.target);
+            range.collapse(false);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+        
+        let val = parseFloat(text);
+        if (isNaN(val) || val < 0) val = 0;
+        localStorage.setItem(SEGMENT_DELAY_KEY, val);
+        window.TTS_SEGMENT_DELAY = val * 1000;
+    }
+});
+
+document.addEventListener('focusout', (e) => {
+    if (e.target.id === 'tts-segment-delay-input') {
+        let val = parseFloat(e.target.innerText);
+        if (e.target.innerText.trim() === '' || isNaN(val)) {
+            e.target.innerText = '0';
+            localStorage.setItem(SEGMENT_DELAY_KEY, 0);
+            window.TTS_SEGMENT_DELAY = 0;
+        }
+    }
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.target.id === 'tts-segment-delay-input' && e.key === 'Enter') {
+        e.preventDefault();
+        e.target.blur();
+    }
+});
+
+document.addEventListener('focusin', (e) => {
+    if (e.target.id === 'tts-segment-delay-input') {
+        const range = document.createRange();
+        range.selectNodeContents(e.target);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
+});
+// ---------------------------------------------------
