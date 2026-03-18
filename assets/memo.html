@@ -12,18 +12,6 @@
 <link href="/assets/css/paliLookup.css" rel="stylesheet" />
 
     <style>
-        .copy-success {
-            z-index: 1000;
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            padding: 10px;
-            background-color: #28a745;
-            color: #fff;
-            font-weight: bold;
-            border-radius: 5px;
-            display: none;
-        }
 
         /* --- ВСТРОЕННЫЙ ТАЙМЕР В РЯДУ С КНОПКАМИ --- */
         #memo-timer-status {
@@ -197,6 +185,11 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
     </svg>
 </button>
 
+<button class="btn btn-secondary icon" id="btn_share_memo" title="Поделиться ссылкой">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5zm-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/>
+    </svg>
+</button>
 
     
     <button type="button" class="btn btn-secondary icon" data-bs-toggle="collapse" data-bs-target="#linkList" aria-expanded="false" id="btn_links">
@@ -297,72 +290,112 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
         </div>
     </div>
 
-    <div class="copy-success" id="lbl_copied">Copied to Clipboard</div>
-
     <script>
       
-      document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => {
     const favBtn = document.getElementById('toggle-memo-favorite');
+    const shareBtn = document.getElementById('btn_share_memo');
     const iconOutline = document.getElementById('star-outline');
     const iconSolid = document.getElementById('star-solid');
     const textInput = document.getElementById("inputText");
 
-    if (!favBtn || !textInput) return;
+    if (!textInput) return;
 
-    // Функция динамически берет текст прямо из поля ввода
+    // Собирает данные для URL и Избранного
     function getMemoData() {
+        // Текст тримим (убираем лишние пробелы по краям текста)
         const currentText = textInput.value.trim();
         if (!currentText) return null;
 
         const memoSlug = "memo_" + currentText.substring(0, 50).replace(/\s+/g, '_'); 
         const memoTitle = "📝 " + currentText.substring(0, 35) + (currentText.length > 35 ? "..." : "");
 
+        // Используем стандартный класс для сборки параметров
+        const params = new URLSearchParams();
+        params.set('text', currentText);
+        params.set('delay', document.getElementById("ttsDelay").value || "0");
+        params.set('end', document.getElementById("ttsEndDelay").value || "0");
+        params.set('trn', document.getElementById("ttsIsTranslation").checked ? "1" : "0");
+        params.set('loop', document.getElementById("ttsIsLoop").checked ? "1" : "0");
+        params.set('lc', document.getElementById("ttsLoopCount").value || "∞");
+        params.set('snd', document.getElementById("ttsSound").value || "none");
+        
+        // РАЗДЕЛИТЕЛЬ: берем "как есть", без trim(). URLSearchParams сам закодирует пробелы.
+        params.set('sep', document.getElementById("ttsDelimiter").value || "");
+
         return {
             slug: memoSlug,
             id: memoSlug,
             title: memoTitle,
             path: window.location.pathname,
-            search: "?text=" + encodeURIComponent(currentText), // Кодируем текст для URL
+            search: "?" + params.toString(), // Выдаст: ?text=...&delay=60&end=10&trn=0...
             timestamp: Date.now()
         };
     }
 
-    // Обновляет звездочку: закрашена или нет
-    function updateMemoIcon() {
-        const data = getMemoData();
-        if (data && typeof isFavorite === 'function') {
-            const saved = isFavorite(data.slug);
-            iconOutline.style.display = saved ? 'none' : 'inline-block';
-            iconSolid.style.display = saved ? 'inline-block' : 'none';
-        } else {
-            iconOutline.style.display = 'inline-block';
-            iconSolid.style.display = 'none';
+    // --- ЛОГИКА "В ИЗБРАННОЕ" ---
+    if (favBtn) {
+        function updateMemoIcon() {
+            const data = getMemoData();
+            if (data && typeof isFavorite === 'function') {
+                const saved = isFavorite(data.slug);
+                iconOutline.style.display = saved ? 'none' : 'inline-block';
+                iconSolid.style.display = saved ? 'inline-block' : 'none';
+            } else {
+                iconOutline.style.display = 'inline-block';
+                iconSolid.style.display = 'none';
+            }
         }
+
+        setTimeout(updateMemoIcon, 100);
+        textInput.addEventListener('input', updateMemoIcon);
+
+        favBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const positionData = getMemoData();
+            
+            if (positionData && typeof toggleFavoriteGlobal === 'function') {
+                toggleFavoriteGlobal(positionData);
+                updateMemoIcon();
+                if (typeof window.syncSmartIcons === 'function') setTimeout(window.syncSmartIcons, 50);
+            } else if (!positionData) {
+                alert(window.memoLang === 'ru' ? 'Сначала введите текст!' : 'Please enter text first!');
+            }
+        });
     }
 
-    // Проверяем статус при загрузке и при КАЖДОМ изменении текста
-    setTimeout(updateMemoIcon, 100);
-    textInput.addEventListener('input', updateMemoIcon);
-
-    // Логика клика
-    favBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const positionData = getMemoData();
-        
-        if (positionData && typeof toggleFavoriteGlobal === 'function') {
-            toggleFavoriteGlobal(positionData);
-            updateMemoIcon();
+    // --- ЛОГИКА "ПОДЕЛИТЬСЯ" ---
+    if (shareBtn) {
+        shareBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const data = getMemoData();
             
-            // Синхронизация с умными иконками, если они активны
-            if (typeof window.syncSmartIcons === 'function') {
-                setTimeout(window.syncSmartIcons, 50);
+            if (!data) {
+                alert(window.memoLang === 'ru' ? 'Сначала введите текст!' : 'Please enter text first!');
+                return;
             }
-        } else if (!positionData) {
-            // Если попытаться сохранить пустую форму
-            alert(window.memoLang === 'ru' ? 'Сначала введите текст!' : 'Please enter text first!');
-        }
-    });
+
+            // Умная замена локального хоста на боевой домен
+            let origin = window.location.origin;
+            if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+                origin = 'https://f.dhamma.gift';
+            }
+
+            // Формируем полную готовую ссылку
+            const fullUrl = origin + data.path + data.search;
+
+            navigator.clipboard.writeText(fullUrl).then(() => {
+                if (typeof showBubbleNotification === 'function') {
+                    showBubbleNotification(window.memoLang === 'ru' ? 'Ссылка скопирована!' : 'Link copied!');
+                } else {
+                    alert(window.memoLang === 'ru' ? 'Ссылка скопирована!' : 'Link copied!');
+                }
+            }).catch(err => console.error('Ошибка копирования: ', err));
+        });
+    }
+
 });
+
 
         // --- ПЕРЕХВАТЧИК MEDIA SESSION (ОБХОД VOICE.JS) ---
         // Заменяем дефолтное название memo_custom на первые слова текста,
@@ -440,7 +473,7 @@ ${text}`;
                 document.getElementById('link_tips').childNodes[0].nodeValue = 'Советы и хитрости заучивания ';
                 document.getElementById('link_open_any').innerText = 'Открыть любую Сутту в этом режиме';
                 document.getElementById('lbl_result').innerText = 'Результат:';
-                document.getElementById('lbl_copied').innerText = 'Скопировано в буфер';
+
                 document.getElementById('help_text_1').innerHTML = 'Сокращайте текст до первых букв для быстрого заучивания (напр. "Sabbaṁ taṁ" → "S t").<br><b>AI Expand</b> попросить ИИ заполнить сокращенный текст (peyyāla)<br><b>TTS:</b> <b>Разделитель</b> режет текст на части. <b>Пауза</b> добавляет задержку между ними. <b>Звук</b> играет в конце. <b>Цикл</b> повторяет.';
             }
 
@@ -639,9 +672,16 @@ ${text}`;
                 tempTextarea.select();
                 document.execCommand("copy");
                 document.body.removeChild(tempTextarea);
-                showCopySuccess();
+                
+                // Вызываем красивый глобальный бабл
+                if (typeof showBubbleNotification === 'function') {
+                    showBubbleNotification(window.memoLang === 'ru' ? 'Скопировано в буфер' : 'Copied to Clipboard');
+                } else {
+                    alert('Скопировано');
+                }
             }
         }
+
 
         function showCopySuccess() {
             var copySuccess = document.querySelector('.copy-success');
@@ -649,11 +689,12 @@ ${text}`;
             setTimeout(function() { copySuccess.style.display = 'none'; }, 1500);
         }
 
-        // --- ЛОГИКА СОХРАНЕНИЯ СОСТОЯНИЯ ---
+        // --- ЛОГИКА СОХРАНЕНИЯ И ВОССТАНОВЛЕНИЯ СОСТОЯНИЯ ---
         window.addEventListener('load', function() {
             const urlParams = new URLSearchParams(window.location.search);
             const textParam = urlParams.get('text');
             
+            // 1. Восстанавливаем текст
             if (textParam) {
                 document.getElementById("inputText").value = textParam;
                 localStorage.setItem("входнойТекст", textParam); 
@@ -669,6 +710,20 @@ ${text}`;
                 }
             }
 
+            // 2. Распаковываем отдельные параметры настроек из URL (если они там есть)
+            // И сразу сохраняем их в localStorage, как будто мы ввели их руками
+            if (urlParams.has('delay')) localStorage.setItem('memo_tts_delay', urlParams.get('delay'));
+            if (urlParams.has('end'))   localStorage.setItem('memo_tts_end_delay', urlParams.get('end'));
+            if (urlParams.has('trn'))   localStorage.setItem('memo_is_translation', urlParams.get('trn') === '1');
+            if (urlParams.has('loop'))  localStorage.setItem('memo_tts_loop', urlParams.get('loop') === '1');
+            if (urlParams.has('lc'))    localStorage.setItem('memo_tts_loop_count', urlParams.get('lc'));
+            if (urlParams.has('snd'))   localStorage.setItem('memo_tts_sound', urlParams.get('snd'));
+            if (urlParams.has('sep'))   {
+                // Важно: мы берем значение как есть, сохраняя пробелы!
+                localStorage.setItem('memo_tts_delimiter', urlParams.get('sep'));
+            }
+
+            // 3. Применяем настройки из localStorage к интерфейсу
             const isTrn = localStorage.getItem('memo_is_translation') === 'true';
             document.getElementById('ttsIsTranslation').checked = isTrn;
 
@@ -694,6 +749,7 @@ ${text}`;
 
             toggleLoopInputVisibility();
         });
+
 
         function toggleLoopInputVisibility() {
             const loopInput = document.getElementById('ttsLoopCount');
