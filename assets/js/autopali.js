@@ -17,6 +17,17 @@ function uniCoder(textInput) {
 // Кэшируем словарь, чтобы не качать его дважды при открытии окна
 let suttaWordsCache = null;
 
+// Выносим словарь раскладки наружу для лучшей производительности
+const ruToEn = {
+    'а': 'f', 'в': 'd', 'е': 't', 'к': 'r', 'м': 'v',
+    'н': 'y', 'о': 'j', 'п': 'g', 'р': 'h', 'с': 'c',
+    'т': 'n', 'у': 'e', 'х': '[', 'ъ': ']', 'ы': 's',
+    'ь': 'm', 'э': "'", 'ё': '`', 'я': 'z', 'ж': ';',
+    'з': 'p', 'и': 'b', 'й': 'q', 'л': 'k', 'д': 'l',
+    'г': 'u', 'ф': 'a', 'ц': 'w', 'ч': 'x', 'ш': 'i',
+    'щ': 'o', 'б': ',', 'ю': '.', ' ': ' '
+};
+
 // Делаем функцию доступной для вызова из модального окна
 window.initPaliAutocomplete = function(selector) {
     let inputEl = document.querySelector(selector);
@@ -69,12 +80,12 @@ window.initPaliAutocomplete = function(selector) {
 };
 
 function bindAutocomplete(selector, allWords) {
+    // Очищенный accentMap (двойные ключи убраны, m с точками приводятся к m)
     var accentMap = {
-        "ā": "a", "ī": "i", "ū": "u", "ḍ": "d", "ḷ": "l", "ṃ": "ṁ", "ṁ": "n",
-        "ṅ": "n", "ṇ": "n", "ṭ": "t", "ñ": "n", "ññ": "n", "ss": "s", "aa": "a",
-        "ii": "i", "uu": "u", "dd": "d", "kk": "k", "ḍḍ": "d", "ḷḷ": "l",
-        "ṇṇ": "n", "ṭṭ": "t", "cc": "c", "pp": "p", "cch": "c", "ch": "c",
-        "kh": "k", "ph": "p", "th": "t", "ṭh": "t"
+        "ā": "a", "ī": "i", "ū": "u", 
+        "ḍ": "d", "ḷ": "l", 
+        "ṃ": "m", "ṁ": "m", 
+        "ṅ": "n", "ṇ": "n", "ṭ": "t", "ñ": "n"
     };
 
     var normalize = function(term) {
@@ -97,16 +108,6 @@ function bindAutocomplete(selector, allWords) {
         source: function(request, response) {
             
             function normalizeTerm(term) {
-                const ruToEn = {
-                    'а': 'f', 'в': 'd', 'е': 't', 'к': 'r', 'м': 'v',
-                    'н': 'y', 'о': 'j', 'п': 'g', 'р': 'h', 'с': 'c',
-                    'т': 'n', 'у': 'e', 'х': '[', 'ъ': ']', 'ы': 's',
-                    'ь': 'm', 'э': "'", 'ё': '`', 'я': 'z', 'ж': ';',
-                    'з': 'p', 'и': 'b', 'й': 'q', 'л': 'k', 'д': 'l',
-                    'г': 'u', 'ф': 'a', 'ц': 'w', 'ч': 'x', 'ш': 'i',
-                    'щ': 'o', 'б': ',', 'ю': '.', ' ': ' '
-                };
-
                 return term.trim()
                     .replace(/[а-яё]/g, char => ruToEn[char] || char)
                     .replace(/,/g, ".")
@@ -143,7 +144,13 @@ function bindAutocomplete(selector, allWords) {
 
             var normLastTerm = normalize(lastTerm);
             var re = $.ui.autocomplete.escapeRegex(normLastTerm);
+            
+            // 1. Делаем каждую букву опционально двойной (k -> k{1,2})
             var modifiedRe = re.replace(/([a-zA-Z])/g, "$1{1,2}");
+            
+            // 2. Делаем 'm' и 'n' полностью взаимозаменяемыми для поиска (m -> [mn], n -> [mn])
+            modifiedRe = modifiedRe.replace(/m|n/g, "[mn]");
+
             var matchbeginonly = new RegExp("^" + modifiedRe, "i");
             var matchall = new RegExp(modifiedRe, "i");
 
