@@ -1271,23 +1271,34 @@ function getClickedWordWithHTML(element, x, y) {
     if (!range) return null;
 
     // --- НОВОЕ ИСПРАВЛЕНИЕ НАЧАЛО ---
-
+    
     // 1. Убеждаемся, что браузер "привязал" клик к текстовому узлу.
     if (range.startContainer.nodeType !== Node.TEXT_NODE) {
         return null;
     }
 
-    // 2. Теперь получаем реальные геометрические границы этого текстового узла.
-    const textNodeRange = document.createRange();
-    textNodeRange.selectNode(range.startContainer);
-    const rect = textNodeRange.getBoundingClientRect();
+    // 2. Получаем точные геометрические координаты самой каретки (куда примагнитился клик)
+    const rects = range.getClientRects();
+    if (rects.length === 0) return null;
+    
+    const caretRect = rects[0];
 
-    // 3. Проверяем, находятся ли координаты клика (x, y) внутри этих границ.
-    //    Это предотвращает срабатывание при клике в полях слева или справа от текста.
-    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
-        return null;
+    // 3. Вычисляем кратчайшее расстояние от реального клика (x, y) до текста по осям X и Y
+    const dx = Math.max(caretRect.left - x, 0, x - caretRect.right);
+    const dy = Math.max(caretRect.top - y, 0, y - caretRect.bottom);
+    
+    // Теорема Пифагора для точной дистанции
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    // 4. Задаем порог чувствительности в пикселях. 
+    // 15px - комфортно для пальца на мобильном, но отсечет случайные клики в пустоте.
+    const CLICK_TOLERANCE = 5; 
+
+    if (distance > CLICK_TOLERANCE) {
+        return null; // Клик был слишком далеко от реального текста, игнорируем
     }
     // --- НОВОЕ ИСПРАВЛЕНИЕ КОНЕЦ ---
+
 
 
     const parentElement = element.closest('.pli-lang, .rus-lang, .eng-lang, [lang="pi"], [lang="en"], [lang="ru"]');
