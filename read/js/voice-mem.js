@@ -534,12 +534,17 @@
 
         document.addEventListener('click', (e) => {
             const mainPlayBtn = e.target.closest('.play-main-button');
-            if (mainPlayBtn && memState.lineA) {
-                if (memState.ignoreNextPlayClick) {
+            const navBtn = e.target.closest('.prev-main-button, .next-main-button'); // <-- ДОБАВЛЕНО: ловим кнопки навигации
+
+            // Обрабатываем и Play, и Вперед/Назад, если мы находимся в А-Б режиме
+            if ((mainPlayBtn || navBtn) && memState.lineA) {
+                
+                if (mainPlayBtn && memState.ignoreNextPlayClick) {
                     memState.ignoreNextPlayClick = false;
                     return; 
                 }
                 
+                // Если тикает таймер ожидания — убиваем его
                 if (memState.countdownId) {
                     clearInterval(memState.countdownId);
                     memState.countdownId = null;
@@ -547,9 +552,26 @@
                     memState.targetTimestamp = null;
                     memState.currentCountdownTime = null;
                     updateABTimerDisplay();
+
+                    // <-- НОВОЕ: Если нажали Вперед/Назад во время таймера
+                    if (navBtn && window.ttsAPI) {
+                        const state = window.ttsAPI.getState();
+                        // Искусственно "будим" плеер, чтобы voice.js не проигнорировал этот клик
+                        state.speaking = true;
+                        state.paused = false;
+                        
+                        // Возвращаем иконку паузы (плеер снова активен)
+                        const imgs = document.querySelectorAll('.play-main-button img');
+                        imgs.forEach(img => img.src = '/assets/svg/pause-grey.svg');
+
+                        // Обновляем статус: убираем таймер и пишем "Проигрывание..."
+                        const statusEl = document.getElementById('mem-status');
+                        if (statusEl) statusEl.innerText = `${L.playing}${memState.repsLeft === Infinity ? '∞' : memState.repsLeft})`;
+                    }
                 }
 
-                if (window.ttsAPI) {
+                // Логика конкретно для кнопки Play остается без изменений
+                if (mainPlayBtn && window.ttsAPI) {
                     const state = window.ttsAPI.getState();
 
                     // Если цикл не активен или плеер молчит (новый старт из панели А-Б)
@@ -631,8 +653,6 @@
                 return;
             }
 
-
-
             const btnA = e.target.closest('#mem-btn-a');
             const btnB = e.target.closest('#mem-btn-b');
             
@@ -678,6 +698,7 @@
             }
 
         }, { capture: true });
+
 
         document.addEventListener('contextmenu', (e) => {
             const btn = e.target.closest('.mem-pick-btn');

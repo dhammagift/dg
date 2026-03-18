@@ -850,7 +850,9 @@ function createPlaylistFromData(textData, mode) {
 
 // --- Ядро TTS ---
 async function playCurrentSegment() {
-  
+ 
+ if (window.ttsDelayTimeout) clearTimeout(window.ttsDelayTimeout);
+ 
    if (ttsState.googleAudio) {
       ttsState.googleAudio.pause();       // 1. Остановить звук
       ttsState.googleAudio.onended = null; // 2. Убить переключение на след. фразу
@@ -1018,7 +1020,9 @@ async function playCurrentSegment() {
                           // --- НОВОЕ: Интервал между сегментами ---
                           const delay = window.TTS_SEGMENT_DELAY || 0;
                           if (delay > 0) {
-                              setTimeout(playCurrentSegment, delay);
+
+window.ttsDelayTimeout = setTimeout(playCurrentSegment, delay);
+
                           } else {
                               playCurrentSegment();
                           }
@@ -1079,7 +1083,7 @@ function playBrowserTTS(text, langKey, rate, isPali) {
               // --- НОВОЕ: Интервал между сегментами ---
               const delay = window.TTS_SEGMENT_DELAY || 0;
               if (delay > 0) {
-                  setTimeout(playCurrentSegment, delay);
+window.ttsDelayTimeout = setTimeout(playCurrentSegment, delay);
               } else {
                   playCurrentSegment();
               }
@@ -1267,10 +1271,18 @@ async function handleSuttaClick(e) {
     e.preventDefault();
     if (!ttsState.speaking || ttsState.playlist.length === 0) return;
     
-        let direction = navBtn.classList.contains('prev-main-button') ? -1 : 1;
+    // 1. УБИВАЕМ ПРИЗРАКА (таймер)
+    if (window.ttsDelayTimeout) clearTimeout(window.ttsDelayTimeout);
+    
+    // 2. УБИВАЕМ onend, чтобы индекс не прыгал на +2 при отмене
+    if (ttsState.utterance) {
+        ttsState.utterance.onend = null;
+    }
+
+    let direction = navBtn.classList.contains('prev-main-button') ? -1 : 1;
     let newIndex = ttsState.currentIndex + direction;
     
-    // --- ИЗМЕНЕНИЕ: ЛОГИКА ДЛЯ A-B LOOP ---
+    // --- ИЗМЕНЕНИЕ: ЛОГИКА ДЛЯ A-B LOOP (СОХРАНЕНО И УЧТЕНО!) ---
     if (ttsState.startIndex !== undefined && ttsState.endIndex !== undefined) {
         if (direction > 0 && newIndex > ttsState.endIndex) {
             newIndex = ttsState.startIndex; // Вперед -> Прыгаем в начало
@@ -1283,20 +1295,18 @@ async function handleSuttaClick(e) {
         else if (direction > 0 && newIndex >= ttsState.playlist.length) newIndex = ttsState.playlist.length - 1;
     }
     // --------------------------------------
-
-    
-    if (direction < 0 && newIndex < 0) newIndex = 0;
-    else if (direction > 0 && newIndex >= ttsState.playlist.length) newIndex = ttsState.playlist.length - 1;
     
     if (newIndex === ttsState.currentIndex) return;
     
     synth.cancel();
     if (ttsState.googleAudio) {
         ttsState.googleAudio.pause();
+        ttsState.googleAudio.onended = null; // Глушим и Google Audio
         ttsState.googleAudio = null;
     }
 
     ttsState.currentIndex = newIndex;
+    
     if (ttsState.paused) {
       resetUI();
       const item = ttsState.playlist[ttsState.currentIndex];
@@ -1306,13 +1316,13 @@ async function handleSuttaClick(e) {
           const scrollTarget = document.getElementById(item.id) || item.element;
           scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-
       }
     } else {
       playCurrentSegment();
     }
     return;
   }
+
 
   if (playBtn && !e.target.classList.contains('voice-link')) {
     e.preventDefault();
@@ -1357,7 +1367,10 @@ async function handleSuttaClick(e) {
         } else {
           // --- PAUSE ---
           ttsState.paused = true;
+          if (window.ttsDelayTimeout) clearTimeout(window.ttsDelayTimeout); // УБИВАЕМ ПРИЗРАКА
+          if (ttsState.utterance) ttsState.utterance.onend = null; // Отключаем прыжок
           synth.cancel();
+
           if (ttsState.googleAudio) {
               ttsState.googleAudio.pause();
           }
@@ -1391,9 +1404,11 @@ async function handleSuttaClick(e) {
 }
 
 
-
 function stopPlayback() {
+  if (window.ttsDelayTimeout) clearTimeout(window.ttsDelayTimeout); // УБИВАЕМ ПРИЗРАКА
+  if (ttsState.utterance) ttsState.utterance.onend = null;
   synth.cancel();
+  
   if (ttsState.googleAudio) {
       ttsState.googleAudio.pause();
       ttsState.googleAudio = null;
