@@ -502,20 +502,19 @@ if (bjtUrl) {
 }
 // --- BJT END ---
 
-
+scLink += getTTSInterfaceHTML(texttype, slugReady, slug);
 
 if ((translator === 'sujato') || (translator === 'brahmali')) {
-  scLink += `<a target="_blank" href="https://suttacentral.net/${slug}/en/${translator}">SC</a> `;  
+  scLink += `&nbsp;<a target="_blank" href="https://suttacentral.net/${slug}/en/${translator}">SC</a> `;  
 } else {
-  scLink += `<a target="_blank" href="https://suttacentral.net/${slug}/th/siam_rath">SC</a> `;
+  scLink += `&nbsp;<a target="_blank" href="https://suttacentral.net/${slug}/th/siam_rath">SC</a> `;
 }
 
       $.ajax({
       url: "/read/php/extralinks.php?fromjs=" +slug
     }).done(function(data) {
       const linksArray = data.split(",");
-  
-scLink += getTTSInterfaceHTML(texttype, slugReady, slug);
+
       if (linksArray[0].length >= 4) {
         scLink += linksArray[0];
             console.log("extralinks " + linksArray[0]);
