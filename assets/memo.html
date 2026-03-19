@@ -470,7 +470,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let origin = window.location.origin;
             if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-                origin = 'https://f.dhamma.gift';
+             //   origin = 'https://f.dhamma.gift';
             }
 
             const fullUrl = origin + data.path + data.search;
@@ -1091,6 +1091,10 @@ if (editToggle) {
                     span.id = id;
                     span.style.display = 'inline-block';
                     span.style.margin = '2px 4px';
+                
+                    span.style.maxWidth = '100%';
+                    span.style.overflowWrap = 'break-word';
+                    span.style.wordBreak = 'break-word';
                     
                     if (/[\u0900-\u097F]/.test(seg)) {
                         span.className = 'pli-lang';
