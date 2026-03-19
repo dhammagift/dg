@@ -1,0 +1,156 @@
+
+        .tts-delay-label,
+        #tts-segment-delay-input {
+            display: none !important;
+        }
+        
+        /* --- Иконка песочных часов для таймера --- */
+        .memo-timer-icon {
+            width: 12px;
+            height: 12px;
+            opacity: 0.6;
+            vertical-align: middle;
+            margin-top: -2px;
+        }
+        .memo-timer-icon.spaced {
+            margin-right: 4px;
+        }
+
+        /* --- ФЕЙКОВЫЙ КОНТЕЙНЕР ТАЙМЕРА ДЛЯ ПЛЕЕРА --- */
+        .dummy-ab-timer-container {
+            position: absolute;
+            right: 20px; 
+            top: 32px;   
+            background: transparent;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            color: #777;
+            font-size: 11px;
+            font-family: sans-serif;
+            font-weight: 700;
+            padding: 2px 4px;
+            display: none; /* Скрыт по умолчанию */
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            z-index: 10;
+            line-height: 1;
+        }
+        .dark .dummy-ab-timer-container {
+            border-color: #555;
+            color: #aaa;
+        }
+
+        /* --- ВСТРОЕННЫЙ ТАЙМЕР В РЯДУ С КНОПКАМИ --- */
+        #memo-timer-status {
+            display: none; 
+            font-size: 14px;
+            font-weight: 600;
+            color: #0d6efd;
+            background: rgba(13, 110, 253, 0.1);
+            padding: 0 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(13, 110, 253, 0.2);
+            height: 38px; 
+            align-items: center;
+            justify-content: center;
+            min-width: 42px;
+            white-space: nowrap;
+            user-select: none;
+        }
+        
+        .dark #memo-timer-status {
+            color: #6ea8fe;
+            background: rgba(13, 110, 253, 0.15);
+            border-color: rgba(110, 168, 254, 0.2);
+        }
+
+        /* --- ОБЩИЙ ТАЙМЕР СЕССИИ (СТИКИ) --- */
+        #global-session-timer {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-family: monospace;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 10000;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            pointer-events: none; /* Клик проходит насквозь */
+            transition: opacity 0.3s ease;
+            display: none;
+        }
+        .dark #global-session-timer {
+            background: rgba(255, 255, 255, 0.15);
+            color: #ddd;
+        }
+
+        /* --- ТЕМНАЯ ТЕМА --- */
+        .dark .form-control,
+        .dark .form-select {
+            background-color: #222;
+            color: #e0e0e0;
+            border-color: #444;
+        }
+        .dark .form-control:focus,
+        .dark .form-select:focus {
+            background-color: #2a2a2a;
+            color: #fff;
+            border-color: #0d6efd;
+        }
+        .dark .form-control::placeholder {
+            color: #777;
+        }
+        .dark .list-group-item {
+            background-color: #222;
+            color: #ccc;
+            border-color: #444;
+        }
+        .dark .list-group-item a {
+            color: #5c93fa; 
+        }
+        .dark .list-group-item a:hover {
+            color: #7ab0ff;
+        }
+        .dark .form-check-label {
+            color: #ccc;
+        }
+
+        #btn_reset_tts img, #reset-tts-btn img {
+            opacity: 0.6;
+            transition: all 0.2s;
+        }
+        #btn_reset_tts:hover img, #reset-tts-btn:hover img {
+            opacity: 1;
+        }
+        
+        /* базовая унификация кнопок */
+        .memo-controls .btn{
+          display:inline-flex;
+          align-items:center;
+          justify-content:center;
+          height:38px;              
+          padding:0 12px;           
+          min-width:42px;           
+          border-radius:6px;
+          box-sizing:border-box;
+          border-width:1px;
+          border-style:solid;
+          border-color:transparent; 
+        }
+
+        .memo-controls .btn.icon{ width:42px; padding:0; }
+        .memo-controls .btn.text{ min-width:88px; padding:0 14px; }
+        .dark .memo-controls .btn{ border-color: rgba(255,255,255,0.06); }
+        
+        .dark #copy_icon_btn {
+            filter: invert(1);
+        }
+        #copy_icon_btn:hover {
+            opacity: 1;
+        }
+  
