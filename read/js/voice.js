@@ -1188,7 +1188,6 @@ window.ttsDelayTimeout = setTimeout(playCurrentSegment, delay);
   }
 }
 
-
 async function handleSuttaClick(e) {
   if (e.target.closest('#tts-settings-toggle')) {
     e.preventDefault();
@@ -1196,27 +1195,20 @@ async function handleSuttaClick(e) {
     const icon = document.getElementById('tts-settings-icon');
     const abPanel = document.getElementById('memorize-panel');
     
-    // Проверяем, открыто ли сейчас меню АБ
     let wasAbPanelOpen = false;
     if (abPanel && abPanel.classList.contains('visible')) {
         wasAbPanelOpen = true;
-        abPanel.classList.remove('visible'); // Закрываем АБ
+        abPanel.classList.remove('visible'); 
     }
 
-
-    // Стандартное поведение (если АБ не была открыта): открываем/закрываем саму шестеренку
     if (panel) {
         panel.classList.toggle('visible');
         if (panel.classList.contains('visible')) {
             if (icon) icon.style.transform = 'rotate(90deg)';
         } else {
             if (icon) icon.style.transform = 'rotate(0deg)';
-            
-            // Автоматически сворачиваем Google Voice при закрытии настроек
             const advSettings = document.getElementById('tts-advanced-settings');
             if (advSettings) advSettings.classList.remove('visible');
-            
-            // И возвращаем базовые настройки, чтобы при следующем открытии они были на месте
             const basicPanel = document.getElementById('tts-basic-settings');
             if (basicPanel) {
                 basicPanel.style.maxHeight = '200px';
@@ -1227,34 +1219,27 @@ async function handleSuttaClick(e) {
     return;
   }
 
-
   const container = e.target.closest('.sutta-container') || document;
   const voiceLink = e.target.closest('.voice-link');
   const playBtn = e.target.closest('.play-main-button');
   const navBtn = e.target.closest('.prev-main-button, .next-main-button');
 
-  // --- DEBUG: ПРОВЕРКА КЛИКА ПО ССЫЛКЕ ---
   if (voiceLink) {
     e.preventDefault();
-    
-    // ---> НОВОЕ: Если slug не указан явно, используем URL страницы <---
     let targetSlug = voiceLink.dataset.slug;
     if (!targetSlug) {
         targetSlug = window.location.pathname.replace(/[^a-zA-Z0-9]/g, '_');
     }
-    
     const player = getOrBuildPlayer();
     const internalPlayBtn = player.querySelector('.play-main-button');
     if (internalPlayBtn && targetSlug) {
         internalPlayBtn.dataset.slug = targetSlug;
     }
     player.classList.add('active');
-    
     if (!ttsState.speaking) {
       const mode = player.querySelector('#tts-mode-select')?.value 
                    || localStorage.getItem(MODE_STORAGE_KEY) 
-                   || 'trn'; // Для статей по дефолту перевод
-      
+                   || 'trn';
       startPlayback(container, mode, targetSlug, 0);
     }
     return;
@@ -1263,43 +1248,32 @@ async function handleSuttaClick(e) {
   if (navBtn) {
     e.preventDefault();
     if (!ttsState.speaking || ttsState.playlist.length === 0) return;
-    
-    // 1. УБИВАЕМ ПРИЗРАКА (таймер)
     if (window.ttsDelayTimeout) clearTimeout(window.ttsDelayTimeout);
-    
-    // 2. УБИВАЕМ onend, чтобы индекс не прыгал на +2 при отмене
     if (ttsState.utterance) {
         ttsState.utterance.onend = null;
     }
-
     let direction = navBtn.classList.contains('prev-main-button') ? -1 : 1;
     let newIndex = ttsState.currentIndex + direction;
     
-    // --- ИЗМЕНЕНИЕ: ЛОГИКА ДЛЯ A-B LOOP (СОХРАНЕНО И УЧТЕНО!) ---
     if (ttsState.startIndex !== undefined && ttsState.endIndex !== undefined) {
         if (direction > 0 && newIndex > ttsState.endIndex) {
-            newIndex = ttsState.startIndex; // Вперед -> Прыгаем в начало
+            newIndex = ttsState.startIndex; 
         } else if (direction < 0 && newIndex < ttsState.startIndex) {
-            newIndex = ttsState.endIndex;   // Назад -> Прыгаем в конец
+            newIndex = ttsState.endIndex;   
         }
     } else {
-        // Обычное поведение плеера
         if (direction < 0 && newIndex < 0) newIndex = 0;
         else if (direction > 0 && newIndex >= ttsState.playlist.length) newIndex = ttsState.playlist.length - 1;
     }
-    // --------------------------------------
     
     if (newIndex === ttsState.currentIndex) return;
-    
     synth.cancel();
     if (ttsState.googleAudio) {
         ttsState.googleAudio.pause();
-        ttsState.googleAudio.onended = null; // Глушим и Google Audio
+        ttsState.googleAudio.onended = null;
         ttsState.googleAudio = null;
     }
-
     ttsState.currentIndex = newIndex;
-    
     if (ttsState.paused) {
       resetUI();
       const item = ttsState.playlist[ttsState.currentIndex];
@@ -1316,16 +1290,10 @@ async function handleSuttaClick(e) {
     return;
   }
 
-
   if (playBtn && !e.target.classList.contains('voice-link')) {
     e.preventDefault();
-
-    // --- FIX START: Ищем актуальный Slug на текущей странице ---
-    // Плеер может помнить старый slug, поэтому мы проверяем, есть ли на странице свежая ссылка
     const pageVoiceLink = document.querySelector('.voice-link[data-slug]');
     const freshPageSlug = pageVoiceLink ? pageVoiceLink.dataset.slug : null;
-    // --- FIX END ---
-
     const activeWordElement = container.querySelector('.active-word');
     const activeId = activeWordElement ? getElementId(activeWordElement) : null;
     const currentItem = ttsState.playlist[ttsState.currentIndex];
@@ -1340,11 +1308,8 @@ async function handleSuttaClick(e) {
         const modeSelect = document.getElementById('tts-mode-select');
         if (modeSelect) modeSelect.value = mode;
       }
-      
-      // ИСПОЛЬЗУЕМ СВЕЖИЙ SLUG
       let targetSlug = freshPageSlug || playBtn.dataset.slug || ttsState.currentSlug;
       startPlayback(container, mode, targetSlug, 0);
-
     } else {
       if (ttsState.speaking) {
         if (ttsState.paused) {
@@ -1352,6 +1317,7 @@ async function handleSuttaClick(e) {
           ttsState.paused = false;
           setButtonIcon('pause');
           toggleSilence(true);
+          requestWakeLock(); // <--- ВКЛЮЧАЕМ ЭКРАН ПРИ ВОЗОБНОВЛЕНИИ
           if (ttsState.googleAudio) {
               ttsState.googleAudio.play();
           } else {
@@ -1360,23 +1326,19 @@ async function handleSuttaClick(e) {
         } else {
           // --- PAUSE ---
           ttsState.paused = true;
-          if (window.ttsDelayTimeout) clearTimeout(window.ttsDelayTimeout); // УБИВАЕМ ПРИЗРАКА
-          if (ttsState.utterance) ttsState.utterance.onend = null; // Отключаем прыжок
+          releaseWakeLock(); // <--- ВЫКЛЮЧАЕМ ЭКРАН ПРИ ПАУЗЕ
+          if (window.ttsDelayTimeout) clearTimeout(window.ttsDelayTimeout); 
+          if (ttsState.utterance) ttsState.utterance.onend = null; 
           synth.cancel();
-
           if (ttsState.googleAudio) {
               ttsState.googleAudio.pause();
           }
-          
-          toggleSilence(false); // <--- ДОБАВЬТЕ ЭТУ СТРОКУ
-          
+          toggleSilence(false); 
           setButtonIcon('play');
         }
       } else {
         // --- START FRESH ---
         const mode = document.getElementById('tts-mode-select')?.value || localStorage.getItem(MODE_STORAGE_KEY) || 'trn';
-        
-        // ИСПОЛЬЗУЕМ СВЕЖИЙ SLUG, ЕСЛИ НАЧИНАЕМ СНАЧАЛА
         let targetSlug = freshPageSlug || playBtn.dataset.slug || ttsState.currentSlug;
         startPlayback(container, mode, targetSlug, 0);
       }
@@ -1384,20 +1346,17 @@ async function handleSuttaClick(e) {
     return;
   }
 
-
   if (e.target.closest('.close-tts-btn')) {
     e.preventDefault();
     stopPlayback();
-    
-    // --- НОВОЕ: Возвращаем кнопку, если есть выделенное слово ---
     const activeWord = document.querySelector('.active-word');
     if (activeWord) {
         const rowContainer = activeWord.closest("[id]") || activeWord;
         addTtsButton(rowContainer, activeWord);
     }
-    // -----------------------
   }
 }
+
 
 function stopPlayback() {
   if (window.ttsDelayTimeout) clearTimeout(window.ttsDelayTimeout); // УБИВАЕМ ПРИЗРАКА
