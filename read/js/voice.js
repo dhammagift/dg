@@ -2483,9 +2483,10 @@ function addTtsButton(containerElement, specificElement) {
 // --- АДАПТЕР ДЛЯ THERAVADA.RU (LEGACY HTML) ---
 
 function isLegacyPage() {
-    // Если есть хотя бы один блок с классом "a", считаем страницу старой
-    return document.querySelectorAll('.a').length > 0;
+    // Если есть блок с классом "a" ИЛИ специфичная для старого дизайна ячейка таблицы
+    return document.querySelectorAll('.a').length > 0 || document.querySelector('td[style*="justify"]') !== null;
 }
+
 
 function prepareLegacyData() {
     const textData = [];

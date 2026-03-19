@@ -9,37 +9,76 @@
     <link href="/assets/css/jquery-ui.min.css" rel="stylesheet" />
     <link href="/assets/css/extrastyles.css" rel="stylesheet" />
     <link rel="stylesheet" href="/read/css/voice.css">
-    <link href="/assets/css/paliLookup.css" rel="stylesheet" />
+<link href="/assets/css/paliLookup.css" rel="stylesheet" />
 
     <style>
-        /* --- ВСТРОЕННЫЙ ТАЙМЕР НА ПЛЕЕРЕ (ВМЕСТО АБ) --- */
-        #memo-timer-status {
-            display: none; 
+
+        .tts-delay-label,
+        #tts-segment-delay-input {
+            display: none !important;
+        }
+        
+        /* --- Иконка песочных часов для таймера --- */
+        .memo-timer-icon {
+            width: 12px;
+            height: 12px;
+            opacity: 0.6;
+            vertical-align: middle;
+            margin-top: -2px;
+        }
+        .memo-timer-icon.spaced {
+            margin-right: 4px;
+        }
+
+        /* --- ФЕЙКОВЫЙ КОНТЕЙНЕР ТАЙМЕРА ДЛЯ ПЛЕЕРА --- */
+        .dummy-ab-timer-container {
             position: absolute;
-            right: 20px;
-            top: 34px;   
-            font-size: 9px;
+            right: 20px; 
+            top: 32px;   
+            background: transparent;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            color: #777;
+            font-size: 11px;
             font-family: sans-serif;
             font-weight: 700;
             padding: 2px 4px;
-            border-radius: 4px;
-            color: var(--blue, #3434be);
-            border: 1px solid var(--blue, #3434be);
-            background: rgba(52, 52, 190, 0.05);
+            display: none; /* Скрыт по умолчанию */
             align-items: center;
+            justify-content: center;
             gap: 2px;
             z-index: 10;
             line-height: 1;
+        }
+        .dark .dummy-ab-timer-container {
+            border-color: #555;
+            color: #aaa;
+        }
+
+
+
+        /* --- ВСТРОЕННЫЙ ТАЙМЕР В РЯДУ С КНОПКАМИ --- */
+        #memo-timer-status {
+            display: none; 
+            font-size: 14px;
+            font-weight: 600;
+            color: #0d6efd;
+            background: rgba(13, 110, 253, 0.1);
+            padding: 0 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(13, 110, 253, 0.2);
+            height: 38px; 
+            align-items: center;
+            justify-content: center;
+            min-width: 42px;
             white-space: nowrap;
             user-select: none;
-            height: auto;
-            min-width: auto;
         }
         
         .dark #memo-timer-status {
-            color: rgb(122, 122, 249);
-            border-color: rgb(122, 122, 249);
-            background: rgba(122, 122, 249, 0.1);
+            color: #6ea8fe;
+            background: rgba(13, 110, 253, 0.15);
+            border-color: rgba(110, 168, 254, 0.2);
         }
 
         /* --- ТЕМНАЯ ТЕМА --- */
@@ -101,11 +140,11 @@
         .dark .memo-controls .btn{ border-color: rgba(255,255,255,0.06); }
         
         .dark #copy_icon_btn {
-            filter: invert(1);
-        }
-        #copy_icon_btn:hover {
-            opacity: 1;
-        }
+    filter: invert(1);
+}
+#copy_icon_btn:hover {
+    opacity: 1;
+}
     </style>
 </head>
 <body>
@@ -196,6 +235,13 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
             <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
         </svg>
     </button>
+ 
+     <button type="button" class="btn btn-secondary icon" data-bs-toggle="collapse" data-bs-target="#presetList" aria-expanded="false" id="btn_links">
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+  <path d="M2 2.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm0 4a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm0 4a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5z"/>
+  <path d="M6 3h7a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1zm0 4h7a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1zm0 4h7a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1z"/>
+</svg>
+    </button>
     
     <button type="button" class="btn btn-secondary icon" data-bs-toggle="collapse" data-bs-target="#linkList" aria-expanded="false" id="btn_links">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 320 512">
@@ -203,7 +249,6 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
         </svg>
     </button>
     
-    <div id="memo-timer-status"></div>
 
 </div>
 
@@ -283,6 +328,20 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
                     </ul>
                 </div>
 
+                <div class="collapse mt-3" id="presetList">
+                    <ul class="list-group">
+
+
+                    <li class="list-group-item"><a href="/assets/memo.html?text=Katama%C3%B1ca%2C+bhikkhave%2C+dukkhasamudaya%E1%B9%81+ariyasacca%E1%B9%81%3F%0AY%C4%81ya%E1%B9%81+ta%E1%B9%87h%C4%81+ponobbhavik%C4%81+nand%C4%ABr%C4%81gasahagat%C4%81+tatratatr%C4%81bhinandin%C4%AB%2C+seyyathida%E1%B9%81%E2%80%94k%C4%81mata%E1%B9%87h%C4%81+bhavata%E1%B9%87h%C4%81+vibhavata%E1%B9%87h%C4%81.%0AS%C4%81+kho+panes%C4%81%2C+bhikkhave%2C+ta%E1%B9%87h%C4%81+kattha+uppajjam%C4%81n%C4%81+uppajjati%2C+kattha+nivisam%C4%81n%C4%81+nivisati%3F%0AYa%E1%B9%81+loke+piyar%C5%ABpa%E1%B9%81+s%C4%81tar%C5%ABpa%E1%B9%81%2C+etthes%C4%81+ta%E1%B9%87h%C4%81+uppajjam%C4%81n%C4%81+uppajjati%2C+ettha+nivisam%C4%81n%C4%81+nivisati.%0AKi%C3%B1ca+loke+piyar%C5%ABpa%E1%B9%81+s%C4%81tar%C5%ABpa%E1%B9%81%3F%0ACakkhu+loke+piyar%C5%ABpa%E1%B9%81+s%C4%81tar%C5%ABpa%E1%B9%81%2C+etthes%C4%81+ta%E1%B9%87h%C4%81+uppajjam%C4%81n%C4%81+uppajjati%2C+ettha+nivisam%C4%81n%C4%81+nivisati.%0ASota%E1%B9%81+loke+%E2%80%A6pe%E2%80%A6%0Agh%C4%81na%E1%B9%81+loke+%E2%80%A6%0Ajivh%C4%81+loke+%E2%80%A6%0Ak%C4%81yo+loke+%E2%80%A6%0Amano+loke+piyar%C5%ABpa%E1%B9%81+s%C4%81tar%C5%ABpa%E1%B9%81%2C+etthes%C4%81+ta%E1%B9%87h%C4%81+uppajjam%C4%81n%C4%81+uppajjati%2C+ettha+nivisam%C4%81n%C4%81+nivisati.%0AR%C5%ABp%C4%81+loke+%E2%80%A6%0Asadd%C4%81+loke+%E2%80%A6%0Agandh%C4%81+loke+%E2%80%A6%0Aras%C4%81+loke+%E2%80%A6%0Apho%E1%B9%AD%E1%B9%ADhabb%C4%81+loke+%E2%80%A6%0Adhamm%C4%81+loke+piyar%C5%ABpa%E1%B9%81+s%C4%81tar%C5%ABpa%E1%B9%81%2C+etthes%C4%81+ta%E1%B9%87h%C4%81+uppajjam%C4%81n%C4%81+uppajjati%2C+ettha+nivisam%C4%81n%C4%81+nivisati.%0ACakkhuvi%C3%B1%C3%B1%C4%81%E1%B9%87a%E1%B9%81+loke+%E2%80%A6%0Asotavi%C3%B1%C3%B1%C4%81%E1%B9%87a%E1%B9%81+loke+%E2%80%A6%0Agh%C4%81navi%C3%B1%C3%B1%C4%81%E1%B9%87a%E1%B9%81+loke+%E2%80%A6%0Ajivh%C4%81vi%C3%B1%C3%B1%C4%81%E1%B9%87a%E1%B9%81+loke+%E2%80%A6%0Ak%C4%81yavi%C3%B1%C3%B1%C4%81%E1%B9%87a%E1%B9%81+loke+%E2%80%A6%0Amanovi%C3%B1%C3%B1%C4%81%E1%B9%87a%E1%B9%81+loke+piyar%C5%ABpa%E1%B9%81+s%C4%81tar%C5%ABpa%E1%B9%81%2C+etthes%C4%81+ta%E1%B9%87h%C4%81+uppajjam%C4%81n%C4%81+uppajjati%2C+ettha+nivisam%C4%81n%C4%81+nivisati.%0ACakkhusamphasso+loke+%E2%80%A6%0Asotasamphasso+loke+%E2%80%A6%0Agh%C4%81nasamphasso+loke+%E2%80%A6%0Ajivh%C4%81samphasso+loke+%E2%80%A6%0Ak%C4%81yasamphasso+loke+%E2%80%A6%0Amanosamphasso+loke+piyar%C5%ABpa%E1%B9%81+s%C4%81tar%C5%ABpa%E1%B9%81%2C+etthes%C4%81+ta%E1%B9%87h%C4%81+uppajjam%C4%81n%C4%81+uppajjati%2C+ettha+nivisam%C4%81n%C4%81+nivisati.%0ACakkhusamphassaj%C4%81+vedan%C4%81+loke+%E2%80%A6%0Asotasamphassaj%C4%81+vedan%C4%81+loke+%E2%80%A6%0Agh%C4%81nasamphassaj%C4%81+vedan%C4%81+loke+%E2%80%A6%0Ajivh%C4%81samphassaj%C4%81+vedan%C4%81+loke+%E2%80%A6%0Ak%C4%81yasamphassaj%C4%81+vedan%C4%81+loke+%E2%80%A6%0Amanosamphassaj%C4%81+vedan%C4%81+loke+piyar%C5%ABpa%E1%B9%81+s%C4%81tar%C5%ABpa%E1%B9%81%2C+etthes%C4%81+ta%E1%B9%87h%C4%81+uppajjam%C4%81n%C4%81+uppajjati%2C+ettha+nivisam%C4%81n%C4%81+nivisati.%0AR%C5%ABpasa%C3%B1%C3%B1%C4%81+loke+%E2%80%A6%0Asaddasa%C3%B1%C3%B1%C4%81+loke+%E2%80%A6%0Agandhasa%C3%B1%C3%B1%C4%81+loke+%E2%80%A6%0Arasasa%C3%B1%C3%B1%C4%81+loke+%E2%80%A6%0Apho%E1%B9%AD%E1%B9%ADhabbasa%C3%B1%C3%B1%C4%81+loke+%E2%80%A6%0Adhammasa%C3%B1%C3%B1%C4%81+loke+piyar%C5%ABpa%E1%B9%81+s%C4%81tar%C5%ABpa%E1%B9%81%2C+etthes%C4%81+ta%E1%B9%87h%C4%81+uppajjam%C4%81n%C4%81+uppajjati%2C+ettha+nivisam%C4%81n%C4%81+nivisati.%0AR%C5%ABpasa%C3%B1cetan%C4%81+loke+%E2%80%A6%0Asaddasa%C3%B1cetan%C4%81+loke+%E2%80%A6%0Agandhasa%C3%B1cetan%C4%81+loke+%E2%80%A6%0Arasasa%C3%B1cetan%C4%81+loke+%E2%80%A6%0Apho%E1%B9%AD%E1%B9%ADhabbasa%C3%B1cetan%C4%81+loke+%E2%80%A6%0Adhammasa%C3%B1cetan%C4%81+loke+piyar%C5%ABpa%E1%B9%81+s%C4%81tar%C5%ABpa%E1%B9%81%2C+etthes%C4%81+ta%E1%B9%87h%C4%81+uppajjam%C4%81n%C4%81+uppajjati%2C+ettha+nivisam%C4%81n%C4%81+nivisati.%0AR%C5%ABpata%E1%B9%87h%C4%81+loke+%E2%80%A6%0Asaddata%E1%B9%87h%C4%81+loke+%E2%80%A6%0Agandhata%E1%B9%87h%C4%81+loke+%E2%80%A6%0Arasata%E1%B9%87h%C4%81+loke+%E2%80%A6%0Apho%E1%B9%AD%E1%B9%ADhabbata%E1%B9%87h%C4%81+loke+%E2%80%A6%0Adhammata%E1%B9%87h%C4%81+loke+piyar%C5%ABpa%E1%B9%81+s%C4%81tar%C5%ABpa%E1%B9%81%2C+etthes%C4%81+ta%E1%B9%87h%C4%81+uppajjam%C4%81n%C4%81+uppajjati%2C+ettha+nivisam%C4%81n%C4%81+nivisati.%0AR%C5%ABpavitakko+loke+%E2%80%A6%0Asaddavitakko+loke+%E2%80%A6%0Agandhavitakko+loke+%E2%80%A6%0Arasavitakko+loke+%E2%80%A6%0Apho%E1%B9%AD%E1%B9%ADhabbavitakko+loke+%E2%80%A6%0Adhammavitakko+loke+piyar%C5%ABpa%E1%B9%81+s%C4%81tar%C5%ABpa%E1%B9%81%2C+etthes%C4%81+ta%E1%B9%87h%C4%81+uppajjam%C4%81n%C4%81+uppajjati%2C+ettha+nivisam%C4%81n%C4%81+nivisati.%0AR%C5%ABpavic%C4%81ro+loke+%E2%80%A6%0Asaddavic%C4%81ro+loke+%E2%80%A6%0Agandhavic%C4%81ro+loke+%E2%80%A6%0Arasavic%C4%81ro+loke+%E2%80%A6%0Apho%E1%B9%AD%E1%B9%ADhabbavic%C4%81ro+loke+%E2%80%A6%0Adhammavic%C4%81ro+loke+piyar%C5%ABpa%E1%B9%81+s%C4%81tar%C5%ABpa%E1%B9%81%2C+etthes%C4%81+ta%E1%B9%87h%C4%81+uppajjam%C4%81n%C4%81+uppajjati%2C+ettha+nivisam%C4%81n%C4%81+nivisati.%0AIda%E1%B9%81+vuccati%2C+bhikkhave%2C+dukkhasamudaya%E1%B9%81+ariyasacca%E1%B9%81.&delay=30&end=10&trn=0&loop=1&lc=%E2%88%9E&snd=gong.mp3&sep=%5Cn">Dukkhasamudayaṁ Ariyasaccaṁ</a></li>
+                    <li class="list-group-item"><a href="/assets/memo.html?text=D%C4%ABgha%E1%B9%81+v%C4%81+assasanto+d%C4%ABgha%E1%B9%81+assas%C4%81m%C4%ABti+paj%C4%81n%C4%81ti+d%C4%ABgha%E1%B9%81+v%C4%81+passasanto+d%C4%ABgha%E1%B9%81+passas%C4%81m%C4%ABti+paj%C4%81n%C4%81ti%0Arassa%E1%B9%81+v%C4%81+assasanto+rassa%E1%B9%81+assas%C4%81m%C4%ABti+paj%C4%81n%C4%81ti+rassa%E1%B9%81+v%C4%81+passasanto+rassa%E1%B9%81+passas%C4%81m%C4%ABti+paj%C4%81n%C4%81ti%0Asabbak%C4%81yapa%E1%B9%ADisa%E1%B9%81ved%C4%AB+assasiss%C4%81m%C4%ABti+sikkhati+sabbak%C4%81yapa%E1%B9%ADisa%E1%B9%81ved%C4%AB+passasiss%C4%81m%C4%ABti+sikkhati%0Apassambhaya%E1%B9%81+k%C4%81yasa%E1%B9%85kh%C4%81ra%E1%B9%81+assasiss%C4%81m%C4%ABti+sikkhati+passambhaya%E1%B9%81+k%C4%81yasa%E1%B9%85kh%C4%81ra%E1%B9%81+passasiss%C4%81m%C4%ABti+sikkhati+%7C%0AP%C4%ABtipa%E1%B9%ADisa%E1%B9%81ved%C4%AB+assasiss%C4%81m%C4%ABti+sikkhati+p%C4%ABtipa%E1%B9%ADisa%E1%B9%81ved%C4%AB+passasiss%C4%81m%C4%ABti+sikkhati%0Asukhapa%E1%B9%ADisa%E1%B9%81ved%C4%AB+assasiss%C4%81m%C4%ABti+sikkhati+sukhapa%E1%B9%ADisa%E1%B9%81ved%C4%AB+passasiss%C4%81m%C4%ABti+sikkhati%0Acittasa%E1%B9%85kh%C4%81rapa%E1%B9%ADisa%E1%B9%81ved%C4%AB+assasiss%C4%81m%C4%ABti+sikkhati+cittasa%E1%B9%85kh%C4%81rapa%E1%B9%ADisa%E1%B9%81ved%C4%AB+passasiss%C4%81m%C4%ABti+sikkhati%0Apassambhaya%E1%B9%81+cittasa%E1%B9%85kh%C4%81ra%E1%B9%81+assasiss%C4%81m%C4%ABti+sikkhati+passambhaya%E1%B9%81+cittasa%E1%B9%85kh%C4%81ra%E1%B9%81+passasiss%C4%81m%C4%ABti+sikkhati+%7C%0ACittapa%E1%B9%ADisa%E1%B9%81ved%C4%AB+assasiss%C4%81m%C4%ABti+sikkhati+cittapa%E1%B9%ADisa%E1%B9%81ved%C4%AB+passasiss%C4%81m%C4%ABti+sikkhati%0Aabhippamodaya%E1%B9%81+citta%E1%B9%81+assasiss%C4%81m%C4%ABti+sikkhati+abhippamodaya%E1%B9%81+citta%E1%B9%81+passasiss%C4%81m%C4%ABti+sikkhati%0Asam%C4%81daha%E1%B9%81+citta%E1%B9%81+assasiss%C4%81m%C4%ABti+sikkhati+sam%C4%81daha%E1%B9%81+citta%E1%B9%81+passasiss%C4%81m%C4%ABti+sikkhati%0Avimocaya%E1%B9%81+citta%E1%B9%81+assasiss%C4%81m%C4%ABti+sikkhati+vimocaya%E1%B9%81+citta%E1%B9%81+passasiss%C4%81m%C4%ABti+sikkhati+%7C%0AAnicc%C4%81nupass%C4%AB+assasiss%C4%81m%C4%ABti+sikkhati+anicc%C4%81nupass%C4%AB+passasiss%C4%81m%C4%ABti+sikkhati%0Avir%C4%81g%C4%81nupass%C4%AB+assasiss%C4%81m%C4%ABti+sikkhati+vir%C4%81g%C4%81nupass%C4%AB+passasiss%C4%81m%C4%ABti+sikkhati%0Anirodh%C4%81nupass%C4%AB+assasiss%C4%81m%C4%ABti+sikkhati+nirodh%C4%81nupass%C4%AB+passasiss%C4%81m%C4%ABti+sikkhati%0Apa%E1%B9%ADinissagg%C4%81nupass%C4%AB+assasiss%C4%81m%C4%ABti+sikkhati+pa%E1%B9%ADinissagg%C4%81nupass%C4%AB+passasiss%C4%81m%C4%ABti+sikkhati+%7C&delay=300&end=0&trn=0&loop=1&lc=%E2%88%9E&snd=gong.mp3&sep=%5Cn">Ānāpānasati</a></li>
+                    <li class="list-group-item"><a href="/assets/memo.html?text=Puna+capara%E1%B9%81+bhikkhave+bhikkhu+abhikkante+pa%E1%B9%ADikkante+sampaj%C4%81nak%C4%81r%C4%AB+hoti+%0A%C4%81lokite+vilokite+sampaj%C4%81nak%C4%81r%C4%AB+hoti+%0Asami%C3%B1jite+pas%C4%81rite+sampaj%C4%81nak%C4%81r%C4%AB+hoti+%0Asa%E1%B9%85gh%C4%81%E1%B9%ADipattac%C4%ABvaradh%C4%81ra%E1%B9%87e+sampaj%C4%81nak%C4%81r%C4%AB+hoti+%0Aasite+p%C4%ABte+kh%C4%81yite+s%C4%81yite+sampaj%C4%81nak%C4%81r%C4%AB+%0Ahoti+ucc%C4%81rapass%C4%81vakamme+sampaj%C4%81nak%C4%81r%C4%AB+hoti+%0Agate+%E1%B9%ADhite+nisinne+sutte+j%C4%81garite+bh%C4%81site+tu%E1%B9%87h%C4%ABbh%C4%81ve+sampaj%C4%81nak%C4%81r%C4%AB+hoti+%7C%0AIti+ajjhatta%E1%B9%81+v%C4%81+k%C4%81ye+k%C4%81y%C4%81nupass%C4%AB+viharati+%0Abahiddh%C4%81+v%C4%81+k%C4%81ye+k%C4%81y%C4%81nupass%C4%AB+viharati+%0Aajjhattabahiddh%C4%81+v%C4%81+k%C4%81ye+k%C4%81y%C4%81nupass%C4%AB+viharati+%7C%0A%0ASamudayadhamm%C4%81nupass%C4%AB+v%C4%81+k%C4%81yasmi%E1%B9%81+viharati+vayadhamm%C4%81nupass%C4%AB+v%C4%81+k%C4%81yasmi%E1%B9%81+viharati+%0Asamudayavayadhamm%C4%81nupass%C4%AB+v%C4%81+k%C4%81yasmi%E1%B9%81+viharati+%7C%0AAtthi+k%C4%81yoti+v%C4%81+panassa+sati+paccupa%E1%B9%AD%E1%B9%ADhit%C4%81+hoti+y%C4%81vadeva+%C3%B1%C4%81%E1%B9%87amatt%C4%81ya+pa%E1%B9%ADissatimatt%C4%81ya+anissito+ca+viharati+na+ca+ki%C3%B1ci+loke+up%C4%81diyati+%7C%0A%0AEvampi+kho+bhikkhave+bhikkhu+k%C4%81ye+k%C4%81y%C4%81nupass%C4%AB+viharati+%7C&delay=300&end=0&trn=0&loop=1&lc=%E2%88%9E&snd=gong.mp3&sep=%5Cn">Sampajānapabba</a></li>
+
+                        <li class="list-group-item"><a href="/assets/memo.html?text=r%C4%81jakatha%E1%B9%81+corakatha%E1%B9%81+mah%C4%81mattakatha%E1%B9%81+sen%C4%81katha%E1%B9%81+bhayakatha%E1%B9%81+yuddhakatha%E1%B9%81+annakatha%E1%B9%81+p%C4%81nakatha%E1%B9%81+vatthakatha%E1%B9%81+sayanakatha%E1%B9%81+m%C4%81l%C4%81katha%E1%B9%81+gandhakatha%E1%B9%81+%C3%B1%C4%81tikatha%E1%B9%81+y%C4%81nakatha%E1%B9%81+g%C4%81makatha%E1%B9%81+nigamakatha%E1%B9%81+nagarakatha%E1%B9%81+janapadakatha%E1%B9%81+itthikatha%E1%B9%81+s%C5%ABrakatha%E1%B9%81+visikh%C4%81katha%E1%B9%81+kumbha%E1%B9%AD%E1%B9%ADh%C4%81nakatha%E1%B9%81+pubbapetakatha%E1%B9%81+n%C4%81nattakatha%E1%B9%81+lokakkh%C4%81yika%E1%B9%81+samuddakkh%C4%81yika%E1%B9%81+itibhav%C4%81bhavakatha%E1%B9%81&delay=60&end=10&trn=0&loop=1&lc=%E2%88%9E&snd=gong.mp3&sep=+">Rājakathaṁ ... itibhavābhavakathaṁ</a></li>
+
+
+                    </ul>
+                </div>
+
                 <div class="mt-3 text-start">
 <div id="result_header" style="display:none; align-items:center; justify-content:center; gap:8px;">
     <h5 class="text-muted mb-0" id="lbl_result">Result:</h5>
@@ -311,6 +370,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const iconOutline = document.getElementById('star-outline');
     const iconSolid = document.getElementById('star-solid');
     const textInput = document.getElementById("inputText");
+
+    // Подбрасываем фейковый контейнер таймера в плеер
+    setInterval(() => {
+        const mainRow = document.querySelector('.tts-main-row');
+        if (mainRow && !document.getElementById('dummy-ab-timer-container')) {
+            mainRow.style.position = 'relative'; 
+            const timerContainer = document.createElement('div');
+            timerContainer.id = 'dummy-ab-timer-container';
+            timerContainer.className = 'dummy-ab-timer-container';
+            timerContainer.innerHTML = `<span id="ab-btn-timer" style="font-variant-numeric: tabular-nums;"></span>`;
+            mainRow.appendChild(timerContainer);
+        }
+    }, 400);
+
+
+
 
     if (!textInput) return;
 
@@ -495,7 +570,7 @@ ${text}`;
                                             title: activeText,
                                             artist: 'Dhamma.gift Voice',
                                             artwork: [{ src: '/assets/img/albumart-memo.png', sizes: '1024x1024', type: 'image/png' }]
-                                        }); 
+                                        });
                                     }
                                 }
                             }
@@ -561,7 +636,9 @@ ${text}`;
 
         // --- ПЕРЕХВАТЧИК АУДИО (СТРОГИЙ КОНТРОЛЬ ТАЙМЕРА) ---
         (function interceptAudioForTimer() {
+            const iconSVG = `<img src="/assets/svg/hourglass-regular-full.svg" class="memo-timer-icon" alt="timer">`;
             const originalPlay = Audio.prototype.play;
+            
             Audio.prototype.play = function() {
                 if (this.src && this.src.includes('/assets/sounds/')) {
                     return originalPlay.apply(this, arguments);
@@ -576,8 +653,10 @@ ${text}`;
                         setTimeout(() => {
                             if (lockIdAtRequest !== window.memoLockId) return resolve();
                             
-                            const statusEl = document.getElementById('memo-timer-status');
-                            if (statusEl && statusEl.style.display !== 'none') statusEl.innerHTML = `⏳`;
+                            const container = document.getElementById('dummy-ab-timer-container');
+                            const span = document.getElementById('ab-btn-timer');
+                            if (container && container.style.display !== 'none' && span) span.innerHTML = iconSVG;
+
                             if (window.memoCountdownInterval) clearInterval(window.memoCountdownInterval);
                             resolve(originalPlay.apply(this));
                         }, waitTime);
@@ -585,8 +664,10 @@ ${text}`;
                 }
 
                 window.memoNextAllowedTime = 0;
-                const statusEl = document.getElementById('memo-timer-status');
-                if (statusEl && statusEl.style.display !== 'none') statusEl.innerHTML = `⏳`; 
+                const container = document.getElementById('dummy-ab-timer-container');
+                const span = document.getElementById('ab-btn-timer');
+                if (container && container.style.display !== 'none' && span) span.innerHTML = iconSVG;
+
                 if (window.memoCountdownInterval) clearInterval(window.memoCountdownInterval);
                 
                 return originalPlay.apply(this, arguments);
@@ -600,8 +681,10 @@ ${text}`;
                     const doSpeak = () => {
                         window.memoNextAllowedTime = 0;
                         utterance.addEventListener('start', () => {
-                            const statusEl = document.getElementById('memo-timer-status');
-                            if (statusEl && statusEl.style.display !== 'none') statusEl.innerHTML = `⏳`;
+                            const container = document.getElementById('dummy-ab-timer-container');
+                            const span = document.getElementById('ab-btn-timer');
+                            if (container && container.style.display !== 'none' && span) span.innerHTML = iconSVG;
+
                             if (window.memoCountdownInterval) clearInterval(window.memoCountdownInterval);
                         });
                         return originalSpeak.apply(window.speechSynthesis, [utterance]);
@@ -623,48 +706,43 @@ ${text}`;
             }
         })();
 
-        // --- ПЕРЕНОС ТАЙМЕРА В ПЛЕЕР ---
-        function ensureTimerInPlayer() {
-            const statusEl = document.getElementById('memo-timer-status');
-            const mainRow = document.querySelector('.tts-main-row');
-            if (statusEl && mainRow && statusEl.parentElement !== mainRow) {
-                mainRow.style.position = 'relative';
-                mainRow.appendChild(statusEl);
-            }
-            return statusEl;
-        }
 
         // --- ВИЗУАЛЬНЫЙ ТАЙМЕР ---
         window.startMemoVisualTimer = function(durationMs, textPrefix) {
             if (window.memoCountdownInterval) clearInterval(window.memoCountdownInterval);
+            const container = document.getElementById('dummy-ab-timer-container');
+            const span = document.getElementById('ab-btn-timer');
+            if (!container || !span) return;
             
-            const statusEl = ensureTimerInPlayer() || document.getElementById('memo-timer-status');
-            if (!statusEl) return;
-        
-            
-            statusEl.style.display = 'inline-flex';
+            container.style.display = 'inline-flex';
+            container.style.alignItems = 'center'; // Выравниваем контейнер
             const endTime = Date.now() + durationMs;
             
             window.memoNextAllowedTime = endTime; 
             window.memoLockId++;
             
+            // Здесь используем класс со spacing для отступа от цифр
+            const iconSVG = `<img src="/assets/svg/hourglass-regular-full.svg" class="memo-timer-icon spaced" alt="timer">`;
+            
             const tick = () => {
                 const left = endTime - Date.now();
                 if (left <= 0) {
                     clearInterval(window.memoCountdownInterval);
-                    statusEl.innerHTML = `⏳`; 
+                    // Иконка без отступа (так как цифр нет)
+                    span.innerHTML = `<img src="/assets/svg/hourglass-regular-full.svg" class="memo-timer-icon" alt="timer">`; 
                     return;
                 }
                 const mins = Math.floor(left / 60000);
                 const secs = Math.floor((left % 60000) / 1000);
                 const timeStr = mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}`;
                 
-                const prefixHtml = textPrefix ? `<span style="margin-right:4px;">${textPrefix}</span>` : '';
-                statusEl.innerHTML = `⏳ ${prefixHtml}<span style="font-variant-numeric: tabular-nums;">${timeStr}</span>`;
+                const prefixHtml = textPrefix ? `<span style="margin-right:4px;">${textPrefix}</span>` : iconSVG;
+                span.innerHTML = `${prefixHtml}<span style="font-variant-numeric: tabular-nums;">${timeStr}</span>`;
             };
             tick();
             window.memoCountdownInterval = setInterval(tick, 1000);
         };
+
 
         function преобразоватьТекст() {
             const входнойТекст = document.getElementById("inputText").value;
@@ -854,21 +932,54 @@ ${text}`;
             };
             const vowels = {'a':'अ', 'ā':'आ', 'i':'इ', 'ī':'ई', 'u':'उ', 'ū':'ऊ', 'e':'ए', 'o':'ओ'};
             const marks = {'ā':'ा', 'i':'ि', 'ī':'ी', 'u':'ु', 'ū':'ू', 'e':'े', 'o':'ो'};
-            let res = ""; let i = 0; str = str.toLowerCase();
+            
+            let res = ""; 
+            let i = 0; 
+            str = str.toLowerCase();
+
+            // 1. Проверяем, является ли переданная строка фразой или одним отдельным словом.
+            // Если пробелов внутри нет, значит это одно слово.
+            const isSingleWord = !str.trim().includes(' ');
+
+            // 2. Блок частных случаев для ЦЕЛЫХ СЛОВ (если понадобится)
+            if (isSingleWord) {
+                const cleanWord = str.replace(/[.,;!?\n|]/g, '').trim();
+                const specialCases = {
+                    // Сюда можно добавлять полные исключения, если Google совсем не справляется.
+                    // Например:
+                    // "evaṃ": "एवङ्" 
+                };
+                
+                if (specialCases[cleanWord]) {
+                    // Возвращаем исключение, приклеив обратно знак препинания из оригинала (если был)
+                    let punctuation = str.match(/[.,;!?\n|]+$/);
+                    return specialCases[cleanWord] + (punctuation ? punctuation[0] : '');
+                }
+            }
 
             while (i < str.length) {
-                let char = str[i]; let nextChar = str[i+1] || ''; let doubleChar = char + nextChar;
+                let char = str[i]; 
+                let nextChar = str[i+1] || ''; 
+                let doubleChar = char + nextChar;
+                
                 if (char === 'ṃ' || char === 'ṁ') { 
-                    res += (i === str.length - 1) ? 'ङ्' : 'ं'; 
-                    i++; continue; 
+                    // 3. Главный фикс: применяем 'ङ्' ТОЛЬКО если это отдельное слово и конец строки.
+                    // Внутри фразы (даже в конце) оставляем стандартное 'ं'
+                    res += (isSingleWord && i === str.length - 1) ? 'ङ्' : 'ं'; 
+                    i++; 
+                    continue; 
                 }
+                
                 if (vowels[char]) {
                     if (i === 0 || !str[i-1].match(/[a-zāīūṭḍṇṅñṃḷ]/i) || vowels[str[i-1]]) res += vowels[char];
                     i++; continue;
                 }
+                
                 let cons = mapping[doubleChar] ? doubleChar : (mapping[char] ? char : null);
                 if (cons) {
-                    res += mapping[cons]; i += cons.length; let v = str[i];
+                    res += mapping[cons]; 
+                    i += cons.length; 
+                    let v = str[i];
                     if (vowels[v]) {
                         if (v !== 'a') res += marks[v];
                         i++;
@@ -878,24 +989,28 @@ ${text}`;
                     }
                     continue;
                 }
-                res += char; i++;
+                res += char; 
+                i++;
             }
             return res;
         }
 
+
         function startMemoTTS(isRestart = false) {
             updatePlayButtonState(true); 
-            преобразоватьТекст();
+         //   преобразоватьТекст();
 
             if (isRestart !== true) {
                 window.memoLoopsPlayed = 0;
                 if (window.memoCountdownInterval) clearInterval(window.memoCountdownInterval);
-                const statusEl = document.getElementById('memo-timer-status');
-                if (statusEl) {
-                    statusEl.style.display = 'none';
-                    statusEl.innerHTML = '';
+                const container = document.getElementById('dummy-ab-timer-container');
+                if (container) {
+                    container.style.display = 'none';
+                    const span = document.getElementById('ab-btn-timer');
+                    if (span) span.innerHTML = '';
                 }
             }
+
 
             const settingsPanel = document.getElementById('ttsSettings');
             if (settingsPanel && settingsPanel.classList.contains('show')) {
@@ -995,7 +1110,6 @@ ${text}`;
                         state.endIndex = state.playlist.length - 1;
                     }
                 }
-                ensureTimerInPlayer();
             }, 400);
         }
 
@@ -1034,11 +1148,13 @@ ${text}`;
             if (window.memoLoopTimeout) clearTimeout(window.memoLoopTimeout);
             if (window.memoRestartTimeout) clearTimeout(window.memoRestartTimeout);
 
-            const statusEl = document.getElementById('memo-timer-status');
-            if (statusEl) {
-                statusEl.style.display = 'none';
-                statusEl.innerHTML = '';
+            const container = document.getElementById('dummy-ab-timer-container');
+            if (container) {
+                container.style.display = 'none';
+                const span = document.getElementById('ab-btn-timer');
+                if (span) span.innerHTML = '';
             }
+
             
             window.memoLoopsPlayed = 0;
         }
