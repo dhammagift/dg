@@ -594,13 +594,10 @@ if (bjtUrl) {
 }
 // --- BJT END ---
 
-
-if ((translator === 'sujato') || (translator === 'brahmali')) {
-  scLink += `<a target="" title='SuttaCentral.net' href="https://suttacentral.net/${slug}/en/${translator}">SC</a>&nbsp;`;  
-} else {
-  scLink += `<a target="" title='SuttaCentral.net' href="https://suttacentral.net/${slug}">SC</a>&nbsp;`;
-}
 scLink += getTTSInterfaceHTML(texttype, slugReady, slug);
+
+scLink += `&nbsp;<a target="" title="SuttaCentral.net" href="https://suttacentral.net/${slug}/en/${translator}">SC</a>`;
+
       if (linksArray[0].length >= 4) {
         scLink += linksArray[0];
         //    console.log("extralinks " + linksArray[0]);

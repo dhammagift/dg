@@ -480,9 +480,10 @@ if (bjtUrl) {
 // --- BJT END ---
 
 
-scLink += `<a target="" title="SuttaCentral.net" href="https://suttacentral.net/${slug}/en/${translator}">SC</a>&nbsp;`;
- 
- scLink += getTTSInterfaceHTML(texttype, slugReady, slug);     
+scLink += getTTSInterfaceHTML(texttype, slugReady, slug);
+
+scLink += `&nbsp;<a target="" title="SuttaCentral.net" href="https://suttacentral.net/${slug}/en/${translator}">SC</a>`;
+
 //<a href="/legacy.suttacentral.net/read/pi/${slug}.html">legacy.SC</a>&nbsp; <a target="" href="https://voice.suttacentral.net/scv/index.html?#/sutta?search=${slug}">Voice.SC</a> 
       if (linksArray[0].length >= 4) {
         scLink += linksArray[0];

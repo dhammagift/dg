@@ -442,12 +442,10 @@ if (bjtUrl) {
     scLink += `<a target="_blank" title="Buddha Jayanthi (Sri Lanka Edition at Tipitaka.lk)" href="${bjtUrl}">BJT</a>&nbsp;`;
 }
 // --- BJT END ---
-
-
-scLink += `<a target="" title="SuttaCentral.net" href="https://suttacentral.net/${slug}/en/${translator}">SC</a>&nbsp;`;
-      
 scLink += getTTSInterfaceHTML(texttype, slugReady, slug);
 
+scLink += `&nbsp;<a target="" title="SuttaCentral.net" href="https://suttacentral.net/${slug}/en/${translator}">SC</a>`;
+      
       if (linksArray[0].length >= 4) {
         scLink += linksArray[0];
         //    console.log("extralinks " + linksArray[0]);

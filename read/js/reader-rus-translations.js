@@ -468,14 +468,15 @@ if (bjtUrl) {
 }
 // --- BJT END ---
 
+scLink += getTTSInterfaceHTML(texttype, slugReady, slug);
 
 if ((translator === 'sujato') || (translator === 'brahmali')) {
-  scLink += `<a target="" title='SuttaCentral.net' href="https://suttacentral.net/${slug}/en/${translator}">SC</a>&nbsp;`;  
+  scLink += `&nbsp;<a target="" title='SuttaCentral.net' href="https://suttacentral.net/${slug}/en/${translator}">SC</a>`;  
 } else {
-  scLink += `<a target="" title='SuttaCentral.net' href="https://suttacentral.net/${slug}">SC</a>&nbsp;`;
+  scLink += `&nbsp;<a target="" title='SuttaCentral.net' href="https://suttacentral.net/${slug}">SC</a>`;
 }
 
-scLink += getTTSInterfaceHTML(texttype, slugReady, slug);
+
 
 // 2. Запускаем загрузку доп. ссылок
 //loadExtraLinks(slug);
