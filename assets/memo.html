@@ -297,6 +297,14 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
                                     <input class="form-check-input" type="checkbox" id="ttsIsLoop" checked style="margin-top: 0;">
                                     <label class="form-check-label" for="ttsIsLoop" style="font-size: 13px; margin-right: 2px;" id="tts_loop_label">Loop</label>
                                     <input type="text" id="ttsLoopCount" value="∞" class="form-control form-control-sm text-center px-1" style="width: 36px; height: 22px; font-size: 12px;" title="Repetitions">
+                                    
+                                    
+<div class="form-check mb-0">
+    <input class="form-check-input" type="checkbox" id="editModeToggle">
+    <label class="form-check-label" for="editModeToggle" id="edit_mode_label" style="font-size: 13px;" title="Places the cursor at the end of the current line on stop">Auto-cursor</label>
+</div>
+
+                        
                                 </div>
                             </div>
                         </div>
@@ -363,6 +371,9 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
     </div>
 
     <script>
+ 
+ 
+ 
       
 document.addEventListener("DOMContentLoaded", () => {
     const favBtn = document.getElementById('toggle-memo-favorite');
@@ -544,14 +555,17 @@ ${text}`;
                 document.getElementById('tts_trn_label').innerText = 'Перевод';
                 document.getElementById('tts_loop_label').innerText = 'Цикл';
                 document.getElementById('btn_play_toggle').title = 'Слушать'; 
-                document.getElementById('btn_transform').innerText = 'Сократить';
-                document.getElementById('btn_copy').innerText = 'Копир.';
+                document.getElementById('btn_transform').innerText = 'Сжать';
+
                 document.getElementById('btn_clear').title = 'Очистить';
                 document.getElementById('btn_settings').title = 'Настройки';
                 document.getElementById('btn_reset_tts').title = 'Сбросить настройки';
                 document.getElementById('link_tips').childNodes[0].nodeValue = 'Советы и хитрости заучивания ';
                 document.getElementById('link_open_any').innerText = 'Открыть любую Сутту в этом режиме';
                 document.getElementById('lbl_result').innerText = 'Результат:';
+
+document.getElementById('edit_mode_label').innerText = 'Авто-курсор';
+                document.getElementById('edit_mode_label').title = 'Ставит курсор в конец текущей строки при остановке плеера';
 
                 document.getElementById('help_text_1').innerHTML = 'Сокращайте текст до первых букв для быстрого заучивания (напр. "Sabbaṁ taṁ" → "S t").<br><b>AI Expand</b> попросить ИИ заполнить сокращенный текст (peyyāla)<br><b>TTS:</b> <b>Разделитель</b> режет текст на части. <b>Пауза</b> добавляет задержку между ними. <b>Звук</b> играет в конце. <b>Цикл</b> повторяет.';
             }
@@ -811,6 +825,16 @@ ${text}`;
         }
 
         window.addEventListener('load', function() {
+         
+         // Восстановление и сохранение режима редактирования
+const editToggle = document.getElementById('editModeToggle');
+if (editToggle) {
+    const savedEditMode = localStorage.getItem('memo_edit_mode');
+    editToggle.checked = savedEditMode === null ? true : (savedEditMode === 'true');
+    editToggle.addEventListener('change', (e) => localStorage.setItem('memo_edit_mode', e.target.checked));
+}
+ 
+          
             const urlParams = new URLSearchParams(window.location.search);
             const textParam = urlParams.get('text');
             
@@ -1114,6 +1138,40 @@ ${text}`;
         }
 
         function stopMemoTTS(fullReset = true) {
+          
+        // --- АВТОФОКУС В КОНЕЦ СТРОКИ ПРИ СТОПЕ ---
+    const editToggle = document.getElementById('editModeToggle');
+    const ta = document.getElementById("inputText");
+    
+    if (editToggle && editToggle.checked && window.ttsAPI && ta) {
+        const state = window.ttsAPI.getState();
+        const spans = document.getElementById("tts-virtual-container")?.children;
+        
+        if (state && spans && spans[state.currentIndex]) {
+            let searchPos = 0;
+            // Идем по кусочкам до текущего, чтобы обойти одинаковые слова и найти точное место
+            for (let i = 0; i <= state.currentIndex; i++) {
+                const txt = spans[i].textContent;
+                searchPos = ta.value.indexOf(txt, searchPos);
+                
+                // Если мы дошли до текущего слова
+                if (i === state.currentIndex && searchPos !== -1) {
+                    // Ищем конец текущей строки (\n)
+                    let lineEnd = ta.value.indexOf('\n', searchPos);
+                    if (lineEnd === -1) lineEnd = ta.value.length; // если это последняя строка
+                    
+                    ta.focus();
+                    ta.setSelectionRange(lineEnd, lineEnd);
+                    // Легкий скролл к строке (как в line-by-line)
+                    ta.scrollTop = ta.scrollHeight * (lineEnd / ta.value.length);
+                }
+                if (searchPos !== -1) searchPos += txt.length;
+            }
+        }
+    }
+    // --- КОНЕЦ АВТОФОКУСА ---
+      
+          
             updatePlayButtonState(false); 
             window.isLoopingPause = false;
             
