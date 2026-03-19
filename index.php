@@ -1499,6 +1499,37 @@ var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
 <script src="/read/js/urlForLbl.js" defer></script>
 <script src="/assets/js/settings.js"></script>
 
+<script>
+    // Функция проверки локального сервера
+    function tryLocalServer() {
+        // Делаем легкий фоновый запрос. 
+        // mode: 'no-cors' нужен, чтобы браузер не ругался на запросы с HTTPS на HTTP
+        fetch('http://127.0.0.1:8080/', { mode: 'no-cors', cache: 'no-store' })
+            .then(() => {
+                // Сервер ответил (не выдал ошибку)! Делаем редирект.
+                window.location.replace('http://127.0.0.1:8080');
+            })
+            .catch(() => {
+                // Сервер не ответил (его нет). 
+                // Никуда не переходим. Service Worker отдаст PWA из кэша.
+                console.log('Локальный сервер не запущен. Остаемся на закэшированной PWA версии.');
+            });
+    }
+
+    // Проверяем при загрузке страницы
+    window.addEventListener('load', () => {
+        if (!navigator.onLine) {
+            tryLocalServer();
+        }
+    });
+
+    // Слушаем момент потери сети
+    window.addEventListener('offline', () => {
+        tryLocalServer();
+    });
+</script>
+
+
 </body>
 
 <?php
