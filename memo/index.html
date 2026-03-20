@@ -401,15 +401,13 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
     </div>
 
     <script>
-      
-      
-      // Функция для загрузки и рендера пресетов
+     
+  // Функция для загрузки и рендера пресетов
 async function loadPresets() {
     const container = document.getElementById('preset-list-container');
     if (!container) return;
 
     try {
-        // Укажите правильный путь к вашему файлу presets.json
         const response = await fetch('presets.json'); 
         if (!response.ok) throw new Error('Не удалось загрузить пресеты');
         
@@ -425,7 +423,13 @@ async function loadPresets() {
 
             // Если есть готовый URL (как в старых пресетах)
             if (preset.url) {
-                a.href = preset.url;
+                // Извлекаем только параметры (всё начиная с '?')
+                const queryString = preset.url.includes('?') 
+                    ? preset.url.substring(preset.url.indexOf('?')) 
+                    : preset.url;
+                
+                // Приклеиваем их к текущему пути (например, /memo/ или /ru/memo/)
+                a.href = window.location.pathname + queryString;
             } 
             // Если это новый удобный формат, собираем параметры динамически
             else {
@@ -439,7 +443,6 @@ async function loadPresets() {
                 if (preset.snd !== undefined) params.set('snd', preset.snd);
                 if (preset.sep !== undefined) params.set('sep', preset.sep);
 
-                // Собираем ссылку (замените window.location.pathname на нужный путь, если нужно)
                 a.href = window.location.pathname + '?' + params.toString();
             }
 
@@ -451,6 +454,7 @@ async function loadPresets() {
         container.innerHTML = '<li class="list-group-item text-danger">Ошибка загрузки списка пресетов</li>';
     }
 }
+   
 
 // Запускаем загрузку пресетов при загрузке страницы
 window.addEventListener('DOMContentLoaded', loadPresets);
