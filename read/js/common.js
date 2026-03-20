@@ -423,14 +423,22 @@ document.addEventListener('click', (e) => {
 
 
 // ==========================================
-// ГЛОБАЛЬНЫЙ ПЕРЕХВАТЧИК ДЛЯ ССЫЛОК MEMO
+// ЛОКАЛЬНЫЙ ПЕРЕХВАТЧИК ДЛЯ ССЫЛКИ MEMO
 // ==========================================
-document.addEventListener('click', function(e) {
-    // Ищем ссылки, содержащие /memo, но СТРОГО исключаем /memorize
-    const memoLink = e.target.closest('a[href*="/memo"]:not([href*="/memorize"])');
+/*
+document.addEventListener('DOMContentLoaded', function() {
+    // Ищем конкретно ту самую ссылку в подвале
+    // Выбираем a[href="/memo/"] или a[href="/ru/memo/"] в зависимости от языка
+    const memoLink = document.querySelector('a[href="/memo/"], a[href="/ru/memo/"]');
     
-    // Игнорируем кнопку плеера (у нее свой обработчик в voice-mem.js) и iframe
-    if (memoLink && memoLink.id !== 'memo-app-btn') {
+    // Если ссылки на странице нет, просто выходим
+    if (!memoLink) return;
+
+    // Вешаем слушатель ТОЛЬКО на эту ссылку
+    memoLink.addEventListener('click', function(e) {
+        // Игнорируем кнопку плеера (на всякий случай, если селектор совпадет)
+        if (this.id === 'memo-app-btn') return; 
+
         let textToPass = '';
         
         const activeWord = document.querySelector('.active-word');
@@ -468,19 +476,20 @@ document.addEventListener('click', function(e) {
         
         textToPass = textToPass ? textToPass.trim() : '';
 
-        // Определяем базовый URL в зависимости от языка интерфейса
+        // Определяем базовый URL в зависимости от пути
         const isRuPath = window.location.pathname.includes('/r/') || 
                          window.location.pathname.includes('/ml/') || 
                          window.location.pathname.includes('/ru/');
                          
         const baseUrl = isRuPath ? '/ru/memo/' : '/memo/';
         
-        // Динамически обновляем href прямо перед тем, как браузер по нему перейдет!
+        // Динамически обновляем href у самой ссылки (`this`)
         if (textToPass) {
-            memoLink.href = `${baseUrl}?text=${encodeURIComponent(textToPass)}`;
+            this.href = `${baseUrl}?text=${encodeURIComponent(textToPass)}`;
         } else {
-            memoLink.href = baseUrl;
+            this.href = baseUrl;
         }
-        // Браузер сам откроет обновленную ссылку (т.к. мы не делаем e.preventDefault())
-    }
+    });
 });
+
+*/
