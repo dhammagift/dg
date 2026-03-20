@@ -91,7 +91,7 @@ RewriteRule ^/$ / [L,R=302]
 
     # JS — 1 неделя
     <FilesMatch "\.(js)$">
-        Header set Cache-Control "public, max-age=86400"
+        Header set Cache-Control "public, max-age=864000"
     </FilesMatch>
 
 </IfModule>
