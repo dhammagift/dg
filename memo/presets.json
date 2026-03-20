@@ -15,16 +15,6 @@
     "title": "Rājakathaṁ ... itibhavābhavakathaṁ",
     "url": "/?text=r%C4%81jakatha%E1%B9%81+corakatha%E1%B9%81+mah%C4%81mattakatha%E1%B9%81+sen%C4%81katha%E1%B9%81+bhayakatha%E1%B9%81+yuddhakatha%E1%B9%81+annakatha%E1%B9%81+p%C4%81nakatha%E1%B9%81+vatthakatha%E1%B9%81+sayanakatha%E1%B9%81+m%C4%81l%C4%81katha%E1%B9%81+gandhakatha%E1%B9%81+%C3%B1%C4%81tikatha%E1%B9%81+y%C4%81nakatha%E1%B9%81+g%C4%81makatha%E1%B9%81+nigamakatha%E1%B9%81+nagarakatha%E1%B9%81+janapadakatha%E1%B9%81+itthikatha%E1%B9%81+s%C5%ABrakatha%E1%B9%81+visikh%C4%81katha%E1%B9%81+kumbha%E1%B9%AD%E1%B9%ADh%C4%81nakatha%E1%B9%81+pubbapetakatha%E1%B9%81+n%C4%81nattakatha%E1%B9%81+lokakkh%C4%81yika%E1%B9%81+samuddakkh%C4%81yika%E1%B9%81+itibhav%C4%81bhavakatha%E1%B9%81&delay=60&end=10&trn=0&loop=1&lc=%E2%88%9E&snd=gong.mp3&sep=+"
   },
- /* {
-    "title": "Пример нового, читаемого пресета",
-    "text": "Sabbaṁ taṁ abhiññāya...\nПросто пишем текст здесь с переносами \\n",
-    "delay": 20,
-    "end": 5,
-    "loop": 1,
-    "snd": "tick.mp3",
-    "sep": "\\n"
-  },*/
-  
   {
     "title": "Пример нового, читаемого пресета",
     "text": "Sabbaṁ taṁ abhiññāya...\nПросто пишем текст здесь с переносами \\n",
