@@ -183,3 +183,79 @@
         .memo-controls .btn.text{ min-width:88px; padding:0 14px; }
         .dark .memo-controls .btn{ border-color: rgba(255,255,255,0.06); }
         
+        
+        /* =========================================
+   CLEANED INLINE STYLES (Layout & UI)
+   ========================================= */
+
+#global-session-timer {
+    display: none;
+}
+
+/* Flex Containers & Gaps */
+.flex-col-gap-15 { display: flex; flex-direction: column; gap: 15px; }
+.flex-col-gap-8 { display: flex; flex-direction: column; gap: 8px; }
+.flex-row-gap-10-mb { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.flex-center-gap-8 { display: flex; align-items: center; gap: 8px; }
+
+/* Custom Switches */
+.custom-switch-input {
+    margin: 0;
+    width: 3em;
+    height: 1.5em;
+    cursor: pointer;
+}
+.custom-switch-label {
+    margin: 0;
+    cursor: pointer;
+    user-select: none;
+}
+.custom-switch-label-sm {
+    margin: 0;
+    cursor: pointer;
+    user-select: none;
+    font-size: 14px;
+}
+
+/* Dict Link */
+.dict-link-wrapper {
+    text-align: right;
+    margin-bottom: 5px;
+}
+.dict-link {
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Settings Modal Grid */
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+/* Modal UI Elements */
+.setting-label-flex {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+.setting-input-w60 {
+    width: 60px;
+}
+.setting-input-w50-center {
+    width: 50px;
+    text-align: center;
+}
+.label-nowrap {
+    white-space: nowrap;
+}
+.memo-btn-sm-text {
+    font-size: 13px;
+}
+
+/* Z-index fix for top modal */
+.modal-top-z {
+    z-index: 10500 !important;
+}

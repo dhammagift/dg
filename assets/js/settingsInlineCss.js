@@ -464,15 +464,18 @@ window.addEventListener("keydown", (event) => {
             }
         }
 
-// --- 3. Close the Quick Modal (Cattāri Ariyasaccāni) ---
-if (typeof quickModalIsOpen !== 'undefined' && quickModalIsOpen) {
-    if (typeof toggleQuickModal === 'function') {
-        toggleQuickModal(); 
-        event.preventDefault();
-        return;
-    }
-}
-
+        // --- 3. Close the Quick Modal (Cattāri Ariyasaccāni) ---
+        // We check if the quick modal is open by looking for its overlay.
+        const quickOverlayElement = document.querySelector('.quick-overlay-element');
+        if (quickOverlayElement && quickOverlayElement.style.opacity === '1') {
+            // If the modal is open, we call its close function.
+            // This assumes toggleQuickModal handles closing if it's already open.
+             if (typeof toggleQuickModal === 'function') {
+                toggleQuickModal(); // This will close it if it's open.
+                event.preventDefault();
+                return;
+            }
+        }
 
 
         const closeBtnElements = document.querySelectorAll('.btn-close');
@@ -1303,12 +1306,12 @@ document.addEventListener("keydown", function (event) {
   }
 });
 
-let isQuickModalRendered = false; // Флаг: собирали ли мы DOM
-let quickModalIsOpen = false;     // Флаг: открыто ли сейчас окно
+let quickModalIsOpen = false;
 let quickOverlay = null;
 let quickModal = null;
 
-function buildQuickModalDOM() {
+function createQuickModal() {
+  // --- ОПРЕДЕЛЕНИЕ БАЗОВЫХ ПУТЕЙ И ЯЗЫКА ---
   const currentPath = window.location.pathname;
   let currentUrl = window.location.href;
   let urlWithoutParams = currentUrl.split('?')[0];
@@ -1318,33 +1321,212 @@ function buildQuickModalDOM() {
   
   const formAction = currentPath.match(/\/(ru|r)\//) ? '/ru/' : '/';
   const isRu = currentPath.includes('/ru/') || currentPath.includes('/r/') || currentPath.includes('/ml/');
-  const isDark = document.body.classList.contains("dark");
   
+  // --- ЛОКАЛИЗАЦИЯ ТЕКСТОВ ---
   const tabFavText = isRu ? "★ Избранное" : "★ Favorites";
   const favTitleText = isRu ? "Избранное" : "Favorites";
   const tabLinksText = "4 Ariyasaccāni";
+  
+  // Текст и путь для новой вкладки Memo
   const tabMemoText = isRu ? "Запоминание" : "Memo";
   const memoPath = isRu ? "/ru/memo/" : "/memo/";
+  
   const tabDpdText = isRu ? "Словарь" : "Dict";
   const histTitleText = isRu ? "История поиска" : "Search History";
+  const noFavsText = isRu ? "Избранного пока нет. Нажмите звёздочку при чтении." : "No favorites yet. Click the star icon while reading.";
+  const noHistText = isRu ? "История пуста." : "History is empty.";
+  const allHistText = isRu ? "Вся история →" : "All history →";
+  
+  const confirmClearHistText = isRu ? "Очистить ВСЮ историю поиска?" : "Clear ALL search history?";
+  const confirmRemoveFavText = isRu ? "Удалить из избранного?" : "Remove from favorites?";
+  const titleRemove = isRu ? "Удалить" : "Delete";
+  const titleAdd = isRu ? "В избранное" : "Add to favorites";
   const titleClearAll = isRu ? "Очистить историю" : "Clear history";
+  const textRemoved = isRu ? "Удалено из избранного" : "Removed from favorites";
+  const textSaved = isRu ? "Сохранено в избранное" : "Saved to favorites";
+
+  // --- НАСТРОЙКИ СТИЛЕЙ (ТЕМЫ) ---
+  const isDark = document.body.classList.contains("dark");
+  const bgColor = isDark ? "#1a252f" : "#ffffff";
+  const textColor = isDark ? "#ffffff" : "#212529";
+  const borderColor = isDark ? "#444" : "#ccc";
+  const linkColorPrimary = "#859900";
+  const linkColorSuccess = "#2aa198";
+  const linkColorWarning = "#cb4b16";
+  const linkColorDanger = "#dc322f";
+
+  // URL для DPD iframe
   const dpdTheme = isDark ? "dark" : "light";
   const dpdUrl = `https://dict.dhamma.gift${isRu ? '/ru/' : '/'}?theme=${dpdTheme}`;
 
-  // Создаем узлы (теперь без инлайн-стилей!)
+
+  // --- СОЗДАНИЕ ОВЕРЛЕЯ ---
   quickOverlay = document.createElement("div");
   quickOverlay.className = "quick-overlay-element";
-  
+  quickOverlay.style.cssText = `
+    position: fixed; top: -20vh; left: -20vw; width: 140vw; height: 140vh;
+    z-index: 9999; background-color: rgba(0, 0, 0, 0.7);
+    opacity: 0; transition: opacity 0.4s ease;
+  `;
+
+  // --- СОЗДАНИЕ МОДАЛКИ ---
   quickModal = document.createElement("div");
   quickModal.className = "quick-modal-container";
+  quickModal.style.cssText = `
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    z-index: 10000; opacity: 0;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    width: 95%; max-width: 600px; max-height: 90vh;
+    overflow-y: auto; display: flex; flex-direction: column;
+  `;
 
+  // --- ДОБАВЛЕНИЕ CSS СТИЛЕЙ ---
+  const styleTag = document.createElement("style");
+  styleTag.textContent = `
+    .quick-pad-lr { box-sizing: border-box; padding-left: 1.5rem; padding-right: 1.5rem; }
+    .quick-pad-b { padding-bottom: 1.5rem; }
+
+    #tab-fav, #tab-4as {
+        box-sizing: border-box;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+    
+    /* Убираем отступы для вкладок с фреймами */
+    #tab-dpd, #tab-memo {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    #quickSearchForm {
+        padding-right: 3.5rem; 
+    }
+
+    .quick-tabs-wrapper { 
+      display: flex; justify-content: space-between; align-items: center; 
+      margin-bottom: 15px; border-bottom: 1px solid ${borderColor}; 
+    }
+    .quick-tabs { display: flex; gap: 5px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+    .quick-tabs::-webkit-scrollbar { display: none; }
+    .quick-tab-btn { 
+      background: none; border: none; color: ${textColor}; 
+      padding: 8px 5px; cursor: pointer; opacity: 0.6; font-size: 1.05rem;
+      border-bottom: 3px solid transparent; transition: all 0.2s;
+    }
+    .quick-tab-btn:hover { opacity: 1; }
+    .quick-tab-btn.active { opacity: 1; border-bottom: 3px solid ${linkColorPrimary}; font-weight: bold; }
+    
+    .quick-tab-content { 
+      display: none; 
+      height: 55vh; 
+      min-height: 420px; 
+      overflow-y: auto; 
+      box-sizing: border-box;
+    }
+    .quick-tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    #quick-favorites-container, #quick-history-container {
+        max-height: 520px;
+        overflow-y: hidden;
+        padding-right: 5px;
+    }
+    
+    .header-title { cursor: pointer; transition: color 0.2s; display: flex; align-items: center; }
+    .header-title::before {
+        content: '▼';
+        display: inline-block;
+        margin-right: 6px;
+        font-size: 0.75rem;
+        transition: transform 0.2s;
+    }
+    .header-title.collapsed::before {
+        transform: rotate(-90deg);
+    }
+
+    .compact-list { list-style: none; padding: 0; margin: 0; }
+    .compact-list li { 
+      padding: 8px 0; border-bottom: 1px dashed ${borderColor}; 
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .compact-list li:last-child { border-bottom: none; }
+    .compact-list a { 
+      color: ${textColor}; text-decoration: none; flex-grow: 1; 
+      margin-left: 10px; margin-right: 10px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .compact-list a:hover { color: ${linkColorPrimary}; }
+ 
+    .fav-star-icon { color: #f39c12; font-size: 1.4rem; }
+    .toggle-fav-btn-hist { color: #888; font-size: 1.4rem; }
+    .toggle-fav-btn-hist:hover { color: #f39c12; }
+    .hist-icon { color: #888; font-size: 0.9rem; }
+    .item-date { font-size: 0.75rem; color: #888; min-width: 65px; text-align: right; }
+
+    .action-btn {
+        margin-left: 10px; cursor: pointer; 
+        opacity: 0.8; transition: opacity 0.2s, color 0.2s; padding: 0 4px; user-select: none;
+    }
+    .action-btn:hover { opacity: 1; }
+    .remove-fav-btn { font-size: 1.2rem; }
+    .remove-fav-btn:hover { color: #dc322f; }
+
+    .sortable-header {
+      margin-bottom: 10px; color: #888; font-size: 0.85rem; 
+      text-transform: uppercase; display: flex; justify-content: space-between; 
+      align-items: center; user-select: none;
+    }
+
+    @media (max-width: 500px) {
+      .quick-modal-container {
+        width: 94% !important; 
+        height: 90% !important; 
+      }
+      .quick-modal-content-wrapper {
+        padding: 1rem 0 0 0 !important; 
+        display: flex; flex-direction: column;
+      }
+      #tab-fav, #tab-4as {
+        padding-left: 1.2rem !important;
+        padding-right: 1.2rem !important;
+      }
+      #tab-dpd, #tab-memo {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+      #quickSearchForm {
+        padding-left: 1.2rem !important;
+        padding-right: 3.5rem !important; 
+      }
+    }
+  `;
+  document.head.appendChild(styleTag);
+
+
+  // --- ВНУТРЕННИЙ HTML МОДАЛКИ ---
   quickModal.innerHTML = `
-    <div class="quick-modal-content-wrapper">
-      <button id="quickCloseModalBtn" class="quick-close-btn" title="(Esc)">×</button>
+    <div class="quick-modal-content-wrapper" style="
+      background-color: ${bgColor}; color: ${textColor};
+      padding: 1.5rem; width: 100%; border-radius: 1rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3); font-family: sans-serif; position: relative;
+    ">
+      <button id="quickCloseModalBtn" style="
+        position: absolute; top: 12px; right: 12px; background-color: #9e1c19; color: #fff;
+        border: none; width: 28px; height: 28px; border-radius: 50%; font-size: 1.1rem;
+        font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 10;
+      " title="(Esc)">×</button>
 
-      <form id="quickSearchForm" class="quick-search-form" action="${formAction}" method="GET">
-          <input type="search" name="q" id="quickSearchInput" class="quick-search-input" placeholder="e.g. Kāyagatā or sn56.11" autocomplete="off">
-          <button type="submit" id="quickSearchBtn" class="quick-search-btn">
+      <form id="quickSearchForm" action="${formAction}" method="GET" style="display: flex; gap: 8px; margin-bottom: 1rem; margin-top: 10px;">
+          <input type="search" name="q" id="quickSearchInput" placeholder="e.g. Kāyagatā or sn56.11" autocomplete="off" style="
+              flex-grow: 1; border: 1px solid ${borderColor}; background-color: ${isDark ? '#2c3a47' : '#f8f9fa'};
+              color: ${textColor}; padding: 10px 14px; border-radius: 20px; font-size: 0.95rem; outline: none;
+          ">
+          <button type="submit" id="quickSearchBtn" style="
+              background-color: #025242; color: white; border: none; width: 40px; height: 40px;
+              border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+          ">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           </button>
       </form>
@@ -1356,98 +1538,98 @@ function buildQuickModalDOM() {
           <button class="quick-tab-btn" data-tab="tab-memo">${tabMemoText}</button>
           <button class="quick-tab-btn" data-tab="tab-dpd">${tabDpdText}</button>
         </div>
-        <span class="clear-all-btn action-btn" id="main-trash-icon" title="${titleClearAll}">
+        <span class="clear-all-btn" id="main-trash-icon" title="${titleClearAll}">
            <img src="/assets/svg/trash-can-regular-full.svg" width="25" height="25" alt="Reset">
-        </span>
+</span>
       </div>
 
       <div id="tab-fav" class="quick-tab-content active">
         <h6 id="fav-header" class="sortable-header">
           <span class="header-title" title="Сортировать">${favTitleText}</span>
           <div class="header-actions">
-            <span class="sort-icon-fav sort-trigger" title="Сортировать">⇅</span>
+            <span class="sort-icon-fav sort-trigger" title="Сортировать" style="color: ${linkColorPrimary}; font-weight: bold;">⇅</span>
           </div>
         </h6>
         <div id="quick-favorites-container"></div>
         
-        <h6 id="hist-header" class="sortable-header">
+        <h6 id="hist-header" class="sortable-header" style="margin-top: 25px;">
           <span class="header-title" title="Сортировать">${histTitleText}</span>
           <div class="header-actions">
-            <span class="sort-icon-hist sort-trigger" title="Сортировать">⇅</span>
+            <span class="sort-icon-hist sort-trigger" title="Сортировать" style="color: ${linkColorPrimary}; font-weight: bold;">⇅</span>
           </div>
         </h6>
         <div id="quick-history-container"></div>
       </div>
 
       <div id="tab-4as" class="quick-tab-content">
-        <div class="quick-links-container">
-          <div class="quick-links-column">
-            <p>1st priority:</p>
-            <ul>
-              <li><a href="${queryBase}sn56.11" target="_blank" class="link-primary">SN 56.11</a></li>
-              <li><a href="${queryBase}dn22" target="_blank" class="link-primary">DN 22</a></li>
-              <li><a href="${queryBase}sn12.2" target="_blank" class="link-primary">SN 12.2</a></li>
+        <div class="quick-links-container" style="display: flex; gap: 1.2rem; flex-wrap: wrap; justify-content: space-between;">
+          <div class="quick-links-column" style="flex: 1 1 45%; min-width: 200px;">
+            <p><strong>1st priority:</strong></p>
+            <ul style="padding-left: 1rem; font-size: 0.9rem;">
+              <li><a href="${queryBase}sn56.11" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">SN 56.11</a></li>
+              <li><a href="${queryBase}dn22" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">DN 22</a></li>
+              <li><a href="${queryBase}sn12.2" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">SN 12.2</a></li>
             </ul>
           </div>
-          <div class="quick-links-column">
-            <p>Clarify 5 khandha:</p>
-            <ul>
-              <li><a href="${queryBase}sn22.56" target="_blank" class="link-success">SN 22.56</a></li>
-              <li><a href="${queryBase}sn22.79" target="_blank" class="link-success">SN 22.79</a></li>
-              <li><a href="${queryBase}sn22.85" target="_blank" class="link-success">SN 22.85</a></li>
-              <li><a href="${queryBase}sn22" target="_blank" class="link-success">SN 22</a></li>       
+          <div class="quick-links-column" style="flex: 1 1 45%; min-width: 200px;">
+            <p><strong>Clarify 5 khandha:</strong></p>
+            <ul style="padding-left: 1rem; font-size: 0.9rem;">
+              <li><a href="${queryBase}sn22.56" target="_blank" style="color: ${linkColorSuccess}; text-decoration: none;">SN 22.56</a></li>
+              <li><a href="${queryBase}sn22.79" target="_blank" style="color: ${linkColorSuccess}; text-decoration: none;">SN 22.79</a></li>
+              <li><a href="${queryBase}sn22.85" target="_blank" style="color: ${linkColorSuccess}; text-decoration: none;">SN 22.85</a></li>
+              <li><a href="${queryBase}sn22" target="_blank" style="color: ${linkColorSuccess}; text-decoration: none;">SN 22</a></li>       
             </ul>
           </div>
-          <div class="quick-links-column">
-            <p>Clarify 6 ajjhattāyatana:</p>
-            <ul>
-              <li><a href="${queryBase}sn35.228" target="_blank" class="link-warning">SN 35.228</a></li>
-              <li><a href="${queryBase}sn35.229" target="_blank" class="link-warning">SN 35.229</a></li>
-              <li><a href="${queryBase}sn35.236" target="_blank" class="link-warning">SN 35.236</a></li>
-              <li><a href="${queryBase}sn35.238" target="_blank" class="link-warning">SN 35.238</a></li>
-              <li><a href="${queryBase}sn35" target="_blank" class="link-warning">SN 35</a></li>
+          <div class="quick-links-column" style="flex: 1 1 45%; min-width: 200px;">
+            <p><strong>Clarify 6 ajjhattāyatana:</strong></p>
+            <ul style="padding-left: 1rem; font-size: 0.9rem;">
+              <li><a href="${queryBase}sn35.228" target="_blank" style="color: ${linkColorWarning}; text-decoration: none;">SN 35.228</a></li>
+              <li><a href="${queryBase}sn35.229" target="_blank" style="color: ${linkColorWarning}; text-decoration: none;">SN 35.229</a></li>
+              <li><a href="${queryBase}sn35.236" target="_blank" style="color: ${linkColorWarning}; text-decoration: none;">SN 35.236</a></li>
+              <li><a href="${queryBase}sn35.238" target="_blank" style="color: ${linkColorWarning}; text-decoration: none;">SN 35.238</a></li>
+              <li><a href="${queryBase}sn35" target="_blank" style="color: ${linkColorWarning}; text-decoration: none;">SN 35</a></li>
             </ul>
           </div>
-          <div class="quick-links-column">
-            <p>Clarify 4-6-X Dhātu:</p>
-            <ul>
-              <li><a href="${queryBase}mn28" target="_blank" class="link-danger">MN 28</a></li>
-              <li><a href="${queryBase}mn115" target="_blank" class="link-danger">MN 115</a></li>
-              <li><a href="${queryBase}mn140" target="_blank" class="link-danger">MN 140</a></li>
-              <li><a href="${queryBase}sn14" target="_blank" class="link-danger">SN 14</a></li>
+          <div class="quick-links-column" style="flex: 1 1 45%; min-width: 200px;">
+            <p><strong>Clarify 4-6-X Dhātu:</strong></p>
+            <ul style="padding-left: 1rem; font-size: 0.9rem;">
+              <li><a href="${queryBase}mn28" target="_blank" style="color: ${linkColorDanger}; text-decoration: none;">MN 28</a></li>
+              <li><a href="${queryBase}mn115" target="_blank" style="color: ${linkColorDanger}; text-decoration: none;">MN 115</a></li>
+              <li><a href="${queryBase}mn140" target="_blank" style="color: ${linkColorDanger}; text-decoration: none;">MN 140</a></li>
+              <li><a href="${queryBase}sn14" target="_blank" style="color: ${linkColorDanger}; text-decoration: none;">SN 14</a></li>
             </ul>
           </div>
-          <div class="quick-links-column">
-            <p>Dukkaṁ so abhinandati:</p>
-            <ul>
-              <li><a href="${queryBase}sn14.35" target="_blank" class="link-primary">SN 14.35</a></li>
-              <li><a href="${queryBase}sn22.29" target="_blank" class="link-primary">SN 22.29</a></li>
-              <li><a href="${queryBase}sn35.19" target="_blank" class="link-primary">SN 35.19</a></li>
-              <li><a href="${queryBase}sn35.20" target="_blank" class="link-primary">SN 35.20</a></li>
+          <div class="quick-links-column" style="flex: 1 1 45%; min-width: 200px;">
+            <p><strong>Dukkaṁ so abhinandati:</strong></p>
+            <ul style="padding-left: 1rem; font-size: 0.9rem;">
+              <li><a href="${queryBase}sn14.35" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">SN 14.35</a></li>
+              <li><a href="${queryBase}sn22.29" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">SN 22.29</a></li>
+              <li><a href="${queryBase}sn35.19" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">SN 35.19</a></li>
+              <li><a href="${queryBase}sn35.20" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">SN 35.20</a></li>
             </ul>
           </div>
-          <div class="quick-links-column">
-            <p>Extra</p>
-            <ul>
-              <li><a href="${queryBase}an3.70" target="_blank" class="link-danger">AN 3.70</a></li>
-              <li><a href="${queryBase}an6.63" target="_blank" class="link-danger">AN 6.63</a></li>
-              <li><a href="${queryBase}an8.9" target="_blank" class="link-danger">AN 8.9</a></li>
-              <li><a href="${queryBase}an10.46" target="_blank" class="link-primary">AN 10.46</a></li>
-              <li><a href="${queryBase}an10.176" target="_blank" class="link-primary">AN 10.176</a></li>
-              <li><a href="${queryBase}snp3.2" target="_blank" class="link-primary">Snp 3.2</a></li>
-              <li><a href="${queryBase}iti61" target="_blank" class="link-primary">Iti 61</a></li>
-              <li><a href="${queryBase}an4.199" target="_blank" class="link-primary">an4.199</a></li>
+          <div class="quick-links-column" style="flex: 1 1 45%; min-width: 200px;">
+            <p><strong>Extra</strong></p>
+            <ul style="padding-left: 1rem; font-size: 0.9rem;">
+              <li><a href="${queryBase}an3.70" target="_blank" style="color: ${linkColorDanger}; text-decoration: none;">AN 3.70</a></li>
+              <li><a href="${queryBase}an6.63" target="_blank" style="color: ${linkColorDanger}; text-decoration: none;">AN 6.63</a></li>
+              <li><a href="${queryBase}an8.9" target="_blank" style="color: ${linkColorDanger}; text-decoration: none;">AN 8.9</a></li>
+              <li><a href="${queryBase}an10.46" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">AN 10.46</a></li>
+              <li><a href="${queryBase}an10.176" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">AN 10.176</a></li>
+              <li><a href="${queryBase}snp3.2" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">Snp 3.2</a></li>
+              <li><a href="${queryBase}iti61" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">Iti 61</a></li>
+              <li><a href="${queryBase}an4.199" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">an4.199</a></li>
             </ul>
           </div>
         </div>
       </div>
 
-      <div id="tab-memo" class="quick-tab-content">
-        <iframe src="${memoPath}" class="quick-iframe"></iframe>
+      <div id="tab-memo" class="quick-tab-content" style="height: 60vh; min-height: 450px;">
+        <iframe src="${memoPath}" style="width: 100%; height: 100%; border: none; border-radius: 8px; background: transparent;"></iframe>
       </div>
 
-      <div id="tab-dpd" class="quick-tab-content">
-        <iframe src="${dpdUrl}" class="quick-iframe"></iframe>
+      <div id="tab-dpd" class="quick-tab-content" style="height: 60vh; min-height: 450px;">
+        <iframe src="${dpdUrl}" style="width: 100%; height: 100%; border: none; border-radius: 8px; background: transparent;"></iframe>
       </div>
     </div>
   `;
@@ -1455,7 +1637,7 @@ function buildQuickModalDOM() {
   document.body.appendChild(quickOverlay);
   document.body.appendChild(quickModal);
 
-  // Обработка вкладок
+  // --- ЛОГИКА ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК ---
   const tabBtns = quickModal.querySelectorAll('.quick-tab-btn');
   const tabContents = quickModal.querySelectorAll('.quick-tab-content');
   const mainTrashIcon = document.getElementById('main-trash-icon');
@@ -1464,47 +1646,139 @@ function buildQuickModalDOM() {
     btn.addEventListener('click', () => {
       tabBtns.forEach(b => b.classList.remove('active'));
       tabContents.forEach(c => c.classList.remove('active'));
+      
       btn.classList.add('active');
       const targetTab = btn.dataset.tab;
       quickModal.querySelector(`#${targetTab}`).classList.add('active');
-      if (mainTrashIcon) mainTrashIcon.style.display = targetTab === 'tab-fav' ? 'block' : 'none';
+      
+      if (mainTrashIcon) {
+          mainTrashIcon.style.display = targetTab === 'tab-fav' ? 'block' : 'none';
+      }
     });
   });
 
-  // Логика закрытия модалки (теперь просто скрываем)
-  const closeQuickModal = () => {
-    if(quickModalIsOpen) toggleQuickModal();
-  };
+  // (Далее идет остальная часть вашей функции: renderFavs, renderHist, закрытие и т.д.)
+  // Я привел здесь основную структуру с добавленной вкладкой и сохраненными ссылками.
 
-  quickOverlay.addEventListener("click", (e) => e.target === quickOverlay && closeQuickModal());
-  quickModal.querySelector("#quickCloseModalBtn").addEventListener("click", closeQuickModal);
-
-  if (typeof window.initPaliAutocomplete === 'function') {
-      window.initPaliAutocomplete('#quickSearchInput');
-  }
-
-  // Прикрепляем функции рендера глобально, чтобы мы могли вызывать их при переоткрытии окна
-  window.refreshQuickModalData = function() {
-    renderQuickLists(isRu, queryBase);
-  };
+  // --- ДАННЫЕ И СОСТОЯНИЯ ---
+  let favData = JSON.parse(localStorage.getItem('dg_favorites')) || [];
+  let histData = JSON.parse(localStorage.getItem('localSearchHistory')) || [];
   
-  // Делегирование событий на клики внутри списков
   const favContainer = quickModal.querySelector('#quick-favorites-container');
   const histContainer = quickModal.querySelector('#quick-history-container');
+  const favHeader = quickModal.querySelector('#fav-header');
+  const histHeader = quickModal.querySelector('#hist-header');
+  const favSortIcon = quickModal.querySelector('.sort-icon-fav');
+  const histSortIcon = quickModal.querySelector('.sort-icon-hist');
   
+  let favAlphaSort = false;
+  let histAlphaSort = false;
+  let favCollapsed = localStorage.getItem('dg_favCollapsed') === 'true';
+  let histCollapsed = localStorage.getItem('dg_histCollapsed') === 'true';
+
+  function renderFavs() {
+    if (favData.length === 0) {
+      favContainer.innerHTML = `<p style="font-size: 0.9rem; color: #888; font-style: italic; margin: 0;">${noFavsText}</p>`;
+      favHeader.style.display = 'none';
+      favContainer.style.display = 'block';
+      return;
+    }
+    favHeader.style.display = 'flex';
+    favContainer.style.display = favCollapsed ? 'none' : 'block';
+    const favTitle = favHeader.querySelector('.header-title');
+    if (favTitle) favTitle.classList.toggle('collapsed', favCollapsed);
+
+    let dataToRender = [...favData];
+    if (favAlphaSort) {
+      dataToRender.sort((a, b) => (a.title || a.slug || '').localeCompare(b.title || b.slug || '', undefined, { numeric: true }));
+    }
+
+    let favHtml = '<ul class="compact-list">';
+    dataToRender.forEach(fav => {
+      let url = (fav.path && fav.search) ? `${fav.path}${fav.search}` : `${queryBase}${fav.slug}`;
+      if (fav.id && fav.id !== fav.slug) url += `#${fav.id}`;
+      const dateStr = fav.timestamp ? new Date(fav.timestamp).toLocaleDateString() : "";
+      const displayName = fav.title || fav.slug;
+
+      favHtml += `<li>
+        <span class="fav-star-icon" title="★">★</span> 
+        <a href="${url}">${displayName}</a>
+        <span class="item-date">${dateStr}</span>
+        <span class="action-btn remove-fav-btn" data-slug="${fav.slug}" title="${titleRemove}">×</span>
+      </li>`;
+    });
+    favHtml += '</ul>';
+    favContainer.innerHTML = favHtml;
+    favSortIcon.textContent = favAlphaSort ? 'A-Z' : '⇅';
+  }
+
+  function renderHist() {
+    if (histData.length === 0) {
+      histContainer.innerHTML = `<p style="font-size: 0.9rem; color: #888; font-style: italic; margin: 0;">${noHistText}</p>`;
+      histHeader.style.display = 'none';
+      histContainer.style.display = 'block';
+      return;
+    }
+    histHeader.style.display = 'flex';
+    histContainer.style.display = histCollapsed ? 'none' : 'block';
+    const histTitle = histHeader.querySelector('.header-title');
+    if (histTitle) histTitle.classList.toggle('collapsed', histCollapsed);
+
+    let dataToRender = [...histData];
+    if (histAlphaSort) {
+      dataToRender.sort((a, b) => (a[0] || '').localeCompare(b[0] || '', undefined, { numeric: true }));
+    }
+
+    let histHtml = '<ul class="compact-list">';
+    dataToRender.slice(0, 84).forEach(h => {
+      const dateStr = h[2] ? new Date(h[2]).toLocaleDateString() : "";
+      const displayKey = h[0]; 
+      const urlString = h[1];  
+      
+      let realSlug = displayKey;
+      try {
+          const parser = new URL(urlString, window.location.origin);
+          if (parser.searchParams.has('q')) {
+              realSlug = parser.searchParams.get('q');
+          }
+      } catch(e) {}
+
+      const isFav = favData.some(f => f.slug === realSlug);
+      const starIcon = isFav ? "★" : "☆";
+
+      histHtml += `<li>
+        <span class="hist-icon" style="display: flex; align-items: center; margin-right: 5px;">
+            <img src="/assets/svg/clock-rotate-left.svg" width="14" height="14" alt="history" style="${isDark ? 'filter: invert(0.7);' : 'opacity: 0.6;'}">
+        </span> 
+        <a href="${urlString}">${displayKey}</a>
+        <span class="item-date">${dateStr}</span>
+        <span class="action-btn toggle-fav-btn-hist" data-slug="${realSlug}" data-display="${displayKey}" data-url="${urlString}" title="${isFav ? titleRemove : titleAdd}">${starIcon}</span>
+      </li>`;
+    });
+    histHtml += '</ul>';
+    
+    if (histData.length > 84) {
+      const historyUrl = isRu ? "/ru/history.php" : "/history.php";
+      histHtml += `<div style="text-align: right; margin-top: 10px;"><a href="${historyUrl}" style="font-size: 0.85rem; color: ${linkColorPrimary}; text-decoration: none;">${allHistText}</a></div>`;
+    }
+    histContainer.innerHTML = histHtml;
+    histSortIcon.textContent = histAlphaSort ? 'A-Z' : '⇅';
+  }
+
+  // Делегирование событий
   favContainer.addEventListener('click', (e) => {
       if (e.target.classList.contains('remove-fav-btn')) {
           const slug = e.target.dataset.slug;
-          if (confirm(isRu ? "Удалить из избранного?" : "Remove from favorites?")) {
-              let favData = JSON.parse(localStorage.getItem('dg_favorites')) || [];
+          if (confirm(confirmRemoveFavText)) {
               favData = favData.filter(f => f.slug !== slug);
               localStorage.setItem('dg_favorites', JSON.stringify(favData));
-              window.refreshQuickModalData();
+              renderFavs();
+              renderHist();
           }
       }
   });
 
-  histContainer.addEventListener('click', (e) => {
+    histContainer.addEventListener('click', (e) => {
       if (e.target.classList.contains('toggle-fav-btn-hist')) {
           const slug = e.target.dataset.slug;
           const displayKey = e.target.dataset.display;
@@ -1516,148 +1790,106 @@ function buildQuickModalDOM() {
              currentFavs.splice(idx, 1);
           } else {
              const parser = new URL(url, window.location.origin);
-             const isSearchPage = parser.pathname === '/' || parser.pathname === '/ru/' || parser.pathname.endsWith('index.php');
+             
+             // Определяем, ведет ли ссылка на страницу поиска
+             const isSearchPage = parser.pathname === '/' || 
+                                  parser.pathname === '/ru/' || 
+                                  parser.pathname.endsWith('index.php');
+             
+             // Если это поиск и лупы еще нет, добавляем её
              let finalTitle = displayKey;
-             if (isSearchPage && !finalTitle.startsWith("")) finalTitle = "🔎 " + finalTitle;
+             if (isSearchPage && !finalTitle.startsWith("")) {
+                 finalTitle = "🔎 " + finalTitle; // была лупа ("🔎")) { finalTitle = "🔎 " + finalTitle;
+             }
 
              currentFavs.unshift({
-                 slug: slug, id: slug, title: finalTitle, 
-                 path: parser.pathname, search: parser.search, timestamp: Date.now()
+                 slug: slug,
+                 id: slug, 
+                 title: finalTitle, // Используем обновленный заголовок
+                 path: parser.pathname,
+                 search: parser.search,
+                 timestamp: Date.now()
              });
           }
           localStorage.setItem('dg_favorites', JSON.stringify(currentFavs));
-          window.refreshQuickModalData();
+          favData = currentFavs;
+          renderFavs();
+          renderHist();
+      }
+  });
+
+
+  favHeader.addEventListener('click', (e) => {
+      if (e.target.classList.contains('sort-trigger')) {
+          favAlphaSort = !favAlphaSort;
+          renderFavs();
+      } else if (e.target.closest('.header-title')) {
+          favCollapsed = !favCollapsed;
+          localStorage.setItem('dg_favCollapsed', favCollapsed);
+          renderFavs();
+      }
+  });
+
+  histHeader.addEventListener('click', (e) => {
+      if (e.target.classList.contains('sort-trigger')) {
+          histAlphaSort = !histAlphaSort;
+          renderHist();
+      } else if (e.target.closest('.header-title')) {
+          histCollapsed = !histCollapsed;
+          localStorage.setItem('dg_histCollapsed', histCollapsed);
+          renderHist();
       }
   });
 
   if (mainTrashIcon) {
       mainTrashIcon.addEventListener('click', () => {
-          if (confirm(isRu ? "Очистить ВСЮ историю поиска?" : "Clear ALL search history?")) {
-              localStorage.setItem('localSearchHistory', JSON.stringify([]));
-              window.refreshQuickModalData();
+          if (confirm(confirmClearHistText)) {
+              histData = [];
+              localStorage.setItem('localSearchHistory', JSON.stringify(histData));
+              renderHist();
           }
       });
   }
 
-  // Обработчики заголовков для сортировки/скрытия
-  setupQuickModalHeaders();
-}
+  renderFavs();
+  renderHist();
 
-function renderQuickLists(isRu, queryBase) {
-    const favData = JSON.parse(localStorage.getItem('dg_favorites')) || [];
-    const histData = JSON.parse(localStorage.getItem('localSearchHistory')) || [];
-    
-    const favContainer = document.querySelector('#quick-favorites-container');
-    const histContainer = document.querySelector('#quick-history-container');
-    const favHeader = document.querySelector('#fav-header');
-    const histHeader = document.querySelector('#hist-header');
-    
-    let favAlphaSort = window.favAlphaSort || false;
-    let histAlphaSort = window.histAlphaSort || false;
-    let favCollapsed = localStorage.getItem('dg_favCollapsed') === 'true';
-    let histCollapsed = localStorage.getItem('dg_histCollapsed') === 'true';
-
-    // Рендер Избранного
-    if (favData.length === 0) {
-      // ИСПОЛЬЗУЕМ КЛАСС ВМЕСТО ИНЛАЙН СТИЛЕЙ
-      favContainer.innerHTML = `<p class="quick-empty-msg">${isRu ? "Избранного пока нет." : "No favorites yet."}</p>`;
-      favHeader.style.display = 'none';
-      favContainer.style.display = 'block';
-    } else {
-      favHeader.style.display = 'flex';
-      favContainer.style.display = favCollapsed ? 'none' : 'block';
-      favHeader.querySelector('.header-title').classList.toggle('collapsed', favCollapsed);
-
-      let dataToRender = [...favData];
-      if (favAlphaSort) dataToRender.sort((a, b) => (a.title || a.slug || '').localeCompare(b.title || b.slug || '', undefined, { numeric: true }));
-
-      let favHtml = '<ul class="compact-list">';
-      dataToRender.forEach(fav => {
-        let url = (fav.path && fav.search) ? `${fav.path}${fav.search}` : `${queryBase}${fav.slug}`;
-        if (fav.id && fav.id !== fav.slug) url += `#${fav.id}`;
-        const dateStr = fav.timestamp ? new Date(fav.timestamp).toLocaleDateString() : "";
-        favHtml += `<li><span class="fav-star-icon">★</span><a href="${url}">${fav.title || fav.slug}</a>
-        <span class="item-date">${dateStr}</span><span class="action-btn remove-fav-btn" data-slug="${fav.slug}">×</span></li>`;
-      });
-      favHtml += '</ul>';
-      favContainer.innerHTML = favHtml;
-      document.querySelector('.sort-icon-fav').textContent = favAlphaSort ? 'A-Z' : '⇅';
-    }
-
-    // Рендер Истории
-    if (histData.length === 0) {
-      // ИСПОЛЬЗУЕМ КЛАСС ВМЕСТО ИНЛАЙН СТИЛЕЙ
-      histContainer.innerHTML = `<p class="quick-empty-msg">${isRu ? "История пуста." : "History is empty."}</p>`;
-      histHeader.style.display = 'none';
-      histContainer.style.display = 'block';
-    } else {
-      histHeader.style.display = 'flex';
-      histContainer.style.display = histCollapsed ? 'none' : 'block';
-      histHeader.querySelector('.header-title').classList.toggle('collapsed', histCollapsed);
-
-      let dataToRender = [...histData];
-      if (histAlphaSort) dataToRender.sort((a, b) => (a[0] || '').localeCompare(b[0] || '', undefined, { numeric: true }));
-
-      let histHtml = '<ul class="compact-list">';
-      dataToRender.slice(0, 84).forEach(h => {
-        const dateStr = h[2] ? new Date(h[2]).toLocaleDateString() : "";
-        let realSlug = h[0];
-        try { const p = new URL(h[1], window.location.origin); if(p.searchParams.has('q')) realSlug = p.searchParams.get('q'); } catch(e){}
-        const isFav = favData.some(f => f.slug === realSlug);
-        
-        histHtml += `<li><span class="hist-icon"><img src="/assets/svg/clock-rotate-left.svg" width="14" height="14"></span>
-        <a href="${h[1]}">${h[0]}</a><span class="item-date">${dateStr}</span>
-        <span class="action-btn toggle-fav-btn-hist" data-slug="${realSlug}" data-display="${h[0]}" data-url="${h[1]}">${isFav ? "★" : "☆"}</span></li>`;
-      });
-      histHtml += '</ul>';
-      
-      if (histData.length > 84) {
-        // ИСПОЛЬЗУЕМ КЛАССЫ ВМЕСТО ИНЛАЙН СТИЛЕЙ
-        histHtml += `<div class="quick-all-history-wrapper"><a href="${isRu ? '/ru/history.php' : '/history.php'}" class="quick-all-history-link">${isRu ? "Вся история →" : "All history →"}</a></div>`;
-      }
-      histContainer.innerHTML = histHtml;
-      document.querySelector('.sort-icon-hist').textContent = histAlphaSort ? 'A-Z' : '⇅';
-    }
-}
-
-function setupQuickModalHeaders() {
-  document.querySelector('#fav-header').addEventListener('click', (e) => {
-      if (e.target.classList.contains('sort-trigger')) { window.favAlphaSort = !window.favAlphaSort; window.refreshQuickModalData(); } 
-      else if (e.target.closest('.header-title')) { localStorage.setItem('dg_favCollapsed', localStorage.getItem('dg_favCollapsed') !== 'true'); window.refreshQuickModalData(); }
+  requestAnimationFrame(() => {
+    quickOverlay.style.opacity = "1";
+    quickModal.style.opacity = "1";
+    quickModal.style.transform = "translate(-50%, -50%) scale(1)";
+    document.getElementById('quickSearchInput').focus();
   });
 
-  document.querySelector('#hist-header').addEventListener('click', (e) => {
-      if (e.target.classList.contains('sort-trigger')) { window.histAlphaSort = !window.histAlphaSort; window.refreshQuickModalData(); } 
-      else if (e.target.closest('.header-title')) { localStorage.setItem('dg_histCollapsed', localStorage.getItem('dg_histCollapsed') !== 'true'); window.refreshQuickModalData(); }
-  });
+  const closeQuickModal = () => {
+    quickOverlay.style.opacity = "0";
+    quickModal.style.opacity = "0";
+    quickModal.style.transform = "translate(-50%, -50%) scale(0.95)";
+    setTimeout(() => {
+      quickOverlay.remove();
+      quickModal.remove();
+      quickOverlay = null;
+      quickModal = null;
+      quickModalIsOpen = false;
+    }, 300);
+  };
+
+  quickOverlay.addEventListener("click", (e) => e.target === quickOverlay && closeQuickModal());
+  quickModal.querySelector("#quickCloseModalBtn").addEventListener("click", closeQuickModal);
+
+  if (typeof window.initPaliAutocomplete === 'function') {
+      window.initPaliAutocomplete('#quickSearchInput');
+  }
 }
+
 
 function toggleQuickModal() {
-  // Ленивая инициализация DOM
-  if (!isQuickModalRendered) {
-    buildQuickModalDOM();
-    isQuickModalRendered = true;
-  }
-
   if (quickModalIsOpen) {
-    // Закрываем, используя CSS классы
-    quickOverlay.classList.remove("open");
-    quickModal.classList.remove("open");
-    quickModalIsOpen = false;
+    const closeEvent = new Event('click');
+    quickOverlay.dispatchEvent(closeEvent);
   } else {
-    // Перед открытием обновляем данные, чтобы всегда была свежая история
-    window.refreshQuickModalData();
-    
-    // Открываем
-    quickOverlay.classList.add("open");
-    quickModal.classList.add("open");
+    createQuickModal();
     quickModalIsOpen = true;
-
-    // Фокус на инпут для быстрого поиска
-    setTimeout(() => {
-        const searchInput = document.getElementById('quickSearchInput');
-        if (searchInput) searchInput.focus();
-    }, 100);
   }
 }
 
