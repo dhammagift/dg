@@ -17,10 +17,9 @@
 <body>
 <div id="global-session-timer" style="display: none;">00:00</div>
 
-
     <div class="container mt-3">
-        <div class="align-items-center align-items-center toggle-switch input-group-append">
-            <div id="" class="input-group">
+        <div class="align-items-center toggle-switch input-group-append">
+            <div id="" class="input-group align-items-center">
                 <a href="/read.php" title="Sutta and Vinaya reading" rel="noreferrer" class="me-1">
                     <svg fill="#979797" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="26px" viewBox="0 0 547.596 547.596" xml:space="preserve" stroke="#979797"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#CCCCCC" stroke-width="3.285576"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M540.76,254.788L294.506,38.216c-11.475-10.098-30.064-10.098-41.386,0L6.943,254.788 c-11.475,10.098-8.415,18.284,6.885,18.284h75.964v221.773c0,12.087,9.945,22.108,22.108,22.108h92.947V371.067 c0-12.087,9.945-22.108,22.109-22.108h93.865c12.239,0,22.108,9.792,22.108,22.108v145.886h92.947 c12.24,0,22.108-9.945,22.108-22.108v-221.85h75.965C549.021,272.995,552.081,264.886,540.76,254.788z"></path> </g> </g></svg>
                 </a>
@@ -30,9 +29,8 @@
                
                 <a onclick="toggleQuickModal()" 
                    aria-label="Open Cattāri Ariyasaccāni"
-                   style="cursor: pointer;" 
-                   class="me-1 d-flex align-items-center ms-1 ">
-                    <img src="/assets/svg/compass.svg" style="width: 22px; height: 22px;">
+                   class="me-1 ms-1 d-flex align-items-center cursor-pointer">
+                    <img src="/assets/svg/compass.svg" class="compass-icon">
                 </a>
 
                 <a alt="Onclick popup dictionary" title="Onclick popup dictionary (Alt+A)" class="mx-1 common-size-icon4 toggle-dict-btn text-decoration-none text-black">
@@ -42,12 +40,17 @@
                 <div class="ms-1 form-check form-switch">
                     <input type="checkbox" class="form-check-input" id="darkSwitch">
                 </div>
-                <a href="/memorize/?q=sn56.11&lang=pli" title="Sutta and Vinaya search" rel="noreferrer" class="me-2 text-decoration-none text-muted">sn5.12.2.1</a>
-                <a href="/assets/texts/dn2.9.html" title="Sutta and Vinaya search" rel="noreferrer" class="me-2 text-decoration-none text-muted">dn2.9</a>
-                <a href="/memorize/?q=sn12.2&lang=pli" title="Sutta and Vinaya search" rel="noreferrer" class="me-2 text-decoration-none text-muted">sn2.1.1.2</a>
+                
+                <div class="ms-0 me-1 d-inline-flex align-items-center lang-switcher" id="lang-switcher">
+                </div>
+
+                <a href="/memorize/?q=sn56.11&lang=pli" title="Sutta and Vinaya search" rel="noreferrer" class="ms-1 me-1 text-decoration-none text-muted">sn56.11</a>
+                <a href="/assets/texts/dn2.9.html" title="Sutta and Vinaya search" rel="noreferrer" class="me-1 text-decoration-none text-muted">dn22</a>
+                <a href="/memorize/?q=sn12.2&lang=pli" title="Sutta and Vinaya search" rel="noreferrer" class="me-1 text-decoration-none text-muted">sn12.2</a>
             </div>
         </div>
     </div>
+
 
     <div class="container mt-1">
         <div class="row ">
@@ -69,20 +72,20 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
 </div>
 
 
-                <div class="d-flex flex-wrap justify-content-center align-items-center gap-2 mt-2 memo-controls">
+<div class="d-flex flex-wrap justify-content-center align-items-center gap-2 mt-2 memo-controls">
 
-                    <button class="btn btn-success icon" onclick="toggleMemoTTS()" id="btn_play_toggle" title="Play">
-                        <svg id="icon_play" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
-                        </svg>
-                        <svg id="icon_stop" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16" style="display: none;">
-                            <path d="M5 3.5h6A1.5 1.5 0 0 1 12.5 5v6a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 11V5A1.5 1.5 0 0 1 5 3.5z"/>
-                        </svg>
-                    </button>
-                    
-                    <button class="btn btn-primary text" onclick="преобразоватьТекст()" id="btn_transform">
-                        Transform
-                    </button>
+<button class="btn btn-primary icon btn-memo-action" onclick="toggleMemoTTS()" id="btn_play_toggle" title="Play">
+    <svg id="icon_play" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+        <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
+    </svg>
+    <svg id="icon_stop" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16" class="d-none">
+        <path d="M5 3.5h6A1.5 1.5 0 0 1 12.5 5v6a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 11V5A1.5 1.5 0 0 1 5 3.5z"/>
+    </svg>
+</button>
+
+<button class="btn btn-primary text btn-memo-action" onclick="преобразоватьТекст()" id="btn_transform">
+    Transform
+</button>
                     
                     <button class="btn btn-warning text" onclick="expandWithAI()" id="btn_ai" style="background-color: #6f42c1; border-color: #6f42c1; color: white;">
                    ✨ AI Expand
@@ -344,7 +347,38 @@ window.addEventListener('DOMContentLoaded', loadPresets);
             }
         }
       
-        document.addEventListener("DOMContentLoaded", () => {
+            document.addEventListener("DOMContentLoaded", () => {
+            
+            // --- ГЕНЕРАЦИЯ ПЕРЕКЛЮЧАТЕЛЯ ЯЗЫКОВ ---
+            const switcher = document.getElementById('lang-switcher');
+            if (switcher) {
+                const currentPath = window.location.pathname;
+                const currentSearch = window.location.search; // Сохраняем все GET-параметры (?text=...)
+                let ruPath, enPath;
+
+                if (window.memoLang === 'ru') {
+                    // Убираем /ru/, /r/ или /ml/ для английской версии
+                    enPath = currentPath.replace(/^\/(ru|r|ml)\//, '/');
+                    ruPath = currentPath;
+                } else {
+                    // Добавляем /ru/ для русской версии
+                    ruPath = '/ru' + (currentPath === '/' ? '' : currentPath);
+                    enPath = currentPath;
+                }
+
+                if (window.memoLang === 'ru') {
+                    switcher.innerHTML = `
+                        <a class="btn btn-sm btn-outline-secondary rounded-pill text-decoration-none" href="${enPath + currentSearch}">en</a>
+                        <span class="btn btn-sm btn-primary rounded-pill ms-1">ru</span>
+                    `;
+                } else {
+                    switcher.innerHTML = `
+                        <span class="btn btn-sm btn-primary rounded-pill">en</span>
+                        <a class="btn btn-sm btn-outline-secondary rounded-pill text-decoration-none ms-1" href="${ruPath + currentSearch}">ru</a>
+                    `;
+                }
+            }
+            
             const favBtn = document.getElementById('toggle-memo-favorite');
             const shareBtn = document.getElementById('btn_share_memo');
             const iconOutline = document.getElementById('star-outline');

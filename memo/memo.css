@@ -259,3 +259,19 @@
 .modal-top-z {
     z-index: 10500 !important;
 }
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.compass-icon {
+    width: 22px;
+    height: 22px;
+}
+
+.btn-memo-action {
+    height: 38px; 
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
