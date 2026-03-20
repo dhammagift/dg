@@ -389,7 +389,7 @@ DG
        
                       <li>
 <div class="dropdown-item ">
-         <i class="' . $iconimportant . '"></i><a class="text-reset" href="/ru/assets/memo.html"> Мнемотехника</a>
+         <i class="' . $iconimportant . '"></i><a class="text-reset" href="/ru/memo/"> Мнемотехника</a>
          <a class="text-reset" target=""  href="/memorize/?q=sn56.11">sn56.11</a> 
          <a class="text-reset" target=""  href="/memorize/?q=dn22">dn22</a> 
          <a class="text-reset" target=""  href="/memorize/?q=sn12.2">sn12.2</a>

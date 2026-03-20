@@ -339,7 +339,7 @@ echo '<!--
 
                       <li>
 <div class="dropdown-item ">
-         <i class="' . $iconimportant . '"></i><a class="text-reset" href="/assets/memo.html"> Memorizer</a>
+         <i class="' . $iconimportant . '"></i><a class="text-reset" href="/memo/"> Memorizer</a>
          <a class="text-reset" target=""   href="/memorize/?q=sn56.11">sn56.11</a> 
          <a class="text-reset" target=""   href="/memorize/?q=dn22">dn22</a> 
          <a class="text-reset" target=""   href="/memorize/?q=sn12.2">sn12.2</a>

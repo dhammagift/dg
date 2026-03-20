@@ -7,7 +7,7 @@ const urlsToCache = [
     '/assets/img/icon-192x192.png',
     '/assets/img/icon-512x512.png',
     '/read/index.html',
-    '/assets/memo.html',
+    '/memo/',
     '/r/index.html',
     '/pm.php',
     '/bipm.php',

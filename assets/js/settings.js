@@ -543,7 +543,7 @@ document.addEventListener("keydown", (event) => {
 
         event.preventDefault();
 
-        // 1. Попытка для Memo (эмулируем клик по кнопке в memo.html)
+        // 1. Попытка для Memo (эмулируем клик по кнопке в memo)
         const memoFavBtn = document.getElementById('toggle-memo-favorite');
         if (memoFavBtn) {
             memoFavBtn.click();
@@ -1329,7 +1329,7 @@ function createQuickModal() {
   
   // Текст и путь для новой вкладки Memo
   const tabMemoText = isRu ? "Запоминание" : "Memo";
-  const memoPath = isRu ? "/ru/assets/memo.html" : "/assets/memo.html";
+  const memoPath = isRu ? "/ru/memo/" : "/memo/";
   
   const tabDpdText = isRu ? "Словарь" : "Dict";
   const histTitleText = isRu ? "История поиска" : "Search History";

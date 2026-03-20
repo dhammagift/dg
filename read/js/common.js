@@ -426,8 +426,8 @@ document.addEventListener('click', (e) => {
 // ГЛОБАЛЬНЫЙ ПЕРЕХВАТЧИК ДЛЯ ССЫЛОК MEMO
 // ==========================================
 document.addEventListener('click', function(e) {
-    // Ищем, кликнули ли мы по ссылке (или внутри ссылки), ведущей на memo.html
-    const memoLink = e.target.closest('a[href*="memo.html"]');
+    // Ищем ссылки, содержащие /memo, но СТРОГО исключаем /memorize
+    const memoLink = e.target.closest('a[href*="/memo"]:not([href*="/memorize"])');
     
     // Игнорируем кнопку плеера (у нее свой обработчик в voice-mem.js) и iframe
     if (memoLink && memoLink.id !== 'memo-app-btn') {
@@ -473,7 +473,7 @@ document.addEventListener('click', function(e) {
                          window.location.pathname.includes('/ml/') || 
                          window.location.pathname.includes('/ru/');
                          
-        const baseUrl = isRuPath ? '/ru/assets/memo.html' : '/assets/memo.html';
+        const baseUrl = isRuPath ? '/ru/memo/' : '/memo/';
         
         // Динамически обновляем href прямо перед тем, как браузер по нему перейдет!
         if (textToPass) {

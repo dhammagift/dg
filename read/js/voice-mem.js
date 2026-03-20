@@ -257,7 +257,7 @@
                     const isRuPath = window.location.pathname.includes('/r/') || 
                                      window.location.pathname.includes('/ml/') || 
                                      window.location.pathname.includes('/ru/');
-                    const baseUrl = isRuPath ? '/ru/assets/memo.html' : '/assets/memo.html';
+                    const baseUrl = isRuPath ? '/ru/memo/' : '/memo/';
                     
                     if (textToPass) {
                         this.href = `${baseUrl}?text=${encodeURIComponent(textToPass)}`;
@@ -267,7 +267,7 @@
                 });
                 
                 const isRuPathBase = window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/') || window.location.pathname.includes('/ru/');
-                memoBtn.href = isRuPathBase ? '/ru/assets/memo.html' : '/assets/memo.html';
+                memoBtn.href = isRuPathBase ? '/ru/memo/' : '/memo/';
                 
                 mainRow.appendChild(memoBtn);
 
