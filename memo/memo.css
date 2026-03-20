@@ -65,29 +65,34 @@
             border-color: rgba(110, 168, 254, 0.2);
         }
 
-        /* --- ОБЩИЙ ТАЙМЕР СЕССИИ (СТИКИ) --- */
-        #global-session-timer {
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            background: rgba(0, 0, 0, 0.5);
-            color: #fff;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-family: monospace;
-            font-size: 14px;
-            font-weight: bold;
-            z-index: 10000;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            pointer-events: none; /* Клик проходит насквозь */
-            transition: opacity 0.3s ease;
-            display: none;
-        }
-        .dark #global-session-timer {
-            background: rgba(255, 255, 255, 0.15);
-            color: #ddd;
-        }
+/* --- ОБЩИЙ ТАЙМЕР СЕССИИ (внутри плеера) --- */
+#global-session-timer {
+    position: absolute;
+    left: 20px;        /* Слева */
+    top: 32px;         /* На той же линии, что и таймер фрагментов */
+    background: transparent;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: #777;
+    font-size: 11px;
+    font-family: sans-serif;
+    font-weight: 700;
+    padding: 2px 4px;
+    display: none;     /* Появляется при старте */
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    line-height: 1;
+    pointer-events: none;
+    font-variant-numeric: tabular-nums;
+}
+
+.dark #global-session-timer {
+    border-color: #555;
+    color: #aaa;
+}
+
+
 
         /* --- ТЕМНАЯ ТЕМА --- */
         .dark .form-control,
@@ -153,4 +158,3 @@
         #copy_icon_btn:hover {
             opacity: 1;
         }
-  
