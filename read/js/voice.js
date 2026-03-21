@@ -2421,7 +2421,11 @@ function removeAllHighlights() {
 }
 
 function addTtsButton(containerElement, specificElement) {
-    if (ttsState.speaking || ttsState.paused) return;
+    // --- ИЗМЕНЕНИЕ: Проверяем физическую видимость плеера на экране ---
+    const player = document.getElementById('voice-player-container');
+    const isPlayerVisible = player && player.classList.contains('active');
+
+    if (isPlayerVisible && (ttsState.speaking || ttsState.paused)) return;
 
     const oldBtn = document.querySelector('.dynamic-tts-btn');
     if (oldBtn) oldBtn.remove();
