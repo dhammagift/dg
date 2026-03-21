@@ -1356,11 +1356,18 @@ function buildQuickModalDOM() {
           <button class="quick-tab-btn" data-tab="tab-memo">${tabMemoText}</button>
           <button class="quick-tab-btn" data-tab="tab-dpd">${tabDpdText}</button>
         </div>
-        <span class="clear-all-btn action-btn" id="main-trash-icon" title="${titleClearAll}">
-           <img src="/assets/svg/trash-can-regular-full.svg" width="25" height="25" alt="Reset">
-        </span>
+        
+        <div class="quick-actions-right" style="display: flex; gap: 8px; align-items: center;">
+            <span class="clear-all-btn action-btn" id="main-trash-icon" title="${titleClearAll}">
+               <img src="/assets/svg/trash-can-regular-full.svg" width="25" height="25" alt="Reset">
+            </span>
+            <span class="action-btn" id="main-open-window-icon" title="${isRu ? 'Открыть в новом окне' : 'Open in new window'}" style="display: none; cursor: pointer;">
+               <img src="/assets/svg/open-link.svg" width="20" height="20" alt="Open">
+            </span>
+        </div>
       </div>
 
+  
       <div id="tab-fav" class="quick-tab-content active">
         <h6 id="fav-header" class="sortable-header">
           <span class="header-title" title="Сортировать">${favTitleText}</span>
@@ -1443,12 +1450,13 @@ function buildQuickModalDOM() {
       </div>
 
       <div id="tab-memo" class="quick-tab-content">
-        <iframe src="${memoPath}" class="quick-iframe"></iframe>
+        <iframe data-src="${memoPath}" class="quick-iframe"></iframe>
       </div>
 
       <div id="tab-dpd" class="quick-tab-content">
-        <iframe src="${dpdUrl}" class="quick-iframe"></iframe>
+        <iframe data-src="${dpdUrl}" class="quick-iframe"></iframe>
       </div>
+
     </div>
   `;
 
@@ -1456,20 +1464,38 @@ function buildQuickModalDOM() {
   document.body.appendChild(quickModal);
 
   // Обработка вкладок
-  const tabBtns = quickModal.querySelectorAll('.quick-tab-btn');
+   const tabBtns = quickModal.querySelectorAll('.quick-tab-btn');
   const tabContents = quickModal.querySelectorAll('.quick-tab-content');
   const mainTrashIcon = document.getElementById('main-trash-icon');
+  const mainOpenWindowIcon = document.getElementById('main-open-window-icon'); // <-- Добавили
 
   tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       tabBtns.forEach(b => b.classList.remove('active'));
       tabContents.forEach(c => c.classList.remove('active'));
       btn.classList.add('active');
+      
       const targetTab = btn.dataset.tab;
-      quickModal.querySelector(`#${targetTab}`).classList.add('active');
-      if (mainTrashIcon) mainTrashIcon.style.display = targetTab === 'tab-fav' ? 'block' : 'none';
+      const targetContent = quickModal.querySelector(`#${targetTab}`);
+      targetContent.classList.add('active');
+      
+      // --- НАЧАЛО: ЛОГИКА ЛЕНИВОЙ ЗАГРУЗКИ ---
+      const iframe = targetContent.querySelector('iframe');
+      if (iframe && !iframe.getAttribute('src')) {
+          iframe.setAttribute('src', iframe.getAttribute('data-src'));
+      }
+      // --- КОНЕЦ ---
+
+      // Переключаем видимость иконок
+      if (mainTrashIcon) {
+          mainTrashIcon.style.display = targetTab === 'tab-fav' ? 'block' : 'none';
+      }
+      if (mainOpenWindowIcon) {
+          mainOpenWindowIcon.style.display = (targetTab === 'tab-memo' || targetTab === 'tab-dpd') ? 'block' : 'none';
+      }
     });
   });
+
 
   // Логика закрытия модалки (теперь просто скрываем)
   const closeQuickModal = () => {
@@ -1538,6 +1564,30 @@ function buildQuickModalDOM() {
           }
       });
   }
+
+  // --- ЛОГИКА НОВОЙ КНОПКИ "ОТКРЫТЬ В НОВОМ ОКНЕ" ---
+  if (mainOpenWindowIcon) {
+      mainOpenWindowIcon.addEventListener('click', () => {
+          // Ищем, какая вкладка сейчас активна
+          const activeTab = quickModal.querySelector('.quick-tab-content.active');
+          if (!activeTab) return;
+
+          // Ищем iframe внутри активной вкладки
+          const iframe = activeTab.querySelector('iframe');
+          if (!iframe) return;
+
+          // Берем ссылку (сначала из src, а если там пусто из-за ленивой загрузки - из data-src)
+          const urlToOpen = iframe.getAttribute('src') || iframe.getAttribute('data-src');
+          
+          if (urlToOpen) {
+              window.open(urlToOpen, '_blank');
+          } else {
+              console.log("Ссылка не найдена");
+          }
+      });
+  }
+
+
 
   // Обработчики заголовков для сортировки/скрытия
   setupQuickModalHeaders();

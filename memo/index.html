@@ -610,19 +610,37 @@ ${text}`;
             if (!btn) return;
 
             if (playing) {
-                btn.classList.remove('btn-success');
+                // Обязательно удаляем btn-primary, чтобы кнопка смогла стать красной (danger)
+                btn.classList.remove('btn-primary', 'btn-primary');
                 btn.classList.add('btn-danger');
                 btn.title = window.memoLang === 'ru' ? 'Стоп' : 'Stop';
-                iconPlay.style.display = 'none';
-                iconStop.style.display = 'inline-block';
+                
+                // Переключаем видимость через классы (сбрасывая inline-стили)
+                if (iconPlay) {
+                    iconPlay.style.display = '';
+                    iconPlay.classList.add('d-none');
+                }
+                if (iconStop) {
+                    iconStop.style.display = '';
+                    iconStop.classList.remove('d-none');
+                }
             } else {
-                btn.classList.remove('btn-danger');
-                btn.classList.add('btn-success');
+                // Возвращаем в зеленый (или синий) цвет
+                btn.classList.remove('btn-danger', 'btn-primary');
+                btn.classList.add('btn-primary');
                 btn.title = window.memoLang === 'ru' ? 'Слушать' : 'Play';
-                iconPlay.style.display = 'inline-block';
-                iconStop.style.display = 'none';
+                
+                if (iconPlay) {
+                    iconPlay.style.display = '';
+                    iconPlay.classList.remove('d-none');
+                }
+                if (iconStop) {
+                    iconStop.style.display = '';
+                    iconStop.classList.add('d-none');
+                }
             }
         }
+
 
         Object.defineProperty(window, 'TTS_SEGMENT_DELAY', {
             get: function() {
