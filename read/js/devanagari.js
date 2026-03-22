@@ -668,8 +668,8 @@ if (document.location.search) {
     language = lang;
  //   console.log("in the initializing " + lang);
     setLanguage(lang);
-  } else if  (localStorage.paliToggle) {
-    	language = localStorage.paliToggle; 
+  } else if  (localStorage.paliToggleSpecial) {
+    	language = localStorage.paliToggleSpecial; 
 		//  console.log('read from ls ' + language);
 setLanguage(language);
   }
@@ -778,8 +778,8 @@ setLanguage(language);
 function setLanguage(language) {
   if (language === "pli-2nd") {
     showPaliEnglish();
-  } else if (language === "rus") {
-    showEnglish();
+  } else if (language === "2nd") {
+    showPaliEnglish();
   } else if (language === "pli") {
     showPali();
   }
@@ -833,8 +833,8 @@ function toggleThePali() {
   const languageButton = document.getElementById("language-button");
 
   // Инициализация
-  if (!localStorage.paliToggle) {
-    localStorage.paliToggle = "pli-2nd";
+  if (!localStorage.paliToggleSpecial) {
+    localStorage.paliToggleSpecial = "pli-2nd";
   }
 
   const newButton = languageButton.cloneNode(true);
@@ -865,11 +865,11 @@ function toggleThePali() {
     if (language === "pli") {
       showPaliAll();
       language = "pli-2nd";
-      localStorage.paliToggle = "pli-2nd";
+      localStorage.paliToggleSpecial = "pli-2nd";
     } else if (language === "pli-2nd") {
       showPali();
       language = "pli";
-      localStorage.paliToggle = "pli";
+      localStorage.paliToggleSpecial = "pli";
     }
 
     // 3. ЖЕСТКАЯ ФИКСАЦИЯ
@@ -906,4 +906,3 @@ abbreviations.forEach(book => {
     citation.focus();
   });
 });
-

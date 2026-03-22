@@ -821,8 +821,8 @@ if (document.location.search) {
  if (lang) {
     language = lang;
     setLanguage(lang);
-  } else if  (localStorage.paliToggle) {
-    	language = localStorage.paliToggle; 
+  } else if  (localStorage.paliToggleSpecial) {
+    	language = localStorage.paliToggleSpecial; 
 setLanguage(language);
   }
 } else {
@@ -932,7 +932,7 @@ function setLanguage(language) {
   if (language === "pli-2nd") {
     showPaliRussian();
   } else if (language === "2nd") {
-    showEnglish();
+    showPaliRussian();
   } else if (language === "pli") {
     showPali();
   }
@@ -987,24 +987,20 @@ function toggleThePali() {
   const languageButton = document.getElementById("language-button");
 
 // initial state
- if (!localStorage.paliToggle) {
-    localStorage.paliToggle = "pli-2nd";
+ if (!localStorage.paliToggleSpecial) {
+    localStorage.paliToggleSpecialRu = "pli-2nd";
   }   
 
   languageButton.addEventListener("click", () => {
     if (language === "pli") {
       showPaliAll();
       language = "pli-2nd";    
-      localStorage.paliToggle = "pli-2nd";
+      localStorage.paliToggleSpecial = "pli-2nd";
     } else if (language === "pli-2nd") {
      showPali();
            language = "pli";
-      localStorage.paliToggle = "pli";
+      localStorage.paliToggleSpecial = "pli";
 
- /*   } else if (language === "2nd") {
-     showPaliRussian();
-      language = "2nd";
-      localStorage.paliToggle = "2nd"; */
     }
   });
   
@@ -1019,4 +1015,3 @@ abbreviations.forEach(book => {
     citation.focus();
   });
 });
-
