@@ -12,7 +12,7 @@ const citation = document.getElementById("paliauto");
 const pathLang = "ru";
 
 citation.focus();
-let language = "pli-rus";
+let language = "pli-2nd";
 
 homeButton.addEventListener("click", () => {
   document.location.search = "";
@@ -126,7 +126,7 @@ const anchorURL = new URL(currentURL).hash; // Убираем символ "#"
 
 if (slug.includes("mn"))  {
  var trnpath = rustrnpath; 
- let language = "pli-rus";
+ let language = "pli-2nd";
 // scLink += ifRus; 
   console.log(trnpath);
 } else if (slug.includes("sn")) { 
@@ -821,8 +821,8 @@ if (document.location.search) {
  if (lang) {
     language = lang;
     setLanguage(lang);
-  } else if  (localStorage.paliToggleML) {
-    	language = localStorage.paliToggleML; 
+  } else if  (localStorage.paliToggle) {
+    	language = localStorage.paliToggle; 
 setLanguage(language);
   }
 } else {
@@ -929,9 +929,9 @@ setLanguage(language);
 
   
 function setLanguage(language) {
-  if (language === "pli-rus") {
+  if (language === "pli-2nd") {
     showPaliRussian();
-  } else if (language === "rus") {
+  } else if (language === "2nd") {
     showEnglish();
   } else if (language === "pli") {
     showPali();
@@ -987,24 +987,24 @@ function toggleThePali() {
   const languageButton = document.getElementById("language-button");
 
 // initial state
- if (!localStorage.paliToggleML) {
-    localStorage.paliToggleRu = "pli-rus";
+ if (!localStorage.paliToggle) {
+    localStorage.paliToggle = "pli-2nd";
   }   
 
   languageButton.addEventListener("click", () => {
     if (language === "pli") {
       showPaliAll();
-      language = "pli-rus";    
-      localStorage.paliToggleML = "pli-rus";
-    } else if (language === "pli-rus") {
+      language = "pli-2nd";    
+      localStorage.paliToggle = "pli-2nd";
+    } else if (language === "pli-2nd") {
      showPali();
            language = "pli";
-      localStorage.paliToggleML = "pli";
+      localStorage.paliToggle = "pli";
 
- /*   } else if (language === "rus") {
+ /*   } else if (language === "2nd") {
      showPaliRussian();
-      language = "rus";
-      localStorage.paliToggleML = "rus"; */
+      language = "2nd";
+      localStorage.paliToggle = "2nd"; */
     }
   });
   

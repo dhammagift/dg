@@ -31,7 +31,7 @@ const citation = document.getElementById("paliauto");
 const pathLang = "ru";
 
 citation.focus();
-let language = "pli-rus";
+let language = "pli-2nd";
 
 homeButton.addEventListener("click", () => {
   document.location.search = "";
@@ -139,7 +139,7 @@ const anchorURL = new URL(currentURL).hash; // Убираем символ "#"
 
 if (slug.includes("mn"))  {
  var trnpath = rustrnpath; 
- let language = "pli-rus";
+ let language = "pli-2nd";
 // scLink += ifRus; 
   console.log(trnpath);
 } else if (slug.includes("sn")) { 
@@ -707,8 +707,8 @@ if (document.location.search) {
     language = lang;
     console.log("in the initializing " + lang);
     setLanguage(lang);
-  } else if  (localStorage.paliToggleSpecial) {
-    	language = localStorage.paliToggleSpecial; 
+  } else if  (localStorage.paliToggle) {
+    	language = localStorage.paliToggle; 
 		  console.log('read from ls ' + language);
 setLanguage(language);
   }
@@ -815,7 +815,7 @@ setLanguage(language);
 
   
 function setLanguage(language) {
-  if (language === "pli-rus") {
+  if (language === "pli-2nd") {
     showPaliEnglish();
   } else if (language === "rus") {
     showEnglish();
@@ -872,8 +872,8 @@ function toggleThePali() {
   const languageButton = document.getElementById("language-button");
 
   // Инициализация
-  if (!localStorage.paliToggleSpecial) {
-    localStorage.paliToggleSpecial = "pli-rus";
+  if (!localStorage.paliToggle) {
+    localStorage.paliToggle = "pli-2nd";
   }
 
   const newButton = languageButton.cloneNode(true);
@@ -903,12 +903,12 @@ function toggleThePali() {
     // 2. МГНОВЕННОЕ ПЕРЕКЛЮЧЕНИЕ
     if (language === "pli") {
       showPaliAll();
-      language = "pli-rus";
-      localStorage.paliToggleSpecial = "pli-rus";
-    } else if (language === "pli-rus") {
+      language = "pli-2nd";
+      localStorage.paliToggle = "pli-2nd";
+    } else if (language === "pli-2nd") {
       showPali();
       language = "pli";
-      localStorage.paliToggleSpecial = "pli";
+      localStorage.paliToggle = "pli";
     }
 
     // 3. ЖЕСТКАЯ ФИКСАЦИЯ

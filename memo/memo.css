@@ -5,31 +5,37 @@
     width: 100%;
 }
 
-/* Стили для кнопки копирования верхнего поля */
-.copy-input-btn {
-    position: absolute;
-    top: -28px; /* Поднимаем кнопку над textarea (на уровень текста) */
-    right: 5px; /* Прижимаем к правому краю */
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    opacity: 0.6;
-    transition: opacity 0.2s;
-    display: none; /* По умолчанию скрыта */
-}
-        #copy_icon_btn:hover, 
-.copy-input-btn:hover {
-    opacity: 1;
+/* --- КНОПКИ ВВОДА (КОПИРОВАТЬ И ОЧИСТИТЬ) --- */
+.input-action-btns {
+    position: absolute; 
+    top: -28px; 
+    right: 4px; 
+    display: none; /* JS управляет видимостью (меняет на flex) */
+    gap: 10px; 
+    z-index: 10; 
+    color: #989898;
 }
 
-/* Поддержка темной темы для новой кнопки */
-        .dark #copy_icon_btn,
-.dark .copy-input-btn {
+.input-action-btn {
+    cursor: pointer;
+    opacity: 0.5;
+    width: 18px;
+    height: 18px;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.input-action-btn:hover,
+#copy_icon_btn:hover {
+    opacity: 0.8;
+}
+
+/* Поддержка темной темы */
+.dark .input-action-btn,
+.dark #copy_icon_btn {
     filter: invert(1);
 }
 
-      
-    
+
         .tts-delay-label,
         #tts-segment-delay-input {
             display: none !important;

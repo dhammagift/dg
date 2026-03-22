@@ -44,9 +44,9 @@
                 <div class="ms-0 me-1 d-inline-flex align-items-center lang-switcher" id="lang-switcher">
                 </div>
 
-                <a href="/memorize/?q=sn56.11&lang=pli" title="Sutta and Vinaya search" rel="noreferrer" class="ms-1 me-1 text-decoration-none text-muted">sn56.11</a>
+                <a href="/memorize/?q=sn56.11" title="Sutta and Vinaya search" rel="noreferrer" class="ms-1 me-1 text-decoration-none text-muted">sn56.11</a>
                 <a href="/assets/texts/dn2.9.html" title="Sutta and Vinaya search" rel="noreferrer" class="me-1 text-decoration-none text-muted">dn22</a>
-                <a href="/memorize/?q=sn12.2&lang=pli" title="Sutta and Vinaya search" rel="noreferrer" class="me-1 text-decoration-none text-muted">sn12.2</a>
+                <a href="/memorize/?q=sn12.2" title="Sutta and Vinaya search" rel="noreferrer" class="me-1 text-decoration-none text-muted">sn12.2</a>
             </div>
         </div>
     </div>
@@ -59,17 +59,28 @@
                 <p class="text-muted" id="page_desc">Persist with diligence</p>
 
 <div class="input-wrapper">
-    <img src="/assets/svg/copy.svg" 
-         id="copy_input_btn"
-         class="copy-input-btn"
-         onclick="копироватьПолеВвода()"
-         title="Copy text">
-         
+    <div id="input_action_btns" class="input-action-btns">
+        <img src="/assets/svg/copy.svg" 
+             id="copy_input_btn"
+             class="input-action-btn"
+             onclick="копироватьПолеВвода()"
+             title="Copy text">
+             
+    <svg id="clear_input_btn" 
+             class="input-action-btn"
+             onclick="очистить()" 
+             title="Clear" 
+             xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="#000">
+            <path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/>
+        </svg>
+    </div>
+     
     <textarea id="inputText" class="form-control mb-3 inputdiv" rows="10" placeholder="Paste text that you want to memorize or ponder on">atthi imasmiṁ kāye kesā lomā nakhā dantā 
 taco maṁsaṁ nhāru aṭṭhi aṭṭhimiñjaṁ 
 vakkaṁ hadayaṁ yakanaṁ kilomakaṁ pihakaṁ papphāsaṁ antaṁ antaguṇaṁ udariyaṁ karīsaṁ 
 pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā lasikā muttanti |</textarea>
 </div>
+
 
 
 <div class="d-flex flex-wrap justify-content-center align-items-center gap-2 mt-2 memo-controls">
@@ -113,12 +124,6 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
                         </svg>
                     </button>
 
-                    <button class="btn btn-danger icon" onclick="очистить()" id="btn_clear" title="Clear">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
-                        </svg>
-                    </button>
-                 
 
                     <button type="button" class="btn btn-secondary icon" data-bs-toggle="collapse" data-bs-target="#ttsSettings" aria-expanded="false" id="btn_settings" title="Settings">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -313,40 +318,63 @@ window.addEventListener('DOMContentLoaded', loadPresets);
         window.memoNextAllowedTime = 0;
         window.memoLockId = 0;
 
-        // --- ОБЩИЙ ТАЙМЕР СЕССИИ ---
-        window.globalSessionSeconds = 0;
+// --- ОБЩИЙ ТАЙМЕР СЕССИИ ---
+window.globalSessionSeconds = 0;
+window.globalSessionInterval = null;
+
+// Новая функция-помощник: ищет таймер, а если его удалили — создает заново
+function getOrCreateGlobalTimer() {
+    let timerEl = document.getElementById('global-session-timer');
+    if (!timerEl) {
+        timerEl = document.createElement('div');
+        timerEl.id = 'global-session-timer';
+        
+        // Сразу подставляем текущее время, чтобы не было скачков
+        let m = Math.floor(window.globalSessionSeconds / 60).toString().padStart(2, '0');
+        let s = (window.globalSessionSeconds % 60).toString().padStart(2, '0');
+        timerEl.innerText = `${m}:${s}`;
+        
+        // Таймер должен быть виден, если окно плеера существует (даже на паузе)
+        const isPlayerVisible = !!document.querySelector('.tts-main-row');
+        timerEl.style.display = isPlayerVisible ? 'block' : 'none';
+        
+        document.body.appendChild(timerEl);
+    }
+    return timerEl;
+}
+
+
+function startGlobalSessionTimer() {
+    const timerEl = getOrCreateGlobalTimer();
+    timerEl.style.display = 'block';
+    if (!window.globalSessionInterval) {
+        window.globalSessionInterval = setInterval(() => {
+            window.globalSessionSeconds++;
+            let m = Math.floor(window.globalSessionSeconds / 60).toString().padStart(2, '0');
+            let s = (window.globalSessionSeconds % 60).toString().padStart(2, '0');
+            let el = document.getElementById('global-session-timer');
+            if (el) el.innerText = `${m}:${s}`;
+        }, 1000);
+    }
+}
+
+function pauseGlobalSessionTimer() {
+    if (window.globalSessionInterval) {
+        clearInterval(window.globalSessionInterval);
         window.globalSessionInterval = null;
+    }
+}
 
-        function startGlobalSessionTimer() {
-            const timerEl = document.getElementById('global-session-timer');
-            if (timerEl) timerEl.style.display = 'block';
-            if (!window.globalSessionInterval) {
-                window.globalSessionInterval = setInterval(() => {
-                    window.globalSessionSeconds++;
-                    let m = Math.floor(window.globalSessionSeconds / 60).toString().padStart(2, '0');
-                    let s = (window.globalSessionSeconds % 60).toString().padStart(2, '0');
-                    if (timerEl) timerEl.innerText = `${m}:${s}`;
-                }, 1000);
-            }
-        }
+function resetGlobalSessionTimer() {
+    pauseGlobalSessionTimer();
+    window.globalSessionSeconds = 0;
+    const timerEl = document.getElementById('global-session-timer');
+    if (timerEl) {
+        timerEl.innerText = '00:00';
+        timerEl.style.display = 'none';
+    }
+}
 
-        function pauseGlobalSessionTimer() {
-            if (window.globalSessionInterval) {
-                clearInterval(window.globalSessionInterval);
-                window.globalSessionInterval = null;
-            }
-        }
-
-        function resetGlobalSessionTimer() {
-            pauseGlobalSessionTimer();
-            window.globalSessionSeconds = 0;
-            const timerEl = document.getElementById('global-session-timer');
-            if (timerEl) {
-                timerEl.innerText = '00:00';
-                timerEl.style.display = 'none';
-            }
-        }
-      
             document.addEventListener("DOMContentLoaded", () => {
             
             // --- ГЕНЕРАЦИЯ ПЕРЕКЛЮЧАТЕЛЯ ЯЗЫКОВ ---
@@ -368,45 +396,23 @@ window.addEventListener('DOMContentLoaded', loadPresets);
 
                 if (window.memoLang === 'ru') {
                     switcher.innerHTML = `
-                        <a class="btn btn-sm btn-outline-secondary rounded-pill text-decoration-none" href="${enPath + currentSearch}">en</a>
-                        <span class="btn btn-sm btn-primary rounded-pill ms-1">ru</span>
+                        <a class="btn btn-sm btn-secondary rounded-pill text-decoration-none" href="${enPath + currentSearch}">en</a>
+                        <span class="ms-1 me-1 text-muted fw-bold" style="font-size: 0.9rem;">ru</span>
                     `;
                 } else {
                     switcher.innerHTML = `
-                        <span class="btn btn-sm btn-primary rounded-pill">en</span>
-                        <a class="btn btn-sm btn-outline-secondary rounded-pill text-decoration-none ms-1" href="${ruPath + currentSearch}">ru</a>
+                        <span class="ms-1 me-1 text-muted fw-bold" style="font-size: 0.9rem;">en</span>
+                        <a class="btn btn-sm btn-secondary rounded-pill text-decoration-none" href="${ruPath + currentSearch}">ru</a>
                     `;
                 }
             }
+
             
             const favBtn = document.getElementById('toggle-memo-favorite');
             const shareBtn = document.getElementById('btn_share_memo');
             const iconOutline = document.getElementById('star-outline');
             const iconSolid = document.getElementById('star-solid');
             const textInput = document.getElementById("inputText");
-
-// Инъекция таймеров в динамически создаваемый плеер
-setInterval(() => {
-    const mainRow = document.querySelector('.tts-main-row');
-    if (mainRow) {
-        mainRow.style.position = 'relative'; 
-
-        // 1. Вставляем локальный таймер (справа), если его еще нет
-        if (!document.getElementById('dummy-ab-timer-container')) {
-            const timerContainer = document.createElement('div');
-            timerContainer.id = 'dummy-ab-timer-container';
-            timerContainer.className = 'dummy-ab-timer-container';
-            timerContainer.innerHTML = `<span id="ab-btn-timer" style="font-variant-numeric: tabular-nums;"></span>`;
-            mainRow.appendChild(timerContainer);
-        }
-
-        // 2. Перемещаем глобальный таймер (слева) внутрь плеера
-        const globalTimer = document.getElementById('global-session-timer');
-        if (globalTimer && globalTimer.parentNode !== mainRow) {
-            mainRow.appendChild(globalTimer);
-        }
-    }
-}, 400);
 
 
             if (!textInput) return;
@@ -548,7 +554,8 @@ ${text}`;
                 document.getElementById('btn_play_toggle').title = 'Слушать'; 
                 document.getElementById('btn_transform').innerText = 'Сжать';
 
-                document.getElementById('btn_clear').title = 'Очистить';
+if (document.getElementById('clear_input_btn')) document.getElementById('clear_input_btn').title = 'Очистить';
+if (document.getElementById('copy_input_btn')) document.getElementById('copy_input_btn').title = 'Скопировать';
                 document.getElementById('btn_settings').title = 'Настройки';
                 document.getElementById('btn_reset_tts').title = 'Сбросить настройки';
                 document.getElementById('link_tips').childNodes[0].nodeValue = 'Советы и хитрости заучивания ';
@@ -803,6 +810,9 @@ ${text}`;
                 localStorage.removeItem("входнойТекст");
                 localStorage.removeItem("результат");
                 
+                // Прячем кнопки копирования и очистки, так как текста больше нет
+                обновитьКнопкиВвода();
+                
                 const url = new URL(window.location.href);
                 if (url.searchParams.has('text')) {
                     url.searchParams.delete('text');
@@ -810,6 +820,7 @@ ${text}`;
                 }
             }
         }
+
 
 // Функция копирования текста из textarea
 function копироватьПолеВвода() {
@@ -830,12 +841,13 @@ function копироватьПолеВвода() {
     }
 }
 
-// Функция показа/скрытия кнопки копирования
-function обновитьКнопкуКопированияВвода() {
-    const btn = document.getElementById("copy_input_btn");
+// Функция показа/скрытия кнопок копирования и очистки
+function обновитьКнопкиВвода() {
+    const btnsContainer = document.getElementById("input_action_btns");
     const textInput = document.getElementById("inputText");
-    if (btn && textInput) {
-        btn.style.display = textInput.value.trim() !== "" ? "block" : "none";
+    if (btnsContainer && textInput) {
+        // Показываем контейнер с иконками, если текст есть
+        btnsContainer.style.display = textInput.value.trim() !== "" ? "flex" : "none";
     }
 }
 
@@ -843,11 +855,10 @@ function обновитьКнопкуКопированияВвода() {
 document.addEventListener("DOMContentLoaded", () => {
     const textInput = document.getElementById("inputText");
     if (textInput) {
-        textInput.addEventListener('input', обновитьКнопкуКопированияВвода);
+        textInput.addEventListener('input', обновитьКнопкиВвода);
     }
 });
-window.addEventListener('load', обновитьКнопкуКопированияВвода);
-
+window.addEventListener('load', обновитьКнопкиВвода);
 
         function копироватьРезультат() {
             const результат = document.getElementById("результат").innerText;
@@ -1303,27 +1314,27 @@ window.addEventListener('load', обновитьКнопкуКопировани
             const closeMainBtn = e.target.closest('.close-tts-btn');
             
             if (playMainBtn) {
-                if (window.ttsAPI) {
-                    const state = window.ttsAPI.getState();
-                    if (!state.speaking) {
-                        const container = document.getElementById("tts-virtual-container");
-                        if (!container || container.innerHTML === '') {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            startMemoTTS();
-                        } else {
-                            startGlobalSessionTimer(); // Резюмируем таймер, если сняли с паузы через плавающую панель
-                        }
+                const container = document.getElementById("tts-virtual-container");
+                if (!container || container.innerHTML === '') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    startMemoTTS();
+                } else {
+                    // Если интервал таймера запущен — ставим на паузу, если нет — запускаем
+                    if (window.globalSessionInterval) {
+                        pauseGlobalSessionTimer();
                     } else {
-                        pauseGlobalSessionTimer(); // Ставим таймер на паузу, если нажали паузу в панели
+                        startGlobalSessionTimer();
                     }
                 }
             }
+            
             if (closeMainBtn) {
                 stopMemoTTS(false); 
                 resetGlobalSessionTimer(); // Сбрасываем таймер если плеер был полностью закрыт крестиком
             }
         }, { capture: true }); 
+
 
         window.resetTTSSettings = function() {
             const msg = window.memoLang === 'ru' ? 'Сбросить настройки TTS по умолчанию?' : 'Reset TTS settings to default?';
@@ -1353,6 +1364,36 @@ window.addEventListener('load', обновитьКнопкуКопировани
                 stopMemoTTS(true);
             }
         };
+
+        // Инъекция таймеров в плеер через MutationObserver (оптимизированный подход)
+        const playerObserver = new MutationObserver((mutations) => {
+            const mainRow = document.querySelector('.tts-main-row');
+            if (mainRow) {
+                if (mainRow.style.position !== 'relative') {
+                    mainRow.style.position = 'relative'; 
+                }
+
+                // 1. Вставляем локальный таймер (справа)
+                if (!document.getElementById('dummy-ab-timer-container')) {
+                    const timerContainer = document.createElement('div');
+                    timerContainer.id = 'dummy-ab-timer-container';
+                    timerContainer.className = 'dummy-ab-timer-container';
+                    timerContainer.innerHTML = `<span id="ab-btn-timer" style="font-variant-numeric: tabular-nums;"></span>`;
+                    mainRow.appendChild(timerContainer);
+                }
+
+                // 2. Вставляем глобальный таймер (слева)
+                const globalTimer = getOrCreateGlobalTimer();
+                if (globalTimer.parentNode !== mainRow) {
+                    mainRow.appendChild(globalTimer);
+                }
+            }
+        });
+
+        // Наблюдаем за DOM. Скрипт сработает только тогда, когда плеер реально появится или изменится
+        playerObserver.observe(document.body, { childList: true, subtree: true });
+
+
 
     </script>
     <script src="/assets/js/jquery-3.7.0.min.js" defer></script>

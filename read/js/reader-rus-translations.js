@@ -13,7 +13,7 @@ const citation = document.getElementById("paliauto");
 const pathLang = "ru";
 
 citation.focus();
-let language = "pli-rus";
+let language = "pli-2nd";
 
 homeButton.addEventListener("click", () => {
   document.location.search = "";
@@ -112,7 +112,7 @@ const anchorURL = new URL(currentURL).hash; // Убираем символ "#"
  
 if (slug.includes("mn"))  {
  var trnpath = rustrnpath; 
- let language = "pli-rus";
+ let language = "pli-2nd";
 // scLink += ifRus; 
 } else if (slug.includes("sn")) { 
   var trnpath = rustrnpath; 
@@ -732,8 +732,8 @@ if (document.location.search) {
   if (lang) {
     language = lang;
     setLanguage(lang);
-  } else if  (localStorage.paliToggleRu) {
-    	language = localStorage.paliToggleRu; 
+  } else if  (localStorage.paliToggle) {
+    	language = localStorage.paliToggle; 
 setLanguage(language);
   } 
 } else {
@@ -838,11 +838,11 @@ setLanguage(language);
 }
 
 function setLanguage(language) {
-  if (language === "pli-rus") {
+  if (language === "pli-2nd") {
     showPaliEnglish();
   } else if (language === "pli") {
     showPali();
-  } else if (language === "rus") {
+  } else if (language === "2nd") {
     showEnglish();
   }
 }
@@ -879,8 +879,8 @@ function toggleThePali() {
   const languageButton = document.getElementById("language-button");
   const suttaContainer = document.getElementById("sutta"); // Получаем контейнер текста
 
-  if (!localStorage.paliToggleRu) {
-    localStorage.paliToggleRu = "pli-rus";
+  if (!localStorage.paliToggle) {
+    localStorage.paliToggle = "pli-2nd";
   }
 
   languageButton.addEventListener("click", () => {
@@ -895,18 +895,18 @@ function toggleThePali() {
     setTimeout(() => {
         
         // --- СМЕНА ЯЗЫКА (происходит пока невидимо) ---
-        if (language === "pli-rus") {
+        if (language === "pli-2nd") {
           showPali();
           language = "pli";
-          localStorage.paliToggleRu = "pli";
-        } else if (language === "rus") {
+          localStorage.paliToggle = "pli";
+        } else if (language === "2nd") {
           showPaliEnglish();
-          language = "pli-rus";
-          localStorage.paliToggleRu = "pli-rus";
+          language = "pli-2nd";
+          localStorage.paliToggle = "pli-2nd";
         } else if (language === "pli") {
           showEnglish();
-          language = "rus";
-          localStorage.paliToggleRu = "rus";
+          language = "2nd";
+          localStorage.paliToggle = "2nd";
         }
 
         // --- ВОССТАНОВЛЕНИЕ ПОЗИЦИИ (Ядерный метод) ---

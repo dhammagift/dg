@@ -12,7 +12,7 @@ const citation = document.getElementById("paliauto");
 const pathLang = "en";
 
 citation.focus();
-let language = "pli-eng";
+let language = "pli-2nd";
 
 homeButton.addEventListener("click", () => {
   document.location.search = "";
@@ -766,9 +766,9 @@ setLanguage(language);
 }
 
 function setLanguage(language) {
-  if (language === "pli-eng") {
+  if (language === "pli-2nd") {
     showPaliEnglish();
-  } else if (language === "eng") {
+  } else if (language === "2nd") {
     showEnglish();
   } else if (language === "pli") {
     showPali();
@@ -804,7 +804,7 @@ function showPali() {
 function toggleThePali() {
   const languageButton = document.getElementById("language-button");
 
-  if (!localStorage.paliToggle) localStorage.paliToggle = "pli-eng";
+  if (!localStorage.paliToggle) localStorage.paliToggle = "pli-2nd";
 
   const newButton = languageButton.cloneNode(true);
   languageButton.parentNode.replaceChild(newButton, languageButton);
@@ -814,13 +814,13 @@ function toggleThePali() {
     runWithTransition(() => {
         if (language === "pli") {
           showPaliEnglish();
-          language = "pli-eng";
-          localStorage.paliToggle = "pli-eng";
-        } else if (language === "pli-eng") {
+          language = "pli-2nd";
+          localStorage.paliToggle = "pli-2nd";
+        } else if (language === "pli-2nd") {
           showEnglish();
-          language = "eng";
-          localStorage.paliToggle = "eng";
-        } else if (language === "eng") {
+          language = "2nd";
+          localStorage.paliToggle = "2nd";
+        } else if (language === "2nd") {
           showPali();
           language = "pli";
           localStorage.paliToggle = "pli";
