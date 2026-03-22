@@ -55,15 +55,46 @@ if (isset($_GET['ml']) && $_GET['ml'] === 'on') {
 <meta name="twitter:title" content="<?php echo $titletwit;?>">
 <meta name="twitter:description" content="<?php echo $ogdesc;?>">
 
-<style>
-    body {
-        opacity: 0;
-        visibility: hidden;
-        background: black;
-     /*   transition: opacity 0.3s ease-in-out; Плавное появление */
-    }
-</style>
+    <style id="anti-fouc">
+        body {
+            opacity: 0;
+            background: black;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out; /* Плавное появление */
+        }
+        
+        [data-bs-theme="dark"] .list-group-numbered > .list-group-item::before {
+            color: #e9ecef !important;
+        }
+    </style>
 
+
+<!-- Favicon favico-noglass
+<link href="/assets/img/gray.png" rel="icon" media="(prefers-color-scheme: light)">
+<link href="/assets/img/gray-white.png" rel="icon" media="(prefers-color-scheme: dark)">-->
+
+<link rel="icon" type="image/png" sizes="56x56" href="/assets/img/favicon-56x56.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16x16.png">
+<link rel="icon" href="/assets/img/favicon.ico">
+
+  <!-- Загрузка иконки для iOS  -->
+  <link rel="apple-touch-icon" sizes="152x152" href="/assets/img/favico-noglass.png">
+
+<!-- Google fonts
+<link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css" />
+<link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css" />
+-->
+
+<!--  Core theme CSS (includes Bootstrap)-->
+<link href="/assets/css/jquery-ui.min.css" rel="stylesheet"/>
+<link href="/assets/css/styles.css" rel="stylesheet" />
+<script src="/assets/js/loadCssJsMain.js"></script>
+<link href="/assets/css/extrastyles.css" rel="stylesheet" />
+
+<script src="/assets/js/jquery-3.7.0.min.js"></script>
+<script src="/assets/js/jquery-ui.min.js"></script>
+<link href="/assets/css/paliLookup.css" rel="stylesheet" />
 <script>
 // Получаем текущие параметры URL
 const urlParams = new URLSearchParams(window.location.search);
@@ -110,39 +141,6 @@ if (isPWA) {
     }
 }
 </script>
-<!-- Favicon favico-noglass
-<link href="/assets/img/gray.png" rel="icon" media="(prefers-color-scheme: light)">
-<link href="/assets/img/gray-white.png" rel="icon" media="(prefers-color-scheme: dark)">-->
-
-<link rel="icon" type="image/png" sizes="56x56" href="/assets/img/favicon-56x56.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16x16.png">
-<link rel="icon" href="/assets/img/favicon.ico">
-
-  <!-- Загрузка иконки для iOS  -->
-  <link rel="apple-touch-icon" sizes="152x152" href="/assets/img/favico-noglass.png">
-
-<!-- Google fonts
-<link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css" />
-<link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css" />
--->
-
-<!--  Core theme CSS (includes Bootstrap)-->
-<link href="/assets/css/jquery-ui.min.css" rel="stylesheet"/>
- 
-<link href="/assets/css/styles.css" rel="stylesheet" />
-
-<script src="/assets/js/loadCssJsMain.js"></script>
-
-<link href="/assets/css/extrastyles.css" rel="stylesheet" />
-
-
-<script src="/assets/js/jquery-3.7.0.min.js"></script>
-<script src="/assets/js/jquery-ui.min.js"></script>
-<link href="/assets/css/paliLookup.css" rel="stylesheet" />
-<style>
-</style>
-
 <?php echo $fontawesomejs;?> 
 
 </head>

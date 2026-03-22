@@ -39,18 +39,20 @@ include 'scripts/search-handler.php';
 <meta property="og:title" content="Dhamma.Gift" />
 <meta property="og:description" content="<?php echo $ogdesc;?>" />
 
-<style>
-    body {
-        opacity: 0;
-        background: black;
-        visibility: hidden;
-        transition: opacity 0.3s ease-in-out; /* Плавное появление */
-    }
-    
+<head>
+    <style id="anti-fouc">
+        body {
+            opacity: 0;
+            background: black;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out; /* Плавное появление */
+        }
+        
         [data-bs-theme="dark"] .list-group-numbered > .list-group-item::before {
-        color: #e9ecef !important;
-    }
-</style>
+            color: #e9ecef !important;
+        }
+    </style>
+
 
   <!-- PWA-метатеги -->
   <meta name="theme-color" content="#ffffff">
@@ -64,6 +66,57 @@ include 'scripts/search-handler.php';
 <link rel="alternate" href="https://dhamma.gift/" hreflang="x-default">
 
 <!-- для PWA где нет адресной строки, но нужно установить язык по умолчанию. --> 
+
+<meta property="og:url" content="https://Dhamma.Gift" />
+<meta property="og:site_name" content="Dhamma.Gift" />
+<meta property="og:image" content="<?php echo $ogshare;?>" />
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="<?php echo $titletwit;?>">
+<meta name="twitter:description" content="<?php echo $ogdesc;?>">
+<!-- Favicon favico-noglass
+<link href="/assets/img/gray.png" rel="icon" media="(prefers-color-scheme: light)">
+<link href="/assets/img/gray-white.png" rel="icon" media="(prefers-color-scheme: dark)"> -->
+
+<link rel="icon" type="image/png" sizes="56x56" href="/assets/img/favicon-56x56.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16x16.png">
+<link rel="icon" href="/assets/img/favicon.ico">
+
+  <!-- Загрузка иконки для iOS -->
+  <link rel="apple-touch-icon" sizes="152x152" href="/assets/img/favico-noglass.png">
+  
+  <!-- iOS-специфичные -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Dhamma.Gift">
+  <link rel="apple-touch-icon" href="/icons/icon-180x180.png">
+  <link rel="apple-touch-startup-image" href="/splash.png">
+    <meta name="mobile-web-app-capable" content="yes">
+  
+<!-- Google fonts
+<link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css" />
+<link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css" />
+-->
+
+<!--  Core theme CSS (includes Bootstrap)-->
+<link href="/assets/css/paliLookup.css" rel="stylesheet" />
+<link rel="stylesheet" href="/assets/css/jquery-ui.min.css">
+<!-- -->
+<link href="/assets/css/styles.css" rel="stylesheet" />
+<link href="/assets/css/extrastyles.css" rel="stylesheet" />
+<script src="/assets/js/loadCssJsMain.js"></script>
+
+<script src="/assets/js/jquery-3.7.0.min.js"></script>
+<script src="/assets/js/jquery-ui.min.js"></script>
+<!-- <script
+  src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+  async
+  defer
+></script> -->
+
+<?php echo $fontawesomejs;?> 
+
 <script>
 // Получаем текущие параметры URL
 const urlParams = new URLSearchParams(window.location.search);
@@ -111,64 +164,6 @@ if (isPWA) {
 }
 </script>
 
-<meta property="og:url" content="https://Dhamma.Gift" />
-<meta property="og:site_name" content="Dhamma.Gift" />
-<meta property="og:image" content="<?php echo $ogshare;?>" />
-
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="<?php echo $titletwit;?>">
-<meta name="twitter:description" content="<?php echo $ogdesc;?>">
-<!-- Favicon favico-noglass
-<link href="/assets/img/gray.png" rel="icon" media="(prefers-color-scheme: light)">
-<link href="/assets/img/gray-white.png" rel="icon" media="(prefers-color-scheme: dark)"> -->
-
-<link rel="icon" type="image/png" sizes="56x56" href="/assets/img/favicon-56x56.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16x16.png">
-<link rel="icon" href="/assets/img/favicon.ico">
-
-  <!-- Загрузка иконки для iOS -->
-  <link rel="apple-touch-icon" sizes="152x152" href="/assets/img/favico-noglass.png">
-  
-  
-  
-  <!-- iOS-специфичные -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Dhamma.Gift">
-  <link rel="apple-touch-icon" href="/icons/icon-180x180.png">
-  <link rel="apple-touch-startup-image" href="/splash.png">
-    <meta name="mobile-web-app-capable" content="yes">
-  
-  
-  
-<!-- Google fonts
-<link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css" />
-<link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css" />
--->
-
-<!--  Core theme CSS (includes Bootstrap)-->
-<link href="/assets/css/paliLookup.css" rel="stylesheet" />
-
-
-<link rel="stylesheet" href="/assets/css/jquery-ui.min.css">
-<!-- -->
-
-<link href="/assets/css/styles.css" rel="stylesheet" />
-
-
-<link href="/assets/css/extrastyles.css" rel="stylesheet" />
-<script src="/assets/js/loadCssJsMain.js"></script>
-
-<script src="/assets/js/jquery-3.7.0.min.js"></script>
-<script src="/assets/js/jquery-ui.min.js"></script>
-<!-- <script
-  src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-  async
-  defer
-></script> -->
-
-<?php echo $fontawesomejs;?> 
 </head>
 
 
