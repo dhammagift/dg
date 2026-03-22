@@ -496,32 +496,24 @@ function lazyLoadStandaloneScripts(lang = 'en') {
     });
 }
 
-function initDictBases() {
+document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
-        if (savedDict === "standalone") {
-            requestIdleCallback(() => {
-                lazyLoadStandaloneScripts().catch(err => console.warn('Lazy load eng:', err));
-            }, { timeout: 2000 });
-        }
-        else if (savedDict === "standaloneru") {
-            requestIdleCallback(() => {
-                lazyLoadStandaloneScripts("ru").catch(err => console.warn('Lazy load ru:', err));
-            }, { timeout: 2000 });
-        }
-    }, 1000); 
-}
-
-// Безопасный запуск фоновой загрузки баз
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initDictBases);
-} else {
-    // Если скрипт загрузился после клика юзера, мы НЕ запускаем фон здесь,
-    // так как скрипт settings.js загрузит их принудительно для моментального открытия словаря.
-    if (!window.isFirstDictClickNow) {
-        initDictBases();
+    if (savedDict === "standalone") {
+        requestIdleCallback(() => {
+            lazyLoadStandaloneScripts()
+                .then(() => {  })
+                .catch(err => console.warn('Lazy loading eng scripts warning:', err));
+        }, { timeout: 2000 });
     }
-}
-
+    else if (savedDict === "standaloneru") {
+        requestIdleCallback(() => {
+            lazyLoadStandaloneScripts("ru")
+                .then(() => {  })
+                .catch(err => console.warn('Lazy loading rus scripts warning:', err));
+        }, { timeout: 2000 });
+    }
+    }, 1000); 
+});
 
 function createClickableLink(wordToLink) {
     const wordSearchUrl = createDictSearchUrl(wordToLink);

@@ -1,4 +1,84 @@
 
+// === УМНЫЙ ЗАПУСК СЛОВАРЯ (ПЕРВОЕ КАСАНИЕ) ===
+(function() {
+    const DICT_EVER_USED_KEY = 'dictEverUsed';
+    const isDictEverUsed = localStorage.getItem(DICT_EVER_USED_KEY) === 'true';
+
+    if (isDictEverUsed) {
+        // Юзер уже пользовался словарем. Грузим скрипт как обычно в фоне.
+        const script = document.createElement('script');
+        script.src = "/assets/js/paliLookup.js";
+        script.defer = true;
+        document.head.appendChild(script);
+    } else {
+        // ПЕРВЫЙ ЗАПУСК: Ждем первого клика по слову или кнопкам
+        const firstClickHandler = function(e) {
+            const isPaliWord = e.target.closest('.pli-lang, [lang="pi"]');
+            const isDictBtn = e.target.closest('.toggle-dict-btn');
+            const isMultiSelectBtn = e.target.closest('#toggle-multiselect');
+
+            if (isPaliWord || isDictBtn || isMultiSelectBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // 1. Ставим флаг на всю жизнь, что словарь активирован
+                localStorage.setItem(DICT_EVER_USED_KEY, 'true');
+
+                // 2. Показываем сообщение
+                if (typeof showBubbleNotification === 'function') {
+                    const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/');
+                    showBubbleNotification(isRu ? "Инициализация словаря..." : "Initializing dictionary...");
+                }
+
+                // 3. Сохраняем координаты для "выстрела" после загрузки
+                const clickX = e.clientX;
+                const clickY = e.clientY;
+                const target = e.target;
+
+                // 4. Скачиваем сам скрипт
+                window.isFirstDictClickNow = true; // Флаг для paliLookup
+                const script = document.createElement('script');
+                script.src = "/assets/js/paliLookup.js";
+                
+                script.onload = () => {
+                    // Скрипт загружен. Форсируем скачку тяжелых баз данных (если словарь встроенный)
+                    let loadPromise = Promise.resolve();
+                    if (typeof lazyLoadStandaloneScripts === 'function') {
+                        let dictUrl = localStorage.getItem('selectedDict') || "standalone";
+                        if (window.location.href.includes('/ru/') || window.location.href.includes('/r/') || window.location.href.includes('/ml/')) {
+                            if (!localStorage.getItem('selectedDict')) dictUrl = 'standaloneru';
+                        }
+                        if (dictUrl === "standalone" || dictUrl === "standaloneru") {
+                            const lang = dictUrl === "standaloneru" ? "ru" : "en";
+                            loadPromise = lazyLoadStandaloneScripts(lang); // Эта функция возвращает Promise
+                        }
+                    }
+
+                    // 5. Как только базы скачаны - программно "кликаем" заново, чтобы открыть окно
+                    loadPromise.then(() => {
+                        const clickEvent = new MouseEvent('click', {
+                            view: window, bubbles: true, cancelable: true, clientX: clickX, clientY: clickY
+                        });
+                        target.dispatchEvent(clickEvent);
+                    });
+                };
+                
+                document.head.appendChild(script);
+
+                // 6. Удаляем этот перехватчик (он больше никогда не сработает)
+                document.removeEventListener('click', firstClickHandler, true);
+            }
+        };
+
+        // Вешаем перехватчик
+        document.addEventListener('click', firstClickHandler, true);
+    }
+})();
+
+
+
+
+
 function checkStorage(key) {
     if (localStorage.getItem(key) !== null) {
         alert(`Запись "${key}" есть в localStorage! Значение: ${localStorage.getItem(key)}`);

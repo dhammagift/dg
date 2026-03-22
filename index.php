@@ -1489,7 +1489,6 @@ var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
 </script>
 
 <!--  -->
-<script src="/assets/js/paliLookup.js"></script>
 <script src="/read/js/urlForLbl.js" defer></script>
 <script src="/assets/js/settings.js"></script>
 
