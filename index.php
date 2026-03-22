@@ -53,7 +53,6 @@ include 'scripts/search-handler.php';
         }
     </style>
 
-
   <!-- PWA-метатеги -->
   <meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="<?php echo $manifest; ?>">

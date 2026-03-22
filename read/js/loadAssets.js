@@ -1,14 +1,8 @@
-document.addEventListener('DOMContentLoaded', function() {
-  
-    // === НОВОЕ: Применяем масштаб сразу, пока страница скрыта ===
-    function applySavedScale() {
-        const savedScale = localStorage.getItem('uiScale') || 100;
-        // Устанавливаем размер шрифта корня. 
-        // Так как используется Bootstrap (rem), это масштабирует ВЕСЬ интерфейс.
-        document.documentElement.style.fontSize = savedScale + '%';
-    }
-    applySavedScale(); 
-    // ============================================================
+// 1. САМОВЫЗЫВАЮЩАЯСЯ ФУНКЦИЯ (выполняется мгновенно при чтении <head>)
+(function() {
+    // Применяем масштаб сразу к <html>
+    const savedScale = localStorage.getItem('uiScale') || 100;
+    document.documentElement.style.fontSize = savedScale + '%';
 
     function getModeFromPath() {
         const path = window.location.pathname.split('/').filter(Boolean);
@@ -29,64 +23,78 @@ document.addEventListener('DOMContentLoaded', function() {
         "read": { js: "./js/index.js", css: "./css/index.css" }
     };
 
-    function loadAssets(mode) {
-        const assets = assetMap[mode] || assetMap["read"];
-        let loadedCSS = false, loadedJS = false;
+    const mode = getModeFromPath();
+    const assets = assetMap[mode] || assetMap["read"];
 
-        function checkAndShowPage() {
-            if (loadedCSS && loadedJS) {
+    // Функция снятия "завесы" (показ страницы)
+    function revealBody() {
+        if (document.body) {
+            document.body.style.visibility = "visible";
+            document.body.style.opacity = "1";
+        } else {
+            // Если body еще не распарсился, ждем DOMContentLoaded
+            window.addEventListener('DOMContentLoaded', () => {
                 document.body.style.visibility = "visible";
                 document.body.style.opacity = "1";
-            }
+            });
         }
-
-        if (assets.css) {
-            const css = document.createElement("link");
-            css.rel = "stylesheet";
-            css.href = assets.css;
-            css.onload = function() { 
-                loadedCSS = true; 
-                checkAndShowPage();
-            };
-            document.head.appendChild(css);
-        } else {
-            loadedCSS = true;
-        }
-
-        if (assets.js) {
-            const script = document.createElement("script");
-            script.src = assets.js;
-            script.onload = function() { 
-                loadedJS = true; 
-                checkAndShowPage();
-            };
-            document.body.appendChild(script);
-        } else {
-            loadedJS = true;
-        }
-
-        checkAndShowPage(); 
     }
-  
-    const mode = getModeFromPath();
-    loadAssets(mode);
 
-    // ... ваш старый код для rev/frev скроллинга ...
+    // Загружаем CSS и вешаем слушатель на его готовность
+    if (assets.css) {
+        const css = document.createElement("link");
+        css.rel = "stylesheet";
+        css.href = assets.css;
+        
+        // Как только стили загрузились - показываем контент
+        css.onload = revealBody;
+        css.onerror = revealBody; // Защита от вечного скрытия при ошибке сети
+        
+        document.head.appendChild(css);
+    } else {
+        revealBody();
+    }
+
+    // JS-файлы подгружаем асинхронно (defer), чтобы они не тормозили отрисовку
+    if (assets.js) {
+        const script = document.createElement("script");
+        script.src = assets.js;
+        script.defer = true;
+        document.head.appendChild(script);
+    }
+})();
+
+// 2. ЛОГИКА СКРОЛЛА (ждет готовности DOM)
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Умный скролл для реверсивных режимов (когда текст грузится целиком)
     if (window.location.pathname.includes("/rev/") || window.location.pathname.includes("/frev/")) { 
-        let div = document.getElementById("sutta"); 
-        if (div) { 
-            div.classList.add("right-text"); 
+        const suttaDiv = document.getElementById("sutta"); 
+        
+        if (suttaDiv) { 
+            suttaDiv.classList.add("right-text"); 
+            
+            const observer = new MutationObserver((mutations, obs) => {
+                // Как только внутри контейнера появился контент
+                if (suttaDiv.innerHTML.trim().length > 0) {
+                    obs.disconnect(); // Сразу выключаем наблюдателя
+                    
+                    // requestAnimationFrame ждет ровно 1 кадр, чтобы браузер 
+                    // отрисует текст и посчитал scrollHeight, после чего прыгаем
+                    requestAnimationFrame(() => {
+                        window.scrollTo({
+                            top: document.body.scrollHeight,
+                            behavior: 'smooth'
+                        });
+                    });
+                }
+            });
+
+            // Начинаем следить за добавлением текста
+            observer.observe(suttaDiv, { childList: true, subtree: true });
+            
+            // Предохранитель (10 секунд на случай, если сервер не ответил)
+            setTimeout(() => observer.disconnect(), 10000); 
         }
-        function scrollToBottom() {
-            const isLocalhost = window.location.hostname.match(/localhost|127\.0\.0\.1/);
-            const timeout = isLocalhost ? 1000 : 2500; 
-            setTimeout(function() {
-                window.scrollBy({
-                    top: document.body.scrollHeight,
-                    behavior: 'smooth'
-                });
-            }, timeout);
-        }
-        scrollToBottom();
     }
 });
