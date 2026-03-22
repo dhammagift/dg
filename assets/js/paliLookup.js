@@ -191,7 +191,7 @@ const scriptCache = new Map();
 const requestIdleCallback = window.requestIdleCallback ||
     function(cb) { return setTimeout(() => { cb({ didTimeout: false }); }, 0); };
 
-async function handleWordLookup(word, event) {
+function handleWordLookup(word, event) {
     if (!dictionaryVisible) return;
 
     const currentTheme = getEffectiveTheme();
@@ -205,13 +205,6 @@ async function handleWordLookup(word, event) {
     }
 
     const { popup, overlay, iframe } = getPopup();
-
-    // --- НОВОЕ: Ждем загрузки огромных баз данных перед поиском слова ---
-    if (dictUrl === "standalone" || dictUrl === "standaloneru") {
-        const lang = dictUrl === "standaloneru" ? "ru" : "en";
-        await lazyLoadStandaloneScripts(lang); 
-    }
-    // -----------------------------------------------------
 
     let cleanedWord = cleanWord(word);
     let translation = "";
@@ -414,72 +407,113 @@ async function handleWordLookup(word, event) {
 }
 
 function lazyLoadStandaloneScripts(lang = 'en') {
-    const commonScripts = [
-        '/assets/js/standalone-dpd/dpd_i2h.js',
-        '/assets/js/standalone-dpd/dpd_deconstructor.js'
-    ];
+    return new Promise((resolve, reject) => {
+        const loadScripts = () => {
+            const commonScripts = [
+                '/assets/js/standalone-dpd/dpd_i2h.js',
+                '/assets/js/standalone-dpd/dpd_deconstructor.js'
+            ];
 
-    const langSpecific = lang === 'ru'
-        ? '/assets/js/standalone-dpd/ru/dpd_ebts.js'
-        : '/assets/js/standalone-dpd/dpd_ebts.js';
+            const langSpecific = lang === 'ru'
+                ? '/assets/js/standalone-dpd/ru/dpd_ebts.js'
+                : '/assets/js/standalone-dpd/dpd_ebts.js';
 
-    const scripts = [...commonScripts, langSpecific];
-    
-    // 1. СУПЕР-БЫСТРАЯ ПРОВЕРКА (без задержек и промисов)
-    const scriptsToLoad = scripts.filter(src => {
-        return !scriptCache.has(src) && !document.querySelector(`script[src="${src}"]`);
-    });
-
-    // Если базы уже скачаны — возвращаем управление МГНОВЕННО!
-    if (scriptsToLoad.length === 0) {
-        return Promise.resolve();
-    }
-
-    // 2. ЕСЛИ НЕ СКАЧАНО — грузим ПРЯМО СЕЙЧАС (убрали requestIdleCallback)
-    return new Promise((resolve) => {
-        const loadingId = 'dict-loading-' + Date.now();
-        const loadingEl = document.createElement('div');
-        loadingEl.id = loadingId;
-        loadingEl.className = 'dict-loading-indicator';
-        loadingEl.textContent = 'Loading dictionary...';
-
-        document.body.appendChild(loadingEl);
-        setTimeout(() => loadingEl.classList.add('show'), 10);
-
-        const loadPromises = scriptsToLoad.map(src => {
-            return new Promise((scriptResolve) => {
-                const script = document.createElement('script');
-                script.src = src;
-                
-                script.onload = script.onreadystatechange = function() {
-                    if (!this.readyState || this.readyState === 'loaded' || this.readyState === 'complete') {
-                        scriptCache.set(src, true);
-                        scriptResolve();
-                    }
-                };
-
-                script.onerror = () => {
-                    console.warn(`Failed to load script: ${src}`);
-                    scriptResolve(); 
-                };
-
-                script.crossOrigin = 'anonymous';
-                document.head.appendChild(script);
+            const scripts = [...commonScripts, langSpecific];
+            const scriptsToLoad = scripts.filter(src => {
+                return !document.querySelector(`script[src="${src}"]`) && !scriptCache.has(src);
             });
-        });
 
-        // Как только скачались - убираем бабл и продолжаем
-        Promise.all(loadPromises).then(() => {
-            const el = document.getElementById(loadingId);
-            if (el) {
-                el.classList.remove('show');
-                setTimeout(() => el.remove(), 300);
+            if (scriptsToLoad.length === 0) {
+                resolve();
+                return;
             }
-            resolve();
-        });
+
+            const loadingId = 'dict-loading-' + Date.now();
+            const loadingEl = document.createElement('div');
+            loadingEl.id = loadingId;
+            loadingEl.className = 'dict-loading-indicator';
+            loadingEl.textContent = 'Loading dictionary...';
+
+            document.body.appendChild(loadingEl);
+            setTimeout(() => loadingEl.classList.add('show'), 10);
+
+            const loadPromises = scriptsToLoad.map(src => {
+                return new Promise((scriptResolve) => {
+                    if (scriptCache.has(src)) {
+                        return scriptResolve();
+                    }
+
+                    const script = document.createElement('script');
+                    script.src = src;
+                    script.defer = true;
+
+                    script.onload = script.onreadystatechange = function() {
+                        if (!this.readyState || this.readyState === 'loaded' || this.readyState === 'complete') {
+                            scriptCache.set(src, true);
+                            scriptResolve();
+                        }
+                    };
+
+                    script.onerror = () => {
+                        console.warn(`Failed to load script: ${src}`);
+                        scriptResolve(); 
+                    };
+
+                    script.crossOrigin = 'anonymous';
+                    document.head.appendChild(script);
+                });
+            });
+
+            const timeoutPromise = new Promise((_, timeoutReject) => {
+                setTimeout(() => timeoutReject(new Error('Script loading timeout')), 20000); 
+            });
+
+            Promise.race([
+                Promise.all(loadPromises),
+                timeoutPromise
+            ])
+            .then(() => {
+                const el = document.getElementById(loadingId);
+                if (el) {
+                    el.classList.remove('show');
+                    setTimeout(() => el.remove(), 300);
+                }
+                resolve();
+            })
+            .catch(err => {
+                console.warn('Dictionary loading warning:', err);
+                const el = document.getElementById(loadingId);
+                if (el) {
+                    el.textContent = 'Dictionary load failed';
+                    el.style.background = 'rgba(255,0,0,0.7)';
+                    setTimeout(() => el.remove(), 2000);
+                }
+                resolve(); 
+            });
+        };
+
+        requestIdleCallback(loadScripts, { timeout: 1000 });
     });
 }
 
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+    if (savedDict === "standalone") {
+        requestIdleCallback(() => {
+            lazyLoadStandaloneScripts()
+                .then(() => {  })
+                .catch(err => console.warn('Lazy loading eng scripts warning:', err));
+        }, { timeout: 2000 });
+    }
+    else if (savedDict === "standaloneru") {
+        requestIdleCallback(() => {
+            lazyLoadStandaloneScripts("ru")
+                .then(() => {  })
+                .catch(err => console.warn('Lazy loading rus scripts warning:', err));
+        }, { timeout: 2000 });
+    }
+    }, 1000); 
+});
 
 function createClickableLink(wordToLink) {
     const wordSearchUrl = createDictSearchUrl(wordToLink);
@@ -916,7 +950,7 @@ function updateMultiSelectUI() {
     if (typeof window.syncSmartIcons === 'function') window.syncSmartIcons();
 }
 
-updateMultiSelectUI();
+document.addEventListener('DOMContentLoaded', updateMultiSelectUI);
 
 document.addEventListener('click', (e) => {
     const msBtn = e.target.closest('#toggle-multiselect');
