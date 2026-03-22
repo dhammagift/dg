@@ -442,7 +442,7 @@ if (bjtUrl) {
     scLink += `<a target="_blank" title="Buddha Jayanthi (Sri Lanka Edition at Tipitaka.lk)" href="${bjtUrl}">BJT</a>&nbsp;`;
 }
 // --- BJT END ---
-scLink += getTTSInterfaceHTML(texttype, slugReady, slug);
+scLink += `<a data-slug="${texttype}/${slugReady}" href="javascript:void(0)" title="Text-to-Speech (Alt+R)" class="voice-link">Voice</a>`;
 
 scLink += `&nbsp;<a target="" title="SuttaCentral.net" href="https://suttacentral.net/${slug}/en/${translator}">SC</a>`;
       

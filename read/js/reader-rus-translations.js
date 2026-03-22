@@ -468,7 +468,7 @@ if (bjtUrl) {
 }
 // --- BJT END ---
 
-scLink += getTTSInterfaceHTML(texttype, slugReady, slug);
+scLink += `<a data-slug="${texttype}/${slugReady}" href="javascript:void(0)" title="Text-to-Speech (Alt+R)" class="voice-link">Voice</a>`;
 
 if ((translator === 'sujato') || (translator === 'brahmali')) {
   scLink += `&nbsp;<a target="" title='SuttaCentral.net' href="https://suttacentral.net/${slug}/en/${translator}">SC</a>`;  
