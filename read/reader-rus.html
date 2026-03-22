@@ -43,15 +43,37 @@ content="https://dhamma.gift/assets/img/favico_black.png" />
 <meta property="og:url" content="/r/" />
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favico_black.png">
 
-<style>
-body {
-opacity: 0;
-visibility: hidden;
-background: black;
-transition: opacity 0.3s ease-in-out;
-/* Плавное появление */
-}
+<style id="anti-fouc">
+  body {
+    opacity: 0;
+    visibility: hidden;
+    background-color: black;
+    transition: opacity 0.2s ease-in;
+  }
 </style>
+
+<link href="/assets/css/jquery-ui.min.css" rel="stylesheet" />
+<link href="/assets/css/extrastyles.css" rel="stylesheet" />
+<!-- <link rel="stylesheet" href="./css/index.css"> -->
+<link rel="stylesheet" href="./css/uiextra.css">
+<link rel="stylesheet" href="./css/voice.css">
+<link href="/assets/css/paliLookup.css" rel="stylesheet" />
+
+
+<script src="/read/js/ranges.js" defer></script>
+<script src="/read/js/loadAssets.js"></script>
+<script src="/read/js/common.js"></script>
+<link href="/assets/css/styles.css" rel="stylesheet" />
+
+
+<script src="/assets/js/jquery-3.7.0.min.js" defer></script>
+<script src="/assets/js/jquery-ui.min.js" defer></script>
+<!--<script src="https://cdn.jsdelivr.net/gh/virtualvinodh/aksharamukha/aksharamukha-web-plugin/aksharamukha-v3.js?class=pli-lang"></script>
+<script src="/assets/js/citationac.js"></script>
+<script src="/assets/js/audioLazyLoad.js" defer></script>
+
+-->
+
 <script>
   
   function getPunctuationSetting() {
@@ -90,26 +112,7 @@ function cleanPaliText(text) {
 }
 
 </script>
-<script src="/read/js/ranges.js" defer></script>
-<script src="/read/js/loadAssets.js"></script>
-<script src="/read/js/common.js"></script>
 
-
-<link href="/assets/css/styles.css" rel="stylesheet" />
-
-<link href="/assets/css/jquery-ui.min.css" rel="stylesheet" />
-<link href="/assets/css/extrastyles.css" rel="stylesheet" />
-<!-- <link rel="stylesheet" href="./css/index.css"> -->
-<link rel="stylesheet" href="./css/uiextra.css">
-<link rel="stylesheet" href="./css/voice.css">
-<link href="/assets/css/paliLookup.css" rel="stylesheet" />
-
-<script src="/assets/js/jquery-3.7.0.min.js" defer></script>
-<script src="/assets/js/jquery-ui.min.js" defer></script>
-<!--<script src="https://cdn.jsdelivr.net/gh/virtualvinodh/aksharamukha/aksharamukha-web-plugin/aksharamukha-v3.js?class=pli-lang"></script>
-<script src="/assets/js/citationac.js"></script>
--->
-<script src="/assets/js/audioLazyLoad.js" defer></script>
 </head>
 
 <body class="dark">
@@ -903,60 +906,6 @@ form.addEventListener("submit", e => {
   }
 });
 
-
-
-
-window.addEventListener("DOMContentLoaded", function() {
-    const params = new URLSearchParams(document.location.search);
-    const finder = params.get("s");
-    const query = params.get("q");
-    const url = document.location.href;
-
-    // 🎯 Выполняем скрипт, только если в URL есть параметры 's' и 'q' и нет якоря #
-    if (finder && finder.trim() !== "" && query && url.indexOf("#") === -1) {
-        
-        const maxTime = 8500; // Максимальное время ожидания в мс (8.5 секунд)
-        const intervalTime = 500; // Интервал между попытками в мс (0.5 секунды)
-        let elapsedTime = 0;
-
-        const tryToScroll = function() {
-            const regex = new RegExp(finder, 'gi');
-            
-            // 🧐 Ищем совпадения только внутри основного контейнера с текстом #sutta
-            const suttaArea = document.getElementById('sutta');
-            if (!suttaArea) return false; // Если контейнер ещё не загрузился
-
-            const textNodes = document.evaluate(
-                ".//text()[normalize-space(parent::*) != '']", // XPath ищет внутри suttaArea
-                suttaArea,
-                null,
-                XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE,
-                null
-            );
-
-            for (let i = 0; i < textNodes.snapshotLength; i++) {
-                const currentNode = textNodes.snapshotItem(i);
-                if (regex.test(currentNode.nodeValue)) {
-                    const parentNode = currentNode.parentNode;
-                    parentNode.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start"
-                    });
-                    return true; // ✅ Успех! Прокрутка выполнена.
-                }
-            }
-            return false; // ❌ Неудача, совпадение пока не найдено.
-        };
-
-        const scrollInterval = setInterval(function() {
-            elapsedTime += intervalTime;
-            // 🛑 Прекращаем, если прокрутка удалась или вышло время
-            if (tryToScroll() || elapsedTime >= maxTime) {
-                clearInterval(scrollInterval);
-            }
-        }, intervalTime);
-    }
-});
 </script>
 <script src="/assets/js/uihelp.js" defer></script>
 <script src="/assets/js/variantsButton.js" defer></script>

@@ -27,25 +27,71 @@ const ScrollManager = {
         });
     },
 
-    // 1. УМНОЕ ОЖИДАНИЕ АСИНХРОННОГО ЭЛЕМЕНТА (Без setInterval!)
+    // 1. УМНОЕ ОЖИДАНИЕ АСИНХРОННОГО ЭЛЕМЕНТА
     waitForElement(id) {
         return new Promise((resolve) => {
             let el = this.findFallbackElement(id);
             if (el) return resolve(el);
 
-            // MutationObserver тихо ждет, пока в документ добавят новые теги (наша сутта)
             const observer = new MutationObserver((mutations, obs) => {
                 el = this.findFallbackElement(id);
                 if (el) {
-                    obs.disconnect(); // Нашли! Отключаем слежку
+                    obs.disconnect();
                     resolve(el);
                 }
             });
 
-            // Слушаем изменения в DOM
             observer.observe(document.body, { childList: true, subtree: true });
 
-            // Резервный тайм-аут, чтобы обещание не висело вечно
+            setTimeout(() => {
+                observer.disconnect();
+                resolve(null);
+            }, this.config.maxWait);
+        });
+    },
+
+    // 1.5 УМНОЕ ОЖИДАНИЕ ТЕКСТА (Для параметра ?s=...)
+    waitForText(searchText) {
+        return new Promise((resolve) => {
+            const tryFindText = () => {
+                const suttaArea = document.getElementById('sutta');
+                if (!suttaArea) return null;
+
+                try {
+                    const regex = new RegExp(searchText, 'gi');
+                    const textNodes = document.evaluate(
+                        ".//text()[normalize-space(parent::*) != '']",
+                        suttaArea,
+                        null,
+                        XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE,
+                        null
+                    );
+
+                    for (let i = 0; i < textNodes.snapshotLength; i++) {
+                        const currentNode = textNodes.snapshotItem(i);
+                        if (regex.test(currentNode.nodeValue)) {
+                            return currentNode.parentNode;
+                        }
+                    }
+                } catch (e) {
+                    console.error("Invalid regex pattern from search param", e);
+                }
+                return null;
+            };
+
+            let el = tryFindText();
+            if (el) return resolve(el);
+
+            const observer = new MutationObserver((mutations, obs) => {
+                el = tryFindText();
+                if (el) {
+                    obs.disconnect();
+                    resolve(el);
+                }
+            });
+
+            observer.observe(document.body, { childList: true, subtree: true });
+
             setTimeout(() => {
                 observer.disconnect();
                 resolve(null);
@@ -57,6 +103,8 @@ const ScrollManager = {
     async handleInitialScroll() {
         let anchorId = null;
         let offset = this.config.eyeLevel;
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasHash = !!window.location.hash;
 
         // Приоритет 1: Одноразовый прыжок из настроек
         const rawSettingsData = localStorage.getItem('exactScrollAnchor');
@@ -67,6 +115,19 @@ const ScrollManager = {
                 offset = anchor.offset;
                 localStorage.removeItem('exactScrollAnchor');
             } catch(e) {}
+        }
+
+        // Приоритет 2: Поиск текста по параметру ?s=...
+        const finder = urlParams.get("s");
+        const query = urlParams.get("q");
+        
+        // Срабатываем, только если нет четкого якоря (hash/localstorage) и есть параметры s и q
+        if (!anchorId && !hasHash && finder && finder.trim() !== "" && query) {
+            const textElement = await this.waitForText(finder);
+            if (textElement) {
+                textElement.scrollIntoView({ behavior: "smooth", block: "start" });
+                return; // Прерываем функцию, текст найден и мы к нему прыгнули
+            }
         }
 
         // Проверка: перезагрузил ли пользователь страницу?
@@ -80,10 +141,8 @@ const ScrollManager = {
             }
         }
 
-        // Приоритет 2: Автосохраненный прогресс
-        const hasHash = !!window.location.hash;
+        // Приоритет 3: Автосохраненный прогресс
         if (!anchorId && (!hasHash || isReloadOrHistory)) {
-            const urlParams = new URLSearchParams(window.location.search);
             const slug = urlParams.get('q');
             if (slug) {
                 try {
@@ -102,7 +161,7 @@ const ScrollManager = {
             const el = await this.waitForElement(anchorId);
             if (el) this.executeScroll(el, offset, true); 
         } else {
-            // Приоритет 3: Обычный хеш в URL
+            // Приоритет 4: Обычный хеш в URL
             this.scrollToHash();
         }
     },
@@ -118,7 +177,6 @@ const ScrollManager = {
         const cleanId = hashContent.split('&')[0].split('?')[0];
 
         if (cleanId.includes(',')) {
-            // Несколько ID через запятую
             const ids = cleanId.split(','); 
             const firstElement = await this.waitForElement(ids[0]);
             if (firstElement) {
@@ -126,7 +184,6 @@ const ScrollManager = {
                 ids.forEach(id => this.highlightById(id)); 
             }
         } else {
-            // Одиночный ID
             const element = await this.waitForElement(cleanId);
             if (element) {
                 this.executeScroll(element, window.innerHeight * 0.20, isInstant);
@@ -148,12 +205,10 @@ const ScrollManager = {
             window.scrollTo({ top: targetY, behavior: 'auto' });
             
             requestAnimationFrame(() => {
-                // Точная до-корректировка
                 const correctedY = window.pageYOffset + element.getBoundingClientRect().top - offsetData;
                 window.scrollTo(0, correctedY);
                 html.style.scrollBehavior = prevBehavior;
                 
-                // Снимаем блокировку хеша через 100мс
                 setTimeout(() => window.isRestoringProgress = false, 100);
             });
         } else {
@@ -161,7 +216,7 @@ const ScrollManager = {
         }
     },
 
-    // 5. ОПТИМИЗИРОВАННОЕ СОХРАНЕНИЕ ПРОГРЕССА (Без фризов!)
+    // 5. ОПТИМИЗИРОВАННОЕ СОХРАНЕНИЕ ПРОГРЕССА
     saveReadingProgress() {
         const urlParams = new URLSearchParams(window.location.search);
         const slug = urlParams.get('q');
@@ -176,7 +231,6 @@ const ScrollManager = {
         let bestElement = null;
         let minDistance = Infinity;
 
-        // МАГИЯ ЗДЕСЬ: Элементы идут сверху вниз. Нам не нужно проверять тысячи штук.
         for (const el of elements) {
             const rectTop = el.getBoundingClientRect().top;
             const distance = Math.abs(rectTop - this.config.eyeLevel);
@@ -185,8 +239,6 @@ const ScrollManager = {
                 minDistance = distance;
                 bestElement = el;
             } else if (rectTop > this.config.eyeLevel) {
-                // Мы перешагнули линию глаз. Дальше дистанция будет только расти.
-                // Хватит насиловать процессор, прерываем цикл!
                 break;
             }
         }
@@ -204,7 +256,7 @@ const ScrollManager = {
             };
 
             const keys = Object.keys(progressData);
-            if (keys.length > 20) { // Храним историю для 20 сутт
+            if (keys.length > 20) {
                 keys.sort((a, b) => progressData[b].time - progressData[a].time);
                 const newProgressData = {};
                 for (let i = 0; i < 20; i++) {
@@ -242,7 +294,6 @@ const ScrollManager = {
         const element = this.findFallbackElement(elementId);
         if (!element) return;
 
-        // Связь с TTS плеером
         if (typeof window.activateSegmentForTTS === 'function') {
             if (element.matches('.pli-lang, .rus-lang, .eng-lang')) {
                  window.activateSegmentForTTS(element);
@@ -259,7 +310,6 @@ const ScrollManager = {
             element.style.position = 'relative';
         }
 
-        // Overlay мигание
         const overlay = document.createElement('div');
         overlay.style.position = 'absolute';
         overlay.style.top = '0';
@@ -351,5 +401,4 @@ const ScrollManager = {
     }
 };
 
-// Запуск контроллера
 ScrollManager.init();
