@@ -1,82 +1,72 @@
 
-// === УМНЫЙ ЗАПУСК СЛОВАРЯ (ПЕРВОЕ КАСАНИЕ) ===
+
+// === ЗАГРУЗКА СЛОВАРЯ СТРОГО ПО КЛИКУ (ДЛЯ ВСЕХ) ===
 (function() {
-    const DICT_EVER_USED_KEY = 'dictEverUsed';
-    const isDictEverUsed = localStorage.getItem(DICT_EVER_USED_KEY) === 'true';
+    window.isDictScriptLoaded = false;
+    let isDictInitializing = false;
 
-    if (isDictEverUsed) {
-        // Юзер уже пользовался словарем. Грузим скрипт как обычно в фоне.
-        const script = document.createElement('script');
-        script.src = "/assets/js/paliLookup.js";
-        script.defer = true;
-        document.head.appendChild(script);
-    } else {
-        // ПЕРВЫЙ ЗАПУСК: Ждем первого клика по слову или кнопкам
-        const firstClickHandler = function(e) {
-            const isPaliWord = e.target.closest('.pli-lang, [lang="pi"]');
-            const isDictBtn = e.target.closest('.toggle-dict-btn');
-            const isMultiSelectBtn = e.target.closest('#toggle-multiselect');
+    const clickHandler = function(e) {
+        // Если словарь выключен кнопкой, не вмешиваемся
+        if (typeof dictionaryVisible !== 'undefined' && !dictionaryVisible) return;
 
-            if (isPaliWord || isDictBtn || isMultiSelectBtn) {
-                e.preventDefault();
-                e.stopPropagation();
+        const isPaliWord = e.target.closest('.pli-lang, [lang="pi"]');
+        const isDictBtn = e.target.closest('.toggle-dict-btn');
+        const isMultiSelectBtn = e.target.closest('#toggle-multiselect');
 
-                // 1. Ставим флаг на всю жизнь, что словарь активирован
-                localStorage.setItem(DICT_EVER_USED_KEY, 'true');
+        if (isPaliWord || isDictBtn || isMultiSelectBtn) {
+            // Если скрипт уже загружен, пусть работает сам
+            if (window.isDictScriptLoaded) return;
 
-                // 2. Показываем сообщение
-                if (typeof showBubbleNotification === 'function') {
-                    const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/');
-                    showBubbleNotification(isRu ? "Инициализация словаря..." : "Initializing dictionary...");
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (isDictInitializing) return;
+            isDictInitializing = true;
+
+            // 1. Создаем НАСТОЯЩИЙ визуальный лоадер
+            let loadingEl = document.getElementById('main-dict-loader');
+            if (!loadingEl) {
+                loadingEl = document.createElement('div');
+                loadingEl.id = 'main-dict-loader';
+                loadingEl.className = 'dict-loading-indicator';
+                const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/');
+                loadingEl.textContent = isRu ? 'Инициализация словаря...' : 'Initializing dictionary...';
+                document.body.appendChild(loadingEl);
+                setTimeout(() => loadingEl.classList.add('show'), 10);
+            }
+
+            // 2. Сохраняем точные координаты клика
+            const clickX = e.clientX;
+            const clickY = e.clientY;
+            const target = e.target;
+
+            // 3. Скачиваем ядро словаря
+            const script = document.createElement('script');
+            script.src = "/assets/js/paliLookup.js";
+            
+            script.onload = () => {
+                window.isDictScriptLoaded = true;
+                
+                // Убираем стартовый лоадер
+                if (loadingEl) {
+                    loadingEl.classList.remove('show');
+                    setTimeout(() => loadingEl.remove(), 300);
                 }
 
-                // 3. Сохраняем координаты для "выстрела" после загрузки
-                const clickX = e.clientX;
-                const clickY = e.clientY;
-                const target = e.target;
+                // Имитируем клик с правильными координатами, чтобы словарь открылся
+                const clickEvent = new MouseEvent('click', {
+                    view: window, bubbles: true, cancelable: true, clientX: clickX, clientY: clickY
+                });
+                target.dispatchEvent(clickEvent);
+                isDictInitializing = false;
+            };
+            
+            document.head.appendChild(script);
+        }
+    };
 
-                // 4. Скачиваем сам скрипт
-                window.isFirstDictClickNow = true; // Флаг для paliLookup
-                const script = document.createElement('script');
-                script.src = "/assets/js/paliLookup.js";
-                
-                script.onload = () => {
-                    // Скрипт загружен. Форсируем скачку тяжелых баз данных (если словарь встроенный)
-                    let loadPromise = Promise.resolve();
-                    if (typeof lazyLoadStandaloneScripts === 'function') {
-                        let dictUrl = localStorage.getItem('selectedDict') || "standalone";
-                        if (window.location.href.includes('/ru/') || window.location.href.includes('/r/') || window.location.href.includes('/ml/')) {
-                            if (!localStorage.getItem('selectedDict')) dictUrl = 'standaloneru';
-                        }
-                        if (dictUrl === "standalone" || dictUrl === "standaloneru") {
-                            const lang = dictUrl === "standaloneru" ? "ru" : "en";
-                            loadPromise = lazyLoadStandaloneScripts(lang); // Эта функция возвращает Promise
-                        }
-                    }
-
-                    // 5. Как только базы скачаны - программно "кликаем" заново, чтобы открыть окно
-                    loadPromise.then(() => {
-                        const clickEvent = new MouseEvent('click', {
-                            view: window, bubbles: true, cancelable: true, clientX: clickX, clientY: clickY
-                        });
-                        target.dispatchEvent(clickEvent);
-                    });
-                };
-                
-                document.head.appendChild(script);
-
-                // 6. Удаляем этот перехватчик (он больше никогда не сработает)
-                document.removeEventListener('click', firstClickHandler, true);
-            }
-        };
-
-        // Вешаем перехватчик
-        document.addEventListener('click', firstClickHandler, true);
-    }
+    document.addEventListener('click', clickHandler, true);
 })();
-
-
-
 
 
 function checkStorage(key) {

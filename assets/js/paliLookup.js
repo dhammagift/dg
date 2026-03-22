@@ -191,7 +191,7 @@ const scriptCache = new Map();
 const requestIdleCallback = window.requestIdleCallback ||
     function(cb) { return setTimeout(() => { cb({ didTimeout: false }); }, 0); };
 
-function handleWordLookup(word, event) {
+async function handleWordLookup(word, event) {
     if (!dictionaryVisible) return;
 
     const currentTheme = getEffectiveTheme();
@@ -208,6 +208,13 @@ function handleWordLookup(word, event) {
 
     let cleanedWord = cleanWord(word);
     let translation = "";
+
+    // --- Ждем базы перед поиском ---
+    if (dictUrl === "standalone" || dictUrl === "standaloneru") {
+        const lang = dictUrl === "standaloneru" ? "ru" : "en";
+        await lazyLoadStandaloneScripts(lang);
+    }
+    // -------------------------------
 
     if (dictUrl === "standalone" || dictUrl === "standaloneru") {
         const phraseTranslation = lookupWordInStandaloneDict(cleanedWord);
@@ -406,121 +413,67 @@ function handleWordLookup(word, event) {
     }
 }
 
+let dbLoadPromise = null;
+
 function lazyLoadStandaloneScripts(lang = 'en') {
-    return new Promise((resolve, reject) => {
-        const loadScripts = () => {
-            const commonScripts = [
-                '/assets/js/standalone-dpd/dpd_i2h.js',
-                '/assets/js/standalone-dpd/dpd_deconstructor.js'
-            ];
+    if (dbLoadPromise) return dbLoadPromise;
 
-            const langSpecific = lang === 'ru'
-                ? '/assets/js/standalone-dpd/ru/dpd_ebts.js'
-                : '/assets/js/standalone-dpd/dpd_ebts.js';
+    const commonScripts = [
+        '/assets/js/standalone-dpd/dpd_i2h.js',
+        '/assets/js/standalone-dpd/dpd_deconstructor.js'
+    ];
 
-            const scripts = [...commonScripts, langSpecific];
-            const scriptsToLoad = scripts.filter(src => {
-                return !document.querySelector(`script[src="${src}"]`) && !scriptCache.has(src);
-            });
+    const langSpecific = lang === 'ru'
+        ? '/assets/js/standalone-dpd/ru/dpd_ebts.js'
+        : '/assets/js/standalone-dpd/dpd_ebts.js';
 
-            if (scriptsToLoad.length === 0) {
-                resolve();
-                return;
-            }
-
-            const loadingId = 'dict-loading-' + Date.now();
-            const loadingEl = document.createElement('div');
-            loadingEl.id = loadingId;
-            loadingEl.className = 'dict-loading-indicator';
-            loadingEl.textContent = 'Loading dictionary...';
-
-            document.body.appendChild(loadingEl);
-            setTimeout(() => loadingEl.classList.add('show'), 10);
-
-            const loadPromises = scriptsToLoad.map(src => {
-                return new Promise((scriptResolve) => {
-                    if (scriptCache.has(src)) {
-                        return scriptResolve();
-                    }
-
-                    const script = document.createElement('script');
-                    script.src = src;
-                    script.defer = true;
-
-                    script.onload = script.onreadystatechange = function() {
-                        if (!this.readyState || this.readyState === 'loaded' || this.readyState === 'complete') {
-                            scriptCache.set(src, true);
-                            scriptResolve();
-                        }
-                    };
-
-                    script.onerror = () => {
-                        console.warn(`Failed to load script: ${src}`);
-                        scriptResolve(); 
-                    };
-
-                    script.crossOrigin = 'anonymous';
-                    document.head.appendChild(script);
-                });
-            });
-
-            const timeoutPromise = new Promise((_, timeoutReject) => {
-                setTimeout(() => timeoutReject(new Error('Script loading timeout')), 20000); 
-            });
-
-            Promise.race([
-                Promise.all(loadPromises),
-                timeoutPromise
-            ])
-            .then(() => {
-                const el = document.getElementById(loadingId);
-                if (el) {
-                    el.classList.remove('show');
-                    setTimeout(() => el.remove(), 300);
-                }
-                resolve();
-            })
-            .catch(err => {
-                console.warn('Dictionary loading warning:', err);
-                const el = document.getElementById(loadingId);
-                if (el) {
-                    el.textContent = 'Dictionary load failed';
-                    el.style.background = 'rgba(255,0,0,0.7)';
-                    setTimeout(() => el.remove(), 2000);
-                }
-                resolve(); 
-            });
-        };
-
-        requestIdleCallback(loadScripts, { timeout: 1000 });
+    const scripts = [...commonScripts, langSpecific];
+    const scriptsToLoad = scripts.filter(src => {
+        return !document.querySelector(`script[src="${src}"]`) && !scriptCache.has(src);
     });
-}
 
-function initDictBases() {
-    setTimeout(() => {
-        if (savedDict === "standalone") {
-            requestIdleCallback(() => {
-                lazyLoadStandaloneScripts().catch(err => console.warn('Lazy load eng:', err));
-            }, { timeout: 2000 });
-        }
-        else if (savedDict === "standaloneru") {
-            requestIdleCallback(() => {
-                lazyLoadStandaloneScripts("ru").catch(err => console.warn('Lazy load ru:', err));
-            }, { timeout: 2000 });
-        }
-    }, 1000); 
-}
-
-// Безопасный запуск фоновой загрузки баз
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initDictBases);
-} else {
-    // Если скрипт загрузился после клика юзера, мы НЕ запускаем фон здесь,
-    // так как скрипт settings.js загрузит их принудительно для моментального открытия словаря.
-    if (!window.isFirstDictClickNow) {
-        initDictBases();
+    if (scriptsToLoad.length === 0) {
+        return Promise.resolve();
     }
+
+    dbLoadPromise = new Promise((resolve) => {
+        // Показываем визуальный индикатор загрузки баз
+        const loadingId = 'dict-loading-' + Date.now();
+        const loadingEl = document.createElement('div');
+        loadingEl.id = loadingId;
+        loadingEl.className = 'dict-loading-indicator';
+        const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/');
+        loadingEl.textContent = isRu ? 'Загрузка баз данных...' : 'Loading databases...';
+        document.body.appendChild(loadingEl);
+        setTimeout(() => loadingEl.classList.add('show'), 10);
+
+        const loadPromises = scriptsToLoad.map(src => {
+            return new Promise((scriptResolve) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = () => {
+                    scriptCache.set(src, true);
+                    scriptResolve();
+                };
+                script.onerror = () => scriptResolve(); 
+                document.head.appendChild(script);
+            });
+        });
+
+        Promise.all(loadPromises).then(() => {
+            const el = document.getElementById(loadingId);
+            if (el) {
+                el.classList.remove('show');
+                setTimeout(() => el.remove(), 300);
+            }
+            resolve();
+        });
+    });
+
+    return dbLoadPromise;
 }
+
+
 
 
 function createClickableLink(wordToLink) {
@@ -958,7 +911,11 @@ function updateMultiSelectUI() {
     if (typeof window.syncSmartIcons === 'function') window.syncSmartIcons();
 }
 
-document.addEventListener('DOMContentLoaded', updateMultiSelectUI);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', updateMultiSelectUI);
+} else {
+    updateMultiSelectUI();
+}
 
 document.addEventListener('click', (e) => {
     const msBtn = e.target.closest('#toggle-multiselect');
