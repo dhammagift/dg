@@ -1,6 +1,5 @@
-// 1. САМОВЫЗЫВАЮЩАЯСЯ ФУНКЦИЯ (выполняется мгновенно при чтении <head>)
+// 1. САМОВЫЗЫВАЮЩАЯСЯ ФУНКЦИЯ (Стили и защита от мигания)
 (function() {
-    // Применяем масштаб сразу к <html>
     const savedScale = localStorage.getItem('uiScale') || 100;
     document.documentElement.style.fontSize = savedScale + '%';
 
@@ -26,13 +25,14 @@
     const mode = getModeFromPath();
     const assets = assetMap[mode] || assetMap["read"];
 
-    // Функция снятия "завесы" (показ страницы)
+    // Сохраняем нужный JS в window, чтобы вызвать его позже, когда DOM будет готов
+    window._assetsToLoad = assets.js;
+
     function revealBody() {
         if (document.body) {
             document.body.style.visibility = "visible";
             document.body.style.opacity = "1";
         } else {
-            // Если body еще не распарсился, ждем DOMContentLoaded
             window.addEventListener('DOMContentLoaded', () => {
                 document.body.style.visibility = "visible";
                 document.body.style.opacity = "1";
@@ -40,34 +40,30 @@
         }
     }
 
-    // Загружаем CSS и вешаем слушатель на его готовность
+    // Загружаем CSS моментально в <head>
     if (assets.css) {
         const css = document.createElement("link");
         css.rel = "stylesheet";
         css.href = assets.css;
-        
-        // Как только стили загрузились - показываем контент
         css.onload = revealBody;
-        css.onerror = revealBody; // Защита от вечного скрытия при ошибке сети
-        
+        css.onerror = revealBody; 
         document.head.appendChild(css);
     } else {
         revealBody();
     }
-
-    // JS-файлы подгружаем асинхронно (defer), чтобы они не тормозили отрисовку
-    if (assets.js) {
-        const script = document.createElement("script");
-        script.src = assets.js;
-        script.defer = true;
-        document.head.appendChild(script);
-    }
 })();
 
-// 2. ЛОГИКА СКРОЛЛА (ждет готовности DOM)
+// 2. ЛОГИКА ЗАГРУЗКИ СКРИПТОВ (Ждем готовности HTML-каркаса)
 document.addEventListener('DOMContentLoaded', function() {
     
-    // Умный скролл для реверсивных режимов (когда текст грузится целиком)
+    // Вот теперь безопасно загружать JS, так как <div id="sutta"> уже точно существует
+    if (window._assetsToLoad) {
+        const script = document.createElement("script");
+        script.src = window._assetsToLoad;
+        document.body.appendChild(script);
+    }
+
+    // Умный скролл для реверсивных режимов
     if (window.location.pathname.includes("/rev/") || window.location.pathname.includes("/frev/")) { 
         const suttaDiv = document.getElementById("sutta"); 
         
@@ -75,12 +71,9 @@ document.addEventListener('DOMContentLoaded', function() {
             suttaDiv.classList.add("right-text"); 
             
             const observer = new MutationObserver((mutations, obs) => {
-                // Как только внутри контейнера появился контент
                 if (suttaDiv.innerHTML.trim().length > 0) {
-                    obs.disconnect(); // Сразу выключаем наблюдателя
+                    obs.disconnect(); 
                     
-                    // requestAnimationFrame ждет ровно 1 кадр, чтобы браузер 
-                    // отрисует текст и посчитал scrollHeight, после чего прыгаем
                     requestAnimationFrame(() => {
                         window.scrollTo({
                             top: document.body.scrollHeight,
@@ -90,10 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            // Начинаем следить за добавлением текста
             observer.observe(suttaDiv, { childList: true, subtree: true });
-            
-            // Предохранитель (10 секунд на случай, если сервер не ответил)
             setTimeout(() => observer.disconnect(), 10000); 
         }
     }
