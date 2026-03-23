@@ -11,7 +11,6 @@ const form = document.getElementById("form");
 const citation = document.getElementById("paliauto");
 const pathLang = "ru";
 
-citation.focus();
 let language = "pli-2nd";
 
 homeButton.addEventListener("click", () => {

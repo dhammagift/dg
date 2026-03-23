@@ -11,8 +11,7 @@ const form = document.getElementById("form");
 const citation = document.getElementById("paliauto");
 const pathLang = "ru";
 
-citation.focus();
-let language = "pli-rus";
+let language = "pli-2nd";
 
 homeButton.addEventListener("click", () => {
   document.location.search = "";
@@ -135,7 +134,7 @@ const anchorURL = new URL(currentURL).hash; // Убираем символ "#"
 
 if (slug.includes("mn"))  {
  var trnpath = rustrnpath; 
- let language = "pli-rus";
+ let language = "pli-2nd";
 // scLink += ifRus; 
   console.log(trnpath);
 } else if (slug.includes("sn")) { 
@@ -730,9 +729,9 @@ setLanguage(language);
 
   
 function setLanguage(language) {
-  if (language === "pli-rus") {
+  if (language === "pli-2nd") {
     showPaliEnglish();
-  } else if (language === "rus") {
+  } else if (language === "2nd") {
     showEnglish();
   } else if (language === "pli") {
     showPali();
@@ -771,23 +770,23 @@ function toggleThePali() {
 
 // initial state
  if (!localStorage.paliToggleSpecial) {
-    localStorage.paliToggleRu = "pli-rus";
+    localStorage.paliToggleRu = "pli-2nd";
   }   
 
   languageButton.addEventListener("click", () => {
     if (language === "pli") {
       showPaliAll();
-      language = "pli-rus";    
-      localStorage.paliToggleSpecial = "pli-rus";
-    } else if (language === "pli-rus") {
+      language = "pli-2nd";    
+      localStorage.paliToggleSpecial = "pli-2nd";
+    } else if (language === "pli-2nd") {
      showPali();
            language = "pli";
       localStorage.paliToggleSpecial = "pli";
 
- /*   } else if (language === "rus") {
+ /*   } else if (language === "2nd") {
      showPaliRussian();
-      language = "rus";
-      localStorage.paliToggleSpecial = "rus"; */
+      language = "2nd";
+      localStorage.paliToggleSpecial = "2nd"; */
     }
   });
   

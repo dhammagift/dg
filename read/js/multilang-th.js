@@ -11,8 +11,8 @@ const form = document.getElementById("form");
 const citation = document.getElementById("paliauto");
 const pathLang = "th";
 
-citation.focus();
-let language = "pli-rus";
+
+let language = "pli-2nd";
 
 homeButton.addEventListener("click", () => {
   document.location.search = "";
@@ -131,7 +131,7 @@ const anchorURL = new URL(currentURL).hash; // Убираем символ "#"
 
 /*if (slug.includes("mn"))  {
  var trnpath = thtrnpath; 
- let language = "pli-rus";
+ let language = "pli-2nd";
 // scLink += ifRus; 
 } else if (slug.includes("sn")) { 
   var trnpath = thtrnpath; 
@@ -928,9 +928,9 @@ suttaArea.innerHTML = `<div class="instructions">
 
   
 function setLanguage(language) {
-  if (language === "pli-rus") {
+  if (language === "pli-2nd") {
     showPaliEnglish();
-  } else if (language === "rus") {
+  } else if (language === "2nd") {
     showEnglish();
   } else if (language === "pli") {
     showPali();
@@ -987,23 +987,23 @@ function toggleThePali() {
 
 // initial state
  if (!localStorage.paliToggleML) {
-    localStorage.paliToggleRu = "pli-rus";
+    localStorage.paliToggleRu = "pli-2nd";
   }   
 
   languageButton.addEventListener("click", () => {
     if (language === "pli") {
       showPaliAll();
-      language = "pli-rus";    
-      localStorage.paliToggleML = "pli-rus";
-    } else if (language === "pli-rus") {
+      language = "pli-2nd";    
+      localStorage.paliToggleML = "pli-2nd";
+    } else if (language === "pli-2nd") {
      showPali();
            language = "pli";
       localStorage.paliToggleML = "pli";
 
- /*   } else if (language === "rus") {
+ /*   } else if (language === "2nd") {
      showPaliRussian();
-      language = "rus";
-      localStorage.paliToggleML = "rus"; */
+      language = "2nd";
+      localStorage.paliToggleML = "2nd"; */
     }
   });
   
