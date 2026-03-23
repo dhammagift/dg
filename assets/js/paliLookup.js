@@ -443,7 +443,7 @@ function lazyLoadStandaloneScripts(lang = 'en') {
         loadingEl.id = loadingId;
         loadingEl.className = 'dict-loading-indicator';
         const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/');
-        loadingEl.textContent = isRu ? 'Загрузка баз данных...' : 'Loading databases...';
+        loadingEl.textContent = isRu ? 'Загрузка Словаря...' : 'Loading Dictionary...';
         document.body.appendChild(loadingEl);
         setTimeout(() => loadingEl.classList.add('show'), 10);
 
