@@ -18,8 +18,9 @@ homeButton.addEventListener("click", () => {
   document.location.search = "";
 });
 
-
 function buildSutta(slug) {
+  // Показываем крутилку мгновенно, чтобы интерфейс "ожил"
+  suttaArea.innerHTML = `<div class="d-flex justify-content-center m-5"><div class="spinner-border text-secondary" role="status"><span class="visually-hidden">Загрузка...</span></div></div>`;
   
   let translator = "";
   let texttype = "sutta";
@@ -482,175 +483,132 @@ if ((translator === 'sujato') || (translator === 'brahmali')) {
 
 
 //   onclick="alert(this.getAttribute('data-slug'))"
-      $.ajax({
-      url: "/read/php/extralinks.php?fromjs=" +slug
-    }).done(function(data) {
-      const linksArray = data.split(",");
-  
-   //   scLink += `<a target="_blank" href="https://suttacentral.net/${slug}">SC</a>&nbsp;`; 
+      // === 1. МГНОВЕННЫЙ ВЫВОД ТЕКСТА НА ЭКРАН ===
+      const origUrl = window.location.href;
+      let rvUrl = origUrl.replace("/r/", "/read/");
+      let thUrl = origUrl.replace("/r/", "/th/read/");
+      let dUrl = origUrl.replace("/r/", "/d/");
+      rvUrl = rvUrl.replace("/ml/", "/r/");
+      rvUrl = rvUrl.replace("/read/", "/memorize/");
 
-//<a href="/legacy.suttacentral.net/read/pi/${slug}.html">legacy.SC</a>&nbsp; <a target="" href="https://voice.suttacentral.net/scv/index.html?#/sutta?search=${slug}">Voice.SC</a>
-      if (linksArray[0].length >= 4) {
-        scLink += linksArray[0];
-          //  console.log("extralinks " + linksArray[0]);
-      } 
-      scLink = scLink;
-      
-      scLink += "</p>"; 
+      const SHOW_CLOSE_AFTER = 10;
+      let viewCount = parseInt(localStorage.getItem('warningViewCount')) || 0;
+      viewCount++;
+      localStorage.setItem('warningViewCount', viewCount);
+      const canShowClose = viewCount >= SHOW_CLOSE_AFTER;
+      const isWarningClosed = localStorage.getItem('warningClosed');
 
-const origUrl = window.location.href;
-let rvUrl = origUrl.replace("/r/", "/read/");
-thUrl = origUrl.replace("/r/", "/th/read/");
-dUrl = origUrl.replace("/r/", "/d/");
-rvUrl = rvUrl.replace("/ml/", "/r/");
-rvUrl = rvUrl.replace("/read/", "/memorize/");
+      const warning = `
+        <div style="max-width: 550px; margin: 0 auto; text-align: center;" class="warning-container">
+          <p class='warning'>
+            <strong>Заметка:</strong><a style='cursor: pointer;' class='text-decoration-none' target='' href='${dUrl}'>&nbsp;</a>Переводы, словари и комментарии сделаны не Благословенным.<a style='cursor: pointer;' class='text-decoration-none' target='' href='${thUrl}'>&nbsp;</a>Сверяйтесь с Пали в 4 основных никаях.
+                 ${canShowClose && !isWarningClosed ? `<span class="close-warning">×</span>` : ''} 
+          </p>
+        </div>
+      `;
 
-// Настройки
-const SHOW_CLOSE_AFTER = 10;  // Показывать кнопку закрытия после 10 просмотров
+      // Выводим текст СРАЗУ, оставив пустые <div> для верхних и нижних ссылок
+      suttaArea.innerHTML = 
+          `<div id="top-links-container" style="min-height: 24px;"></div><br>` + 
+          (!isWarningClosed ? warning : '') + 
+          translatorByline + 
+          html + 
+          translatorByline + 
+          (!isWarningClosed ? warning : '') + 
+          `<div id="bottom-links-container" style="min-height: 24px;"></div>`;
 
-// Получаем или инициализируем счетчик просмотров
-let viewCount = parseInt(localStorage.getItem('warningViewCount')) || 0;
-viewCount++;
-localStorage.setItem('warningViewCount', viewCount);
+      // === 2. НАСТРОЙКА ИНТЕРФЕЙСА (ПОКА ТЕКСТ УЖЕ МОЖНО ЧИТАТЬ) ===
+      if (canShowClose && !isWarningClosed) {
+        document.querySelectorAll('.close-warning').forEach(btn => {
+          btn.addEventListener('click', function() {
+            localStorage.setItem('warningClosed', 'true');
+            document.querySelectorAll('.warning-container').forEach(el => el.remove());
+          });
+        });
+      }
 
-// Проверяем, можно ли показывать кнопку закрытия
-const canShowClose = viewCount >= SHOW_CLOSE_AFTER;
+      const pageTitleElement = document.querySelector("h1.sutta-title");
+      let pageTitle = '';
+      if (pageTitleElement) {
+        let text = pageTitleElement.textContent;
+        const paliLettersRegex = /[а-яa-zāīūṭḍñṃṁṅṇśṣ\s]/gi;
+        const filtered = text.match(paliLettersRegex);
+        if (filtered) pageTitle = filtered.join('');
+      }
+      let cleanSlug = slug.replace(/pli-tv-|vb-/g, '');
+      document.title = `${cleanSlug} ${pageTitle}`;
+          
+      var metaDescription = document.createElement('meta');
+      metaDescription.name = 'description';
+      metaDescription.content = document.title;
+      document.head.appendChild(metaDescription);
 
-// Проверяем, был ли warning уже закрыт
-const isWarningClosed = localStorage.getItem('warningClosed');
-
-const warning = `
-  <div style="max-width: 550px; margin: 0 auto; text-align: center;" class="warning-container">
-    <p class='warning'>
-      <strong>Заметка:</strong><a style='cursor: pointer;' class='text-decoration-none' target='' href='${dUrl}'>&nbsp;</a>Переводы, словари и комментарии сделаны не Благословенным.<a style='cursor: pointer;' class='text-decoration-none' target='' href='${thUrl}'>&nbsp;</a>Сверяйтесь с Пали в 4 основных никаях.
-           ${canShowClose && !isWarningClosed ? `<span class="close-warning">×</span>` : ''} 
-    </p>
-  </div>
-`;
-
-// Добавляем HTML
-suttaArea.innerHTML = scLink + '<br>' + (!isWarningClosed ? warning : '') + translatorByline + html + translatorByline + warning + scLink;
-
-// Добавляем обработчик события для кнопки закрытия (если она есть)
-if (canShowClose && !isWarningClosed) {
-  document.querySelector('.close-warning')?.addEventListener('click', function() {
-    localStorage.setItem('warningClosed', 'true');
-    document.querySelector('.warning-container')?.remove();
-  });
-}
-
-//конец вывода информации
-
-const pageTitleElement = document.querySelector("h1.sutta-title");
-let pageTitle = '';
-
-if (pageTitleElement) {
-  // Получаем весь текст из элемента, включая вложенные теги
-  let text = pageTitleElement.textContent;
-  const paliLettersRegex = /[а-яa-zāīūṭḍñṃṁṅṇśṣ\s]/gi;
-
-  // Извлечь только эти символы и собрать обратно в строку
-  const filtered = text.match(paliLettersRegex);
-  if (filtered) {
-    pageTitle = filtered.join('');
-  }
-}
-
-slug = slug.replace(/pli-tv-|vb-/g, '');
-document.title = `${slug} ${pageTitle}`;
-    
-var metaDescription = document.createElement('meta');
-metaDescription.name = 'description';
-metaDescription.content = document.title;
-document.head.appendChild(metaDescription);
-
-var ogDescriptionMeta = document.createElement('meta');
-ogDescriptionMeta.property = 'og:description';
-ogDescriptionMeta.content = document.title;
-document.head.appendChild(ogDescriptionMeta);
-
+      var ogDescriptionMeta = document.createElement('meta');
+      ogDescriptionMeta.property = 'og:description';
+      ogDescriptionMeta.content = document.title;
+      document.head.appendChild(ogDescriptionMeta);
 
       toggleThePali();
+
+      // === 3. ФОНОВАЯ ПОДГРУЗКА ССЫЛОК И КНОПОК НАВИГАЦИИ ===
       
+      // Запрашиваем экстра-ссылки (SC, Voice)
       $.ajax({
-      url: "/read/php/api.php?fromjs=" +texttype +"/" +slugReady +"&type=A"
-    }).done(function(data) {
-      const nextArray = data.split(" ");
-      let nextSlug = nextArray[0];
-let nextSlugPrint = nextSlug.replace(/pli-tv-|b[ui]-vb-/g, "");
+        url: "/read/php/extralinks.php?fromjs=" + slug
+      }).done(function(data) {
+        const linksArray = data.split(",");
+        if (linksArray[0] && linksArray[0].length >= 4) {
+          scLink += linksArray[0];
+        } 
+        scLink += "</p>"; 
+        
+        // Вставляем полученные ссылки в подготовленные контейнеры
+        const topContainer = document.getElementById('top-links-container');
+        const bottomContainer = document.getElementById('bottom-links-container');
+        if (topContainer) topContainer.innerHTML = scLink;
+        if (bottomContainer) bottomContainer.innerHTML = scLink;
+      });
 
-   //   let nextName = nextArray[1];
-let nextName = nextArray.slice(1).join(" ");
-nextName = nextName.replace(/[0-9.]/g, '');
+      // Запрашиваем следующую сутту
+      $.ajax({
+        url: "/read/php/api.php?fromjs=" + texttype + "/" + slugReady + "&type=A"
+      }).done(function(data) {
+        const nextArray = data.split(" ");
+        let nextSlug = nextArray[0];
+        let nextSlugPrint = nextSlug.replace(/pli-tv-|b[ui]-vb-/g, "");
+        let nextName = nextArray.slice(1).join(" ").replace(/[0-9.]/g, '');
 
-      if (nextName === undefined) {
-      var nextPrint = nextSlugPrint;
-      } else {
-        var nextPrint = `
-      ${nextSlugPrint}
-      <span class="sutta-name"> ${nextName.trim()}</span>
-      `;
-     
-     
-     }
-   //  console.log(nextPrint);
+        let nextPrint = (nextName === undefined || nextName.trim() === "") ? nextSlugPrint : `${nextSlugPrint} <span class="sutta-name"> ${nextName.trim()}</span>`;
+        let finder = (params.get("s") || "").replace(/ṃ/g, "ṁ");
+        
+        next.innerHTML = nextSlug ? `<a href="?q=${nextSlug}${params.has("s") ? `&s=${finder}` : ""}">${nextPrint.trim()}
+          <svg xmlns="http://www.w3.org/2000/svg" id="body_1" width="15" height="11">
+            <g transform="matrix(0.021484375 0 0 0.021484375 2 -0)"><g><path d="M202.1 450C 196.03278 449.9987 190.56381 446.34256 188.24348 440.73654C 185.92316 435.13055 187.20845 428.67883 191.5 424.39L191.5 424.39L365.79 250.1L191.5 75.81C 185.81535 69.92433 185.89662 60.568687 191.68266 54.782654C 197.46869 48.996624 206.82434 48.91536 212.71 54.6L212.71 54.6L397.61 239.5C 403.4657 245.3575 403.4657 254.8525 397.61 260.71L397.61 260.71L212.70999 445.61C 209.89557 448.4226 206.07895 450.0018 202.1 450z" fill="#8f8f8f"/></g></g>
+          </svg></a>` : "";
+        next2.innerHTML = next.innerHTML.replace(/class="sutta-name"/g, '');
+      });
 
-    let finder = (params.get("s") || "").replace(/ṃ/g, "ṁ");
-         next.innerHTML = nextSlug
-          ? `<a href="?q=${nextSlug}${params.has("s") ? `&s=${finder}` : ""}">${nextPrint.trim()}
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="body_1" width="15" height="11">
+      // Запрашиваем предыдущую сутту
+      $.ajax({
+        url: "/read/php/api.php?fromjs=" + texttype + "/" + slugReady + "&type=B"
+      }).done(function(data) {
+        const prevArray = data.split(" ");
+        let prevSlug = prevArray[0];
+        let prevSlugPrint = prevSlug.replace(/pli-tv-|b[ui]-vb-/g, "");
+        let prevName = prevArray.slice(1).join(" ").replace(/[0-9.]/g, '');
 
-      <g transform="matrix(0.021484375 0 0 0.021484375 2 -0)">
-        <g>
-              <path d="M202.1 450C 196.03278 449.9987 190.56381 446.34256 188.24348 440.73654C 185.92316 435.13055 187.20845 428.67883 191.5 424.39L191.5 424.39L365.79 250.1L191.5 75.81C 185.81535 69.92433 185.89662 60.568687 191.68266 54.782654C 197.46869 48.996624 206.82434 48.91536 212.71 54.6L212.71 54.6L397.61 239.5C 403.4657 245.3575 403.4657 254.8525 397.61 260.71L397.61 260.71L212.70999 445.61C 209.89557 448.4226 206.07895 450.0018 202.1 450z" stroke="none" fill="#8f8f8f" fill-rule="nonzero" />
-        </g>
-      </g>
-      </svg></a>`
-        : "";
-// Копируем HTML и сразу удаляем класс через replace()
-next2.innerHTML = next.innerHTML.replace(/class="sutta-name"/g, '');
-    }
-    );
-  
-  $.ajax({
-      url: "/read/php/api.php?fromjs=" +texttype +"/" +slugReady +"&type=B"
-    }).done(function(data) {
-      const prevArray = data.split(" ");
-      let prevSlug = prevArray[0];
-      let prevSlugPrint = prevSlug.replace(/pli-tv-|b[ui]-vb-/g, "");
-
-//      let prevName = prevArray[1];
-let prevName = prevArray.slice(1).join(" ");
-prevName = prevName.replace(/[0-9.]/g, '');
-
-        if (prevName === undefined) {
-    var prevPrint = prevSlugPrint;
-      } else {
-      var prevPrint = `
-      ${prevSlugPrint}
-      <span class="sutta-name"> ${prevName}</span>
-      `;
-     }
-    let finder = (params.get("s") || "").replace(/ṃ/g, "ṁ");
-
-    previous.innerHTML = prevSlug
-  ? `<a href="?q=${prevSlug}${params.has("s") ? `&s=${finder}` : ""}">
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="body_1" width="15" height="11">
-      <g transform="matrix(0.021484375 0 0 0.021484375 2 -0)">
-        <g>
-          <path d="M353 450C 349.02106 450.0018 345.20444 448.4226 342.39 445.61L342.39 445.61L157.5 260.71C 151.64429 254.8525 151.64429 245.3575 157.5 239.5L157.5 239.5L342.39 54.6C 346.1788 50.809414 351.70206 49.328068 356.8792 50.713974C 362.05634 52.099876 366.10086 56.14248 367.4892 61.318974C 368.87753 66.49547 367.3988 72.01941 363.61002 75.81L363.61002 75.81L189.32 250.1L363.61 424.39C 367.90283 428.6801 369.18747 435.13425 366.8646 440.74118C 364.5417 446.34808 359.06903 450.00275 353 450z" stroke="none" fill="#8f8f8f" fill-rule="nonzero" />
-        </g>
-      </g>
-      </svg>${prevPrint.trim()}</a>`
-  : "";
+        let prevPrint = (prevName === undefined || prevName.trim() === "") ? prevSlugPrint : `${prevSlugPrint} <span class="sutta-name"> ${prevName.trim()}</span>`;
+        let finder = (params.get("s") || "").replace(/ṃ/g, "ṁ");
+        
+        previous.innerHTML = prevSlug ? `<a href="?q=${prevSlug}${params.has("s") ? `&s=${finder}` : ""}">
+          <svg xmlns="http://www.w3.org/2000/svg" id="body_1" width="15" height="11">
+            <g transform="matrix(0.021484375 0 0 0.021484375 2 -0)"><g><path d="M353 450C 349.02106 450.0018 345.20444 448.4226 342.39 445.61L342.39 445.61L157.5 260.71C 151.64429 254.8525 151.64429 245.3575 157.5 239.5L157.5 239.5L342.39 54.6C 346.1788 50.809414 351.70206 49.328068 356.8792 50.713974C 362.05634 52.099876 366.10086 56.14248 367.4892 61.318974C 368.87753 66.49547 367.3988 72.01941 363.61002 75.81L363.61002 75.81L189.32 250.1L363.61 424.39C 367.90283 428.6801 369.18747 435.13425 366.8646 440.74118C 364.5417 446.34808 359.06903 450.00275 353 450z" fill="#8f8f8f"/></g></g>
+          </svg>${prevPrint.trim()}</a>` : "";
         previous2.innerHTML = previous.innerHTML.replace(/class="sutta-name"/g, '');
+      });
 
-      }
-      );
+      addToSearchHistory();
 
-    }
-    );
-	     addToSearchHistory(); 
 
     })
 .catch(error => {
