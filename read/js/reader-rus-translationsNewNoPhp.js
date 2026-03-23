@@ -18,7 +18,7 @@ homeButton.addEventListener("click", () => {
   document.location.search = "";
 });
 
-function buildSutta(slug) {
+async function buildSutta(slug) {
   
   let translator = "";
   let texttype = "sutta";
@@ -61,13 +61,10 @@ function buildSutta(slug) {
   const slugReady = parseSlug(slug);
  // console.log("slugReady is " + slugReady + " slug is " + slug); 
 
+      if (translator === "") {
+          translator = await getTranslator(texttype, slugReady, pathLang);
+      }
 
-
-$.ajax({
-       url: "/read/php/translator-lookup.php?fromjs=" +texttype +"/" +slugReady
-    }).done(function(data) {
-      const trnsResp = data.split(" ");
-      let translator = trnsResp[0];
 
 //if (slug.match(/^mn([1-9]|1[0-9]|2[0-1])$/)) {
  
@@ -356,34 +353,30 @@ Promise.all([rootResponse, translationResponse, htmlResponse, varResponse]).then
         html += openHtml + '<span id="' + anchor + '"><span class="rus-lang" lang="ru">' + linkToCopyStart + transData[segment].trim() + linkToCopy + '</span></span>' + closeHtml + '\n\n';
       }
     }
+
   if (slug.match(/bi-pm/)) {
      translator = "adelina";
   }
-  
-if (translator === "o") {
-  translatorforuser = '<a href=/assets/common/o.html>o</a> с Пали';
-} else if (translator === "sv") {
-  translatorforuser = 'SV theravada.ru с Англ';
-} else if (translator === "adelina") {
-  translatorforuser = 'Adel NamaRupa с Англ';
-} else if ((translator === "" && texttype === "sutta" ) || (translator === "sujato" )) {
-  translatorforuser = 'Bhikkhu Sujato';
-} else if ((translator === "" && texttype === "vinaya") || (translator === "brahmali" ))  {
-  translatorforuser = 'Bhikkhu Brahmali';
-} else if (translator === "syrkin" ) {
-  translatorforuser = '<a href=/assets/texts/syrkin.html>А.Я. Сыркин</a> с Пали';
-} else if (translator === "syrkin+edited+o" ) {
-  translatorforuser = '<a href=/assets/texts/syrkin.html>А.Я. Сыркин</a> с Пали, ред. <a href=/assets/common/o.html>o</a>';
-} else if (translator === "sv+edited+o" ) {
-  translatorforuser = 'SV theravada.ru с Англ, ред. <a href=/assets/common/o.html>o</a>';
-} else if (translator === "myagkih+edited+tr" ) {
-  translatorforuser = 'К. Мягких с Англ, ред. ТР';
-}
-else if (translator === "o+in+progress" ) {
-  translatorforuser = '<a href=/assets/common/o.html>o</a>, в процессе';
-} else {
-	translatorforuser = translator ;
-}
+
+  // Назначаем дефолтные значения, если файла не нашлось
+  if (translator === "") {
+      if (texttype === "vinaya") translator = "brahmali";
+      else translator = "sujato";
+  }
+
+  // ОБЯЗАТЕЛЬНО ОБЪЯВЛЯЕМ ПЕРЕМЕННУЮ, чтобы не было ReferenceError (и бесконечного цикла!)
+  let translatorforuser = translator; 
+
+  // Пытаемся взять красивое имя из JSON, который мы загрузили в common.js
+  if (window.siteTranslators) {
+      if (window.siteTranslators[pathLang] && window.siteTranslators[pathLang][translator]) {
+          // Ищем в списке текущего языка
+          translatorforuser = window.siteTranslators[pathLang][translator];
+      } else if (window.siteTranslators["en"] && window.siteTranslators["en"][translator]) {
+          // Фолбэк: ищем в списке "en"
+          translatorforuser = window.siteTranslators["en"][translator];
+      }
+  }
 
 //const translatorCapitalized = translator.charAt(0).toUpperCase() + translator.slice(1);
 
@@ -400,8 +393,6 @@ const enUrl = ruUrl.replace("/r/", "/read/");
 scLink += `<a title='Английский (Alt+1)' href="${enUrl}">En</a>&nbsp;`;
  
   
-
-
 //   onclick="alert(this.getAttribute('data-slug'))"
       // === 1. МГНОВЕННЫЙ ВЫВОД ТЕКСТА НА ЭКРАН ===
       const origUrl = window.location.href;
@@ -469,7 +460,6 @@ scLink += `<a title='Английский (Alt+1)' href="${enUrl}">En</a>&nbsp;`
       document.head.appendChild(ogDescriptionMeta);
 
       toggleThePali();
-
 // === ГЕНЕРАЦИЯ ССЫЛОК (DPR, BJT, SC, BB, TBW, Th.ru, Th.su) ИЗ COMMON.JS ===
 scLink += generateThirdPartyLinks(slug, slugReady, texttype, translator);
 scLink += "</p>";
@@ -543,9 +533,6 @@ window.location.href = newUrl;
     С главной страницы доступно больше настроек поиска.
 <br></p>`;
 });
-    }
-
-    );
 	
 // в конец функции можно добавить скролл
 

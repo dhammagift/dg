@@ -525,3 +525,202 @@ document.addEventListener('click', function(e) {
         window.location.href = baseUrl;
     }
 });
+
+// ==========================================================================
+// ГЕНЕРАЦИЯ ДОПОЛНИТЕЛЬНЫХ ССЫЛОК (DPR, BJT, Voice, SC, BB, TBW, Th.ru, Th.su)
+// ==========================================================================
+
+function getDprUrl(slug) {
+    if (typeof dprLinksData === 'undefined') return null;
+    let cleanSlug = slug.split('&')[0].toLowerCase();
+    let dprItem = dprLinksData.find(item => item[0] === cleanSlug);
+    if (dprItem && dprItem[1]) {
+        return "https://www.digitalpalireader.online/_dprhtml/index.html?loc=" + dprItem[1];
+    }
+    return null;
+}
+
+function getBjtUrl(slug) {
+    if (typeof bjtLinksData === 'undefined') return null;
+    let cleanSlug = slug.split('&')[0].toLowerCase();
+    let bjtItem = bjtLinksData.find(item => item[0] === cleanSlug);
+    if (bjtItem && bjtItem[1]) {
+        return "https://open.tipitaka.lk/latn/" + bjtItem[1];
+    }
+    return null;
+}
+
+function generateThirdPartyLinks(slug, slugReady, texttype, translator) {
+    let scLink = "";
+
+    // DPR
+    let dprUrl = getDprUrl(slug);
+    if (dprUrl) scLink += `<a target="_blank" title="Myanmar and Thai Editions at DPR" href="${dprUrl}">DPR</a>&nbsp;`;
+
+    // BJT
+    let bjtUrl = getBjtUrl(slug);
+    if (bjtUrl) scLink += `<a target="_blank" title="Buddha Jayanthi (Sri Lanka Edition at Tipitaka.lk)" href="${bjtUrl}">BJT</a>&nbsp;`;
+
+    // Voice
+    scLink += `<a data-slug="${texttype}/${slugReady}" href="javascript:void(0)" title="Text-to-Speech (Alt+R)" class="voice-link">Voice</a>`;
+
+    // SC
+
+       scLink += `&nbsp;<a target="_blank" title='SuttaCentral.net' href="https://suttacentral.net/${slug}">SC</a>`;
+        
+  /*   if ((translator === 'sujato') || (translator === 'brahmali')) {
+        scLink += `&nbsp;<a target="_blank" title='SuttaCentral.net' href="https://suttacentral.net/${slug}/en/${translator}">SC</a>`;  
+    } else {   }
+    */
+    
+
+    // BB, TBW, Th.ru, Th.su
+    const isLocal = window.location.host.includes('localhost') || window.location.host.includes('127.0.0.1');
+
+    if (typeof tbwLinksData !== 'undefined') {
+        const hasTbw = tbwLinksData.find(item => Array.isArray(item) ? item[0] === slug : item === slug);
+        if (hasTbw) {
+            scLink += `&nbsp;<a target="" title="BB and Other translations" href="/b/?q=${slug}">BB</a>`;
+            const bookMatch = slug.match(/^[a-z]+/); 
+            const book = bookMatch ? bookMatch[0] : "";
+            scLink += `&nbsp;<a target="_blank" title="TheBuddhasWords.net (Offline Copy)" href="/bw/${book}/${slug}.html">TBW</a>`;
+        }
+    }
+
+    if (typeof thruLinksData !== 'undefined') {
+        const ruItem = thruLinksData.find(item => item[0] === slug);
+        if (ruItem) {
+            scLink += `&nbsp;<a title="Theravada.ru (Offline Copy)" target="_blank" href="/theravada.ru/Teaching/Canon/Suttanta/Texts/${ruItem[1]}">Th.ru</a>`;
+        }
+    }
+
+    if (isLocal) {
+        if (typeof thsuLinksDataoffl !== 'undefined') {
+            const suItem = thsuLinksDataoffl.find(item => item[0] === slug);
+            if (suItem) scLink += `&nbsp;<a title="Theravada.su" target="_blank" href="/tipitaka.theravada.su/dn/${suItem[1]}">Th.su</a>`;
+        }
+    } else {
+        if (typeof thsuLinksData !== 'undefined') {
+            const suItem = thsuLinksData.find(item => item[0] === slug);
+            if (suItem) scLink += `&nbsp;<a title="Theravada.su" target="_blank" href="https://tipitaka.theravada.su/${suItem[1]}">Th.su</a>`;
+        }
+    }
+
+    return scLink;
+}
+
+
+// ==========================================================================
+// ПОИСК И ОТРИСОВКА ПРЕДЫДУЩЕЙ И СЛЕДУЮЩЕЙ СУТТЫ
+// ==========================================================================
+
+function renderNavigation(slug, slugReady) {
+    let params = new URLSearchParams(document.location.search);
+    let finder = (params.get("s") || "").replace(/ṃ/g, "ṁ");
+    let sQuery = params.has("s") ? `&s=${finder}` : "";
+
+    fetch("/assets/js/textinfo.js")
+        .then(response => {
+            if (!response.ok) throw new Error("Файл textinfo.js не найден!");
+            return response.text();
+        })
+        .then(text => {
+            let textInfo;
+            try {
+                textInfo = JSON.parse(text);
+            } catch(e) {
+                textInfo = new Function("return " + text.replace(/^(export default |const \\w+ = |let \\w+ = |var \\w+ = )/, '').replace(/;$/, ''))();
+            }
+            
+            const keys = Object.keys(textInfo);
+            let currentIndex = keys.indexOf(slug);
+            if (currentIndex === -1) currentIndex = keys.indexOf(slugReady);
+            if (currentIndex === -1) return;
+
+            const next = document.getElementById("next");
+            const next2 = document.getElementById("next2");
+            const previous = document.getElementById("previous");
+            const previous2 = document.getElementById("previous2");
+
+            // --- Отрисовка СЛЕДУЮЩЕЙ ---
+            if (currentIndex < keys.length - 1) {
+                let nextSlug = keys[currentIndex + 1];
+                let nextInfo = textInfo[nextSlug] || {};
+                let nextName = (nextInfo.pi || nextInfo.ru || nextInfo.en || "").replace(/[0-9.-]/g, '').trim();
+                let nextPrint = nextName === "" ? nextSlug.replace(/pli-tv-|b[ui]-vb-/g, "") : `${nextSlug.replace(/pli-tv-|b[ui]-vb-/g, "")} <span class="sutta-name"> ${nextName}</span>`;
+                
+                let htmlNext = `<a href="?q=${nextSlug}${sQuery}">${nextPrint.trim()}
+                    <svg xmlns="http://www.w3.org/2000/svg" id="body_1" width="15" height="11">
+                        <g transform="matrix(0.021484375 0 0 0.021484375 2 -0)"><g><path d="M202.1 450C 196.03278 449.9987 190.56381 446.34256 188.24348 440.73654C 185.92316 435.13055 187.20845 428.67883 191.5 424.39L191.5 424.39L365.79 250.1L191.5 75.81C 185.81535 69.92433 185.89662 60.568687 191.68266 54.782654C 197.46869 48.996624 206.82434 48.91536 212.71 54.6L212.71 54.6L397.61 239.5C 403.4657 245.3575 403.4657 254.8525 397.61 260.71L397.61 260.71L212.70999 445.61C 209.89557 448.4226 206.07895 450.0018 202.1 450z" fill="#8f8f8f"/></g></g>
+                    </svg></a>`;
+                if (next) next.innerHTML = htmlNext;
+                if (next2) next2.innerHTML = htmlNext.replace(/class="sutta-name"/g, '');
+            } else {
+                if (next) next.innerHTML = "";
+                if (next2) next2.innerHTML = "";
+            }
+
+            // --- Отрисовка ПРЕДЫДУЩЕЙ ---
+            if (currentIndex > 0) {
+                let prevSlug = keys[currentIndex - 1];
+                let prevInfo = textInfo[prevSlug] || {};
+                let prevName = (prevInfo.pi || prevInfo.ru || prevInfo.en || "").replace(/[0-9.-]/g, '').trim();
+                let prevPrint = prevName === "" ? prevSlug.replace(/pli-tv-|b[ui]-vb-/g, "") : `${prevSlug.replace(/pli-tv-|b[ui]-vb-/g, "")} <span class="sutta-name"> ${prevName}</span>`;
+                
+                let htmlPrev = `<a href="?q=${prevSlug}${sQuery}">
+                    <svg xmlns="http://www.w3.org/2000/svg" id="body_1" width="15" height="11">
+                        <g transform="matrix(0.021484375 0 0 0.021484375 2 -0)"><g><path d="M353 450C 349.02106 450.0018 345.20444 448.4226 342.39 445.61L342.39 445.61L157.5 260.71C 151.64429 254.8525 151.64429 245.3575 157.5 239.5L157.5 239.5L342.39 54.6C 346.1788 50.809414 351.70206 49.328068 356.8792 50.713974C 362.05634 52.099876 366.10086 56.14248 367.4892 61.318974C 368.87753 66.49547 367.3988 72.01941 363.61002 75.81L363.61002 75.81L189.32 250.1L363.61 424.39C 367.90283 428.6801 369.18747 435.13425 366.8646 440.74118C 364.5417 446.34808 359.06903 450.00275 353 450z" fill="#8f8f8f"/></g></g>
+                    </svg>${prevPrint.trim()}</a>`;
+                if (previous) previous.innerHTML = htmlPrev;
+                if (previous2) previous2.innerHTML = htmlPrev.replace(/class="sutta-name"/g, '');
+            } else {
+                if (previous) previous.innerHTML = "";
+                if (previous2) previous2.innerHTML = "";
+            }
+        })
+        .catch(err => console.error("Ошибка Пред/След:", err));
+}
+
+// ==========================================================================
+// АСИНХРОННЫЙ ПОИСК ДОСТУПНОГО ПЕРЕВОДЧИКА (С ПОДДЕРЖКОЙ ИМЕН)
+// ==========================================================================
+
+window.siteTranslators = null; // Создаем глобальную переменную для имен
+
+async function getTranslator(texttype, slugReady, lang = "ru") {
+    let translatorsData = {}; 
+    
+    try {
+        const trResp = await fetch("/assets/js/translators.json");
+        if (trResp.ok) {
+            translatorsData = await trResp.json();
+            window.siteTranslators = translatorsData; // Сохраняем весь JSON для красивых имен
+        }
+    } catch (e) {
+        console.log("Файл translators.json не найден.");
+    }
+    
+    // Получаем список для нужного языка (или пустой объект)
+    const currentListObj = translatorsData[lang] || {};
+    
+    // Object.keys берет ключи (ID) в том самом порядке, в котором они записаны в JSON!
+    const translatorIds = Object.keys(currentListObj); 
+    
+    if (translatorIds.length === 0) return lang === "en" ? "sujato" : "o";
+    
+    // Формируем запросы
+    const fetchPromises = translatorIds.map(tr => {
+        let testPath = `/assets/texts/${lang}/${texttype}/${slugReady}_translation-${lang}-${tr}.json`;
+        return fetch(testPath, { method: 'HEAD' }).then(response => {
+            if (response.ok) return tr;
+            throw new Error('Not found');
+        });
+    });
+
+    try {
+        let foundTranslator = await Promise.any(fetchPromises);
+        return foundTranslator.trim();
+    } catch (e) {
+        return lang === "en" ? "sujato" : "o"; 
+    }
+}
