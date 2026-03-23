@@ -828,57 +828,6 @@ form.addEventListener("submit", e => {
   }
 });
 
-window.addEventListener("DOMContentLoaded", function() {
-    const params = new URLSearchParams(document.location.search);
-    const finder = params.get("s");
-    const query = params.get("q");
-    const url = document.location.href;
-
-    // 🎯 Выполняем скрипт, только если в URL есть параметры 's' и 'q' и нет якоря #
-    if (finder && finder.trim() !== "" && query && url.indexOf("#") === -1) {
-        
-        const maxTime = 8500; // Максимальное время ожидания в мс (8.5 секунд)
-        const intervalTime = 500; // Интервал между попытками в мс (0.5 секунды)
-        let elapsedTime = 0;
-
-        const tryToScroll = function() {
-            const regex = new RegExp(finder, 'gi');
-            
-            // 🧐 Ищем совпадения только внутри основного контейнера с текстом #sutta
-            const suttaArea = document.getElementById('sutta');
-            if (!suttaArea) return false; // Если контейнер ещё не загрузился
-
-            const textNodes = document.evaluate(
-                ".//text()[normalize-space(parent::*) != '']", // XPath ищет внутри suttaArea
-                suttaArea,
-                null,
-                XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE,
-                null
-            );
-
-            for (let i = 0; i < textNodes.snapshotLength; i++) {
-                const currentNode = textNodes.snapshotItem(i);
-                if (regex.test(currentNode.nodeValue)) {
-                    const parentNode = currentNode.parentNode;
-                    parentNode.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start"
-                    });
-                    return true; // ✅ Успех! Прокрутка выполнена.
-                }
-            }
-            return false; // ❌ Неудача, совпадение пока не найдено.
-        };
-
-        const scrollInterval = setInterval(function() {
-            elapsedTime += intervalTime;
-            // 🛑 Прекращаем, если прокрутка удалась или вышло время
-            if (tryToScroll() || elapsedTime >= maxTime) {
-                clearInterval(scrollInterval);
-            }
-        }, intervalTime);
-    }
-});
 </script>
 
 <script src="/assets/js/uihelp.js" defer></script>
