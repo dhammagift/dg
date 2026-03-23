@@ -170,6 +170,86 @@
     });
 })();
 
+// === UI ВЫДЕЛЕНИЯ ТЕКСТА И КНОПКА PLAY (Работает до загрузки voice.js) ===
+window.removeAllHighlights = function() {
+    document.querySelectorAll(".active-word").forEach(el => el.classList.remove("active-word"));
+    const oldBtn = document.querySelector('.dynamic-tts-btn');
+    if (oldBtn) oldBtn.remove();
+};
+
+window.addTtsButton = function(containerElement, specificElement) {
+    // Безопасная проверка видимости плеера (до загрузки voice.js ttsState не существует)
+    const player = document.getElementById('voice-player-container');
+    const isPlayerVisible = player && player.classList.contains('active');
+    const isSpeakingOrPaused = typeof ttsState !== 'undefined' && (ttsState.speaking || ttsState.paused);
+
+    if (isPlayerVisible && isSpeakingOrPaused) return;
+
+    const oldBtn = document.querySelector('.dynamic-tts-btn');
+    if (oldBtn) oldBtn.remove();
+
+    const btnContainer = document.createElement('div');
+    btnContainer.className = 'dynamic-tts-btn'; 
+    btnContainer.innerHTML = `<img src="/assets/svg/play.svg" alt="Play">`;
+
+    const scrollBtn = document.getElementById('scrollToTopBtn');
+    if (scrollBtn && window.getComputedStyle(scrollBtn).opacity > 0) {
+        btnContainer.classList.add('shifted');
+    }
+
+    document.body.appendChild(btnContainer);
+};
+
+window.activateSegmentForTTS = function(element) {
+    if (!element) return;
+    
+    let targetElement = element;
+    if (!targetElement.matches(".pli-lang, .rus-lang, .eng-lang, .tha-lang")) {
+        const childLang = targetElement.querySelector(".pli-lang, .rus-lang, .eng-lang, .tha-lang");
+        if (childLang) {
+            targetElement = childLang;
+        } else {
+            return;
+        }
+    }
+
+    window.removeAllHighlights();
+    targetElement.classList.add("active-word");
+    
+    const rowContainer = targetElement.closest("[id]") || targetElement;
+    window.addTtsButton(rowContainer, targetElement);
+};
+
+document.addEventListener("click", function (e) {
+    // Игнорируем клики по самому плееру, кнопкам настроек или кнопке Play
+    if (e.target.closest('.tts-ignore') || e.target.closest('.dynamic-tts-btn')) return;
+    
+    const clickedSegment = e.target.closest(".pli-lang, .rus-lang, .eng-lang, .tha-lang");
+
+    if (clickedSegment) {
+        // Если кликнули по уже выделенному слову - снимаем выделение
+        if (clickedSegment.classList.contains("active-word")) {
+            window.removeAllHighlights();
+            return;
+        }
+        window.activateSegmentForTTS(clickedSegment);
+        return;
+    }
+
+    // Если клик был мимо текста и мимо плеера - снимаем выделение
+    if (
+        !e.target.closest(".voice-player") &&
+        !e.target.closest(".tts-mode-select") &&
+        !e.target.closest(".tts-rate-select") &&
+        !e.target.closest("#tts-scroll-toggle") && 
+        !e.target.closest(".dynamic-tts-btn")
+    ) {
+        window.removeAllHighlights();
+    }
+});
+// ========================================================================
+
+
 
 function checkStorage(key) {
     if (localStorage.getItem(key) !== null) {

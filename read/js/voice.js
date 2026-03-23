@@ -1203,7 +1203,46 @@ window.ttsDelayTimeout = setTimeout(playCurrentSegment, delay);
   }
 }
 
+
 async function handleSuttaClick(e) {
+  // === НОВОЕ: Перехват клика по мини-кнопке (после загрузки скрипта) ===
+  const dynamicBtn = e.target.closest('.dynamic-tts-btn');
+  if (dynamicBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      let mode = localStorage.getItem(MODE_STORAGE_KEY) || 'trn';
+      if (mode !== 'pi-trn' && mode !== 'trn-pi') {
+          const activeWord = document.querySelector('.active-word');
+          if (activeWord) {
+              mode = activeWord.classList.contains('pli-lang') ? 'pi' : 'trn';
+              localStorage.setItem(MODE_STORAGE_KEY, mode);
+              const modeSelect = document.getElementById('tts-mode-select');
+              if (modeSelect) modeSelect.value = mode;
+          }
+      }
+      
+      let slug = ttsState.currentSlug;
+      if (!slug) {
+          const mainPlayBtn = document.querySelector('a.voice-link[data-slug]');
+          if (mainPlayBtn) slug = mainPlayBtn.dataset.slug;
+      }
+      if (!slug && typeof isLegacyPage === 'function' && isLegacyPage()) {
+           slug = window.location.pathname.split('/').pop() || 'legacy_page';
+      }
+      if (!slug) return;
+      
+      const player = getOrBuildPlayer();
+      const internalPlayBtn = player.querySelector('.play-main-button');
+      if (internalPlayBtn) internalPlayBtn.dataset.slug = slug;
+      
+      player.classList.add('active');
+      startPlayback(document, mode, slug); 
+      dynamicBtn.remove();
+      return;
+  }
+  // =====================================================================
+
   if (e.target.closest('#tts-settings-toggle')) {
     e.preventDefault();
     const panel = document.getElementById('tts-settings-panel');
@@ -2369,111 +2408,6 @@ document.addEventListener('visibilitychange', async () => {
     requestWakeLock();
   }
 });
-
-window.activateSegmentForTTS = function(element) {
-  if (!element) return;
-  
-  let targetElement = element;
-  if (!targetElement.matches(".pli-lang, .rus-lang, .eng-lang, .tha-lang")) {
-      const childLang = targetElement.querySelector(".pli-lang, .rus-lang, .eng-lang, .tha-lang");
-      if (childLang) {
-          targetElement = childLang;
-      } else {
-          return;
-      }
-  }
-
-  removeAllHighlights();
-  targetElement.classList.add("active-word");
-  
-  const rowContainer = targetElement.closest("[id]") || targetElement;
-  addTtsButton(rowContainer, targetElement);
-};
-
-document.addEventListener("click", function (e) {
-  if (e.target.closest('.tts-ignore') || e.target.closest('.dynamic-tts-btn')) return;
-  
-  const clickedSegment = e.target.closest(".pli-lang, .rus-lang, .eng-lang, .tha-lang");
-
-  if (clickedSegment) {
-    if (clickedSegment.classList.contains("active-word")) {
-      removeAllHighlights();
-      return;
-    }
-    window.activateSegmentForTTS(clickedSegment);
-    return;
-  }
-
-  if (
-    !e.target.closest(".voice-player") &&
-    !e.target.closest(".tts-mode-select") &&
-    !e.target.closest(".tts-rate-select") &&
-    !e.target.closest("#tts-scroll-toggle") && 
-    !e.target.closest(".dynamic-tts-btn")
-  ) {
-    removeAllHighlights();
-  }
-});
-
-function removeAllHighlights() {
-    document.querySelectorAll(".active-word").forEach(el => el.classList.remove("active-word"));
-    const oldBtn = document.querySelector('.dynamic-tts-btn');
-    if (oldBtn) oldBtn.remove();
-}
-
-function addTtsButton(containerElement, specificElement) {
-    // --- ИЗМЕНЕНИЕ: Проверяем физическую видимость плеера на экране ---
-    const player = document.getElementById('voice-player-container');
-    const isPlayerVisible = player && player.classList.contains('active');
-
-    if (isPlayerVisible && (ttsState.speaking || ttsState.paused)) return;
-
-    const oldBtn = document.querySelector('.dynamic-tts-btn');
-    if (oldBtn) oldBtn.remove();
-
-    const btnContainer = document.createElement('div');
-    btnContainer.className = 'dynamic-tts-btn'; 
-    btnContainer.innerHTML = `<img src="/assets/svg/play.svg" alt="Play">`;
-
-    // --- НОВОЕ: Проверка позиции сразу при создании ---
-    const scrollBtn = document.getElementById('scrollToTopBtn');
-    if (scrollBtn && window.getComputedStyle(scrollBtn).opacity > 0) {
-        btnContainer.classList.add('shifted');
-    }
-    // -------------------------------------------------
-
-    document.body.appendChild(btnContainer);
-
-    btnContainer.addEventListener('click', (e) => {
-        e.stopPropagation(); 
-        e.preventDefault();
-        // ... (остальной код внутри клика остается без изменений) ...
-        let mode = localStorage.getItem(MODE_STORAGE_KEY) || 'trn';
-        if (mode !== 'pi-trn' && mode !== 'trn-pi') {
-            const targetEl = specificElement || containerElement; 
-            mode = targetEl.classList.contains('pli-lang') ? 'pi' : 'trn';
-            localStorage.setItem(MODE_STORAGE_KEY, mode);
-            const modeSelect = document.getElementById('tts-mode-select');
-            if (modeSelect) modeSelect.value = mode;
-        }
-        let slug = ttsState.currentSlug;
-        if (!slug) {
-            const mainPlayBtn = document.querySelector('a.voice-link[data-slug]');
-            if (mainPlayBtn) slug = mainPlayBtn.dataset.slug;
-        }
-        if (!slug && isLegacyPage()) {
-             slug = window.location.pathname.split('/').pop() || 'legacy_page';
-        }
-        if (!slug) return;
-        const player = getOrBuildPlayer();
-        const internalPlayBtn = player.querySelector('.play-main-button');
-        if (internalPlayBtn) internalPlayBtn.dataset.slug = slug;
-        player.classList.add('active');
-        startPlayback(document, mode, slug); 
-        btnContainer.remove();
-    });
-}
-
 
 // --- АДАПТЕР ДЛЯ THERAVADA.RU (LEGACY HTML) ---
 
