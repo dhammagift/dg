@@ -19,8 +19,6 @@ homeButton.addEventListener("click", () => {
 });
 
 function buildSutta(slug) {
-  // Показываем крутилку мгновенно, чтобы интерфейс "ожил"
-  suttaArea.innerHTML = `<div class="d-flex justify-content-center m-5"><div class="spinner-border text-secondary" role="status"><span class="visually-hidden">Загрузка...</span></div></div>`;
   
   let translator = "";
   let texttype = "sutta";
