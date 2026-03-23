@@ -550,9 +550,8 @@ if ((translator === 'sujato') || (translator === 'brahmali')) {
 
       toggleThePali();
 
-      // === 3. МГНОВЕННАЯ ГЕНЕРАЦИЯ ЭКСТРА-ССЫЛОК (БЕЗ СЕРВЕРА!) ===
+         // === 3. МГНОВЕННАЯ ГЕНЕРАЦИЯ ЭКСТРА-ССЫЛОК (БЕЗ СЕРВЕРА!) ===
       
-      // Проверяем, где мы находимся: на локальном компьютере или на сервере в интернете
       const isLocal = window.location.host.includes('localhost') || window.location.host.includes('127.0.0.1');
 
       let bbLinkHtml = "";
@@ -562,19 +561,15 @@ if ((translator === 'sujato') || (translator === 'brahmali')) {
       if (typeof tbwLinksData !== 'undefined') {
           const hasTbw = tbwLinksData.find(item => Array.isArray(item) ? item[0] === slug : item === slug);
           if (hasTbw) {
-              // Кнопка BB всегда локальная (встроенная читалка)
+              // Кнопка BB всегда локальная
               bbLinkHtml = `&nbsp;<a target="" title="BB and Other translations" href="/b/?q=${slug}">BB</a>`;
               
-              // Кнопка TBW: локально берем из папки /bw/, онлайн — с официального сайта
-              // match(/^[a-z]+/) надежно вытащит "mn" из "mn1" или "an" из "an1.1-10"
+              // Кнопка TBW: ВСЕГДА ОФФЛАЙН (локальный путь /bw/)
               const bookMatch = slug.match(/^[a-z]+/); 
               const book = bookMatch ? bookMatch[0] : "";
-              
-              const tbwUrl = isLocal 
-                  ? `/bw/${book}/${slug}.html` 
-                  : `https://thebuddhaswords.net/${book}/${slug}.html`;
+              const tbwUrl = `/bw/${book}/${slug}.html`; 
                   
-              tbwLinkHtml = `&nbsp;<a target="_blank" title="TheBuddhasWords.net" href="${tbwUrl}">TBW</a>`;
+              tbwLinkHtml = `&nbsp;<a target="_blank" title="TheBuddhasWords.net (Offline Copy)" href="${tbwUrl}">TBW</a>`;
           }
       }
 
@@ -583,18 +578,15 @@ if ((translator === 'sujato') || (translator === 'brahmali')) {
       if (typeof thruLinksData !== 'undefined') {
           const ruItem = thruLinksData.find(item => item[0] === slug);
           if (ruItem) {
-              // Если локально - отдаем твою папку, если онлайн - официальный сайт
-              const ruUrl = isLocal 
-                  ? `/theravada.ru/Teaching/Canon/Suttanta/Texts/${ruItem[1]}` 
-                  : `https://theravada.ru/Teaching/Canon/Suttanta/Texts/${ruItem[1]}`;
-              ruLinkHtml = `&nbsp;<a title="Theravada.ru" target="_blank" href="${ruUrl}">Th.ru</a>`;
+              // ВСЕГДА ОФФЛАЙН (локальный путь)
+              const ruUrl = `/theravada.ru/Teaching/Canon/Suttanta/Texts/${ruItem[1]}`;
+              ruLinkHtml = `&nbsp;<a title="Theravada.ru (Offline Copy)" target="_blank" href="${ruUrl}">Th.ru</a>`;
           }
       }
 
-      // 3. Проверяем Theravada.su (Th.su) с учетом WGET (node) и оффлайн версий (.html)
+      // 3. Проверяем Theravada.su (Th.su) - ЗДЕСЬ ОСТАВЛЯЕМ ПРОВЕРКУ
       let suLinkHtml = "";
       if (isLocal) {
-          // ЛОКАЛЬНО: берем из thsuLinksDataoffl (сохраненные оффлайн-страницы, например dn22.html)
           if (typeof thsuLinksDataoffl !== 'undefined') {
               const suItem = thsuLinksDataoffl.find(item => item[0] === slug);
               if (suItem) {
@@ -602,11 +594,9 @@ if ((translator === 'sujato') || (translator === 'brahmali')) {
               }
           }
       } else {
-          // ОНЛАЙН: берем из thsuLinksData (база результатов wget, например node/123)
           if (typeof thsuLinksData !== 'undefined') {
               const suItem = thsuLinksData.find(item => item[0] === slug);
               if (suItem) {
-                  // Для онлайна путь формируется к официальному сайту
                   suLinkHtml = `&nbsp;<a title="Theravada.su" target="_blank" href="https://tipitaka.theravada.su/${suItem[1]}">Th.su</a>`;
               }
           }
@@ -615,12 +605,11 @@ if ((translator === 'sujato') || (translator === 'brahmali')) {
       // Склеиваем всё вместе
       scLink += bbLinkHtml + tbwLinkHtml + ruLinkHtml + suLinkHtml + "</p>";
 
-      // Вставляем готовые ссылки в HTML
+      // Вставляем в контейнеры
       const topContainer = document.getElementById('top-links-container');
       const bottomContainer = document.getElementById('bottom-links-container');
       if (topContainer) topContainer.innerHTML = scLink;
       if (bottomContainer) bottomContainer.innerHTML = scLink;
-
 
 
 
