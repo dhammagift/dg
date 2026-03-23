@@ -99,6 +99,20 @@
         scriptVoice.src = "/read/js/voice.js";
         
         scriptVoice.onload = () => {
+            // ---> ИСПРАВЛЕНИЕ: Блокируем загрузку A-B цикла для приложения Memo <---
+            // У Memo своя логика задержек и интерфейса, voice-mem.js там вызывает конфликты
+            if (window.location.pathname.includes('/memo')) {
+                window.isVoiceScriptLoaded = true;
+                isVoiceInitializing = false;
+                
+                if (loadingEl) {
+                    loadingEl.classList.remove('show');
+                    setTimeout(() => loadingEl.remove(), 300);
+                }
+                if (callback) callback();
+                return; // Прерываем цепочку, не загружая voice-mem.js
+            }
+
             // 3. Затем voice-mem.js (он зависит от window.ttsAPI из voice.js)
             const scriptMem = document.createElement('script');
             scriptMem.src = "/read/js/voice-mem.js";
@@ -133,6 +147,7 @@
         
         document.head.appendChild(scriptVoice);
     };
+
 
     // Перехват кликов
     const voiceClickHandler = function(e) {
