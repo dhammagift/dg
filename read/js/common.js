@@ -423,73 +423,105 @@ document.addEventListener('click', (e) => {
 
 
 // ==========================================
-// ЛОКАЛЬНЫЙ ПЕРЕХВАТЧИК ДЛЯ ССЫЛКИ MEMO
+// ЛОКАЛЬНЫЙ ПЕРЕХВАТЧИК ДЛЯ ССЫЛКИ MEMO (ДЕЛЕГИРОВАНИЕ + УМНЫЙ ВЫБОР ЯЗЫКА)
 // ==========================================
-/*
-document.addEventListener('DOMContentLoaded', function() {
-    // Ищем конкретно ту самую ссылку в подвале
-    // Выбираем a[href="/memo/"] или a[href="/ru/memo/"] в зависимости от языка
-    const memoLink = document.querySelector('a[href="/memo/"], a[href="/ru/memo/"]');
+document.addEventListener('click', function(e) {
+    const memoLink = e.target.closest('a[href="/memo/"], a[href="/ru/memo/"]');
     
-    // Если ссылки на странице нет, просто выходим
     if (!memoLink) return;
+    if (memoLink.id === 'memo-app-btn') return; 
 
-    // Вешаем слушатель ТОЛЬКО на эту ссылку
-    memoLink.addEventListener('click', function(e) {
-        // Игнорируем кнопку плеера (на всякий случай, если селектор совпадет)
-        if (this.id === 'memo-app-btn') return; 
+    e.preventDefault();
 
-        let textToPass = '';
-        
-        const activeWord = document.querySelector('.active-word');
-        const highlighted = Array.from(document.querySelectorAll('.memorize-highlight'));
-        const ttsActive = document.querySelector('.tts-active');
+    let textToPass = '';
+    
+    const activeWord = document.querySelector('.active-word');
+    const highlighted = Array.from(document.querySelectorAll('.memorize-highlight'));
+    const ttsActive = document.querySelector('.tts-active');
 
-        // Проверяем, находится ли активное слово внутри диапазона А-Б
-        let isWordInsideAB = false;
-        if (activeWord && highlighted.length > 0) {
-            isWordInsideAB = activeWord.closest('.memorize-highlight') !== null;
+    let isWordInsideAB = false;
+    if (activeWord && highlighted.length > 0) {
+        isWordInsideAB = activeWord.closest('.memorize-highlight') !== null;
+    }
+
+    // 1. ПРИОРИТЕТ: Активное слово ВНЕ диапазона А-Б
+    if (activeWord && !isWordInsideAB) {
+        textToPass = activeWord.innerText || activeWord.textContent;
+    } 
+    // 2. ПРИОРИТЕТ: Весь диапазон А-Б
+    else if (highlighted.length > 0) {
+        const ttsMode = localStorage.getItem('tts_preferred_mode') || 'pi';
+        let filtered = highlighted;
+
+        if (ttsMode === 'pi') {
+            filtered = highlighted.filter(el => el.classList.contains('pli-lang'));
+        } else if (ttsMode === 'trn') {
+            filtered = highlighted.filter(el => !el.classList.contains('pli-lang'));
         }
+        
+        if (filtered.length === 0) filtered = highlighted;
+        textToPass = filtered.map(el => el.innerText || el.textContent).join('\n');
+    } 
+    // 3. ПРИОРИТЕТ: Текущая читаемая строка (TTS)
+    else if (ttsActive) {
+        textToPass = ttsActive.innerText || ttsActive.textContent;
+    }
+    // 4. ПРИОРИТЕТ: Ничего не выбрано — берем текст сутты с учетом видимости
+    else {
+        const suttaContainer = document.getElementById('sutta');
+        if (suttaContainer) {
+            // Проверяем, скрыт ли язык Пали через класс
+            const isPaliHidden = suttaContainer.classList.contains('hide-pali');
 
-        // 1. ПРИОРИТЕТ: Активное слово ВНЕ диапазона А-Б
-        if (activeWord && !isWordInsideAB) {
-            textToPass = activeWord.innerText || activeWord.textContent;
-        } 
-        // 2. ПРИОРИТЕТ: Весь диапазон А-Б
-        else if (highlighted.length > 0) {
-            const ttsMode = localStorage.getItem('tts_preferred_mode') || 'pi';
-            let filtered = highlighted;
-
-            if (ttsMode === 'pi') {
-                filtered = highlighted.filter(el => el.classList.contains('pli-lang'));
-            } else if (ttsMode === 'trn') {
-                filtered = highlighted.filter(el => !el.classList.contains('pli-lang'));
+            if (isPaliHidden) {
+                // ПАЛИ СКРЫТ: Ищем спаны с переводом (русский или английский)
+                const transElements = suttaContainer.querySelectorAll('.rus-lang, .eng-lang');
+                if (transElements.length > 0) {
+                    textToPass = Array.from(transElements).map(el => el.innerText || el.textContent).join('\n');
+                } else {
+                    textToPass = suttaContainer.innerText || suttaContainer.textContent;
+                }
+            } else {
+                // ПАЛИ ВИДИМ (один или вместе с переводом): Отдаем приоритет Пали
+                const paliElements = suttaContainer.querySelectorAll('.pli-lang');
+                if (paliElements.length > 0) {
+                    textToPass = Array.from(paliElements).map(el => el.innerText || el.textContent).join('\n');
+                } else {
+                    textToPass = suttaContainer.innerText || suttaContainer.textContent;
+                }
             }
+        }
+    }
+    
+    textToPass = textToPass ? textToPass.trim() : '';
+
+    const isRuPath = window.location.pathname.includes('/r/') || 
+                     window.location.pathname.includes('/ml/') || 
+                     window.location.pathname.includes('/ru/');
+                     
+    const baseUrl = isRuPath ? '/ru/memo/' : '/memo/';
+    
+    // Формируем URL с безопасной обрезкой (лимит ~1900 символов)
+    if (textToPass) {
+        const MAX_URL_LENGTH = 1900;
+        let encodedText = encodeURIComponent(textToPass);
+        
+        if (encodedText.length > MAX_URL_LENGTH) {
+            let safeRatio = MAX_URL_LENGTH / encodedText.length;
+            let safeLength = Math.floor(textToPass.length * safeRatio) - 3;
             
-            if (filtered.length === 0) filtered = highlighted;
-            textToPass = filtered.map(el => el.innerText || el.textContent).join('\n');
-        } 
-        // 3. ПРИОРИТЕТ: Текущая читаемая строка (TTS)
-        else if (ttsActive) {
-            textToPass = ttsActive.innerText || ttsActive.textContent;
+            textToPass = textToPass.substring(0, safeLength) + '...';
+            encodedText = encodeURIComponent(textToPass);
+            
+            while (encodedText.length > MAX_URL_LENGTH && textToPass.length > 0) {
+                safeLength -= 10;
+                textToPass = textToPass.substring(0, safeLength) + '...';
+                encodedText = encodeURIComponent(textToPass);
+            }
         }
         
-        textToPass = textToPass ? textToPass.trim() : '';
-
-        // Определяем базовый URL в зависимости от пути
-        const isRuPath = window.location.pathname.includes('/r/') || 
-                         window.location.pathname.includes('/ml/') || 
-                         window.location.pathname.includes('/ru/');
-                         
-        const baseUrl = isRuPath ? '/ru/memo/' : '/memo/';
-        
-        // Динамически обновляем href у самой ссылки (`this`)
-        if (textToPass) {
-            this.href = `${baseUrl}?text=${encodeURIComponent(textToPass)}`;
-        } else {
-            this.href = baseUrl;
-        }
-    });
+        window.location.href = `${baseUrl}?text=${encodedText}`;
+    } else {
+        window.location.href = baseUrl;
+    }
 });
-
-*/

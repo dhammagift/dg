@@ -2265,8 +2265,9 @@ document.addEventListener('click', (e) => {
 
 
 window.speechSynthesis.onvoiceschanged = () => synth.getVoices();
-document.addEventListener('DOMContentLoaded', () => { 
 
+function initTTS() {
+  // --- Та самая часть с контекстным меню ---
   document.addEventListener('contextmenu', function(e) {
     if (!e.target.closest('a.voice-link')) return;
     if (localStorage.getItem('ttsMode') === 'true') {
@@ -2280,7 +2281,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   synth.getVoices();
   
-  // --- AUTOPLAY LOGIC (Вставить перед закрывающей скобкой DOMContentLoaded) ---
+  // --- AUTOPLAY LOGIC ---
   const urlParams = new URLSearchParams(window.location.search);
   
   if (urlParams.has('autoplay') || localStorage.getItem('ttsMode') === 'true') {
@@ -2303,28 +2304,23 @@ document.addEventListener('DOMContentLoaded', () => {
               const internalPlayBtn = player.querySelector('.play-main-button');
               if (internalPlayBtn) internalPlayBtn.dataset.slug = slug;
 
-              // 2. ОПРЕДЕЛЕНИЕ РЕЖИМА (Приоритет: URL -> Память -> 'trn')
+              // 2. ОПРЕДЕЛЕНИЕ РЕЖИМА
               let mode = urlParams.get('mode');
               const validModes = ['pi', 'trn', 'pi-trn', 'trn-pi'];
 
-              // Если в URL мусор или пусто, берем из памяти
               if (!mode || !validModes.includes(mode)) {
                   mode = localStorage.getItem(MODE_STORAGE_KEY) || 'trn';
               } else {
-                  // Если режим задан в URL, обновляем выпадающий список в плеере визуально
                   const modeSelect = document.getElementById('tts-mode-select');
                   if (modeSelect) modeSelect.value = mode;
-                  // И запоминаем на будущее (опционально, можно убрать если не хотите сбивать настройки)
                   localStorage.setItem(MODE_STORAGE_KEY, mode);
               }
 
               // 3. ЗАПУСК
               startPlayback(document, mode, slug, 0);
 
-              // 4. СТРАХОВКА ОТ БЛОКИРОВКИ (Firefox/Chrome)
+              // 4. СТРАХОВКА ОТ БЛОКИРОВКИ
               const forceUnlock = (e) => {
-                  // Если клик пришел из самого плеера, ничего не делаем здесь.
-                  // Основной обработчик handleSuttaClick сам всё включит.
                   const isPlayerClick = e && e.target && e.target.closest('.voice-player');
                   
                   if (ttsState.speaking && ttsState.paused && !isPlayerClick) {
@@ -2334,23 +2330,21 @@ document.addEventListener('DOMContentLoaded', () => {
                       toggleSilence(true); 
 
                       if (ttsState.googleAudio) {
-                          ttsState.googleAudio.play().catch(e => console.warn(e));
+                          ttsState.googleAudio.play().catch(err => console.warn(err));
                       } else {
                           playCurrentSegment();
                       }
                   }
 
-                  // Удаляем слушателей в любом случае, так как взаимодействие произошло
                   ['click', 'touchstart', 'scroll', 'keydown'].forEach(evt => 
                       document.removeEventListener(evt, forceUnlock)
                   );
               };
 
-              // Важно: убираем { once: true }, так как мы сами удаляем слушателей внутри функции
+              // Восстановил твои обработчики в исходном виде
               ['click', 'touchstart', 'scroll', 'keydown'].forEach(evt => 
                   document.addEventListener(evt, forceUnlock, { passive: true })
               );
-
 
               ['click', 'touchstart', 'scroll', 'keydown'].forEach(evt => 
                   document.addEventListener(evt, forceUnlock, { once: true, passive: true })
@@ -2358,10 +2352,17 @@ document.addEventListener('DOMContentLoaded', () => {
           }
       }, 1000); 
   }
-  // --- END AUTOPLAY ---
+}
 
-  
-});
+// Запускаем немедленно, если DOM уже готов (при ленивой загрузке), 
+// или ждем готовности, если грузится стандартно
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTTS);
+} else {
+    initTTS();
+}
+
+
 
 document.addEventListener('visibilitychange', async () => {
   if (wakeLock !== null && document.visibilityState === 'visible') {

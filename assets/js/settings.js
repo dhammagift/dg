@@ -69,6 +69,108 @@
 })();
 
 
+// === ЗАГРУЗКА TTS СТРОГО ПО КЛИКУ / ХОТКЕЮ / АВТОПЛЕЮ ===
+(function() {
+    window.isVoiceScriptLoaded = false;
+    let isVoiceInitializing = false;
+
+    window.loadVoiceScripts = function(callback) {
+        if (window.isVoiceScriptLoaded) {
+            if (callback) callback();
+            return;
+        }
+        if (isVoiceInitializing) return;
+        isVoiceInitializing = true;
+
+        // 1. Показываем визуальный лоадер
+        let loadingEl = document.getElementById('voice-loader');
+        if (!loadingEl) {
+            loadingEl = document.createElement('div');
+            loadingEl.id = 'voice-loader';
+            loadingEl.className = 'dict-loading-indicator';
+            const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/');
+            loadingEl.textContent = isRu ? 'Инициализация аудио...' : 'Initializing audio...';
+            document.body.appendChild(loadingEl);
+            setTimeout(() => loadingEl.classList.add('show'), 10);
+        }
+
+        // 2. Сначала грузим voice.js
+        const scriptVoice = document.createElement('script');
+        scriptVoice.src = "/read/js/voice.js";
+        
+        scriptVoice.onload = () => {
+            // 3. Затем voice-mem.js (он зависит от window.ttsAPI из voice.js)
+            const scriptMem = document.createElement('script');
+            scriptMem.src = "/read/js/voice-mem.js";
+            
+            scriptMem.onload = () => {
+                window.isVoiceScriptLoaded = true;
+                isVoiceInitializing = false;
+                
+                if (loadingEl) {
+                    loadingEl.classList.remove('show');
+                    setTimeout(() => loadingEl.remove(), 300);
+                }
+                if (callback) callback();
+            };
+            
+            scriptMem.onerror = () => {
+                console.error("Failed to load voice-mem.js");
+                window.isVoiceScriptLoaded = true; // Считаем, что ядро всё равно загружено
+                isVoiceInitializing = false;
+                if (loadingEl) loadingEl.remove();
+                if (callback) callback();
+            };
+            
+            document.head.appendChild(scriptMem);
+        };
+        
+        scriptVoice.onerror = () => {
+            console.error("Failed to load voice.js");
+            isVoiceInitializing = false;
+            if (loadingEl) loadingEl.remove();
+        };
+        
+        document.head.appendChild(scriptVoice);
+    };
+
+    // Перехват кликов
+    const voiceClickHandler = function(e) {
+        const isVoiceLink = e.target.closest('.voice-link');
+        const isDynamicBtn = e.target.closest('.dynamic-tts-btn');
+
+        if (isVoiceLink || isDynamicBtn) {
+            if (window.isVoiceScriptLoaded) return; // Пусть работает логика voice.js
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            const clickX = e.clientX;
+            const clickY = e.clientY;
+            const target = e.target;
+
+            window.loadVoiceScripts(() => {
+                // Имитируем клик после загрузки скриптов
+                const clickEvent = new MouseEvent('click', {
+                    view: window, bubbles: true, cancelable: true, clientX: clickX, clientY: clickY
+                });
+                target.dispatchEvent(clickEvent);
+            });
+        }
+    };
+
+    document.addEventListener('click', voiceClickHandler, true);
+
+    // Проверка автоплея (чтобы загрузить сразу без клика)
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('autoplay') || localStorage.getItem('ttsMode') === 'true') {
+            window.loadVoiceScripts();
+        }
+    });
+})();
+
+
 function checkStorage(key) {
     if (localStorage.getItem(key) !== null) {
         alert(`Запись "${key}" есть в localStorage! Значение: ${localStorage.getItem(key)}`);
@@ -688,45 +790,48 @@ document.addEventListener("keydown", (event) => {
     helpButton.click();
   }
 
-// Alt + R — Voice / TTS (если доступно)
 // --- Обработчик горячих клавиш (Alt + R) ---
-    // Проверяем комбинацию Alt + R
-    if (event.altKey && event.code === "KeyR") {
-      
-      // 1. Пропускаем, если фокус в поле ввода
-      const activeTag = document.activeElement.tagName;
-      if (['INPUT', 'TEXTAREA'].includes(activeTag) || document.activeElement.isContentEditable) {
+if (event.altKey && event.code === "KeyR") {
+    // 1. Пропускаем, если фокус в поле ввода
+    const activeTag = document.activeElement.tagName;
+    if (['INPUT', 'TEXTAREA'].includes(activeTag) || document.activeElement.isContentEditable) {
         return;
-      }
+    }
 
-      event.preventDefault();
+    event.preventDefault();
 
-      // 2. Сценарий: Плеер уже активен (играет или на паузе)
-      // Мы просто нажимаем программно на кнопку Play/Pause основного плеера.
-      // Это сработает как Play -> Pause или Pause -> Resume.
-      if (ttsState.speaking) {
-         const mainPlayBtn = document.querySelector('.play-main-button');
-         if (mainPlayBtn) {
-             mainPlayBtn.click();
-         }
-         return;
-      }
+    // Если скрипты еще не загружены — грузим и запускаем
+    if (!window.isVoiceScriptLoaded) {
+        window.loadVoiceScripts(() => {
+            const voiceLink = document.querySelector('.voice-link');
+            if (voiceLink) voiceLink.click();
+        });
+        return;
+    }
 
-      // 3. Сценарий: Плеер выключен, но выбран конкретный сегмент
-      // Ищем миникнопку и запускаем её
-      const miniPlayBtn = document.querySelector('.dynamic-tts-btn');
-      if (miniPlayBtn) {
+    // 2. Сценарий: Плеер уже активен
+    if (typeof ttsState !== 'undefined' && ttsState.speaking) {
+        const mainPlayBtn = document.querySelector('.play-main-button');
+        if (mainPlayBtn) {
+            mainPlayBtn.click();
+        }
+        return;
+    }
+
+    // 3. Сценарий: Выбран конкретный сегмент (мини-кнопка)
+    const miniPlayBtn = document.querySelector('.dynamic-tts-btn');
+    if (miniPlayBtn) {
         miniPlayBtn.click();
         return;
-      }
-
-      // 4. Сценарий: Плеер выключен, ничего не выбрано
-      // Запускаем через главную ссылку (откроет плеер и начнет сначала)
-      const voiceLink = document.querySelector('.voice-link');
-      if (voiceLink) {
-        voiceLink.click();
-      }
     }
+
+    // 4. Сценарий: Запуск по умолчанию
+    const voiceLink = document.querySelector('.voice-link');
+    if (voiceLink) {
+        voiceLink.click();
+    }
+}
+
 
 
     if (event.altKey && event.code === "KeyS") {
@@ -1720,7 +1825,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (typeof addToSearchHistory === 'function') addToSearchHistory();
 });
 
-
 // === ЛЕНИВАЯ ЗАГРУЗКА QUICK MODAL (СТРОГО ПО КЛИКУ / ХОТКЕЮ) ===
 (function() {
     window.isQuickModalScriptLoaded = false;
@@ -1735,10 +1839,10 @@ document.addEventListener("DOMContentLoaded", () => {
         isQuickModalInitializing = true;
 
         // 1. Показываем визуальный лоадер (берем стили от словаря)
-        let loadingEl = document.getElementById('main-dict-loader');
+        let loadingEl = document.getElementById('quick-modal-loader');
         if (!loadingEl) {
             loadingEl = document.createElement('div');
-            loadingEl.id = 'main-dict-loader';
+            loadingEl.id = 'quick-modal-loader';
             loadingEl.className = 'dict-loading-indicator';
             const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/');
             loadingEl.textContent = isRu ? 'Загрузка меню...' : 'Loading menu...';
