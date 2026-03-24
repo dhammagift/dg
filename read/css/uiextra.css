@@ -698,8 +698,6 @@
     filter: brightness(0) invert(0.7) !important;
 }
 
-
-/* Панель с кнопками */
 #smart-panel {
     background-color: rgba(255, 255, 255, 0.95);
     border-radius: 12px;
@@ -710,6 +708,12 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     border: 1px solid #ccc;
     
+    /* --- ДОБАВЬ ЭТИ ТРИ СТРОКИ --- */
+    max-height: calc(100vh - 80px); /* 80px — запас, чтобы панель не упиралась в края экрана */
+    overflow-y: auto;               /* Включаем скролл, если контент не влезает */
+    -webkit-overflow-scrolling: touch; /* Плавный скролл для мобильных устройств */
+    /* ----------------------------- */
+
     opacity: 0;
     visibility: hidden;
     transform: scale(0.9);
@@ -768,7 +772,7 @@
 }
 
 
-@media (orientation: landscape) and (max-height: 520px) {
+@media (max-height: 520px) {
   #smart-gear-container {
     top: 8px;
     right: max(20px, env(safe-area-inset-right, 0px));
