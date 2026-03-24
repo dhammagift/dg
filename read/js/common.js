@@ -580,12 +580,20 @@ function generateThirdPartyLinks(slug, slugReady, texttype, translator) {
     if (typeof tbwLinksData !== 'undefined') {
         const hasTbw = tbwLinksData.find(item => Array.isArray(item) ? item[0] === slug : item === slug);
         if (hasTbw) {
-            scLink += `&nbsp;<a target="" title="BB and Other translations" href="/b/?q=${slug}">BB</a>`;
+            // Проверяем, не находимся ли мы уже в директории /b/
+            const isBbPath = window.location.pathname.startsWith('/b/');
+            
+            // Выводим ссылку BB только если мы НЕ на странице BB
+            if (!isBbPath) {
+                scLink += `&nbsp;<a target="" title="BB and Other translations" href="/b/?q=${slug}">BB</a>`;
+            }
+            
             const bookMatch = slug.match(/^[a-z]+/); 
             const book = bookMatch ? bookMatch[0] : "";
             scLink += `&nbsp;<a target="_blank" title="TheBuddhasWords.net (Offline Copy)" href="/bw/${book}/${slug}.html">TBW</a>`;
         }
     }
+
 
     if (typeof thruLinksData !== 'undefined') {
         const ruItem = thruLinksData.find(item => item[0] === slug);
