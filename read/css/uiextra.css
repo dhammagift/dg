@@ -819,11 +819,21 @@
 
 /* Общие стили для иконок компаса в модальных окнах */
 .compass-icon {
-    color: grey;
     cursor: pointer;
     height: 25px;
-    display: inline-block;
+    width: 25px; /* фиксируем ширину */
+    color: grey;
+    margin-left: 0.5em; /* небольшой отступ от заголовка */
+    display: inline-flex; /* flex лучше центрирует картинку */
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
 }
+.compass-icon img {
+    height: 100%;
+    width: auto;
+}
+
 
 /* Разделитель в смарт-панели */
 #smart-panel hr {
