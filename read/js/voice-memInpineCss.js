@@ -11,7 +11,7 @@
         b: isRu ? 'Б:' : 'B:',
         notSet: isRu ? 'не выбрана' : 'not set',
         titlePick: isRu ? 'Нажмите для выбора. ПКМ или долгое нажатие для сброса.' : 'Click to select. Right-Click / Long-Press to clear.',
-        interval: isRu ? 'сек' : 'sec', 
+        interval: isRu ? 'сек' : 'sec', // Изменено на секунды
         playing: isRu ? 'Проигрывание... (осталось: ' : 'Playing... (left: ',
         paused: isRu ? 'Пауза... Старт через ' : 'Paused... Next in ',
         abLoopTitle: 'AB'
@@ -23,7 +23,7 @@
         lineB: null,
         snippetA: '', 
         snippetB: '', 
-        intervalSeconds: 0, 
+        intervalSeconds: 0, // Изменено название переменной на секунды
         repsInput: '∞', 
         repsPlayed: 0,   
         repsLeft: 0,     
@@ -49,9 +49,161 @@
 
     // --- Инициализация и UI ---
     function init() {
+        injectStyles();
         injectUI();
         loadState();
         setupListeners();
+    }
+
+    function injectStyles() {
+        const style = document.createElement('style');
+        style.textContent = `
+        
+            .memo-app-btn {
+                position: absolute;
+                left: 20px;
+                top: 34px;
+                background: transparent;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                color: #777;
+                font-size: 9px;
+                font-family: sans-serif;
+                font-weight: 700;
+                padding: 2px 4px;
+                cursor: pointer;
+                transition: all 0.3s;
+                display: inline-flex;
+                align-items: center;
+                text-decoration: none;
+                z-index: 10;
+                line-height: 1;
+            }
+            .memo-app-btn:hover { background: #eee; color: #333; border-color: #bbb; }
+            .dark .memo-app-btn { border-color: #555; color: #aaa; }
+            .dark .memo-app-btn:hover { background: #444; color: #fff; border-color: #777; }
+
+        
+            .ab-loop-toggle-btn {
+                position: absolute;
+                right: 20px; 
+                top: 34px;   
+                background: transparent;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                color: #777;
+                font-size: 9px;
+                font-family: sans-serif;
+                font-weight: 700;
+                padding: 2px 4px;
+                cursor: pointer;
+                transition: all 0.3s;
+                display: inline-flex;
+                align-items: center;
+                gap: 2px;
+                z-index: 10;
+                line-height: 1;
+            }
+            .ab-loop-toggle-btn:hover { background: #eee; color: #333; border-color: #bbb; }
+            .dark .ab-loop-toggle-btn { border-color: #555; color: #aaa; }
+            .dark .ab-loop-toggle-btn:hover { background: #444; color: #fff; border-color: #777; }
+            
+            .ab-loop-toggle-btn.loop-active {
+                color: var(--blue, #3434be);
+                border-color: var(--blue, #3434be);
+                background: rgba(52, 52, 190, 0.05);
+            }
+            .dark .ab-loop-toggle-btn.loop-active {
+                color: rgb(122, 122, 249);
+                border-color: rgb(122, 122, 249);
+                background: rgba(122, 122, 249, 0.1);
+            }
+
+            #memorize-panel {
+                width: 100%;
+                box-sizing: border-box;
+                max-height: 0; opacity: 0; overflow: hidden;
+                transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
+                border-top: 1px dashed #555;
+                background: transparent;
+                padding: 0 5px;
+            }
+            #memorize-panel.visible {
+                max-height: 400px; opacity: 1; margin-top: 10px; padding-top: 8px;
+            }
+            .mem-row { 
+                width: 100%; box-sizing: border-box; 
+                display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; 
+            }
+            
+            .mem-btn-wrapper { 
+                display: flex; align-items: center; gap: 4px; 
+                flex: 1; min-width: 0; width: 50%;
+            }
+            .mem-btn-label { color: #aaa; font-size: 11px; flex-shrink: 0; font-weight: 600; }
+
+            .mem-pick-btn {
+                flex: 1; min-width: 0; width: 100%; 
+                background: #eee; border: 1px dashed #ccc; color: #555;
+                padding: 4px; border-radius: 4px; font-size: 11px; cursor: pointer;
+                transition: all 0.2s; text-align: left; 
+                overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+                user-select: none; -webkit-user-select: none; 
+                display: block; 
+            }
+            
+            .mem-pick-btn span {
+                display: block;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                width: 58px;
+            }
+
+            .dark .mem-pick-btn { background: #333; border-color: #555; color: #aaa; }
+            
+            .mem-pick-btn.picking { border-color: var(--blue, #3434be); background: rgba(52, 52, 190, 0.1); animation: memPulseLight 1.5s infinite; color: #333; }
+            .mem-pick-btn.set { border-color: var(--blue, #3434be); border-style: solid; color: #000; }
+            .mem-status { font-size: 11px; color: var(--blue, #3434be); text-align: center; margin-top: 2px; min-height: 14px; }
+
+            .dark .mem-pick-btn.picking { border-color: rgb(122, 122, 249); background: rgba(122, 122, 249, 0.15); animation: memPulseDark 1.5s infinite; color: #fff; }
+            .dark .mem-pick-btn.set { border-color: rgb(122, 122, 249); color: #fff; }
+            .dark .mem-status { color: rgb(122, 122, 249); }
+
+            .memorize-highlight { 
+                border-left: 3px solid var(--blue, #3434be) !important; 
+                padding-left: 5px !important; 
+                margin-bottom: 0 !important;
+                padding-bottom: 4px !important;
+            }
+            .dark .memorize-highlight { 
+                border-left: 3px solid rgb(122, 122, 249) !important; 
+            }
+            
+            #sutta span[id]:has(.tts-active) .memorize-highlight.tts-active,
+            #sutta span[id]:has(.tts-active) .memorize-highlight.active-word {
+                border-left: 3px solid var(--blue, #3434be) !important;
+                padding-left: 5px !important;
+                margin-bottom: 0 !important;
+                padding-bottom: 4px !important;
+            }
+            .dark #sutta span[id]:has(.tts-active) .memorize-highlight.tts-active,
+            .dark #sutta span[id]:has(.tts-active) .memorize-highlight.active-word {
+                border-left: 3px solid rgb(122, 122, 249) !important;
+            }
+
+            .mem-label { font-size: 11px; color: #aaa; margin: 0; display: flex; align-items: center; gap: 5px; }
+
+            .mem-clear-btn {
+                background: transparent; border: none; font-size: 14px; cursor: pointer; padding: 2px;
+                display: flex; align-items: center; justify-content: center; opacity: 0.7; transition: 0.2s;
+            }
+            .mem-clear-btn:hover { opacity: 1; transform: scale(1.1); }
+            
+            @keyframes memPulseLight { 0% { box-shadow: 0 0 0 0 rgba(52, 52, 190, 0.4); } 70% { box-shadow: 0 0 0 4px rgba(52, 52, 190, 0); } 100% { box-shadow: 0 0 0 0 rgba(52, 52, 190, 0); } }
+            @keyframes memPulseDark { 0% { box-shadow: 0 0 0 0 rgba(122, 122, 249, 0.4); } 70% { box-shadow: 0 0 0 4px rgba(122, 122, 249, 0); } 100% { box-shadow: 0 0 0 0 rgba(122, 122, 249, 0); } }
+        `;
+        document.head.appendChild(style);
     }
 
     function injectUI() {
@@ -59,6 +211,8 @@
             const mainRow = document.querySelector('.tts-main-row');
             if (mainRow && !document.getElementById('ab-loop-toggle-btn')) {
                 
+                mainRow.style.position = 'relative';
+
                 const memoBtn = document.createElement('a');
                 memoBtn.id = 'memo-app-btn';
                 memoBtn.className = 'memo-app-btn';
@@ -125,7 +279,7 @@
                 abBtn.innerHTML = `
                     ${L.abLoopTitle} 
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.2v-2a4 4 0 0 1 4-4h12.8M7 21.9l-4-4 4-4"/><path d="M21 11.8v2a4 4 0 0 1-4 4H4.2"/></svg>
-                    <span id="ab-btn-timer" class="ab-btn-timer-text"></span>
+                    <span id="ab-btn-timer" style="display:none; margin-left:2px; font-variant-numeric: tabular-nums;"></span>
                 `;
                 mainRow.appendChild(abBtn);
 
@@ -133,6 +287,7 @@
                 panel.id = 'memorize-panel';
                 if (memState.isPanelOpen) panel.classList.add('visible');
                 
+                // ТЕПЕРЬ ОБА ПОЛЯ (минуты/секунды и повторы) — ЭТО SPAN 
                 panel.innerHTML = `
                     <div class="mem-row">
                         <div class="mem-btn-wrapper">
@@ -145,20 +300,20 @@
                         </div>
                     </div>
                     
-                    <div class="mem-row mem-row-actions">
+                    <div class="mem-row" style="justify-content: space-around; gap: 5px;">
                         <label class="mem-label">
-                            <img src="/assets/svg/hourglass-regular-full.svg" width="14" height="14" alt="timer" class="mem-timer-icon">
-                            <span id="mem-interval" class="tts-editable-span" contenteditable="true" inputmode="decimal" spellcheck="false">${memState.intervalSeconds}</span>
-                            ${L.interval}
+                            <img src="/assets/svg/hourglass-regular-full.svg" width="14" height="14" alt="timer" style="margin-right: 4px; vertical-align: text-bottom;">
+<span id="mem-interval" class="tts-editable-span" contenteditable="true" inputmode="decimal" spellcheck="false">${memState.intervalSeconds}</span>
+ ${L.interval}
                         </label>
 
                         <label class="mem-label" title="0 = Бесконечно">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.2v-2a4 4 0 0 1 4-4h12.8M7 21.9l-4-4 4-4"/><path d="M21 11.8v2a4 4 0 0 1-4 4H4.2"/></svg> 
-                            <span id="mem-repeat-times" class="tts-editable-span" contenteditable="true" inputmode="numeric" spellcheck="false">${memState.repsInput}</span>
+<span id="mem-repeat-times" class="tts-editable-span" contenteditable="true" inputmode="numeric" spellcheck="false">${memState.repsInput}</span>
+
                         </label>
                         <button id="mem-clear-btn" class="mem-clear-btn" title="Сбросить цикл">️
-                            <img src="/assets/svg/trash-can-regular-full.svg" width="16" height="16" alt="Reset">
-                        </button>
+    <img src="/assets/svg/trash-can-regular-full.svg" width="16" height="16" alt="Reset"></button>
                     </div>
                     <div id="mem-status" class="mem-status"></div>
                 `;
@@ -170,8 +325,58 @@
         }, 400); 
     }
 
-    function loadState() {}
-    function saveState() {}
+    function loadState() {
+        // ЗАКОММЕНТИРОВАНО: Сбрасываем A-B цикл при обновлении страницы 
+        /*
+        try {
+            const slug = getSlug();
+            const memory = JSON.parse(localStorage.getItem(MEMORY_KEY)) || {};
+            const saved = memory[slug];
+            
+            if (saved) {
+                memState.lineA = saved.lineA;
+                memState.lineB = saved.lineB;
+                memState.snippetA = saved.snippetA || '';
+                memState.snippetB = saved.snippetB || '';
+                memState.intervalSeconds = saved.intervalSeconds !== undefined ? saved.intervalSeconds : 0;
+                memState.repsInput = saved.repsInput || '∞'; 
+            }
+        } catch(e) {}
+        */
+    }
+
+    function saveState() {
+        // ЗАКОММЕНТИРОВАНО: Сбрасываем A-B цикл при обновлении страницы 
+        /*
+        try {
+            const slug = getSlug();
+            let memory = JSON.parse(localStorage.getItem(MEMORY_KEY)) || {};
+            
+            memory[slug] = {
+                lineA: memState.lineA,
+                lineB: memState.lineB,
+                snippetA: memState.snippetA,
+                snippetB: memState.snippetB,
+                intervalSeconds: memState.intervalSeconds,
+                repsInput: memState.repsInput,
+                timestamp: Date.now()
+            };
+
+            if (!memState.lineA && !memState.lineB) {
+                delete memory[slug];
+            }
+
+            const keys = Object.keys(memory);
+            if (keys.length > MAX_SAVED_TEXTS) {
+                const sortedKeys = keys.sort((a, b) => (memory[a].timestamp || 0) - (memory[b].timestamp || 0));
+                const keysToRemove = sortedKeys.slice(0, keys.length - MAX_SAVED_TEXTS);
+                keysToRemove.forEach(k => delete memory[k]);
+            }
+
+            localStorage.setItem(MEMORY_KEY, JSON.stringify(memory));
+        } catch(e) {}
+        */
+    }
 
     function extractSnippet(el) {
         if (!el) return '';
@@ -274,7 +479,10 @@
 
         document.addEventListener('input', (e) => {
             if (e.target.id === 'mem-interval') {
+                // Разрешаем цифры, точку и запятую. Запятую сразу меняем на точку
                 let text = e.target.innerText.replace(/[^0-9.,]/g, '').replace(',', '.');
+                
+                // Оставляем только одну точку, если ввели несколько
                 let parts = text.split('.');
                 if (parts.length > 2) {
                     text = parts[0] + '.' + parts.slice(1).join('');
@@ -294,8 +502,10 @@
                 memState.intervalSeconds = isNaN(val) ? 0 : val;
                 
                 if (memState.countdownId && memState.pauseStartedAt) {
+                    // Умножаем на 1000 для перевода секунд в миллисекунды (раньше было * 60 * 1000)
                     memState.targetTimestamp = memState.pauseStartedAt + (memState.intervalSeconds * 1000);
                 }
+                // saveState();
             }
             if (e.target.id === 'mem-repeat-times') {
                 let text = e.target.innerText.replace(/[^0-9∞]/g, '');
@@ -321,6 +531,7 @@
                     const statusEl = document.getElementById('mem-status');
                     if (statusEl) statusEl.innerText = `${L.playing}${memState.repsLeft === Infinity ? '∞' : memState.repsLeft})`;
                 }
+                // saveState();
             }
         });
 
@@ -334,6 +545,7 @@
                 if (memState.countdownId && memState.pauseStartedAt) {
                     memState.targetTimestamp = memState.pauseStartedAt;
                 }
+                // saveState();
             }
             
             if (e.target.id === 'mem-repeat-times') {
@@ -344,6 +556,7 @@
                 }
                 memState.repsPlayed = 0;
                 updateRepsLeft();
+                // saveState();
             }
         });
 
@@ -606,6 +819,7 @@
                 [memState.snippetA, memState.snippetB] = [memState.snippetB, memState.snippetA];
             }
         }
+        // saveState();
         highlightRange();
     }
 
@@ -671,11 +885,6 @@
         memState.targetTimestamp = null;
         
         if (window.ttsAPI) {
-            // ---> Отпускаем экран, так как цикл А-Б полностью завершен <---
-            if (typeof window.ttsAPI.releaseWakeLock === 'function') {
-                window.ttsAPI.releaseWakeLock();
-            }
-
             const state = window.ttsAPI.getState();
             if (state.speaking && !state.paused) {
                 memState.ignoreNextPlayClick = true; 
@@ -691,7 +900,6 @@
         updateABTimerDisplay();
         updateUI();
     }
-
 
     function playCurrentRange() {
         if (!memState.lineA || !window.ttsAPI) return; 
@@ -722,6 +930,7 @@
             return;
         }
 
+        // Перевод секунд в миллисекунды (было * 60 * 1000)
         const msInterval = memState.intervalSeconds * 1000;
         
         if (msInterval <= 0) {
@@ -751,6 +960,7 @@
                 return;
             }
             
+            // Формат отображения таймера оставил как ММ:СС (например, если поставить 65 сек, будет 1:05)
             const mins = Math.floor(timeLeft / 60000);
             const secs = Math.floor((timeLeft % 60000) / 1000);
             const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -768,6 +978,7 @@
         memState.countdownId = setInterval(tick, 1000);
     }
 
+    // === ИНТЕРСЕПТОР ПАУЗЫ МЕЖДУ СЕГМЕНТАМИ (Без вмешательства в voice.js) ===
     let _segmentTimerId = null;
     let _internalDelayValue = (parseFloat(localStorage.getItem('tts_segment_delay')) || 0) * 1000;
 
@@ -777,6 +988,7 @@
                 const state = window.ttsAPI.getState();
                 const maxIndex = state.endIndex !== undefined ? state.endIndex : state.playlist.length - 1;
                 
+                // Перехватываем только в момент перехода к следующей фразе
                 if (state.speaking && !state.paused && state.currentIndex <= maxIndex) {
                     setTimeout(() => startSegmentVisualTimer(_internalDelayValue), 0);
                 }
@@ -809,6 +1021,7 @@
             const secs = Math.floor((timeLeft % 60000) / 1000);
             
             timerSpan.style.setProperty('display', 'inline-block', 'important');
+            // Убрали иконку, оставили чистый формат A-B режима
             timerSpan.innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
         };
 
@@ -834,6 +1047,7 @@
             stopSegmentVisualTimer();
         }
     }, { capture: true });
+    // =========================================================================
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();

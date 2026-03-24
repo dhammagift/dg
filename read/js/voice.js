@@ -2642,7 +2642,8 @@ window.ttsAPI = {
         playCurrentSegment();
     },
     stop: stopPlayback,
-    keepSilenceAlive: toggleSilence
+    keepSilenceAlive: toggleSilence,
+    releaseWakeLock: releaseWakeLock
 };
 
 // --- Обработка поля Delay (Span ContentEditable) ---

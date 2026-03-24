@@ -196,29 +196,38 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
                     </div>
                 </div>
 
-                <div class="collapse mt-3" id="linkList">
-                    <ul class="list-group">
-                      <li class="list-group-item" id="help_text_1">
-                        Reduce text to first letters to memorize faster (e.g. "Sabbaṁ taṁ" → "S t").<br>
-                        <b>AI Expand</b> use AI to restore omitted repeated sections (peyyāla)<br>
-                        <b>TTS:</b> <b>Split by</b> cuts text into pieces. <b>Interval</b> adds delay between them. <b>Sound</b> plays at the end. <b>Loop</b> repeats.
-                      </li>
-                        <li class="list-group-item" id="link_tips">Tips & Tricks for Memorizaiton
-                            <a href="https://docs.google.com/document/d/1JWHEFqcaNhYwYneWBnTp9rkgWecDB4IIHX1l3AxSiWM/edit?tab=t.0#heading=h.j8yrupzfcw9i">Eng</a>
-                            <a href="https://docs.google.com/document/d/12A4jNFrSQywZubM7bL2pgQK0fOtr6LEBJMjGb7nTNlw/edit?tab=t.0#heading=h.j8yrupzfcw9i">Rus</a>
-                        </li>
-                        <li class="list-group-item"><a href="/memorize/" id="link_open_any">Open any Sutta in this way</a></li>
-                        <li class="list-group-item"><a href="/pm.php?expand=true">Bhikkhupātimokkha</a></li>
-                        <li class="list-group-item"><a href="/bipm.php?expand=true">Bhikkhunīpātimokkha</a></li>
-                        <li class="list-group-item"><a href="/ru/assets/materials/prat.html">Dhamma.ru Patimokkha</a></li>
-                        <li class="list-group-item"><a href="/bw/vi/vi.html#content">TBW Patimokkha</a></li>
-                        <li class="list-group-item"><a href="/accesstoinsight.org/tipitaka/vin/sv/index.html">ATI Patimokkha</a></li>
-                        <li class="list-group-item">
-                            Selfcheck: <a href="./rr.html">Bhikkhu</a>
-                            <a href="./rrbi.html">Bhikkhuni</a>
-                        </li>
-                    </ul>
-                </div>
+<div class="collapse mt-3" id="linkList">
+    <ul class="list-group">
+        <li class="list-group-item" id="help_text_1">
+            Reduce text to first letters to memorize faster (e.g. "Sabbaṁ taṁ" → "S t").<br>
+            <b>AI Expand</b> use AI to restore omitted repeated sections (peyyāla)<br>
+            <b>TTS:</b> <b>Split by</b> cuts text into pieces. <b>Interval</b> adds delay between them. <b>Sound</b> plays at the end. <b>Loop</b> repeats.
+        </li>
+        <li class="list-group-item" id="link_tips">Tips & Tricks for Memorizaiton
+            <a href="https://docs.google.com/document/d/1JWHEFqcaNhYwYneWBnTp9rkgWecDB4IIHX1l3AxSiWM/edit?tab=t.0#heading=h.j8yrupzfcw9i">Eng</a>
+            <a href="https://docs.google.com/document/d/12A4jNFrSQywZubM7bL2pgQK0fOtr6LEBJMjGb7nTNlw/edit?tab=t.0#heading=h.j8yrupzfcw9i">Rus</a>
+        </li>
+        <li class="list-group-item"><a href="/memorize/" id="link_open_any">Open any Sutta in this way</a></li>
+        
+        <li class="list-group-item">
+            Pātimokkha: 
+            <a href="/pm.php?expand=true">Bhikkhu</a>
+            <a href="/bipm.php?expand=true">Bhikkhunī</a>
+        </li>
+        <li class="list-group-item" id="link_pm_other">
+            Pātimokkha on Other sites: 
+            <a href="/ru/assets/materials/prat.html">Dhamma.ru</a>
+            <a href="/bw/vi/vi.html#content">TBW</a>
+            <a href="/accesstoinsight.org/tipitaka/vin/sv/index.html">ATI</a>
+        </li>
+        <li class="list-group-item" id="link_selfcheck">
+            Selfcheck: <a href="/assets/rr.html">Bhikkhu</a>
+            <a href="/assets/rrbi.html">Bhikkhuni</a>
+        </li>
+
+    </ul>
+</div>
+
 
 <div class="collapse mt-3" id="presetList">
     <ul class="list-group" id="preset-list-container">
@@ -555,6 +564,19 @@ ${text}`;
                 document.getElementById('btn_transform').innerText = 'Сжать';
 
 if (document.getElementById('clear_input_btn')) document.getElementById('clear_input_btn').title = 'Очистить';
+
+// Локализация ссылок (Пали остается без изменений)
+const linkPmOther = document.getElementById('link_pm_other');
+if (linkPmOther) {
+    linkPmOther.childNodes[0].nodeValue = 'Pātimokkha на других сайтах: ';
+}
+
+const linkSelfcheck = document.getElementById('link_selfcheck');
+if (linkSelfcheck) {
+    linkSelfcheck.childNodes[0].nodeValue = 'Самопроверка: ';
+}
+
+
 if (document.getElementById('copy_input_btn')) document.getElementById('copy_input_btn').title = 'Скопировать';
                 document.getElementById('btn_settings').title = 'Настройки';
                 document.getElementById('btn_reset_tts').title = 'Сбросить настройки';

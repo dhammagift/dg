@@ -466,3 +466,178 @@ body[data-theme="dark"] #sutta span[id]:has(.tts-active) {
 .reset-tts-btn img {
     pointer-events: none;
 }
+
+
+/* --- ОБНОВЛЕНИЕ СУЩЕСТВУЮЩИХ СЕЛЕКТОРОВ --- */
+
+.tts-main-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 15px;
+    height: 40px;
+    position: relative; /* Добавлено из JS */
+}
+
+/* =========================================
+   A-B Loop / Voice Memory Styles (Из voice-mem.js)
+   ========================================= */
+
+.memo-app-btn {
+    position: absolute;
+    left: 20px;
+    top: 34px;
+    background: transparent;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: #777;
+    font-size: 9px;
+    font-family: sans-serif;
+    font-weight: 700;
+    padding: 2px 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    z-index: 10;
+    line-height: 1;
+}
+.memo-app-btn:hover { background: #eee; color: #333; border-color: #bbb; }
+.dark .memo-app-btn { border-color: #555; color: #aaa; }
+.dark .memo-app-btn:hover { background: #444; color: #fff; border-color: #777; }
+
+.ab-loop-toggle-btn {
+    position: absolute;
+    right: 20px; 
+    top: 34px;   
+    background: transparent;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: #777;
+    font-size: 9px;
+    font-family: sans-serif;
+    font-weight: 700;
+    padding: 2px 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    z-index: 10;
+    line-height: 1;
+}
+.ab-loop-toggle-btn:hover { background: #eee; color: #333; border-color: #bbb; }
+.dark .ab-loop-toggle-btn { border-color: #555; color: #aaa; }
+.dark .ab-loop-toggle-btn:hover { background: #444; color: #fff; border-color: #777; }
+
+.ab-loop-toggle-btn.loop-active {
+    color: var(--blue, #3434be);
+    border-color: var(--blue, #3434be);
+    background: rgba(52, 52, 190, 0.05);
+}
+.dark .ab-loop-toggle-btn.loop-active {
+    color: rgb(122, 122, 249);
+    border-color: rgb(122, 122, 249);
+    background: rgba(122, 122, 249, 0.1);
+}
+
+#memorize-panel {
+    width: 100%;
+    box-sizing: border-box;
+    max-height: 0; opacity: 0; overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
+    border-top: 1px dashed #555;
+    background: transparent;
+    padding: 0 5px;
+}
+#memorize-panel.visible {
+    max-height: 400px; opacity: 1; margin-top: 10px; padding-top: 8px;
+}
+.mem-row { 
+    width: 100%; box-sizing: border-box; 
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; 
+}
+
+.mem-row-actions {
+    justify-content: space-around; 
+    gap: 5px;
+}
+
+.mem-btn-wrapper { 
+    display: flex; align-items: center; gap: 4px; 
+    flex: 1; min-width: 0; width: 50%;
+}
+.mem-btn-label { color: #aaa; font-size: 11px; flex-shrink: 0; font-weight: 600; }
+
+.mem-pick-btn {
+    flex: 1; min-width: 0; width: 100%; 
+    background: #eee; border: 1px dashed #ccc; color: #555;
+    padding: 4px; border-radius: 4px; font-size: 11px; cursor: pointer;
+    transition: all 0.2s; text-align: left; 
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    user-select: none; -webkit-user-select: none; 
+    display: block; 
+}
+
+.mem-pick-btn span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 58px;
+}
+
+.dark .mem-pick-btn { background: #333; border-color: #555; color: #aaa; }
+
+.mem-pick-btn.picking { border-color: var(--blue, #3434be); background: rgba(52, 52, 190, 0.1); animation: memPulseLight 1.5s infinite; color: #333; }
+.mem-pick-btn.set { border-color: var(--blue, #3434be); border-style: solid; color: #000; }
+.mem-status { font-size: 11px; color: var(--blue, #3434be); text-align: center; margin-top: 2px; min-height: 14px; }
+
+.dark .mem-pick-btn.picking { border-color: rgb(122, 122, 249); background: rgba(122, 122, 249, 0.15); animation: memPulseDark 1.5s infinite; color: #fff; }
+.dark .mem-pick-btn.set { border-color: rgb(122, 122, 249); color: #fff; }
+.dark .mem-status { color: rgb(122, 122, 249); }
+
+.memorize-highlight { 
+    border-left: 3px solid var(--blue, #3434be) !important; 
+    padding-left: 5px !important; 
+    margin-bottom: 0 !important;
+    padding-bottom: 4px !important;
+}
+.dark .memorize-highlight { 
+    border-left: 3px solid rgb(122, 122, 249) !important; 
+}
+
+#sutta span[id]:has(.tts-active) .memorize-highlight.tts-active,
+#sutta span[id]:has(.tts-active) .memorize-highlight.active-word {
+    border-left: 3px solid var(--blue, #3434be) !important;
+    padding-left: 5px !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 4px !important;
+}
+.dark #sutta span[id]:has(.tts-active) .memorize-highlight.tts-active,
+.dark #sutta span[id]:has(.tts-active) .memorize-highlight.active-word {
+    border-left: 3px solid rgb(122, 122, 249) !important;
+}
+
+.mem-label { font-size: 11px; color: #aaa; margin: 0; display: flex; align-items: center; gap: 5px; }
+
+.mem-clear-btn {
+    background: transparent; border: none; font-size: 14px; cursor: pointer; padding: 2px;
+    display: flex; align-items: center; justify-content: center; opacity: 0.7; transition: 0.2s;
+}
+.mem-clear-btn:hover { opacity: 1; transform: scale(1.1); }
+
+@keyframes memPulseLight { 0% { box-shadow: 0 0 0 0 rgba(52, 52, 190, 0.4); } 70% { box-shadow: 0 0 0 4px rgba(52, 52, 190, 0); } 100% { box-shadow: 0 0 0 0 rgba(52, 52, 190, 0); } }
+@keyframes memPulseDark { 0% { box-shadow: 0 0 0 0 rgba(122, 122, 249, 0.4); } 70% { box-shadow: 0 0 0 4px rgba(122, 122, 249, 0); } 100% { box-shadow: 0 0 0 0 rgba(122, 122, 249, 0); } }
+
+.ab-btn-timer-text {
+    display: none; 
+    margin-left: 2px; 
+    font-variant-numeric: tabular-nums;
+}
+.mem-timer-icon {
+    margin-right: 4px; 
+    vertical-align: text-bottom;
+}
