@@ -316,7 +316,7 @@ function cleanTextForTTS(text) {
       // Только если текст ДЛИННЫЙ, мы меняем структуру:
       
       // 1. Превращаем запятые и точки с запятой в "Данды" (полные остановки)
-      clean = clean.replace(/,/g, ' ।');
+    //  clean = clean.replace(/,/g, ' ।');
       clean = clean.replace(/;/g, ' ।');
 
       clean = clean.replace(/ होती /g, ' होती । ');
