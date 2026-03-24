@@ -423,73 +423,128 @@ document.addEventListener('click', (e) => {
 
 
 // ==========================================
-// ЛОКАЛЬНЫЙ ПЕРЕХВАТЧИК ДЛЯ ССЫЛКИ MEMO (ДЕЛЕГИРОВАНИЕ + УМНЫЙ ВЫБОР ЯЗЫКА)
+// ГЛОБАЛЬНЫЙ ПЕРЕХВАТЧИК ДЛЯ ССЫЛКИ MEMO (УМНЫЙ ЗАХВАТ ПО ВИДИМОСТИ)
 // ==========================================
 document.addEventListener('click', function(e) {
-    const memoLink = e.target.closest('a[href="/memo/"], a[href="/ru/memo/"]');
-    
+    const memoLink = e.target.closest('.memo-button');
     if (!memoLink) return;
-    if (memoLink.id === 'memo-app-btn') return; 
 
     e.preventDefault();
 
-    let textToPass = '';
-    
+    const suttaContainer = document.getElementById('sutta') || document;
     const activeWord = document.querySelector('.active-word');
     const highlighted = Array.from(document.querySelectorAll('.memorize-highlight'));
     const ttsActive = document.querySelector('.tts-active');
 
-    let isWordInsideAB = false;
-    if (activeWord && highlighted.length > 0) {
-        isWordInsideAB = activeWord.closest('.memorize-highlight') !== null;
-    }
+    const isWordInsideAB = activeWord && activeWord.closest('.memorize-highlight') !== null;
+    let textToPass = '';
+    const MAX_CHARS = 1200; 
 
-    // 1. ПРИОРИТЕТ: Активное слово ВНЕ диапазона А-Б
-    if (activeWord && !isWordInsideAB) {
-        textToPass = activeWord.innerText || activeWord.textContent;
+    // =======================================================
+    // ПРИОРИТЕТ 1: ЦИКЛ А-Б (Только его диапазон)
+    // =======================================================
+    if (highlighted.length > 0 && (!activeWord || isWordInsideAB)) {
+        // Проверяем, скрыт ли Пали визуально
+        let isPaliHidden = suttaContainer.classList ? suttaContainer.classList.contains('hide-pali') : false;
+        
+        // Отдаем приоритет Пали, если он видим и есть в выделении
+        let targetClass = !isPaliHidden && highlighted.some(el => el.classList.contains('pli-lang')) 
+                          ? 'pli-lang' 
+                          : (highlighted.some(el => el.classList.contains('rus-lang')) ? 'rus-lang' : 'eng-lang');
+
+        // Оставляем только нужный язык (или общие блоки без языковых классов)
+        let abElements = highlighted.filter(el => el.classList.contains(targetClass) || !el.className.includes('-lang'));
+        
+        let currentLength = 0;
+        let textArr = [];
+        for (let el of abElements) {
+            let text = (el.innerText || el.textContent).trim();
+            if (text) {
+                if (currentLength + text.length > MAX_CHARS) {
+                    textArr.push(text.substring(0, Math.max(0, MAX_CHARS - currentLength - 3)) + '...');
+                    break;
+                }
+                textArr.push(text);
+                currentLength += text.length + 1;
+            }
+        }
+        textToPass = textArr.join('\n');
     } 
-    // 2. ПРИОРИТЕТ: Весь диапазон А-Б
-    else if (highlighted.length > 0) {
-        const ttsMode = localStorage.getItem('tts_preferred_mode') || 'pi';
-        let filtered = highlighted;
+    // =======================================================
+    // ПРИОРИТЕТ 2: ОТ ТОЧКИ ФОКУСА (Active / TTS) ИЛИ ЭКРАНА -> ВНИЗ до 1900 симв
+    // =======================================================
+    else {
+        let startNode = activeWord && !isWordInsideAB ? activeWord : ttsActive;
+        let targetSelector = '';
 
-        if (ttsMode === 'pi') {
-            filtered = highlighted.filter(el => el.classList.contains('pli-lang'));
-        } else if (ttsMode === 'trn') {
-            filtered = highlighted.filter(el => !el.classList.contains('pli-lang'));
+        // 2.1. Определяем язык по стартовой ноде (если кликнули в слово / плеер читает строку)
+        if (startNode) {
+            if (startNode.classList.contains('pli-lang')) targetSelector = '.pli-lang';
+            else if (startNode.classList.contains('rus-lang')) targetSelector = '.rus-lang';
+            else if (startNode.classList.contains('eng-lang')) targetSelector = '.eng-lang';
+            else if (startNode.classList.contains('tha-lang')) targetSelector = '.tha-lang';
         }
         
-        if (filtered.length === 0) filtered = highlighted;
-        textToPass = filtered.map(el => el.innerText || el.textContent).join('\n');
-    } 
-    // 3. ПРИОРИТЕТ: Текущая читаемая строка (TTS)
-    else if (ttsActive) {
-        textToPass = ttsActive.innerText || ttsActive.textContent;
-    }
-    // 4. ПРИОРИТЕТ: Ничего не выбрано — берем текст сутты с учетом видимости
-    else {
-        const suttaContainer = document.getElementById('sutta');
-        if (suttaContainer) {
-            // Проверяем, скрыт ли язык Пали через класс
-            const isPaliHidden = suttaContainer.classList.contains('hide-pali');
+        // 2.2. Если ничего не активно, определяем по ВИДИМОСТИ на экране (Пали по умолчанию)
+        if (!targetSelector) {
+            const isSutta = suttaContainer.id === 'sutta';
+            if (!isSutta || !suttaContainer.classList.contains('hide-pali')) targetSelector = '.pli-lang';
+            else if (!suttaContainer.classList.contains('hide-russian')) targetSelector = '.rus-lang';
+            else if (!suttaContainer.classList.contains('hide-english')) targetSelector = '.eng-lang';
+            else targetSelector = '.tha-lang';
+        }
 
-            if (isPaliHidden) {
-                // ПАЛИ СКРЫТ: Ищем спаны с переводом (русский или английский)
-                const transElements = suttaContainer.querySelectorAll('.rus-lang, .eng-lang');
-                if (transElements.length > 0) {
-                    textToPass = Array.from(transElements).map(el => el.innerText || el.textContent).join('\n');
-                } else {
-                    textToPass = suttaContainer.innerText || suttaContainer.textContent;
-                }
-            } else {
-                // ПАЛИ ВИДИМ (один или вместе с переводом): Отдаем приоритет Пали
-                const paliElements = suttaContainer.querySelectorAll('.pli-lang');
-                if (paliElements.length > 0) {
-                    textToPass = Array.from(paliElements).map(el => el.innerText || el.textContent).join('\n');
-                } else {
-                    textToPass = suttaContainer.innerText || suttaContainer.textContent;
+        // Собираем элементы только ОДНОГО выбранного языка
+        let allValidElements = Array.from(suttaContainer.querySelectorAll(targetSelector));
+        
+        // Фолбэк для обычных статей без -lang классов
+        if (allValidElements.length === 0) {
+            allValidElements = Array.from(suttaContainer.querySelectorAll('p, h1, h2, h3, h4, li, blockquote'));
+        }
+
+        // Отсекаем невидимое и элементы интерфейса
+        allValidElements = allValidElements.filter(el => 
+            el.offsetParent !== null && !el.closest('.tts-ignore, nav, footer, .input-group')
+        );
+
+        let startIndex = -1;
+
+        // Если есть активная нода — находим ее индекс в массиве
+        if (startNode) {
+            const segmentId = startNode.id || startNode.closest('[id]')?.id;
+            if (segmentId) {
+                startIndex = allValidElements.findIndex(el => el.id === segmentId || el.closest(`[id="${segmentId}"]`));
+            }
+            if (startIndex === -1) {
+                startIndex = allValidElements.findIndex(el => el === startNode || el.contains(startNode));
+            }
+        }
+
+        // Если ничего не активно — ищем первый абзац, который виден прямо сейчас от верха экрана (0px)
+        if (startIndex === -1) {
+            startIndex = allValidElements.findIndex(el => {
+                const rect = el.getBoundingClientRect();
+                return rect.bottom > 0; // Строго от верхнего края экрана, без отступов
+            });
+        }
+
+        // Если нашли точку старта — пылесосим текст вниз до лимита
+        if (startIndex !== -1) {
+            let currentLength = 0;
+            let textArr = [];
+            for (let i = startIndex; i < allValidElements.length; i++) {
+                let text = (allValidElements[i].innerText || allValidElements[i].textContent).trim();
+                if (text) {
+                    if (currentLength + text.length > MAX_CHARS) {
+                        let remainingSpace = Math.max(0, MAX_CHARS - currentLength - 3);
+                        if (remainingSpace > 0) textArr.push(text.substring(0, remainingSpace) + '...');
+                        break;
+                    }
+                    textArr.push(text);
+                    currentLength += text.length + 1;
                 }
             }
+            textToPass = textArr.join('\n');
         }
     }
     
@@ -501,30 +556,13 @@ document.addEventListener('click', function(e) {
                      
     const baseUrl = isRuPath ? '/ru/memo/' : '/memo/';
     
-    // Формируем URL с безопасной обрезкой (лимит ~1900 символов)
     if (textToPass) {
-        const MAX_URL_LENGTH = 1900;
-        let encodedText = encodeURIComponent(textToPass);
-        
-        if (encodedText.length > MAX_URL_LENGTH) {
-            let safeRatio = MAX_URL_LENGTH / encodedText.length;
-            let safeLength = Math.floor(textToPass.length * safeRatio) - 3;
-            
-            textToPass = textToPass.substring(0, safeLength) + '...';
-            encodedText = encodeURIComponent(textToPass);
-            
-            while (encodedText.length > MAX_URL_LENGTH && textToPass.length > 0) {
-                safeLength -= 10;
-                textToPass = textToPass.substring(0, safeLength) + '...';
-                encodedText = encodeURIComponent(textToPass);
-            }
-        }
-        
-        window.location.href = `${baseUrl}?text=${encodedText}`;
+        window.open(`${baseUrl}?text=${encodeURIComponent(textToPass)}`, '_blank');
     } else {
-        window.location.href = baseUrl;
+        window.open(baseUrl, '_blank');
     }
 });
+
 
 // ==========================================================================
 // ГЕНЕРАЦИЯ ДОПОЛНИТЕЛЬНЫХ ССЫЛОК (DPR, BJT, Voice, SC, BB, TBW, Th.ru, Th.su)

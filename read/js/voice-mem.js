@@ -61,62 +61,16 @@
                 
                 const memoBtn = document.createElement('a');
                 memoBtn.id = 'memo-app-btn';
-                memoBtn.className = 'memo-app-btn';
+                // Добавляем класс memo-button, чтобы common.js её поймал!
+                memoBtn.className = 'memo-app-btn memo-button'; 
                 memoBtn.title = 'Открыть в Memo';
                 memoBtn.innerHTML = 'memo';
-                memoBtn.target = '_blank';
-                
-                memoBtn.addEventListener('click', function(e) {
-                    let textToPass = '';
-                    
-                    const activeWord = document.querySelector('.active-word');
-                    const highlighted = Array.from(document.querySelectorAll('.memorize-highlight'));
-                    const ttsActive = document.querySelector('.tts-active');
-
-                    let isWordInsideAB = false;
-                    if (activeWord && highlighted.length > 0) {
-                        isWordInsideAB = activeWord.closest('.memorize-highlight') !== null;
-                    }
-
-                    if (activeWord && !isWordInsideAB) {
-                        textToPass = activeWord.innerText || activeWord.textContent;
-                    } 
-                    else if (highlighted.length > 0) {
-                        const ttsMode = localStorage.getItem('tts_preferred_mode') || 'pi';
-                        let filtered = highlighted;
-
-                        if (ttsMode === 'pi') {
-                            filtered = highlighted.filter(el => el.classList.contains('pli-lang'));
-                        } else if (ttsMode === 'trn') {
-                            filtered = highlighted.filter(el => !el.classList.contains('pli-lang'));
-                        }
-                        
-                        if (filtered.length === 0) filtered = highlighted;
-                        textToPass = filtered.map(el => el.innerText || el.textContent).join('\n');
-                    } 
-                    else if (ttsActive) {
-                        textToPass = ttsActive.innerText || ttsActive.textContent;
-                    }
-                    
-                    textToPass = textToPass ? textToPass.trim() : '';
-                    
-                    const isRuPath = window.location.pathname.includes('/r/') || 
-                                     window.location.pathname.includes('/ml/') || 
-                                     window.location.pathname.includes('/ru/');
-                    const baseUrl = isRuPath ? '/ru/memo/' : '/memo/';
-                    
-                    if (textToPass) {
-                        this.href = `${baseUrl}?text=${encodeURIComponent(textToPass)}`;
-                    } else {
-                        this.href = baseUrl;
-                    }
-                });
                 
                 const isRuPathBase = window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/') || window.location.pathname.includes('/ru/');
                 memoBtn.href = isRuPathBase ? '/ru/memo/' : '/memo/';
                 
                 mainRow.appendChild(memoBtn);
-
+ 
 
                 const abBtn = document.createElement('button');
                 abBtn.id = 'ab-loop-toggle-btn';
