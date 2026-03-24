@@ -2432,25 +2432,40 @@ function isLegacyPage() {
     return document.querySelectorAll('.a').length > 0 || document.querySelector('td[style*="justify"]') !== null;
 }
 
-
 function prepareLegacyData() {
     const textData = [];
     let segmentCounter = 0;
+    let contentCell = null;
 
-    // 1. Ищем главный контейнер с текстом
-    // Обычно это ячейка таблицы с выравниванием
-    let contentCell = document.querySelector('td[style*="justify"]');
-    
-    // Фолбэк для других страниц
-    if (!contentCell) {
-        // Если нет justify, ищем родителя первого div.a
-        const firstDivA = document.querySelector('.a');
-        if (firstDivA) contentCell = firstDivA.parentElement;
+    // 1. ОСНОВНОЙ ПУТЬ: Ищем абзацы с классом .a (работает для 95% длинных сутт)
+    const firstDivA = document.querySelector('.a');
+    if (firstDivA) {
+        contentCell = firstDivA.parentElement;
+    } 
+    // 2. ФОЛБЭК: Для коротких сутт (типа AN 1.6), где нет класса .a
+    else {
+        // Ищем все ячейки с вертикальным выравниванием (стандартная верстка контента там)
+        const candidateCells = document.querySelectorAll('td[valign="top"]');
+        for (const cell of candidateCells) {
+            // Ищем ячейку, где есть текст, и отсекаем футер (счетчики, копирайты)
+            if (cell.textContent.trim().length > 50 && 
+                !cell.querySelector('.bottom') && 
+                !cell.textContent.includes('theravada.ru – при копировании')) {
+                contentCell = cell;
+                break;
+            }
+        }
     }
 
     if (!contentCell) {
         console.warn("Legacy Parser: Контейнер не найден.");
         return [];
+    }
+
+    // 3. ФИКС ОБЁРТКИ: Если весь текст завёрнут в один единственный <div> внутри ячейки, 
+    // проваливаемся в него, чтобы парсер мог разобрать текст по предложениям
+    if (contentCell.children.length === 1 && contentCell.firstElementChild.tagName === 'DIV') {
+        contentCell = contentCell.firstElementChild;
     }
 
     // Вспомогательная функция для создания сегмента
