@@ -795,3 +795,34 @@
     word-break: break-word;
   }
 }
+
+
+/* Стилизация по ID для очистки HTML */
+#chapter-button img {
+    position: relative;
+    top: -2px;
+}
+
+#fontDec, #fontInc {
+    width: 32px;
+    height: 32px;
+    font-weight: bold;
+}
+
+#fontVal {
+    min-width: 45px;
+}
+
+/* Общие стили для иконок компаса в модальных окнах */
+.compass-icon {
+    color: grey;
+    cursor: pointer;
+    height: 25px;
+    display: inline-block;
+}
+
+/* Разделитель в смарт-панели */
+#smart-panel hr {
+    margin: 4px 0;
+    border-color: #ccc;
+}
