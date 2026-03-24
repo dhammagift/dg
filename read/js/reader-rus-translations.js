@@ -331,8 +331,8 @@ Promise.all([rootResponse, translationResponse, htmlResponse, varResponse]).then
         }
       }
 
-      const linkToCopyStart = `<a class="text-decoration-none copyLink copyLink-start" style="cursor: pointer;" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;
-      let linkToCopy = `<a class="text-decoration-none copyLink" style="cursor: pointer;" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`
+      const linkToCopyStart = `<a class="text-decoration-none copyLink copyLink-start" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;
+      let linkToCopy = `<a class="text-decoration-none copyLink" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`
 
       if (paliData[segment] !== undefined && transData[segment] !== undefined && varData[segment] !== undefined) {
         html += `${openHtml}<span id="${anchor}">
@@ -419,9 +419,9 @@ scLink += `<a title='Английский (Alt+1)' href="${enUrl}">En</a>&nbsp;`
       const isWarningClosed = localStorage.getItem('warningClosed');
 
       const warning = `
-        <div style="max-width: 550px; margin: 0 auto; text-align: center;" class="warning-container">
+        <div class="warning-container warning-box">
           <p class='warning'>
-            <strong>Заметка:</strong><a style='cursor: pointer;' class='text-decoration-none' target='' href='${dUrl}'>&nbsp;</a>Переводы, словари и комментарии сделаны не Благословенным.<a style='cursor: pointer;' class='text-decoration-none' target='' href='${thUrl}'>&nbsp;</a>Сверяйтесь с Пали в 4 основных никаях.
+            <strong>Заметка:</strong><a class='text-decoration-none cursor-pointer' target='' href='${dUrl}'>&nbsp;</a>Переводы, словари и комментарии сделаны не Благословенным.<a class='text-decoration-none cursor-pointer' target='' href='${thUrl}'>&nbsp;</a>Сверяйтесь с Пали в 4 основных никаях.
                  ${canShowClose && !isWarningClosed ? `<span class="close-warning">×</span>` : ''} 
           </p>
         </div>
@@ -429,13 +429,13 @@ scLink += `<a title='Английский (Alt+1)' href="${enUrl}">En</a>&nbsp;`
 
       // Выводим текст СРАЗУ, оставив пустые <div> для верхних и нижних ссылок
       suttaArea.innerHTML = 
-          `<div id="top-links-container" style="min-height: 24px;"></div><br>` + 
+          `<div id="top-links-container" class="min-h-24"></div><br>` + 
           (!isWarningClosed ? warning : '') + 
           translatorByline + 
           html + 
           translatorByline + 
           (!isWarningClosed ? warning : '') + 
-          `<div id="bottom-links-container" style="min-height: 24px;"></div>`;
+          `<div id="bottom-links-container" class="min-h-24"></div>`;
 
       // === 2. НАСТРОЙКА ИНТЕРФЕЙСА (ПОКА ТЕКСТ УЖЕ МОЖНО ЧИТАТЬ) ===
       if (canShowClose && !isWarningClosed) {
@@ -595,14 +595,11 @@ setLanguage(language);
       <li><span class="abbr">dhp</span> Dhammapada</li>
       <li><span class="abbr">thag</span> Theragāthā</li>
       <li><span class="abbr">thig</span> Therīgāthā</li>
-   <!--	     <li><span class="abbr">snp</span> Sutta-nipāta</li>
- <li><span class="abbr">kp</span> Khuddakapāṭha</li>-->
-  </ul>
+   </ul>
   </div>  
   
   <div>
- <!-- <h2>Виная</h2> -->
-  <div class="vinaya">
+ <div class="vinaya">
   <div>
   <h3>Бхиккху Виная</h3><br>
 <ul>
@@ -784,7 +781,4 @@ function handleVariantVisibility() {
     variantElements.forEach((el) => el.classList.toggle("hidden-variant"));
     localStorage.setItem("variantVisibility", isHidden ? "visible" : "hidden");
   });
-
-  
 }
-

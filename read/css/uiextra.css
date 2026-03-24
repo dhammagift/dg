@@ -826,3 +826,23 @@
     margin: 4px 0;
     border-color: #ccc;
 }
+
+
+/* Специальный зеленый варнинг для Devanagari и Memorize */
+.warning-green {
+    color: green !important;
+}
+
+/* Стили из начала memorize.js перенесены сюда для скорости */
+.mem-pli-size {
+    font-size: 1.4em !important;
+}
+
+.mem-copy-size {
+    font-size: 0.8em !important;
+}
+
+.mem-copy-pos {
+    bottom: 0em !important;
+    right: -0.6em !important;
+}

@@ -1036,24 +1036,31 @@ async function playCurrentSegment() {
               audio.onended = () => {
                   ttsState.googleAudio = null;
                   if (ttsState.speaking && !ttsState.paused) {
-                      if (ttsState.endIndex !== undefined && ttsState.currentIndex >= ttsState.endIndex) {
-                          ttsState.speaking = false;
-                          setButtonIcon('play');
-                          document.dispatchEvent(new CustomEvent('tts-range-finished'));
-                      } else {
-                          ttsState.currentIndex++;
-                          // --- НОВОЕ: Интервал между сегментами ---
-                          const delay = window.TTS_SEGMENT_DELAY || 0;
-                          if (delay > 0) {
+                      const delay = window.TTS_SEGMENT_DELAY || 0;
+                      const isRangeEnd = ttsState.endIndex !== undefined && ttsState.currentIndex >= ttsState.endIndex;
 
-window.ttsDelayTimeout = setTimeout(playCurrentSegment, delay);
+                      if (!isRangeEnd) {
+                          ttsState.currentIndex++; // Индекс увеличивается ДО таймаута
+                      }
 
+                      const finishOrNext = () => {
+                          if (isRangeEnd) {
+                              ttsState.speaking = false;
+                              setButtonIcon('play');
+                              document.dispatchEvent(new CustomEvent('tts-range-finished'));
                           } else {
                               playCurrentSegment();
                           }
+                      };
+
+                      if (delay > 0) {
+                          window.ttsDelayTimeout = setTimeout(finishOrNext, delay);
+                      } else {
+                          finishOrNext();
                       }
                   }
               };
+
 
               
 audio.onerror = (err) => {
@@ -1097,24 +1104,33 @@ function playBrowserTTS(text, langKey, rate, isPali) {
 
   utterance.rate = rate;
 
-    utterance.onend = () => {
+  utterance.onend = () => {
       if (ttsState.speaking && !ttsState.paused) {
-          if (ttsState.endIndex !== undefined && ttsState.currentIndex >= ttsState.endIndex) {
-              ttsState.speaking = false;
-              setButtonIcon('play');
-              document.dispatchEvent(new CustomEvent('tts-range-finished'));
-          } else {
-              ttsState.currentIndex++;
-              // --- НОВОЕ: Интервал между сегментами ---
-              const delay = window.TTS_SEGMENT_DELAY || 0;
-              if (delay > 0) {
-window.ttsDelayTimeout = setTimeout(playCurrentSegment, delay);
+          const delay = window.TTS_SEGMENT_DELAY || 0;
+          const isRangeEnd = ttsState.endIndex !== undefined && ttsState.currentIndex >= ttsState.endIndex;
+
+          if (!isRangeEnd) {
+              ttsState.currentIndex++; 
+          }
+
+          const finishOrNext = () => {
+              if (isRangeEnd) {
+                  ttsState.speaking = false;
+                  setButtonIcon('play');
+                  document.dispatchEvent(new CustomEvent('tts-range-finished'));
               } else {
                   playCurrentSegment();
               }
+          };
+
+          if (delay > 0) {
+              window.ttsDelayTimeout = setTimeout(finishOrNext, delay);
+          } else {
+              finishOrNext();
           }
       }
   };
+
 
 
   utterance.onerror = (e) => {

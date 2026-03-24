@@ -103,7 +103,7 @@ var rootpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slugR
 var rootpath = `/assets/texts/devanagari/root/pli/ms/${texttype}/${slug}_rootd-pli-ms.json`
  } 
  else if (( script === "thai" ) || ( savedScript === "Thai" ) ) {
-var rootpath = `/assets/texts/th/root/pli/ms/${texttype}/${slug}_rootth-pli-ms.json`
+var rootpath = `/assets/texts/th/root/pli/ms/${texttype}/${slugReady}_rootth-pli-ms.json`
  } 
 else {
 var rootpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slug}_root-pli-ms.json`
@@ -209,7 +209,6 @@ const varResponse = fetchVariant();
                   if (str.match(/^["“'‘]?(I\b|I'|O\b)/)) return str;
                   
                   // В остальных случаях просто делаем маленьким первый символ 
-                  // (кавычки не изменятся, и текст внутри останется с заглавной)
                   return str.charAt(0).toLowerCase() + str.slice(1);
               };
 
@@ -217,13 +216,10 @@ const varResponse = fetchVariant();
 
               // 1. Объединяем ПАЛИ
               if (paliData[nextSegment]) {
-                  // trim() убирает пробелы по краям
-                  // " " добавляет ровно один пробел между частями
-                  // toLower() делает вторую часть с маленькой буквы
                   paliData[segment] = (paliData[segment] || "").trim() + " " + toLower(paliData[nextSegment].trim());
               }
 
-              // 2. Объединяем ПЕРЕВОД (Русский)
+              // 2. Объединяем ПЕРЕВОД (Английский)
               if (transData[nextSegment]) {
                   transData[segment] = (transData[segment] || "").trim() + " " + toLower(transData[nextSegment].trim());
               }
@@ -248,18 +244,10 @@ const varResponse = fetchVariant();
       
       
       let [openHtml, closeHtml] = htmlData[segment].split(/{}/);
-   openHtml = openHtml || ''; // Запасное значение
-   closeHtml = closeHtml || ''; // Запасное значение
+   openHtml = openHtml || ''; 
+   closeHtml = closeHtml || ''; 
       
       
-      /* openHtml = openHtml.replace(/^<span class='verse-line'>/, "<br><span class='verse-line'>"); inputscript-IASTPali 
-      Roman (IAST)     	IAST
-Roman (IAST: Pāḷi)     	IASTPali
-Roman (IPA)            	IPA
-Roman (ISO 15919)      	ISO
-Roman (ISO 15919: Pāḷi)	ISOPali */
-// ISOPali ISO IASTPali IAST
-
 let startIndex = segment.indexOf(':') + 1;
 let anchor = segment.substring(startIndex);
 
@@ -278,32 +266,25 @@ if (localStorage.getItem("removePunct") === "true" && paliData[segment] !== unde
 }
 
 if (finder && finder.trim() !== "") {
-  let regex = new RegExp(finder, 'gi'); // 'gi' - игнорировать регистр
+  let regex = new RegExp(finder, 'gi'); 
 
   try {
     paliData[segment] = paliData[segment]?.replace(regex, match => `<b class='match finder'>${match}</b>`);
-  } catch (error) {
- //   console.log("Ошибка при выделении совпадений в paliData:", info);
-  }
+  } catch (error) {}
 
   try {
     transData[segment] = transData[segment]?.replace(regex, match => `<b class="match finder">${match}</b>`);
-  } catch (error) {
-  //  console.log("Ошибка при выделении совпадений в transData:", info);
-  }
+  } catch (error) {}
 
   if (varData[segment] !== undefined) {  
     try {
       varData[segment] = varData[segment].replace(regex, match => `<b class="match finder">${match}</b>`);
-    } catch (error) {
-      console.info("Ошибка при выделении совпадений в varData:", info);
-    }
+    } catch (error) {}
   }
 }
-//&nbsp;
-const linkToCopyStart = `<a class="text-decoration-none copyLink copyLink-start" style="cursor: pointer;" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;
-let linkToCopy = `<a class="text-decoration-none copyLink" style="cursor: pointer;" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`
-let linkWithDataSet = `<a class="text-decoration-none copyLink" style="cursor: pointer;" data-copy-text="${fullUrlWithAnchor}">&nbsp;</a>`
+
+const linkToCopyStart = `<a class="text-decoration-none copyLink copyLink-start" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;
+let linkToCopy = `<a class="text-decoration-none copyLink" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`
 
 if (paliData[segment] !== undefined && transData[segment] !== undefined && varData[segment] !== undefined) {
               html += `${openHtml}<span id="${anchor}">
@@ -329,7 +310,6 @@ if (paliData[segment] !== undefined && transData[segment] !== undefined && varDa
 }
 
 
-//console.log('texttype ' + texttype + ' translator ' + translator);
 if (translator === "o") {
   translatorforuser = '<a href=/assets/common/o-en.html>o</a> from Pali';
 } else if (translator === "sv") {
@@ -350,9 +330,6 @@ if (translator === "o") {
 	translatorforuser = translator ;
 }
 
-//console.log('texttype ' + texttype + ' translator ' + translator);
-
-//const translatorCapitalized = translator.charAt(0).toUpperCase() + translator.slice(1);
 
      const translatorByline = `<div id="trn" class="byline">
      <p>
@@ -369,7 +346,7 @@ if (translator === "o") {
       const origUrl = window.location.href;
       let rvUrl = origUrl.replace("/r/", "/read/");
       rvUrl = rvUrl.replace("/ml/", "");
-      rvUrl = rvUrl.replace("/read/", "/rev/");
+      rvUrl = rvUrl.replace("/read/", "/memorize/");
       let thUrl = origUrl.replace("/read/", "/th/read/");
       let dUrl = origUrl.replace("/read/", "/d/");
 
@@ -381,25 +358,25 @@ if (translator === "o") {
       const isWarningClosed = localStorage.getItem('warningClosed');
 
       const warning = `
-        <div style="max-width: 550px; margin: 0 auto; text-align: center;" class="warning-container">
+        <div class="warning-container warning-box">
           <p class='warning'>
-            <strong>Note:</strong><a style='cursor: pointer;' class='text-decoration-none' target='' href='${dUrl}'>&nbsp;</a>Translations, dictionaries and commentaries were not made by the Blessed One.<a style='cursor: pointer;' class='text-decoration-none' target='' href='${thUrl}'>&nbsp;</a>Cross-check with Pali in 4 main nikayas.
+            <strong>Note:</strong><a class='text-decoration-none cursor-pointer' target='' href='${dUrl}'>&nbsp;</a>Translations, dictionaries and commentaries were not made by the Blessed One.<a class='text-decoration-none cursor-pointer' target='' href='${thUrl}'>&nbsp;</a>Cross-check with Pali in 4 main nikayas.
                  ${canShowClose && !isWarningClosed ? `<span class="close-warning">×</span>` : ''} 
           </p>
         </div>
       `;
 
-      // Выводим текст СРАЗУ, оставив пустые <div> для верхних и нижних ссылок
+      // Выводим текст СРАЗУ
       suttaArea.innerHTML = 
-          `<div id="top-links-container" style="min-height: 24px;"></div><br>` + 
+          `<div id="top-links-container" class="min-h-24"></div><br>` + 
           (!isWarningClosed ? warning : '') + 
           translatorByline + 
           html + 
           translatorByline + 
           (!isWarningClosed ? warning : '') + 
-          `<div id="bottom-links-container" style="min-height: 24px;"></div>`;
+          `<div id="bottom-links-container" class="min-h-24"></div>`;
 
-      // === 2. НАСТРОЙКА ИНТЕРФЕЙСА (ПОКА ТЕКСТ УЖЕ МОЖНО ЧИТАТЬ) ===
+      // === 2. НАСТРОЙКА ИНТЕРФЕЙСА ===
       if (canShowClose && !isWarningClosed) {
         document.querySelectorAll('.close-warning').forEach(btn => {
           btn.addEventListener('click', function() {
@@ -432,17 +409,14 @@ if (translator === "o") {
 
       toggleThePali();
 
-      // === ГЕНЕРАЦИЯ ССЫЛОК (DPR, BJT, SC, BB, TBW, Th.ru, Th.su) ИЗ COMMON.JS ===
       scLink += generateThirdPartyLinks(slug, slugReady, texttype, translator);
       scLink += "</p>";
 
-      // Вставляем сгенерированные ссылки в контейнеры
       const topContainer = document.getElementById('top-links-container');
       const bottomContainer = document.getElementById('bottom-links-container');
       if (topContainer) topContainer.innerHTML = scLink;
       if (bottomContainer) bottomContainer.innerHTML = scLink;
 
-      // === ПОИСК ПРЕДЫДУЩЕЙ И СЛЕДУЮЩЕЙ СУТТЫ (ИЗ COMMON.JS) ===
       renderNavigation(slug, slugReady);
    
 	     addToSearchHistory(); 
@@ -450,21 +424,10 @@ if (translator === "o") {
     })
 .catch(error => {
   console.log('error: not found');
-  console.log('Slug:', slug, 'SlugReady:', slugReady);
-  console.log(`Paths:
-root: ${rootpath}
-trn : ${trnpath}
-html: ${htmlpath}
-var : ${varpath}`);
-
-  // Проверяем, не было ли уже слишком много попыток
   const redirectKey = `redirect_${slug}`;
   const redirectCount = localStorage.getItem(redirectKey) || 0;
   
   if (redirectCount >= 3) {
-    
-    console.error('Превышено максимальное количество редиректов для slug:', slug);
-      // Обновление сообщения об ошибке на странице
         suttaArea.innerHTML = `<p>Search for "${decodeURIComponent(slug)}" failed. Please try another slug.</p>
               <div class="spinner-border" role="status">
                 <span class="visually-hidden">Loading...</span>
@@ -477,12 +440,8 @@ More search options available from the main page.</p>`;
     return;
   }
 
-  // Увеличиваем счетчик и сохраняем
   localStorage.setItem(redirectKey, parseInt(redirectCount) + 1);
 
-
-// Отправка запроса по адресу http://localhost:8080/ru/?q= с использованием значения slug
-var xhr = new XMLHttpRequest();
 var xhr = new XMLHttpRequest();
 xhr.open("GET", "/?p=-kn&q=" + encodeURIComponent(slug), true);
 xhr.send();
@@ -490,20 +449,11 @@ xhr.send();
 xhr.onreadystatechange = function() {
   if (xhr.readyState == 4) {
     if (xhr.status == 200) {
-      // Проверяем, что ответ не является страницей 404 или другой ошибкой
-      // Например, можно проверить наличие определенного текста или структуры ответа
       if (!xhr.responseText.includes("Page not found") && 
           !xhr.responseText.includes("404") &&
           xhr.responseText.trim().length > 0) {
-        console.log(xhr.responseText);
         window.location.href = "/?p=-kn&q=" + encodeURIComponent(slug);
-      } else {
-        console.log('Page not found or empty response');
       }
-    } else if (xhr.status == 404) {
-      console.log('Error 404: Page not found');
-    } else {
-      console.log('Error sending request. Status:', xhr.status);
     }
   }
 };
@@ -523,7 +473,6 @@ if (lang) {
     setLanguage(lang);
   } else if  (localStorage.paliToggle) {
     	language = localStorage.paliToggle; 
-		//  console.log('read from ls ' + language);
 setLanguage(language);
   }
 } else {
@@ -556,7 +505,6 @@ setLanguage(language);
   
   
   <div>
-  <!-- <h2>Vinaya</h2> -->
   <div class="vinaya">
   <div>
   <h3>Bhikkhu Vinaya</h3>
@@ -637,10 +585,9 @@ function showPaliEnglish() {
   suttaArea.classList.remove("hide-pali");
   suttaArea.classList.remove("hide-english");
   suttaArea.classList.remove("hide-russian");
-    const savedMode = localStorage.getItem('viewMode') || 'alternate'; // Получаем сохранённое значение или 'alternate' по умолчанию
+  const savedMode = localStorage.getItem('viewMode') || 'alternate'; 
   const isColumnView = (savedMode === 'columns');
 
-  // Применяем сохранённый режим
   if (isColumnView) {
     suttaArea.classList.add('column-view');
   }
@@ -649,14 +596,13 @@ function showEnglish() {
   suttaArea.classList.add("hide-pali");
   suttaArea.classList.remove("hide-english");
   suttaArea.classList.remove("hide-russian");
-  suttaArea.classList.remove('column-view'); // Отключаем двухколоночный режим
+  suttaArea.classList.remove('column-view'); 
 }
 function showPali() {
   suttaArea.classList.add("hide-english");
-    suttaArea.classList.remove("hide-pali");
-      suttaArea.classList.add("hide-russian");
-      suttaArea.classList.remove('column-view'); // Отключаем двухколоночный режим
-  
+  suttaArea.classList.remove("hide-pali");
+  suttaArea.classList.add("hide-russian");
+  suttaArea.classList.remove('column-view'); 
 }
 
 function toggleThePali() {
@@ -668,7 +614,6 @@ function toggleThePali() {
   languageButton.parentNode.replaceChild(newButton, languageButton);
 
   newButton.addEventListener("click", () => {
-    // Та же обертка, но логика внутри своя (английская)
     runWithTransition(() => {
         if (language === "pli") {
           showPaliEnglish();
@@ -687,14 +632,10 @@ function toggleThePali() {
   });
 }
 
-
-// clicking an abbreviation on the home page will replace the input field with that abbreviation
 const abbreviations = document.querySelectorAll("span.abbr");
 abbreviations.forEach(book => {
   book.addEventListener("click", e => {
     citation.value = e.target.innerHTML;
-    // form.input.setSelectionRange(10, 10);
     citation.focus();
   });
 });
-
