@@ -770,3 +770,160 @@ async function getTranslator(texttype, slugReady, lang = "ru") {
         return lang === "en" ? "sujato" : "o"; 
     }
 }
+
+// ==========================================================================
+// ГЛОБАЛЬНЫЕ ФУНКЦИИ ДЛЯ РАБОТЫ С ВАРИАНТАМИ ЧТЕНИЯ (VARIANTS)
+// ==========================================================================
+
+// 1. Асинхронная загрузка данных вариантов
+window.fetchVariantData = async function(varpathLocal, varpath) {
+  const paths = [varpathLocal, varpath];
+  for (const path of paths) {
+    try {
+      const response = await fetch(path);
+      if (response.ok) return await response.json();
+    } catch (error) {
+      // Игнорируем ошибку и пробуем следующий путь
+    }
+  }
+  return {};
+};
+
+// 2. Настройка UI: переключение видимости, смена иконок, уведомления и хоткеи
+window.setupVariantVisibility = function() {
+  const toggleButton = document.getElementById("toggle-variants");
+  if (!toggleButton) return; // Если кнопки нет на странице, прерываем
+
+  let storedState = localStorage.getItem("variantVisibility") || "hidden";
+  const eyeIcon = "/assets/svg/eye.svg";
+  const eyeSlashIcon = "/assets/svg/eye-slash.svg";
+
+  // Функция для жесткого применения состояния к тексту и кнопке
+  function applyState(state) {
+    const variantElements = document.querySelectorAll(".variant");
+    
+    // Ищем кнопку ЗАНОВО каждый раз, чтобы точно поймать актуальный элемент на странице
+    const currentBtn = document.getElementById("toggle-variants");
+    const iconImage = currentBtn ? currentBtn.querySelector("img") : null;
+
+    variantElements.forEach((el) => {
+      if (state === "hidden") {
+        el.classList.add("hidden-variant");
+      } else {
+        el.classList.remove("hidden-variant");
+      }
+    });
+
+    if (iconImage) {
+      if (state === "hidden") {
+        iconImage.setAttribute("src", eyeSlashIcon);
+        iconImage.classList.remove("fa-eye");
+        iconImage.classList.add("fa-eye-slash");
+      } else {
+        iconImage.setAttribute("src", eyeIcon);
+        iconImage.classList.remove("fa-eye-slash");
+        iconImage.classList.add("fa-eye");
+      }
+    }
+  }
+
+  // Применяем состояние к свежеотрисованному тексту
+  applyState(storedState);
+
+  // Вешаем обработчик через .onclick, чтобы он не дублировался при перерисовках
+  toggleButton.onclick = function(e) {
+    if (e) e.preventDefault();
+    
+    storedState = storedState === "hidden" ? "visible" : "hidden";
+    localStorage.setItem("variantVisibility", storedState);
+    applyState(storedState);
+
+    // Вызываем уведомление, если функция существует на странице
+    if (typeof showBubbleNotification === "function") {
+       showBubbleNotification(storedState === "hidden" ? "Variants Off" : "Variants On");
+    }
+  };
+
+  // Настраиваем хоткей Alt+V (только один раз для всего окна)
+  if (!window._variantHotkeySetup) {
+    document.addEventListener("keydown", (event) => {
+      if (event.altKey && event.code === "KeyV") {
+        const currentBtn = document.getElementById("toggle-variants");
+        if (currentBtn) currentBtn.click();
+      }
+    });
+    window._variantHotkeySetup = true;
+  }
+};
+
+// ==========================================================================
+// ГЛОБАЛЬНАЯ ЛОГИКА ОБЪЕДИНЕНИЯ ГАТХ (СТИХОВ)
+// ==========================================================================
+window.mergeGathas = function(htmlData, paliData, transData, varData, engTransData = null) {
+    const originalSegments = Object.keys(htmlData);
+    
+    // Проверка настройки (по умолчанию включено)
+    // В будущем чекбокс будет менять этот параметр на "false"
+    if (localStorage.getItem("mergeGathas") === "false") {
+        return originalSegments; 
+    }
+
+    const processedSegments = [];
+
+    for (let i = 0; i < originalSegments.length; i++) {
+        let segment = originalSegments[i];
+
+        // Базовая защита от undefined для текущего сегмента
+        if (transData && transData[segment] === undefined) transData[segment] = "";
+        if (engTransData && engTransData[segment] === undefined) engTransData[segment] = "";
+        if (paliData && paliData[segment] === undefined) paliData[segment] = "";
+
+        let nextSegment = originalSegments[i + 1];
+
+        if (htmlData[segment] && htmlData[segment].includes('verse-line') &&
+            nextSegment && htmlData[nextSegment] && htmlData[nextSegment].includes('verse-line')) {
+
+            let [nextOpen, nextClose] = htmlData[nextSegment].split(/{}/);
+
+            // Убеждаемся, что следующий сегмент не начинает новый абзац
+            if (!nextOpen.includes('<p>')) {
+                // Универсальная функция понижения регистра
+                const toLower = (str) => {
+                    if (!str) return "";
+                    // Исключения: английские I, I', O и русское О в начале строки
+                    if (str.match(/^["“'‘]?(I\b|I'|O\b|О\b)/)) return str;
+                    return str.charAt(0).toLowerCase() + str.slice(1);
+                };
+
+                // 1. Объединяем Пали
+                if (paliData && paliData[nextSegment]) {
+                    paliData[segment] = (paliData[segment] || "").trim() + " " + toLower(paliData[nextSegment].trim());
+                }
+                // 2. Объединяем основной перевод (Русский/Английский)
+                if (transData && transData[nextSegment]) {
+                    transData[segment] = (transData[segment] || "").trim() + " " + toLower(transData[nextSegment].trim());
+                }
+                // 3. Объединяем дополнительный перевод (если передан, например, в multilang)
+                if (engTransData && engTransData[nextSegment]) {
+                    engTransData[segment] = (engTransData[segment] || "").trim() + " " + toLower(engTransData[nextSegment].trim());
+                }
+                // 4. Объединяем варианты
+                if (varData && varData[nextSegment]) {
+                    varData[segment] = (varData[segment] || "").trim() + " " + toLower(varData[nextSegment].trim());
+                }
+
+                // 5. Склеиваем HTML (начало от текущего, конец от следующего)
+                let [currOpen, currClose] = htmlData[segment].split(/{}/);
+                htmlData[segment] = (currOpen || '') + "{}" + (nextClose || '');
+
+                processedSegments.push(segment);
+                i++; // Пропускаем следующий сегмент, так как он уже приклеен
+                continue;
+            }
+        }
+        processedSegments.push(segment);
+    }
+
+    return processedSegments;
+};
+

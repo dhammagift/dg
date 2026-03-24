@@ -152,27 +152,8 @@ const rootResponse = fetch(rootpath)
 
   const translationResponse = fetch(trnpath).then(response => response.json());
   const htmlResponse = fetch(htmlpath).then(response => response.json());
-async function fetchVariant() {
-  const paths = [varpath, varpathLocal];
 
-  for (const path of paths) {
-    try {
-      const response = await fetch(path);
-      if (response.ok) {
-        return await response.json();
-      }
-   //   console.log(`note: no var found at ${path}`);
-    } catch (error) {
-  //    console.log(`note: error fetching var ${path}`);
-    }
-  }
-
-//  console.log('note: no var found in any path');
-  return {}; // Если все пути недоступны
-}
-
-const varResponse = fetchVariant();    
-
+const varResponse = window.fetchVariantData(varpathLocal, varpath);
 
   Promise.all([rootResponse, translationResponse, htmlResponse, varResponse]).then(responses => {
     const [paliData, transData, htmlData, varData] = responses;
@@ -375,6 +356,10 @@ if (translator === "o") {
           translatorByline + 
           (!isWarningClosed ? warning : '') + 
           `<div id="bottom-links-container" class="min-h-24"></div>`;
+
+if (typeof window.setupVariantVisibility === 'function') {
+          window.setupVariantVisibility();
+      }
 
       // === 2. НАСТРОЙКА ИНТЕРФЕЙСА ===
       if (canShowClose && !isWarningClosed) {

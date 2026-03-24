@@ -259,27 +259,8 @@ return {};
     
     const htmlResponse = fetch(htmlpath).then(response => response.json());
 
-async function fetchVariant() {
-  const paths = [varpath, varpathLocal];
+const varResponse = window.fetchVariantData(varpathLocal, varpath);
 
-  for (const path of paths) {
-    try {
-      const response = await fetch(path);
-      if (response.ok) {
-        return await response.json();
-      }
-      console.log(`note: no var found at ${path}`);
-    } catch (error) {
-      console.log(`note: error fetching var ${path}`);
-    }
-  }
-
-  console.log('note: no var found in any path');
-  return {}; // Если все пути недоступны
-}
-
-const varResponse = fetchVariant();    
-    
     Promise.all([rootResponse, translationResponse, engtranslationResponse, htmlResponse, varResponse]).then(responses => {
     const [paliData, transData, engTransData, htmlData, varData] = responses;
 
@@ -554,6 +535,10 @@ else {
           translatorByline + 
           (!isWarningClosed ? warning : '') + 
           `<div id="bottom-links-container" style="min-height: 24px;"></div>`;
+
+if (typeof window.setupVariantVisibility === 'function') {
+    window.setupVariantVisibility();
+}
 
       // === 2. НАСТРОЙКА ИНТЕРФЕЙСА (ПОКА ТЕКСТ УЖЕ МОЖНО ЧИТАТЬ) ===
       if (canShowClose && !isWarningClosed) {
@@ -847,24 +832,41 @@ function showPali() {
 function toggleThePali() {
   const languageButton = document.getElementById("language-button");
 
-// initial state
- if (!localStorage.paliToggleSpecial) {
-    localStorage.paliToggleSpecialRu = "pli-2nd";
-  }   
+  if (!localStorage.paliToggleSpecial) {
+    localStorage.paliToggleSpecial = "pli-2nd"; // Исправил опечатку (было paliToggleSpecialRu)
+  }
 
-  languageButton.addEventListener("click", () => {
-    if (language === "pli") {
-      showPaliAll();
-      language = "pli-2nd";    
-      localStorage.paliToggleSpecial = "pli-2nd";
-    } else if (language === "pli-2nd") {
-     showPali();
-           language = "pli";
-      localStorage.paliToggleSpecial = "pli";
+  // Клонируем кнопку, чтобы сбросить старые слушатели (исправляем баг с мульти-кликом)
+  const newButton = languageButton.cloneNode(true);
+  languageButton.parentNode.replaceChild(newButton, languageButton);
 
+  newButton.addEventListener("click", () => {
+    // Используем единую плавную обертку из common.js
+    if (typeof runWithTransition === 'function') {
+        runWithTransition(() => {
+            if (language === "pli") {
+              showPaliAll();
+              language = "pli-2nd";    
+              localStorage.paliToggleSpecial = "pli-2nd";
+            } else if (language === "pli-2nd") {
+              showPali();
+              language = "pli";
+              localStorage.paliToggleSpecial = "pli";
+            }
+        });
+    } else {
+        // Фолбэк, если common.js еще не подгрузился
+        if (language === "pli") {
+          showPaliAll();
+          language = "pli-2nd";    
+          localStorage.paliToggleSpecial = "pli-2nd";
+        } else if (language === "pli-2nd") {
+          showPali();
+          language = "pli";
+          localStorage.paliToggleSpecial = "pli";
+        }
     }
   });
-  
 }
 
 // clicking an abbreviation on the home page will replace the input field with that abbreviation

@@ -18,6 +18,52 @@ homeButton.addEventListener("click", () => {
 });
 
 
+function parseSlugBB(slug) {
+  if (
+    slug === 'bu-pm' || slug === 'bi-pm' ||
+    slug === 'pli-tv-bu-pm' || slug === 'pli-tv-bi-pm' ||
+    slug === 'bupm' || slug === 'bipm'
+  ) {
+    const gender = slug.includes('bi') ? 'bi' : 'bu';
+    return `pli-tv-${gender}-pm`;
+  }
+
+  if (
+    slug === 'bu-as' || slug === 'bu-vb-as1-7' || slug === 'pli-tv-bu-vb-as1-7' ||
+    slug === 'bi-as' || slug === 'bi-vb-as1-7' || slug === 'pli-tv-bi-vb-as1-7'
+  ) {
+    const fixforbivb = slug.replace(/(\d+)-(\d+)/g, '');
+    const bookWithoutNumber = fixforbivb.replace(/(\d+)/g, '');
+    const fixforbivb2 = slug.replace(/-([a-z]+)\d+/g, '');
+    const bookWithoutNumberAndRule = fixforbivb2.replace(/-\d+$/g, '');
+    return `${bookWithoutNumberAndRule}/${bookWithoutNumber}1-7`;
+  } else if (slug.match(/^([a-z]+)-([a-z]+)-([a-z]+)-([a-z]+)-([a-z]+)*(\d*)/)) {
+    const fixforbivb = slug.replace(/(\d+)-(\d+)/g, '');
+    const bookWithoutNumber = fixforbivb.replace(/(\d+)/g, '');
+    const fixforbivb2 = slug.replace(/-([a-z]+)\d+/g, '');
+    const bookWithoutNumberAndRule = fixforbivb2.replace(/-\d+$/g, '');
+    return `${bookWithoutNumberAndRule}/${bookWithoutNumber}/${slug}`;
+  } else if (slug.match(/^([a-z]+)-([a-z]+)-([a-z]+)*(\d*)/)) {
+    const bookWithoutNumber = slug.replace(/(\d+|\.)/g, '');
+    return `${bookWithoutNumber}/${slug}`;
+  }
+
+  const slugParts = slug.match(/^([a-z]+)(\d*)\.*(\d*)/);
+  const book = slugParts ? slugParts[1] : slug;
+  const firstNum = slugParts ? slugParts[2] : '';
+
+  if (book === "dn" || book === "mn") {
+    return `${book}/${slug}`;
+  } else if (book === "sn" || book === "an") {
+    return `${book}/${book}${firstNum}/${slug}`;
+  } else if (["kp", "dhp", "ud", "iti", "snp", "thag", "thig", "ja"].includes(book)) {
+    // В отличие от common.js, здесь мы отдаем плоский путь для KN-книг, без vagga
+    return `kn/${book}/${slug}`;
+  }
+  
+  return slug;
+}
+
 function buildSutta(slug) {
   let translator = "";
   let texttype = "sutta";
@@ -59,7 +105,7 @@ function buildSutta(slug) {
 
   let html = `<div class="button-area"><button title="Switch language (Atl+Z or Alt+Space)" id="language-button" class="hide-button">Pāḷi Eng</button></div>`;
   
-  const slugReady = parseSlug(slug);
+  const slugReady = parseSlugBB(slug);
   // console.log("slugReady is " + slugReady + " slug is " + slug); 
 
 let params = new URLSearchParams(document.location.search);
@@ -113,10 +159,11 @@ var rootpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slug}
   //  console.log(rootpath, trnpath, htmlpath);
 } 
 
-else if (otrnranges.indexOf(slug) !== -1) { 
+/* else if (otrnranges.indexOf(slug) !== -1) { 
     var trnpath = `/assets/texts/en/o/${texttype}/${slugReady}_translation-en-o.json`;
         translator = "o";
-}
+} */ 
+
 else {
   var trnpath = `/assets/texts/en/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`;
 }
@@ -207,27 +254,7 @@ const htmlResponse = fetch(htmlpath).then(response => {
 
 //  const htmlResponse = fetch(htmlpath).then(response => response.json());
 
-async function fetchVariant() {
-  const paths = [varpath, varpathLocal];
-
-  for (const path of paths) {
-    try {
-      const response = await fetch(path);
-      if (response.ok) {
-        return await response.json();
-      }
-   //   console.log(`note: no var found at ${path}`);
-    } catch (error) {
-  //    console.log(`note: error fetching var ${path}`);
-    }
-  }
-
-//  console.log('note: no var found in any path');
-  return {}; // Если все пути недоступны
-}
-
-const varResponse = fetchVariant();    
-
+const varResponse = window.fetchVariantData(varpathLocal, varpath);
 
   Promise.all([rootResponse, translationResponse, htmlResponse, varResponse]).then(responses => {
     const [paliData, transData, htmlData, varData] = responses;
@@ -437,6 +464,9 @@ if (translator === "o") {
           (!isWarningClosed ? warning : '') + 
           `<div id="bottom-links-container" style="min-height: 24px;"></div>`;
 
+if (typeof window.setupVariantVisibility === 'function') {
+          window.setupVariantVisibility();
+      }
       // === 2. НАСТРОЙКА ИНТЕРФЕЙСА (ПОКА ТЕКСТ УЖЕ МОЖНО ЧИТАТЬ) ===
       if (canShowClose && !isWarningClosed) {
         document.querySelectorAll('.close-warning').forEach(btn => {

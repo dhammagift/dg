@@ -218,26 +218,9 @@ var varpathLocal = `/assets/texts/variant/${texttype}/${slugReady}_variant-pli-m
   const rootResponse = fetch(rootpath).then(response => response.json());
   const htmlResponse = fetch(htmlpath).then(response => response.json());
 
-async function fetchVariant() {
-  const paths = [varpath, varpathLocal];
 
-  for (const path of paths) {
-    try {
-      const response = await fetch(path);
-      if (response.ok) {
-        return await response.json();
-      }
-      console.log(`note: no var found at ${path}`);
-    } catch (error) {
-      console.log(`note: error fetching var ${path}`);
-    }
-  }
+const varResponse = window.fetchVariantData(varpathLocal, varpath);
 
-  console.log('note: no var found in any path');
-  return {}; // Если все пути недоступны
-}
-
-const varResponse = fetchVariant();    
     
 Promise.all([rootResponse, htmlResponse, varResponse]).then(responses => {
     const [paliData, htmlData, varData] = responses;
@@ -367,7 +350,7 @@ Promise.all([rootResponse, htmlResponse, varResponse]).then(responses => {
       let linkToCopy = `<a class="text-decoration-none copyLink" style="cursor: pointer;" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;
       let linkWithDataSet = `<a class="text-decoration-none copyLink" style="cursor: pointer;" data-copy-text="${fullUrlWithAnchor}">&nbsp;</a>`;
 
-      if (paliData[segment] !== paliData[segment] && varData[segment] !== undefined) {
+      if (paliData[segment] !== undefined && varData[segment] !== undefined) {
           html += `${openHtml}<span id="${anchor}">
               <span class="pli-lang dict-ignore inputscript-ISOPali" lang="pi">${linkToCopyStart}${преобразоватьТекст().trim()}${linkToCopy}</span>
               <span class="greyedout rus-lang" lang="pi">${linkToCopyStart}${paliData[segment].trim()}${linkToCopy}
@@ -375,7 +358,7 @@ Promise.all([rootResponse, htmlResponse, varResponse]).then(responses => {
               </span>
           </span>${closeHtml}\n\n`;
 
-      } else if (paliData[segment] !== paliData[segment]) {
+      } else if (paliData[segment] !== undefined) {
           html += `${openHtml}<span id="${anchor}">
               <span class="pli-lang dict-ignore inputscript-ISOPali" lang="pi">${linkToCopyStart}${преобразоватьТекст().trim()}${linkToCopy}</span>
               <span class="greyedout rus-lang" lang="pi">${linkToCopyStart}${paliData[segment].trim()}${linkToCopy}</span>
@@ -387,6 +370,7 @@ Promise.all([rootResponse, htmlResponse, varResponse]).then(responses => {
               <span class="greyedout rus-lang" lang="pi">${linkToCopyStart}${paliData[segment].trim()}${linkToCopy}</span>
           </span>${closeHtml}\n\n`;
       }
+
     } // Конец цикла for
 
 if (translator === "o") {
@@ -453,6 +437,11 @@ if (translator === "o") {
           (!isWarningClosed ? warning : '') + 
           `<div id="bottom-links-container" style="min-height: 24px;"></div>`;
 
+
+if (typeof window.setupVariantVisibility === 'function') {
+          window.setupVariantVisibility();
+      }
+      
       // === 2. НАСТРОЙКА ИНТЕРФЕЙСА (ПОКА ТЕКСТ УЖЕ МОЖНО ЧИТАТЬ) ===
       if (canShowClose && !isWarningClosed) {
         document.querySelectorAll('.close-warning').forEach(btn => {

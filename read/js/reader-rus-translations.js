@@ -207,7 +207,7 @@ const rootResponse = fetch(rootpath)
   const translationResponse = fetch(trnpath).then(response => response.json());
   const htmlResponse = fetch(htmlpath).then(response => response.json());
 async function fetchVariant() {
-  const paths = [varpath, varpathLocal];
+  const paths = [varpathLocal, varpath];
 
   for (const path of paths) {
     try {
@@ -225,75 +225,19 @@ async function fetchVariant() {
   return {}; // Если все пути недоступны
 }
 
-const varResponse = fetchVariant();    
- 
+const varResponse = window.fetchVariantData(varpathLocal, varpath);
+  
+
 //  console.log(trnpath);
 //  console.log(rustrnpath);
 Promise.all([rootResponse, translationResponse, htmlResponse, varResponse]).then(responses => {
     const [paliData, transData, htmlData, varData] = responses;
 	
-// === НАЧАЛО ИЗМЕНЕНИЙ: Логика объединения Гатх ===
-    const segments = Object.keys(htmlData);
+    // === ВЫЗЫВАЕМ ГЛОБАЛЬНУЮ ФУНКЦИЮ ОБЪЕДИНЕНИЯ ГАТХ ===
+    const segments = window.mergeGathas(htmlData, paliData, transData, varData);
     
     for (let i = 0; i < segments.length; i++) {
       let segment = segments[i];
-
-      // Проверки на undefined (как в оригинале)
-      if (transData[segment] === undefined) transData[segment] = "";
-      if (transData[segment] === "") transData[segment] = "";
-
-      // ЛОГИКА ОБЪЕДИНЕНИЯ (MERGE):
-      // Проверяем, является ли текущий сегмент частью стиха (verse-line)
-      // и есть ли следующий сегмент, который тоже часть стиха.
-      let nextSegment = segments[i + 1];
-      
-      if (htmlData[segment] && htmlData[segment].includes('verse-line') &&
-          nextSegment && htmlData[nextSegment] && htmlData[nextSegment].includes('verse-line')) {
-          
-          
-          let [nextOpen, nextClose] = htmlData[nextSegment].split(/{}/);
-          
-          // Проверяем, что следующий сегмент не начинает новый абзац
-          if (!nextOpen.includes('<p>')) {
-              
-              // Функция для перевода первой буквы в нижний регистр
-              const toLower = (str) => {
-                  if (!str) return "";
-                  // Если строка начинается с кавычки или скобки, пробуем понизить вторую букву, 
-                  // но для простоты понижаем первую найденную букву.
-                  // Здесь простой вариант:
-                  return str.charAt(0).toLowerCase() + str.slice(1);
-              };
-
-              // 1. Объединяем ПАЛИ
-              if (paliData[nextSegment]) {
-                  // trim() убирает пробелы по краям
-                  // " " добавляет ровно один пробел между частями
-                  // toLower() делает вторую часть с маленькой буквы
-                  paliData[segment] = (paliData[segment] || "").trim() + " " + toLower(paliData[nextSegment].trim());
-              }
-
-              // 2. Объединяем ПЕРЕВОД (Русский)
-              if (transData[nextSegment]) {
-                  transData[segment] = (transData[segment] || "").trim() + " " + toLower(transData[nextSegment].trim());
-              }
-
-              // 3. Объединяем ВАРИАНТЫ (если есть)
-              if (varData[nextSegment]) {
-                  varData[segment] = (varData[segment] || "").trim() + " " + toLower(varData[nextSegment].trim());
-              }
-
-              // 4. Склеиваем HTML (оставляем обертку)
-              let [currOpen, currClose] = htmlData[segment].split(/{}/);
-              
-              // Переписываем htmlData текущего сегмента: начало от первого, конец от второго
-              htmlData[segment] = (currOpen || '') + "{}" + (nextClose || '');
-              
-              // 5. Пропускаем следующий сегмент (мы его только что приклеили)
-              i++; 
-          }
-      }
-      // === КОНЕЦ ЛОГИКИ ОБЪЕДИНЕНИЯ ===
 
       let [openHtml, closeHtml] = htmlData[segment].split(/{}/);
       openHtml = openHtml || ''; 
@@ -436,6 +380,11 @@ scLink += `<a title='Английский (Alt+1)' href="${enUrl}">En</a>&nbsp;`
           translatorByline + 
           (!isWarningClosed ? warning : '') + 
           `<div id="bottom-links-container" class="min-h-24"></div>`;
+          
+if (typeof window.setupVariantVisibility === 'function') {
+    window.setupVariantVisibility();
+}
+          
 
       // === 2. НАСТРОЙКА ИНТЕРФЕЙСА (ПОКА ТЕКСТ УЖЕ МОЖНО ЧИТАТЬ) ===
       if (canShowClose && !isWarningClosed) {
@@ -761,24 +710,3 @@ abbreviations.forEach(book => {
     citation.focus();
   });
 });
-
-function handleVariantVisibility() {
-  const toggleButton = document.getElementById("toggle-variants");
-  const variantElements = document.querySelectorAll(".variant");
-
-  if (!toggleButton || variantElements.length === 0) return;
-
-  const storedState = localStorage.getItem("variantVisibility");
-
-  // Применяем сохраненное состояние при загрузке
-  if (storedState === "hidden") {
-    variantElements.forEach((el) => el.classList.add("hidden-variant"));
-  }
-
-  // Добавляем обработчик клика для переключения видимости
-  toggleButton.addEventListener("click", function () {
-    const isHidden = variantElements[0].classList.contains("hidden-variant");
-    variantElements.forEach((el) => el.classList.toggle("hidden-variant"));
-    localStorage.setItem("variantVisibility", isHidden ? "visible" : "hidden");
-  });
-}
