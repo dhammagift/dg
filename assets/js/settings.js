@@ -101,7 +101,9 @@
         scriptVoice.onload = () => {
             // ---> ИСПРАВЛЕНИЕ: Блокируем загрузку A-B цикла для приложения Memo <---
             // У Memo своя логика задержек и интерфейса, voice-mem.js там вызывает конфликты
-            if (window.location.pathname.includes('/memo/') && !path.includes('/memorize/')) {
+    const path = window.location.pathname;
+
+if (path.includes('/memo/') && !path.includes('/memorize/')) {
                 window.isVoiceScriptLoaded = true;
                 isVoiceInitializing = false;
                 
