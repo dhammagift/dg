@@ -1005,7 +1005,7 @@ function getClickedWordWithHTML(element, x, y) {
     
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    const CLICK_TOLERANCE = 5; 
+    const CLICK_TOLERANCE = 10; 
 
     if (distance > CLICK_TOLERANCE) {
         return null; 
