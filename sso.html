@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест Синхронизации Dhamma.gift</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 0 15px; background: #f9f9f9;}
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        button { padding: 10px 15px; margin: 5px 0; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px;}
+        .btn-google { background: #4285F4; color: white; }
+        .btn-phrase { background: #34A853; color: white; }
+        .btn-danger { background: #EA4335; color: white; }
+        .btn-action { background: #FBBC05; color: #333; font-weight: bold; width: auto; margin-right: 5px; }
+        pre { background: #eee; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
+        #auth-status { font-weight: bold; color: #333; margin-bottom: 15px; display: block;}
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+    <h2>Тест Синхронизации ☁️</h2>
+
+    <div class="card" id="auth-section">
+        <span id="auth-status">Статус: Не в сети (Локальный режим)</span>
+        
+        <div id="login-buttons">
+            <button class="btn-google" onclick="loginWithGoogle()">Войти через Google</button>
+            <button class="btn-phrase" onclick="loginWithPhrase()">Вход по секретной фразе</button>
+        </div>
+
+        <div id="user-info" style="display: none;">
+            <button class="btn-danger" onclick="logout()">Выйти</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Эмуляция данных сайта</h3>
+        <p style="font-size: 14px; color: #666;">Нажмите кнопку, чтобы добавить тестовую закладку в локальную память. Если вы залогинены, она должна сразу улететь в облако.</p>
+        
+        <button class="btn-action" onclick="addTestData()">+ Добавить тестовую закладку</button>
+        <button class="btn-action" onclick="clearLocalData()" style="background: #ccc;">Очистить локально</button>
+        
+        <h4 style="margin-top: 20px;">Содержимое localStorage:</h4>
+        <pre id="local-storage-display">Пусто...</pre>
+    </div>
+
+    <script>
+        // === 1. ИНИЦИАЛИЗАЦИЯ FIREBASE ===
+        const firebaseConfig = {
+          apiKey: "AIzaSyDwatpN1h2w0g1HvQn1yyHUWgR5ONy5Di8",
+          authDomain: "dg-sync-data.firebaseapp.com",
+          projectId: "dg-sync-data",
+          storageBucket: "dg-sync-data.firebasestorage.app",
+          messagingSenderId: "777733337986",
+          appId: "1:777733337986:web:24dac9e062f5d048bad59b"
+        };
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+        // === 2. ЛОГИКА АВТОРИЗАЦИИ ===
+        async function loginWithGoogle() {
+            try { await auth.signInWithPopup(googleProvider); } 
+            catch (error) { console.error(error); alert("Ошибка Google: " + error.message); }
+        }
+
+        function loginWithPhrase() {
+            const phrase = prompt("Введите секретную фразу (минимум 6 символов):");
+            if (phrase && phrase.length >= 6) {
+                const phraseId = "phrase_" + phrase.trim().toLowerCase().replace(/\s+/g, '-');
+                localStorage.setItem('syncPhraseId', phraseId);
+                updateUI();
+                syncFromCloud(phraseId); // Пытаемся скачать данные для этой фразы
+            } else if (phrase) {
+                alert("Слишком короткая фраза!");
+            }
+        }
+
+        async function logout() {
+            await auth.signOut();
+            localStorage.removeItem('syncPhraseId');
+            updateUI();
+        }
+
+        // === 3. ЛОГИКА СИНХРОНИЗАЦИИ ===
+        
+        // Получить текущий ID пользователя (Google UID или ID Фразы)
+        function getCurrentUserId() {
+            const user = auth.currentUser;
+            const phraseId = localStorage.getItem('syncPhraseId');
+            if (user) return user.uid;
+            if (phraseId) return phraseId;
+            return null;
+        }
+
+        // Выгрузка в базу (Backup)
+        async function syncToCloud() {
+            const uid = getCurrentUserId();
+            if (!uid) return;
+
+            const dataToSave = JSON.stringify(localStorage);
+            try {
+                await db.collection("users").doc(uid).set({
+                    settings: dataToSave,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                console.log("Успешно сохранено в облако!");
+            } catch (error) {
+                console.error("Ошибка сохранения:", error);
+                alert("Ошибка сохранения: проверьте правила Firestore!");
+            }
+        }
+
+        // Загрузка из базы (Restore)
+        async function syncFromCloud(uid) {
+            try {
+                const doc = await db.collection("users").doc(uid).get();
+                if (doc.exists) {
+                    const cloudData = JSON.parse(doc.data().settings);
+                    
+                    // Записываем данные в браузер
+                    for (const key in cloudData) {
+                        if (key !== 'syncPhraseId') { // Фразу не перезаписываем
+                            localStorage.setItem(key, cloudData[key]);
+                        }
+                    }
+                    console.log("Данные стянуты из облака!");
+                    updateStorageDisplay();
+                } else {
+                    console.log("В облаке пусто, отправляем туда текущие данные...");
+                    syncToCloud();
+                }
+            } catch (error) {
+                console.error("Ошибка загрузки:", error);
+            }
+        }
+
+        // Слушатель состояния (запускается при старте страницы)
+        auth.onAuthStateChanged((user) => {
+            updateUI();
+            const uid = getCurrentUserId();
+            if (uid) syncFromCloud(uid);
+        });
+
+        // === 4. UI И ТЕСТОВЫЕ ДАННЫЕ ===
+
+        function updateUI() {
+            const user = auth.currentUser;
+            const phraseId = localStorage.getItem('syncPhraseId');
+            
+            const loginBtns = document.getElementById('login-buttons');
+            const userInfo = document.getElementById('user-info');
+            const statusText = document.getElementById('auth-status');
+
+            if (user) {
+                loginBtns.style.display = 'none';
+                userInfo.style.display = 'block';
+                statusText.innerText = `Статус: В сети (Google: ${user.email})`;
+                statusText.style.color = '#4285F4';
+            } else if (phraseId) {
+                loginBtns.style.display = 'none';
+                userInfo.style.display = 'block';
+                statusText.innerText = `Статус: В сети (Фраза: ${phraseId.replace('phrase_', '')})`;
+                statusText.style.color = '#34A853';
+            } else {
+                loginBtns.style.display = 'block';
+                userInfo.style.display = 'none';
+                statusText.innerText = 'Статус: Не в сети (Локальный режим)';
+                statusText.style.color = '#333';
+            }
+            updateStorageDisplay();
+        }
+
+        // Добавляем тестовые данные (имитируем работу сайта)
+        function addTestData() {
+            const randNum = Math.floor(Math.random() * 100);
+            localStorage.setItem(`test_sutta_${randNum}`, `Сутта MN ${randNum} добавлена в ${new Date().toLocaleTimeString()}`);
+            updateStorageDisplay();
+            
+            // Как только добавили локально, сразу шлем в облако!
+            syncToCloud();
+        }
+
+        // Очистка для удобства тестирования
+        function clearLocalData() {
+            const phrase = localStorage.getItem('syncPhraseId');
+            localStorage.clear();
+            if (phrase) localStorage.setItem('syncPhraseId', phrase); // Возвращаем фразу, чтобы не разлогиниться
+            updateStorageDisplay();
+            syncToCloud(); // Очищаем и облако тоже
+        }
+
+        // Рисуем табличку с данными
+        function updateStorageDisplay() {
+            const display = document.getElementById('local-storage-display');
+            const dataObj = { ...localStorage };
+            display.innerText = Object.keys(dataObj).length > 0 
+                ? JSON.stringify(dataObj, null, 2) 
+                : "Локальное хранилище пусто";
+        }
+
+        // Обновляем экран каждую секунду (для наглядности)
+        setInterval(updateStorageDisplay, 1000);
+    </script>
+</body>
+</html>
+
