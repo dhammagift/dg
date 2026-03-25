@@ -174,7 +174,9 @@ if (newUrl !== window.location.href) {
 
         <!-- Navigation-->
         <nav class="navbar navbar-expand-lg bg-secondary text-uppercase" id="mainNav">
-            <a class="navbar-brand mobile-center" href="<?php echo $mainpage;?>"> <div class="container"><img loading="lazy" alt="Precise search in Pali Suttas and Vinaya" src="./assets/img/dhammafindlogo.webp"  style="width:100px;"></a>
+            <a class="navbar-brand mobile-center" href="<?php echo $mainpage;?>"> <div class="container">
+    <img loading="lazy" alt="Precise search in Pali Suttas and Vinaya" src="/assets/img/dhammafindlogo.webp" class="w-100px">
+          </a>
                 <a class="navbar-brand mobile-none" href="<?php echo $mainpage; ?>">Dhamma.gift Read</a>
                 <button class="navbar-toggler text-uppercase font-weight-bold bg-primary text-white rounded" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
                    <?php echo $menu;?>
@@ -248,7 +250,7 @@ if (isset($_GET['q'])) {
   <span class="visually-hidden"><?php echo $searchcaption;?></span>
   </div> 
 
- <div class="text-start text-muted form-check-inline" id="searchbar-help"  data-bs-toggle="tooltip" style="cursor: pointer;" data-bs-placement="bottom" data-bs-html="true" title="<?php echo $tooltipsearchbar;?>">*</div>
+ <div class="text-start text-muted form-check-inline cursor-pointer" id="searchbar-help"  data-bs-toggle="tooltip"data-bs-placement="bottom" data-bs-html="true" title="<?php echo $tooltipsearchbar;?>">*</div>
 </div>
 
 
@@ -274,7 +276,8 @@ $(document).ready(function() {
 });
 </script>
 
-      	<div style="max-width: 450px; display: none;" class='alert alert-warning alert-dismissible fade show container-lg mt-3 mb-1 text-start' role='alert' id='successAlert'>
+<div class="alert alert-warning alert-dismissible fade show container-lg mt-3 mb-1 text-start max-w-450" style="display: none;" role="alert" id="successAlert">
+
   <div id="response"></div>
   <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
 </div>		  
@@ -293,7 +296,7 @@ $(document).ready(function() {
         <option value="-b" <?php if (isset($p) && $p == "-b") echo "selected";?> ><?php echo $radiotbw;?></option>
         <option value="-en" <?php if (isset($p) && $p == "-en") echo "selected";?> ><?php echo $radioen;?></option>
     </select>
-       <div class="text-start text-muted form-check-inline me-0" data-bs-html="true" data-bs-toggle="tooltip" id="texttype-help" style="cursor: pointer;" data-bs-placement="bottom" title="<?php echo $tooltiptextype;?>">*</div>
+       <div class="text-start text-muted form-check-inline me-0 cursor-pointer" data-bs-html="true" data-bs-toggle="tooltip" id="texttype-help" data-bs-placement="bottom" title="<?php echo $tooltiptextype;?>">*</div>
 
     <select class="dropdown droponmain rounded-pill text-muted border-2 border-primary text-center input-group-append" id="extraOptions" name="extra">
         <option value="" <?php if (isset($extra) && $p == "") echo "selected";?> ><?php echo "$liststd";?></option>
@@ -307,20 +310,21 @@ $(document).ready(function() {
         <option value="-nm10" <?php if (isset($extra) && $extra == "-nm10") echo "selected";?> ><?php echo "$listnm10";?></option>
       <option value="-nm5" <?php if (isset($extra) && $extra == "-nm5") echo "selected";?> ><?php echo "$listnm";?></option>
     </select>
-	  <div class="text-muted text-decoration-none me-1 form-check-inline" data-bs-html="true" data-bs-toggle="tooltip" id="searchtype-help" style="cursor: pointer;" data-bs-placement="bottom" title="<?php echo $tooltipsearchtype;?>">*</div>
+	  <div class="text-muted text-decoration-none me-1 form-check-inline cursor-pointer" data-bs-html="true" data-bs-toggle="tooltip" id="searchtype-help"  data-bs-placement="bottom" title="<?php echo $tooltipsearchtype;?>">*</div>
 </div>
   <!--  <label for="pOptions"></label> -->
   <!-- extra options -->
 
-         <div style="max-width: 300px;" class="my-2"> 
+<div class="my-2 max-w-300"> 
+
      <div class="form-check form-check-inline">
         <input class="form-check-input" type="checkbox" id="onlCheckbox" name="extra" <?php if (isset($extra) && $extra=="-anyd ") echo "checked";?>  value="-anyd">
-  <div data-bs-toggle="tooltip" style="cursor: pointer;" data-bs-placement="bottom" title='<?php echo $tooltiponl;?>'><?php echo $checkboxonl;?></div>
+  <div data-bs-toggle="tooltip" class="cursor-pointer" data-bs-placement="bottom" title='<?php echo $tooltiponl;?>'><?php echo $checkboxonl;?></div>
   </div>
   
 <div class="form-check form-check-inline">
   <input class="form-check-input" type="checkbox" id="laCheckbox" name="la" <?php if (isset($extra) && $extra=="-la$defaultla ") echo "checked";?>  value='<?php echo "-la$defaultla"?>'>
-  <div data-bs-toggle="tooltip" style="cursor: pointer;" data-bs-placement="bottom" title='<?php echo $tooltipla;?>'><?php echo $checkboxla;?></div>
+  <div data-bs-toggle="tooltip" class="cursor-pointer" data-bs-placement="bottom" title='<?php echo $tooltipla;?>'><?php echo $checkboxla;?></div>
   </div>
   
 
@@ -346,12 +350,7 @@ $(document).ready(function() {
 </div>
 
 <div class="mt-3">
-  <a 
-  type="button"
-  onclick="toggleQuickModal()" 
-  aria-label="Open Cattāri Ariyasaccāni" 
-  class="common-size-icon4" 
-  style="cursor: pointer; height: 25px">
+<a type="button" onclick="toggleQuickModal()" aria-label="Open Cattāri Ariyasaccāni" class="common-size-icon4 cursor-pointer h-25px">
   <i class="fa-solid fa-compass"></i>
 </a>
 
@@ -370,7 +369,7 @@ $(document).ready(function() {
 </div>
 
  <h5 class="mt-4"><?php echo $regexMemoh5;?></h5> 
-<div class="mt-4" style="text-align: left;">
+<div class="mt-4 text-start">
   <button class="btn btn-primary btn-sm rounded-pill insert-letter" data-letter=" -exc "><strong>X -exc Y Z</strong></button> - <?php echo $exc;?> <br>
   <button class="btn rounded-pill btn-primary btn-sm rounded-pill insert-letter" data-letter=" -la<?php echo $defaultla;?> "><strong>-la<?php echo $defaultla;?> X</strong></button> - <?php echo $lax;?> <br>
   <button class="btn btn-primary btn-sm rounded-pill insert-letter" data-letter=" -lb<?php echo $defaultla;?> "><strong>-lb<?php echo $defaultla;?> X</strong></button> - <?php echo $lbx;?> <br>
@@ -671,14 +670,14 @@ clearBtn.style.display = 'block';
   </script>
 
 
-<div style="max-width: 450px;" class="container-lg my-4">
+<div class="container-lg my-4 max-w-450">
 
 <div class="container text-start input-group-append pli-lang" >
 
  <div class="level1 d-flex align-items-center">
   <span class="toggle-button btn btn-primary btn-sm form-check-inline btn-fixed-width btn-rotate"
     data-bs-toggle="collapse" id="collapseAll">+</span>
-  <h2 style="level1" id="dhamma">Dhamma</h2>
+  <h2 class="level1" id="dhamma">Dhamma</h2>
  </div>
  
  <div class="my-2">
@@ -18467,8 +18466,9 @@ clearBtn.style.display = 'block';
 <h2>
   <a href="#" data-bs-toggle="collapse" data-bs-target="#knCollapse">Khuddaka Nikāya</a>
   <span style="font-size: 0.6em; vertical-align: middle;" 
+  class="cursor-pointer"
         data-bs-html="true" 
-        data-bs-toggle="tooltip" style="cursor: pointer;" 
+        data-bs-toggle="tooltip"  
         data-bs-placement="bottom" 
         title="<?php echo $tooltipknread;?>">*</span>
 </h2>
@@ -21583,7 +21583,7 @@ include $basedir . "/assets/texts/bipm.php";
 
 
 
-<div style="max-width: 600px;" class="container-lg">
+<div class="container-lg max-w-600">
 <div class="alert alert-warning float-start text-left mb-3" role="alert">
 <?php echo $transwarning;?>
 </div>
@@ -21602,8 +21602,8 @@ include $basedir . "/assets/texts/bipm.php";
                 <!-- Portfolio Grid Items-->
 <div class="row justify-content-center">
 
-<div style="max-width: 600px;" class="container-lg">
-<div data-bs-toggle="tooltip" style="cursor: pointer;" data-bs-placement="bottom" title="<?php echo $howtosearchquotetooltip;?>"></div>
+<div class="container-lg max-w-600">
+<div data-bs-toggle="tooltip" class="cursor-pointer" data-bs-placement="bottom" title="<?php echo $howtosearchquotetooltip;?>"></div>
 <?php echo $howtosearchquote;?>
 
 </div>
@@ -21935,7 +21935,7 @@ include $basedir . "/assets/texts/bipm.php";
 
 <p class="lead mt-4">
 <?php echo $poweredby; ?>
- <a class="text-white text-decoration-none me-0" data-bs-html="true" data-bs-toggle="tooltip" style="cursor: pointer;" data-bs-placement="top" title="<?php echo $tooltippoweredby;?>"> *</a></p>
+ <a class="text-white text-decoration-none me-0 cursor-pointer" data-bs-html="true" data-bs-toggle="tooltip" data-bs-placement="top" title="<?php echo $tooltippoweredby;?>"> *</a></p>
 
                     </div>
                 </div>
@@ -21946,7 +21946,7 @@ include $basedir . "/assets/texts/bipm.php";
 <div id="copyright" class="copyright py-4 text-center text-white " >
 <div class="container"><a target="_blank" rel="license" href="<?php echo $cclink; ?>" title="<?php echo $cctitle; ?>"><img alt="Creative Commons License" style="border-width:0" src="/assets/img/88x31.png" loading="lazy" /></a><small> Copyright <a class="text-white text-decoration-none" href="/assets/readylinebyline.html">&copy;</a> Dhamma.Gift <?php echo $mode; ?> <a class="text-white text-decoration-none" href="/assets/countdowntable.php">2022</a>-<?php echo date("Y"); ?></small>  <small id="copyrightnote">
  
-<p class="text-muted text-center mx-auto" style="max-width: 650px;">
+<p class="text-muted text-center mx-auto max-w-650">
    <?php echo $copyrightnote; ?> 
 </p>
 
