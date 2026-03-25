@@ -2110,30 +2110,9 @@ window.forceSyncNow = async function() {
     else if (phraseId) await restoreFromCloud({ uid: phraseId });
 };
 
- window.syncLoginGoogle = async function() {
+window.syncLoginGoogle = async function() {
     if (!auth) return;
-    
-    const btn = document.getElementById('btn-google-login');
-    const originalHtml = btn ? btn.innerHTML : '';
-    
-    if (btn) {
-        btn.disabled = true;
-        // Заменяем иконку гугла на спиннер, сохраняя сам текст кнопки
-        btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin me-2"></i>` + btn.textContent;
-    }
-    
-    try { 
-        await auth.signInWithPopup(googleProvider); 
-        // Кнопка скроется сама при успешном входе
-    } catch (error) { 
-        console.error("Login Error:", error); 
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = originalHtml; // Возвращаем Гугл-иконку, если юзер передумал/закрыл окно
-        }
-    }
-};
-rovider); } catch (error) { console.error("Login Error:", error); }
+    try { await auth.signInWithPopup(googleProvider); } catch (error) { console.error("Login Error:", error); }
 };
 
 window.syncEnablePhrase = function(phraseId) {
