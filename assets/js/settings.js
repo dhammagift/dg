@@ -2021,79 +2021,143 @@ document.addEventListener("DOMContentLoaded", () => {
 })();
 
 // ==========================================
-// ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ FIREBASE (SSO & BACKUP)
+// ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ FIREBASE (CORE ЯДРО)
 // ==========================================
 
-// Объявляем переменные глобально для этого блока
 let db = null;
 let auth = null;
 let googleProvider = null;
 
-// Асинхронная инициализация
 async function initFirebase() {
-    if (firebase.apps.length) return; // Защита от двойного запуска
-
+    if (firebase.apps.length) return;
     try {
-        // Подгружаем конфиг из JSON-файла (укажите правильный путь!)
-        const response = await fetch('/config/sync-config.json?update=' + Date.now()); // Date.now() чтобы избежать кеширования браузером при тестах
-        
-        if (!response.ok) throw new Error('Файл конфига не найден');
+        const response = await fetch('/config/sync-config.json?update=' + Date.now());
+        if (!response.ok) throw new Error('Config not found');
         
         const firebaseConfig = await response.json();
-        
-        // Инициализируем Firebase
         firebase.initializeApp(firebaseConfig);
         
         db = firebase.firestore();
         auth = firebase.auth();
         googleProvider = new firebase.auth.GoogleAuthProvider();
 
-        // Запускаем слушатель состояния только ПОСЛЕ успешной инициализации
         auth.onAuthStateChanged((user) => {
             const phraseId = localStorage.getItem('syncPhraseId');
+            if (user) restoreFromCloud(user);
+            else if (phraseId) restoreFromCloud({ uid: phraseId });
 
-            if (user) {
-                console.log("Залогинен через Google:", user.email);
-                restoreFromCloud(user);
-                if (typeof updateAuthUI === 'function') updateAuthUI(user, null);
-            } else if (phraseId) {
-                console.log("Найдена секретная фраза:", phraseId);
-                restoreFromCloud({ uid: phraseId });
-                if (typeof updateAuthUI === 'function') updateAuthUI(null, phraseId);
-            } else {
-                console.log("Работаем в локальном режиме.");
-                if (typeof updateAuthUI === 'function') updateAuthUI(null, null);
-            }
+            updateGlobalSyncButtons(user, phraseId);
+            if (typeof renderLoginPageUI === 'function') renderLoginPageUI(user, phraseId);
         });
+    } catch (error) { console.error("Firebase Init Error:", error); }
+}
 
-    } catch (error) {
-        console.error("Ошибка загрузки Firebase:", error);
+initFirebase();
+
+// Функция обновления времени для UI
+function refreshSyncTimeUI() {
+    localStorage.setItem('lastSyncTime', Date.now());
+    if (typeof renderLoginPageUI === 'function') {
+        const user = auth ? auth.currentUser : null;
+        renderLoginPageUI(user, localStorage.getItem('syncPhraseId'));
     }
 }
 
-// Запускаем инициализацию сразу при чтении скрипта
-initFirebase();
+window.backupToCloud = async function() {
+    if (!db || !auth) return;
+    const user = auth.currentUser;
+    const uid = user ? user.uid : localStorage.getItem('syncPhraseId');
+    if (!uid) return;
 
-// --- ДАЛЕЕ ИДУТ ВАШИ ФУНКЦИИ (loginWithGoogle, backupToCloud и т.д.) ---
-// Важно: добавим в них небольшую проверку на то, успел ли Firebase загрузиться
-
-window.loginWithGoogle = async function() {
-    if (!auth) return alert("Модуль синхронизации еще загружается, попробуйте через секунду.");
-    
     try {
-        await auth.signInWithPopup(googleProvider);
-        if (typeof showBubbleNotification === 'function') showBubbleNotification("Вход выполнен. Синхронизируем...");
-    } catch (error) {
-        console.error("Ошибка входа:", error);
-    }
+        await db.collection("users").doc(uid).set({
+            settings: JSON.stringify(localStorage),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        refreshSyncTimeUI(); // Обновляем время после отправки
+    } catch (error) { console.error("Backup Error:", error); }
 };
 
-window.logoutGoogle = async function() {
+window.restoreFromCloud = async function(userObj) {
+    if (!db) return;
+    try {
+        const doc = await db.collection("users").doc(userObj.uid).get();
+        if (doc.exists) {
+            const cloudData = JSON.parse(doc.data().settings);
+            let needsReload = false;
+            for (const key in cloudData) {
+                // Исключаем системные ключи из перезаписи
+                if (key !== 'syncPhraseId' && key !== 'lastSyncTime' && localStorage.getItem(key) !== cloudData[key]) {
+                    localStorage.setItem(key, cloudData[key]);
+                    needsReload = true; 
+                }
+            }
+            refreshSyncTimeUI(); // Обновляем время после загрузки
+        } else {
+            backupToCloud();
+        }
+    } catch (error) { console.error("Restore Error:", error); }
+};
+
+window.forceSyncNow = async function() {
+    const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
+    if (typeof showBubbleNotification === 'function') showBubbleNotification(isRu ? "Синхронизация..." : "Syncing...");
+    
+    await backupToCloud();
+    const user = auth ? auth.currentUser : null;
+    const phraseId = localStorage.getItem('syncPhraseId');
+    if (user) await restoreFromCloud(user);
+    else if (phraseId) await restoreFromCloud({ uid: phraseId });
+};
+
+window.syncLoginGoogle = async function() {
     if (!auth) return;
-    await auth.signOut();
-    if (typeof showBubbleNotification === 'function') showBubbleNotification("Вы вышли из аккаунта");
-    location.reload(); 
+    try { await auth.signInWithPopup(googleProvider); } catch (error) { console.error("Login Error:", error); }
 };
 
-// В backupToCloud и restoreFromCloud добавьте первой строкой:
-// if (!db || !auth) return;
+window.syncEnablePhrase = function(phraseId) {
+    localStorage.setItem('syncPhraseId', phraseId);
+    restoreFromCloud({ uid: phraseId });
+    updateGlobalSyncButtons(null, phraseId);
+};
+
+window.syncLogout = async function() {
+    if (auth && auth.currentUser) await auth.signOut();
+    localStorage.removeItem('syncPhraseId');
+    localStorage.removeItem('lastSyncTime'); // Сбрасываем время
+    if (typeof renderLoginPageUI === 'function') renderLoginPageUI(null, null);
+    updateGlobalSyncButtons(null, null);
+};
+
+// ИСПРАВЛЕННАЯ ФУНКЦИЯ УДАЛЕНИЯ (ТОЛЬКО ОБЛАКО)
+window.syncDeleteData = async function() {
+    const user = auth ? auth.currentUser : null;
+    const uid = user ? user.uid : localStorage.getItem('syncPhraseId');
+
+    if (uid && db) {
+        try {
+            await db.collection("users").doc(uid).delete();
+            if (user) await user.delete(); // Удаляем профиль Гугл из системы авторизации
+        } catch (error) { console.error("Delete Error:", error); }
+    }
+    
+    // Удаляем ТОЛЬКО настройки синхронизации, но оставляем историю, словари и избранное
+    localStorage.removeItem('syncPhraseId');
+    localStorage.removeItem('lastSyncTime');
+    
+    if (typeof renderLoginPageUI === 'function') renderLoginPageUI(null, null);
+    updateGlobalSyncButtons(null, null);
+};
+
+function updateGlobalSyncButtons(user, phraseId) {
+    const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
+    const promoBtn = document.getElementById('global-btn-login-promo');
+    const syncBtn = document.getElementById('global-btn-sync-now');
+    
+    if (promoBtn && syncBtn) {
+        promoBtn.innerHTML = isRu ? '<i class="fa-solid fa-cloud"></i> Включить облако' : '<i class="fa-solid fa-cloud"></i> Enable Sync';
+        syncBtn.innerHTML = isRu ? '<i class="fa-solid fa-rotate"></i> Синхронизировать' : '<i class="fa-solid fa-rotate"></i> Sync Data';
+        promoBtn.style.display = (user || phraseId) ? 'none' : 'inline-block';
+        syncBtn.style.display = (user || phraseId) ? 'inline-block' : 'none';
+    }
+}
