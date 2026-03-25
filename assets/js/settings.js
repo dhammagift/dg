@@ -2024,26 +2024,62 @@ document.addEventListener("DOMContentLoaded", () => {
 // ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ FIREBASE (SSO & BACKUP)
 // ==========================================
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDwatpN1h2w0g1HvQn1yyHUWgR5ONy5Di8",
-  authDomain: "dg-sync-data.firebaseapp.com",
-  projectId: "dg-sync-data",
-  storageBucket: "dg-sync-data.firebasestorage.app",
-  messagingSenderId: "777733337986",
-  appId: "1:777733337986:web:24dac9e062f5d048bad59b"
-};
+// Объявляем переменные глобально для этого блока
+let db = null;
+let auth = null;
+let googleProvider = null;
 
-// Инициализируем Firebase
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
+// Асинхронная инициализация
+async function initFirebase() {
+    if (firebase.apps.length) return; // Защита от двойного запуска
+
+    try {
+        // Подгружаем конфиг из JSON-файла (укажите правильный путь!)
+        const response = await fetch('/config/sync-config.json?update=' + Date.now()); // Date.now() чтобы избежать кеширования браузером при тестах
+        
+        if (!response.ok) throw new Error('Файл конфига не найден');
+        
+        const firebaseConfig = await response.json();
+        
+        // Инициализируем Firebase
+        firebase.initializeApp(firebaseConfig);
+        
+        db = firebase.firestore();
+        auth = firebase.auth();
+        googleProvider = new firebase.auth.GoogleAuthProvider();
+
+        // Запускаем слушатель состояния только ПОСЛЕ успешной инициализации
+        auth.onAuthStateChanged((user) => {
+            const phraseId = localStorage.getItem('syncPhraseId');
+
+            if (user) {
+                console.log("Залогинен через Google:", user.email);
+                restoreFromCloud(user);
+                if (typeof updateAuthUI === 'function') updateAuthUI(user, null);
+            } else if (phraseId) {
+                console.log("Найдена секретная фраза:", phraseId);
+                restoreFromCloud({ uid: phraseId });
+                if (typeof updateAuthUI === 'function') updateAuthUI(null, phraseId);
+            } else {
+                console.log("Работаем в локальном режиме.");
+                if (typeof updateAuthUI === 'function') updateAuthUI(null, null);
+            }
+        });
+
+    } catch (error) {
+        console.error("Ошибка загрузки Firebase:", error);
+    }
 }
 
-const db = firebase.firestore();
-const auth = firebase.auth();
-const googleProvider = new firebase.auth.GoogleAuthProvider();
+// Запускаем инициализацию сразу при чтении скрипта
+initFirebase();
 
-// --- 1. GOOGLE ЛОГИН ---
+// --- ДАЛЕЕ ИДУТ ВАШИ ФУНКЦИИ (loginWithGoogle, backupToCloud и т.д.) ---
+// Важно: добавим в них небольшую проверку на то, успел ли Firebase загрузиться
+
 window.loginWithGoogle = async function() {
+    if (!auth) return alert("Модуль синхронизации еще загружается, попробуйте через секунду.");
+    
     try {
         await auth.signInWithPopup(googleProvider);
         if (typeof showBubbleNotification === 'function') showBubbleNotification("Вход выполнен. Синхронизируем...");
@@ -2053,142 +2089,11 @@ window.loginWithGoogle = async function() {
 };
 
 window.logoutGoogle = async function() {
+    if (!auth) return;
     await auth.signOut();
     if (typeof showBubbleNotification === 'function') showBubbleNotification("Вы вышли из аккаунта");
     location.reload(); 
 };
 
-// --- 2. ВХОД ПО ФРАЗЕ (АНОНИМНЫЙ) ---
-window.loginWithPhrase = function() {
-    const phrase = prompt("Придумайте или введите секретную фразу (минимум 6 символов, например: dhamma-metta-108):");
-    if (phrase && phrase.trim().length >= 6) {
-        // Форматируем фразу: нижний регистр, вместо пробелов дефисы
-        const syncPhraseId = "phrase_" + phrase.trim().toLowerCase().replace(/\s+/g, '-');
-        
-        localStorage.setItem('syncPhraseId', syncPhraseId);
-        if (typeof showBubbleNotification === 'function') showBubbleNotification("Синхронизация по фразе включена");
-        
-        // Имитируем объект "user" для загрузки
-        restoreFromCloud({ uid: syncPhraseId });
-        updateAuthUI(null, syncPhraseId);
-    } else if (phrase) {
-        alert("Фраза слишком короткая! Нужно минимум 6 символов.");
-    }
-};
-
-window.logoutPhrase = function() {
-    localStorage.removeItem('syncPhraseId');
-    if (typeof showBubbleNotification === 'function') showBubbleNotification("Синхронизация по фразе отключена");
-    location.reload();
-};
-
-// --- 3. ВЫГРУЗКА В ОБЛАКО (BACKUP) ---
-window.backupToCloud = async function() {
-    const user = auth.currentUser;
-    const phraseId = localStorage.getItem('syncPhraseId');
-    
-    let uid = null;
-    if (user) uid = user.uid;         // Если Гугл
-    else if (phraseId) uid = phraseId; // Если Фраза
-
-    if (!uid) return; // Не залогинен
-
-    const dataToSave = JSON.stringify(localStorage);
-    
-    try {
-        await db.collection("users").doc(uid).set({
-            settings: dataToSave,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        console.log("Бэкап успешно отправлен в облако!");
-    } catch (error) {
-        console.error("Ошибка бэкапа:", error);
-    }
-};
-
-// --- 4. ЗАГРУЗКА ИЗ ОБЛАКА (RESTORE) ---
-window.restoreFromCloud = async function(userObj) {
-    try {
-        const doc = await db.collection("users").doc(userObj.uid).get();
-        
-        if (doc.exists) {
-            const cloudData = JSON.parse(doc.data().settings);
-            let needsReload = false;
-
-            // Сливаем облако с локальным хранилищем
-            for (const key in cloudData) {
-                // Исключаем системный ключ фразы из перезаписи
-                if (key === 'syncPhraseId') continue; 
-
-                if (localStorage.getItem(key) !== cloudData[key]) {
-                    localStorage.setItem(key, cloudData[key]);
-                    needsReload = true; 
-                }
-            }
-
-            if (needsReload) {
-                console.log("Данные подтянуты из облака. Обновляем интерфейс...");
-                // Если данные пришли новые (например, другие шрифты), лучше перезагрузить страницу
-                // location.reload(); 
-            }
-        } else {
-            console.log("Облако пустое. Инициализируем бэкап...");
-            backupToCloud();
-        }
-    } catch (error) {
-        console.error("Ошибка загрузки из облака:", error);
-    }
-};
-
-// --- 5. ОБНОВЛЕНИЕ КНОПОК В ИНТЕРФЕЙСЕ ---
-window.updateAuthUI = function(user, phraseId) {
-    const loginBtns = document.getElementById('auth-login-buttons');
-    const userInfo = document.getElementById('auth-user-info');
-    const userNameSpan = document.getElementById('auth-user-name');
-    const logoutBtn = document.getElementById('btn-logout');
-
-    if (!loginBtns || !userInfo) return; // Если кнопок нет на странице
-
-    if (user) {
-        loginBtns.style.display = 'none';
-        userInfo.style.display = 'block';
-        userNameSpan.textContent = user.email || "Google Аккаунт";
-        logoutBtn.onclick = window.logoutGoogle;
-    } else if (phraseId) {
-        loginBtns.style.display = 'none';
-        userInfo.style.display = 'block';
-        userNameSpan.textContent = "Фраза: " + phraseId.replace('phrase_', '');
-        logoutBtn.onclick = window.logoutPhrase;
-    } else {
-        loginBtns.style.display = 'block';
-        userInfo.style.display = 'none';
-    }
-};
-
-// --- 6. НАБЛЮДАТЕЛЬ СОСТОЯНИЯ (При загрузке страницы) ---
-auth.onAuthStateChanged((user) => {
-    const phraseId = localStorage.getItem('syncPhraseId');
-
-    if (user) {
-        console.log("Залогинен через Google:", user.email);
-        restoreFromCloud(user);
-        updateAuthUI(user, null);
-    } else if (phraseId) {
-        console.log("Найдена секретная фраза:", phraseId);
-        restoreFromCloud({ uid: phraseId });
-        updateAuthUI(null, phraseId);
-    } else {
-        console.log("Работаем в локальном режиме.");
-        updateAuthUI(null, null);
-    }
-});
-
-// Дополнительный вызов UI-апдейтера, на случай если HTML настроек подгружается динамически (ajax/fetch)
-document.addEventListener("DOMContentLoaded", () => {
-    // Ждем секунду, чтобы модальные окна успели отрендериться
-    setTimeout(() => {
-        const user = auth.currentUser;
-        const phraseId = localStorage.getItem('syncPhraseId');
-        updateAuthUI(user, phraseId);
-    }, 1000);
-});
+// В backupToCloud и restoreFromCloud добавьте первой строкой:
+// if (!db || !auth) return;
