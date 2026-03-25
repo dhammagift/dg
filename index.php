@@ -233,9 +233,29 @@ function updateURL(params) {
 <li>
 
 <div class="align-items-center form-check-inline mx-0">
-    <a href="./login" class="mb-1 text-white me-3" title="Login / Sync"><i class="fa-solid fa-user"></i></a><a id="theme-button" class=" mb-1 text-white "><i onclick="switchIcon(this)" class="fa-solid fa-circle-half-stroke"></i></a>	  
+<a href="/login" onclick="openLoginWindow(); return false;" 
+   class="mb-1 text-white me-2" title="Login / Sync"><i class="fa-solid fa-user"></i></a><a id="theme-button" class=" mb-1 text-white "><i onclick="switchIcon(this)" class="fa-solid fa-circle-half-stroke"></i></a>	  
 </div>
 
+
+<script>
+function openLoginWindow() {
+    const match = window.location.pathname.match(/^\/(ru|r|ml)\b/);
+    const lang = match ? match[1] : 'ru';
+
+    const width = 420;
+    const height = 520;
+
+    const left = (window.screen.width / 2) - (width / 2);
+    const top = (window.screen.height / 2) - (height / 2);
+
+    window.open(
+        `/${lang}/login`,
+        'LoginWindow',
+        `width=${width},height=${height},top=${top},left=${left},resizable=no`
+    );
+}
+</script>
 
 </li>
        </ul>
