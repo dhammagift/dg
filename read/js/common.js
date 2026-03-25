@@ -927,3 +927,119 @@ window.mergeGathas = function(htmlData, paliData, transData, varData, engTransDa
     return processedSegments;
 };
 
+// ==========================================
+// УНИВЕРСАЛЬНАЯ ЗАГЛУШКА-ИНСТРУКЦИЯ (СТАРТОВЫЙ ЭКРАН)
+// ==========================================
+window.getInstructionHTML = function(lang) {
+    const isRu = (lang === 'ru');
+    
+    // Определяем базовые пути в зависимости от языка
+    const readPath = isRu ? '/r/' : '/read/';
+    const assetsPath = isRu ? '/ru/assets/texts/' : '/assets/texts/';
+    const mainReadPath = isRu ? '/ru/read.php' : '/read.php';
+
+    // Локализация текстов
+    const t = {
+        instructions: isRu
+            ? `Для перехода тексты должны быть указаны с номерами. Пример: <span class="abbr">sn35.28</span> <span class="abbr">an1.1-10</span> <span class="abbr">bu-as1-7</span> или <span class="abbr">bi-pj1</span>.<br>Доступны dn, mn, sn, an, некоторые книги kn, обе патимоккхи и виная вибханги.`
+            : `Use text indexes for navigation.<br>E.g.: <span class="abbr">sn35.28</span> <span class="abbr">an1.1-10</span> <span class="abbr">bu-as1-7</span> or <span class="abbr">bi-ss1</span>.<br>Dn, mn, sn, an, some kn books, both patimokkhas and vinaya vibhanga are available.`,
+        mainSuttas: isRu ? "Основные Сутты" : "Main Suttas",
+        otherTexts: isRu ? "Часть KN" : "Other Texts",
+        bhikkhuVinaya: isRu ? "Бхиккху Виная" : "Bhikkhu Vinaya",
+        bhikkhuniVinaya: isRu ? "Бхиккхуни Виная" : "Bhikkhunī Vinaya",
+    };
+
+    // Возвращаем собранный HTML
+    return `<div class="instructions">
+  <p>${t.instructions}</p>
+  <div class="lists">
+
+  <div class="suttas">
+  <a href="${mainReadPath}"> <h2>${t.mainSuttas}</h2></a> <br>
+  <ul>
+     <li><span class="abbr">dn</span> <a href="${assetsPath}dn.php"> Dīgha-nikāya</a></li>
+     <li><span class="abbr">mn</span> <a href="${assetsPath}mn.php"> Majjhima-nikāya</a></li>
+     <li><span class="abbr">sn</span> <a href="${assetsPath}sn.php"> Saṁyutta-nikāya</a></li>
+     <li><span class="abbr">an</span> <a href="${assetsPath}an.php"> Aṅguttara-nikāya</a></li>
+  </ul>
+  </div>
+
+  <div>
+  <h2>${t.otherTexts}</h2><br>
+  <ul>
+      <li><span class="abbr">snp</span> Sutta-nipāta</li> 
+      <li><span class="abbr">ud</span> Udāna</li>
+      <li><span class="abbr">iti</span> Itivuttaka (1–112)</li>
+      <li><span class="abbr">dhp</span> Dhammapada</li>
+      <li><span class="abbr">thag</span> Theragāthā</li>
+      <li><span class="abbr">thig</span> Therīgāthā</li>
+      <li><span class="abbr">kp</span> Khuddakapāṭha</li>
+  </ul>
+  </div>  
+  
+  <div>
+ <div class="vinaya">
+  <div>
+  <h3>${t.bhikkhuVinaya}</h3><br>
+<ul>
+<li><span class="abbr">bu-pm</span> <a href="${assetsPath}pm.php"> Bhikkhupātimokkha</a></li>
+<li><span class="abbr">bu-pj</span> <a href="${readPath}?q=bu-pm#8.0"> Pārājikā</a></li>
+<li><span class="abbr">bu-ss</span> <a href="${readPath}?q=bu-pm#14.0"> Saṅghādisesā</a></li>
+<li><span class="abbr">bu-ay</span> <a href="${readPath}?q=bu-pm#29.0"> Aniyatā</a></li>
+<li><span class="abbr">bu-np</span> <a href="${readPath}?q=bu-pm#33.0"> Nissaggiyā-pācittiyā</a></li>
+<li><span class="abbr">bu-pc</span> <a href="${readPath}?q=bu-pm#65.0"> Pācittiyā</a></li>
+<li><span class="abbr">bu-pd</span> <a href="${readPath}?q=bu-pm#159.0"> Pāṭidesanīyā</a></li>
+<li><span class="abbr">bu-sk</span> <a href="${readPath}?q=bu-pm#165.0"> Sekhiyā</a></li>
+<li><span class="abbr">bu-as</span> <a href="${readPath}?q=bu-pm#245.0"> Adhikarana-samatha</a></li>
+</ul>
+</div><div>
+<h3>${t.bhikkhuniVinaya}</h3><br>
+<ul>
+<li><span class="abbr">bi-pm</span> <a href="${assetsPath}bipm.php"> Bhikkhunīpātimokkha</a></li>
+<li><span class="abbr">bi-pj</span> Pārājikā</li>
+<li><span class="abbr">bi-ss</span> Saṅghādisesā</li>
+<li><span class="abbr">bi-np</span> Nissaggiyā-pācittiyā</li>
+<li><span class="abbr">bi-pc</span> Pācittiyā</li>
+<li><span class="abbr">bi-pd</span> Pāṭidesanīyā</li>
+<li><span class="abbr">bi-sk</span> Sekhiyā</li>
+<li><span class="abbr">bi-as</span> Adhikarana-samatha</li>
+</ul>
+</div>
+<div>
+<h3>Khandhaka</h3>
+<h3>Mahāvagga</h3><br>
+<ul>
+<li><span class=abbr>kd1</span> <a href="${readPath}?q=pli-tv-kd1">Mahākhandhaka</a></li>
+<li><span class=abbr>kd2</span> <a href="${readPath}?q=pli-tv-kd2">Uposathakkhandhaka</a></li>                                 
+<li><span class=abbr>kd3</span> <a href="${readPath}?q=pli-tv-kd3>Vassūpanāyikakkhandhaka</a></li>
+<li><span class=abbr>kd4</span> <a href="${readPath}?q=pli-tv-kd4>Pavāraṇākkhandhaka</a></li>
+<li><span class=abbr>kd5</span> <a href="${readPath}?q=pli-tv-kd5>Cammakkhandhaka</a></li>
+<li><span class=abbr>kd6</span> <a href="${readPath}?q=pli-tv-kd6>Bhesajjakkhandhaka</a></li>
+<li><span class=abbr>kd7</span> <a href="${readPath}?q=pli-tv-kd7>Kathinakkhandhaka</a></li>
+<li><span class=abbr>kd8</span> <a href="${readPath}?q=pli-tv-kd8>Cīvarakkhandhaka</a></li>                                    
+<li><span class=abbr>kd9</span> <a href="${readPath}?q=pli-tv-kd9>Campeyyakkhandhaka</a></li>
+<li><span class=abbr>kd10</span> <a href="${readPath}?q=pli-tv-kd10>Kosambakakkhandhaka</a></li>
+</ul>
+<h3>Cūḷavagga</h3><br>
+<ul>
+<li><span class=abbr>kd11</span> <a href="${readPath}?q=pli-tv-kd11">Kammakkhandhaka</a></li>
+<li><span class=abbr>kd12</span> <a href="${readPath}?q=pli-tv-kd12">Pārivāsikakkhandhaka</a></li>
+<li><span class=abbr>kd13</span> <a href="${readPath}?q=pli-tv-kd13>Samuccayakkhandhaka</a></li>
+<li><span class=abbr>kd14</span> <a href="${readPath}?q=pli-tv-kd14>Samathakkhandhaka</a></li>
+<li><span class=abbr>kd15</span> <a href="${readPath}?q=pli-tv-kd15>Khuddakavatthukkhandhaka</a></li>
+<li><span class=abbr>kd16</span> <a href="${readPath}?q=pli-tv-kd16>Senāsanakkhandhaka</a></li>
+<li><span class=abbr>kd17</span> <a href="${readPath}?q=pli-tv-kd17>Saṅghabhedakakkhandhaka</a></li>
+<li><span class=abbr>kd18</span> <a href="${readPath}?q=pli-tv-kd18>Vattakkhandhaka</a></li>
+<li><span class=abbr>kd19</span> <a href="${readPath}?q=pli-tv-kd19>Pātimokkhaṭṭhapanakkhandhaka</a></li>
+<li><span class=abbr>kd20</span> <a href="${readPath}?q=pli-tv-kd20>Bhikkhunikkhandhaka</a></li>
+<li><span class=abbr>kd21</span> <a href="${readPath}?q=pli-tv-kd21>Pañcasatikakkhandhaka</a></li>
+<li><span class=abbr>kd22</span> <a href="${readPath}?q=pli-tv-kd22>Sattasatikakkhandhaka</a></li>
+</ul>
+</div>
+<div>
+<ul>
+<li><span class="abbr">pvr</span> Parivāra</li>
+</ul>
+</div>
+  </div></div>`;
+};
