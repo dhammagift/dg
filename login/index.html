@@ -94,6 +94,24 @@
         
         .logout-link { cursor: pointer; text-decoration: none; font-size: 0.85rem; transition: 0.2s; }
         .logout-link:hover { text-decoration: underline; }
+        
+        /* Темная тема для поля ввода */
+body.dark .form-control,
+[data-bs-theme="dark"] .form-control, 
+[data-theme="dark"] .form-control {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: #495057 !important;
+    color: #f8f9fa !important;
+}
+
+/* Цвет плейсхолдера в темной теме */
+body.dark .form-control::placeholder,
+[data-bs-theme="dark"] .form-control::placeholder, 
+[data-theme="dark"] .form-control::placeholder {
+    color: #adb5bd !important;
+}
+
+        
     </style>
 
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>

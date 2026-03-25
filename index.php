@@ -233,9 +233,7 @@ function updateURL(params) {
 <li>
 
 <div class="align-items-center form-check-inline mx-0">
-     <a id="theme-button" class=" mb-1 text-white ">
-<i onclick="switchIcon(this)" class="fa-solid fa-circle-half-stroke"></i>
-</a>	  
+    <a href="./login" class="mb-1 text-white me-3" title="Login / Sync"><i class="fa-solid fa-user"></i></a><a id="theme-button" class=" mb-1 text-white "><i onclick="switchIcon(this)" class="fa-solid fa-circle-half-stroke"></i></a>	  
 </div>
 
 

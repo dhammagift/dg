@@ -197,13 +197,9 @@ if (newUrl !== window.location.href) {
 <a class="link-light text-decoration-none py-1 px-0 px-lg-1 rounded" title="<?php echo $toggleLangRead;?>" onclick="localStorage.siteLanguage = 'th'; localStorage.selectedScript = 'Thai';" href="/th/read.php">Th</a>
 </p></li>
 <li>
-<div class="align-items-center form-check-inline mx-0">
-     <a id="theme-button" class="mb-1 text-white">
-      <i onclick="switchIcon(this)" class="fa-solid fa-circle-half-stroke"></i>
-</a>	   
+  <div class="align-items-center form-check-inline mx-0">
+    <a href="./login" class="mb-1 text-white me-3" title="Login / Sync"><i class="fa-solid fa-user"></i></a><a id="theme-button" class=" mb-1 text-white "><i onclick="switchIcon(this)" class="fa-solid fa-circle-half-stroke"></i></a>	  
 </div>
-
-
 </li>
                     </ul>
                 </div>
