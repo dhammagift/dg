@@ -226,19 +226,7 @@ async function buildSutta(slug) {
           translatorforuser = window.siteTranslators[pathLang][translator];
       } else if (window.siteTranslators && window.siteTranslators["en"] && window.siteTranslators["en"][translator]) {
           translatorforuser = window.siteTranslators["en"][translator];
-      } else {
-          // Фолбэк на старые значения, если JSON не прогрузился
-          if (translator === "o") translatorforuser = '<a href=/assets/common/o.html>o</a> с Пали';
-          else if (translator === "sv") translatorforuser = 'SV theravada.ru с Англ';
-          else if (translator === "adelina") translatorforuser = 'Adel NamaRupa с Англ';
-          else if (translator === "sujato" || (translator === "" && texttype === "sutta")) translatorforuser = 'Bhikkhu Sujato';
-          else if (translator === "brahmali" || (translator === "" && texttype === "vinaya")) translatorforuser = 'Bhikkhu Brahmali';
-          else if (translator === "syrkin") translatorforuser = '<a href=/assets/texts/syrkin.html>А.Я. Сыркин</a> с Пали';
-          else if (translator === "syrkin+edited+o") translatorforuser = '<a href=/assets/texts/syrkin.html>А.Я. Сыркин</a> с Пали, ред. <a href=/assets/common/o.html>o</a>';
-          else if (translator === "sv+edited+o") translatorforuser = 'SV theravada.ru с Англ, ред. <a href=/assets/common/o.html>o</a>';
-          else if (translator === "myagkih+edited+tr") translatorforuser = 'К. Мягких с Англ, ред. ТР';
-          else if (translator === "o+in+progress") translatorforuser = '<a href=/assets/common/o.html>o</a>, в процессе';
-      }
+      } 
 
       const translatorByline = `<div id="trn" class="byline">
        <p>
@@ -377,102 +365,23 @@ if (document.location.search) {
     setLanguage(language);
   } 
 } else {
-  suttaArea.innerHTML = `<div class="instructions">
-<p>Для перехода тексты должны быть указаны с номерами. Пример: <span class="abbr">sn35.28</span> <span class="abbr">an1.1-10</span> <span class="abbr">bu-as1-7</span> или <span class="abbr">bi-pj1</span>.<br>
- Доступны dn, mn, sn, an, некоторые книги kn, обе патимоккхи и виная вибханги.<br>
-  </p>
-  <div class="lists">
-
-  <div class="suttas">
-  <a href="/ru/read.php"> <h2>Основные Сутты</h2></a> <br>
-  <ul>
-     <li><span class="abbr">dn</span> <a href="/ru/assets/texts/dn.php"> Dīgha-nikāya</a></li></li>
-     <li><span class="abbr">mn</span> <a href="/ru/assets/texts/mn.php"> Majjhima-nikāya</a></li></li>
-      <li><span class="abbr">sn</span> <a href="/ru/assets/texts/sn.php"> Saṁyutta-nikāya</a></li>
-      <li><span class="abbr">an</span> <a href="/ru/assets/texts/an.php"> Aṅguttara-nikāya</a></li>
-
-  </ul>
-  </div>
-
-  <div>
-  <h2>Часть KN</h2><br>
-  <ul>
-       <li><span class="abbr">snp</span> Sutta-nipāta</li> 
-      <li><span class="abbr">ud</span> Udāna</li>
-      <li><span class="abbr">iti</span> Itivuttaka (1–112)</li>
-      <li><span class="abbr">dhp</span> Dhammapada</li>
-      <li><span class="abbr">thag</span> Theragāthā</li>
-      <li><span class="abbr">thig</span> Therīgāthā</li>
-   </ul>
-  </div>  
-  
-  <div>
- <div class="vinaya">
-  <div>
-  <h3>Бхиккху Виная</h3><br>
-<ul>
-<li><span class="abbr">bu-pm</span> <a href="/ru/assets/texts/pm.php"> Bhikkhupātimokkha</a></li>
-<li><span class="abbr">bu-pj</span> <a href="/r/?q=bu-pm#8.0"> Pārājikā</a></li></li>
-<li><span class="abbr">bu-ss</span> <a href="/r/?q=bu-pm#14.0"> Saṅghādisesā</a></li></li>
-<li><span class="abbr">bu-ay</span> <a href="/r/?q=bu-pm#29.0"> Aniyatā</a></li>
-<li><span class="abbr">bu-np</span> <a href="/r/?q=bu-pm#33.0"> Nissaggiyā-pācittiyā</a></li>
-<li><span class="abbr">bu-pc</span> <a href="/r/?q=bu-pm#65.0"> Pācittiyā</a></li>
-<li><span class="abbr">bu-pd</span> <a href="/r/?q=bu-pm#159.0"> Pāṭidesanīyā</a></li></li>
-<li><span class="abbr">bu-sk</span> <a href="/r/?q=bu-pm#165.0"> Sekhiyā</a></li></li>
-<li><span class="abbr">bu-as</span> <a href="/r/?q=bu-pm#245.0"> Adhikarana-samatha</a></li></li>
-</ul>
-</div><div>
-<h3>Бхиккхуни Виная</h3><br>
-<ul>
-<li><span class="abbr">bi-pm</span> <a href="/ru/assets/texts/bipm.php"> Bhikkhunīpātimokkha</a></li>
-<li><span class="abbr">bi-pj</span> Pārājikā</li>
-<li><span class="abbr">bi-ss</span> Saṅghādisesā</li>
-<li><span class="abbr">bi-np</span> Nissaggiyā-pācittiyā</li>
-<li><span class="abbr">bi-pc</span> Pācittiyā</li>
-<li><span class="abbr">bi-pd</span> Pāṭidesanīyā</li>
-<li><span class="abbr">bi-sk</span> Sekhiyā</li>
-<li><span class="abbr">bi-as</span> Adhikarana-samatha</li>
-</ul>
-</div>
-<div>
-<h3>Khandhaka</h3>
-<h3>Mahāvagga</h3><br>
-<ul>
-<li><span class=abbr>kd1</span> <a href=/r/?q=pli-tv-kd1>Mahākhandhaka</a></li>
-<li><span class=abbr>kd2</span> <a href=/r/?q=pli-tv-kd2>Uposathakkhandhaka</a></li>                                 
-<li><span class=abbr>kd3</span> <a href=/r/?q=pli-tv-kd3>Vassūpanāyikakkhandhaka</a></li>
-<li><span class=abbr>kd4</span> <a href=/r/?q=pli-tv-kd4>Pavāraṇākkhandhaka</a></li>
-<li><span class=abbr>kd5</span> <a href=/r/?q=pli-tv-kd5>Cammakkhandhaka</a></li>
-<li><span class=abbr>kd6</span> <a href=/r/?q=pli-tv-kd6>Bhesajjakkhandhaka</a></li>
-<li><span class=abbr>kd7</span> <a href=/r/?q=pli-tv-kd7>Kathinakkhandhaka</a></li>
-<li><span class=abbr>kd8</span> <a href=/r/?q=pli-tv-kd8>Cīvarakkhandhaka</a></li>                                    
-<li><span class=abbr>kd9</span> <a href=/r/?q=pli-tv-kd9>Campeyyakkhandhaka</a></li>
-<li><span class=abbr>kd10</span> <a href=/r/?q=pli-tv-kd10>Kosambakakkhandhaka</a></li>
-</ul>
-<h3>Cūḷavagga</h3><br>
-<ul>
-<li><span class=abbr>kd11</span> <a href=/r/?q=pli-tv-kd11>Kammakkhandhaka</a></li>
-<li><span class=abbr>kd12</span> <a href=/r/?q=pli-tv-kd12>Pārivāsikakkhandhaka</a></li>
-<li><span class=abbr>kd13</span> <a href=/r/?q=pli-tv-kd13>Samuccayakkhandhaka</a></li>
-<li><span class=abbr>kd14</span> <a href=/r/?q=pli-tv-kd14>Samathakkhandhaka</a></li>
-<li><span class=abbr>kd15</span> <a href=/r/?q=pli-tv-kd15>Khuddakavatthukkhandhaka</a></li>
-<li><span class=abbr>kd16</span> <a href=/r/?q=pli-tv-kd16>Senāsanakkhandhaka</a></li>
-<li><span class=abbr>kd17</span> <a href=/r/?q=pli-tv-kd17>Saṅghabhedakakkhandhaka</a></li>
-<li><span class=abbr>kd18</span> <a href=/r/?q=pli-tv-kd18>Vattakkhandhaka</a></li>
-<li><span class=abbr>kd19</span> <a href=/r/?q=pli-tv-kd19>Pātimokkhaṭṭhapanakkhandhaka</a></li>
-<li><span class=abbr>kd20</span> <a href=/r/?q=pli-tv-kd20>Bhikkhunikkhandhaka</a></li>
-<li><span class=abbr>kd21</span> <a href=/r/?q=pli-tv-kd21>Pañcasatikakkhandhaka</a></li>
-<li><span class=abbr>kd22</span> <a href=/r/?q=pli-tv-kd22>Sattasatikakkhandhaka</a></li>
-</ul>
-</div>
-<div>
-<ul>
-<li><span class="abbr">pvr</span> Parivāra</li>
-</ul>
-</div>
-  </div></div>
-`;
+  // Вызываем нашу новую глобальную функцию, передавая язык скрипта
+  if (typeof window.getInstructionHTML === 'function') {
+      suttaArea.innerHTML = window.getInstructionHTML(pathLang);
+      
+      // Заново вешаем слушатели на кнопки, так как мы только что перерисовали HTML
+      const abbreviations = document.querySelectorAll("span.abbr");
+      abbreviations.forEach(book => {
+        book.addEventListener("click", e => {
+          citation.value = e.target.innerHTML;
+          citation.focus();
+        });
+      });
+  } else {
+      suttaArea.innerHTML = `<p>Инструкции загружаются...</p>`;
+  }
 }
+
 
 function setLanguage(language) {
   if (language === "pli-2nd") {
