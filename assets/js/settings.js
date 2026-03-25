@@ -423,9 +423,32 @@ function parseTextInfo(text) {
     }
 }
 
+// === ЦЕНТРАЛИЗОВАННОЕ ФОРМАТИРОВАНИЕ КЛЮЧЕЙ ===
+function formatSlug(str) {
+    if (!str) return '';
+    const trimmed = String(str).trim();
+
+    // Находим позицию самого первого пробела
+    const firstSpaceIndex = trimmed.indexOf(' ');
+
+    // Если пробелов вообще нет, значит это просто одиночный slug (например, "MN16")
+    if (firstSpaceIndex === -1) {
+        return trimmed.toLowerCase();
+    }
+
+    // Разделяем строку на две части по первому пробелу
+    const slug = trimmed.slice(0, firstSpaceIndex).toLowerCase(); // "mn16"
+    const title = trimmed.slice(firstSpaceIndex); // " Mahāsīhanāda Sutta" (включая пробел)
+
+    return slug + title;
+}
+
+
 async function saveToHistory(key, url) {
+    key = formatSlug(key); // <-- Централизованная обработка
     const value = url.pathname + url.search + url.hash;
     const timestamp = new Date().toISOString();
+  
     
     let history = JSON.parse(localStorage.getItem("localSearchHistory")) || [];
     
@@ -448,6 +471,7 @@ async function saveToHistory(key, url) {
     localStorage.setItem("localSearchHistory", 
         JSON.stringify(history.slice(0, MAX_HISTORY)));
 }
+
 //установка фокуса в инпуте по нажатию / 
 document.addEventListener('keydown', function(event) {
     // Проверяем именно символ / (код 191 или Slash)
@@ -1888,8 +1912,13 @@ function isFavorite(slug) {
     return favs.some(fav => fav.slug === slug);
 }
 
+
 function toggleFavoriteGlobal(itemData) {
     if (!itemData || !itemData.slug) return false;
+
+    // <-- Централизованная обработка перед сохранением
+    itemData.slug = formatSlug(itemData.slug);
+    if (itemData.id) itemData.id = formatSlug(itemData.id);
 
     // --- ОПРЕДЕЛЯЕМ ЯЗЫК ДЛЯ УВЕДОМЛЕНИЙ ---
     const currentPath = window.location.pathname;
@@ -1988,3 +2017,5 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 })();
+
+
