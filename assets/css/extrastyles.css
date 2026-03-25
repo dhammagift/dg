@@ -1338,7 +1338,7 @@ a.quoteLink-start::before {
 */
 
 #settings, #paliLookupInfo{
-    z-index: 100000 !important;
+    z-index: 1060 !important;
 }
 
 /*.modal-backdrop {
@@ -1507,3 +1507,52 @@ body.dark .hist-icon img { filter: invert(0.7); opacity: 1; }
 end   QUICK MODAL STYLES (Оптимизировано) end Css for settings.js 
    ========================================= */
   
+ /* Утилиты для замены инлайн-стилей */
+.max-w-450 {
+    max-width: 450px;
+}
+.cursor-pointer {
+    cursor: pointer;
+}
+ 
+.btn-size-32 {
+    width: 32px;
+    height: 32px;
+    font-weight: bold;
+}
+
+.min-w-45 {
+    min-width: 45px;
+    text-align: center;
+}
+
+
+.quick-overlay-element {
+    position: fixed;
+    z-index: 2000;
+}
+
+.quick-modal-container {
+    position: fixed;
+    z-index: 2001;
+}
+
+.w-100px {
+    width: 100px;
+}
+.h-25px {
+    height: 25px;
+}
+.max-w-300 {
+    max-width: 300px;
+}
+
+.max-w-600 {
+    max-width: 600px;
+}
+.max-w-650 {
+    max-width: 650px;
+}
+.max-w-992 {
+    max-width: 992px;
+}

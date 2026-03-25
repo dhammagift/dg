@@ -206,11 +206,9 @@ function updateURL(params) {
         <nav class="navbar navbar-expand-lg bg-secondary text-uppercase" id="mainNav">
             <a class="navbar-brand mobile-center" href="<?php echo $mainpage;?>"> <div class="container">
               
-              
-    <!--    <img loading="lazy" alt="Precise search in Pali Suttas and Vinaya" src="/assets/img/gray-white.png"  style="width:50px;"></a>
-   
-   -->
-   <img loading="lazy" alt="Precise search in Pali Suttas and Vinaya" src="/assets/img/dhammafindlogo.webp"  style="width:100px;"></a>
+            
+<img loading="lazy" alt="Precise search in Pali Suttas and Vinaya" src="/assets/img/dhammafindlogo.webp" class="w-100px">
+</a>
 
             
                 <a class="navbar-brand mobile-none" href="<?php echo $mainpage;?>">Dhamma.Gift</a>
@@ -253,7 +251,7 @@ function updateURL(params) {
                 <!-- Masthead Heading-->
 <div class="hideOnMobile">
 <h1 class="masthead-heading mb-5">
-    <div data-bs-toggle="tooltip" style="cursor: pointer;" data-bs-placement="bottom" title="<?php echo $tooltiptitle;?>">
+    <div data-bs-toggle="tooltip" class="cursor-pointer" data-bs-placement="bottom" title="<?php echo $tooltiptitle;?>">
         <?php echo $title;?>
     </div>
 </h1>
@@ -297,7 +295,7 @@ if (isset($_GET['q'])) {
 <i class="fas fa-search fa-flip-horizontal" aria-hidden="true"></i>
     <span class="visually-hidden"><?php echo $searchcaption;?></span>
 </button>
- <div class="text-start text-muted form-check-inline" data-bs-toggle="tooltip" style="cursor: pointer;" data-bs-placement="bottom" id="searchbar-help" title="<?php echo $tooltipsearchbar;?>">*</div>
+ <div class="text-start text-muted form-check-inline cursor-pointer" data-bs-toggle="tooltip" data-bs-placement="bottom" id="searchbar-help" title="<?php echo $tooltipsearchbar;?>">*</div>
 </div>
 
 </div>
@@ -314,7 +312,7 @@ if (isset($_GET['q'])) {
         <option value="-tru" <?php if (isset($p) && $p == "-tru") echo "selected";?> ><?php echo $radiotru;?></option>        
     </select>
 
-    <div class="text-start text-muted form-check-inline me-0" data-bs-toggle="tooltip" id="texttype-help" style="cursor: pointer;" data-bs-placement="bottom" title="<?php echo $tooltiptextype;?>">*</div>
+    <div class="text-start text-muted form-check-inline me-0 cursor-pointer" data-bs-toggle="tooltip" id="texttype-help" data-bs-placement="bottom" title="<?php echo $tooltiptextype;?>">*</div>
 
     <select class="dropdown droponmain rounded-pill text-muted border-2 border-primary text-center flex-shrink-1" id="extraOptions" name="extra">
         <option value="" <?php if (isset($extra)) echo "selected";?> ><?php echo "$liststd";?></option>
@@ -327,7 +325,7 @@ if (isset($_GET['q'])) {
         <option value="-nm5" <?php if (isset($extra) && $extra == "-nm5") echo "selected";?> ><?php echo "$listnm";?></option>
     </select>
 
-    <div class="text-muted text-decoration-none me-0 form-check-inline" data-bs-toggle="tooltip" id="searchtype-help" style="cursor: pointer;" data-bs-placement="bottom" title="<?php echo $tooltipsearchtype;?>">*</div>
+    <div class="text-muted text-decoration-none me-0 form-check-inline cursor-pointer" data-bs-toggle="tooltip" id="searchtype-help" data-bs-placement="bottom" title="<?php echo $tooltipsearchtype;?>">*</div>
 
     <div id="gear" class="text-white ms-1 flex-shrink-0" data-bs-toggle="collapse" href="#collapseSettings" role="button" aria-expanded="false" aria-controls="collapseSettings">
         <i class="fa-solid fa-gear fa-lg"></i>
@@ -357,7 +355,7 @@ $(document).ready(function() {
 
  <?php
 if (strpos($_SERVER['REQUEST_URI'], "/ru") !== false){
-echo '<div style="max-width: 450px; display: none;" class="alert alert-primary alert-dismissible fade show mt-3" role="alert" id="infoUpdate">
+echo '<div style="display: none;" class="alert alert-primary alert-dismissible fade show mt-3 max-w-450" role="alert" id="infoUpdate">
 Добавить <strong>Dhamma.Gift</strong> на Домашний Экран?
     <a class="btn btn-secondary installButton" id="" style="display:none;">' . $installpwalong . '</a>
    <br>
@@ -367,7 +365,7 @@ echo '<div style="max-width: 450px; display: none;" class="alert alert-primary a
 
 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
 } else {
-echo '<div style="max-width: 450px; display: none;" class="alert alert-primary alert-dismissible fade show mt-3" role="alert" id="infoUpdate">
+echo '<div style="display: none;" class="max-w-450 alert alert-primary alert-dismissible fade show mt-3" role="alert" id="infoUpdate">
 Add <strong>Dhamma.Gift</strong> to your Home Screen?
     <a class="btn btn-secondary installButton" id="" style="display:none;">' . $installpwalong . '</a>
    <br>
@@ -378,7 +376,8 @@ Add <strong>Dhamma.Gift</strong> to your Home Screen?
 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
 }
 ?>
-<div style="max-width: 450px; display: none;" class='alert alert-warning alert-dismissible fade show container-lg mt-3 text-start' role='alert' id='successAlert'>
+<div class="alert alert-warning alert-dismissible fade show container-lg mt-3 mb-1 text-start max-w-450" style="display: none;" role="alert" id="successAlert">
+
   <div id="response"></div>
   <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
 </div>
@@ -389,14 +388,14 @@ Add <strong>Dhamma.Gift</strong> to your Home Screen?
 
  <div class="form-check form-check-inline">
         <input class="form-check-input" type="checkbox" id="onlCheckbox" name="extra" <?php if (isset($extra) && $extra=="-anyd ") echo "checked";?>  value="-anyd">
-  <div data-bs-toggle="tooltip" style="cursor: pointer;" data-bs-placement="bottom" title='<?php echo $tooltiponl;?>'><?php echo $checkboxonl;?><span class="text-muted">*</span></div>
+  <div data-bs-toggle="tooltip" class="cursor-pointer" data-bs-placement="bottom" title='<?php echo $tooltiponl;?>'><?php echo $checkboxonl;?><span class="text-muted">*</span></div>
   </div>
 
   
   
 <div class="form-check form-check-inline">
   <input class="form-check-input" type="checkbox" id="laCheckbox" name="la" <?php if (isset($extra) && $extra=="-la$defaultla -lb$defaultla") echo "checked";?>  value='<?php echo "-la$defaultla -lb$defaultla"?>'>
-  <div data-bs-toggle="tooltip" style="cursor: pointer;" data-bs-placement="bottom" title='<?php echo $tooltipla;?>'><?php echo $checkboxla;?><span class="text-muted">*</span></div>
+  <div data-bs-toggle="tooltip" class="cursor-pointer" data-bs-placement="bottom" title='<?php echo $tooltipla;?>'><?php echo $checkboxla;?><span class="text-muted">*</span></div>
   </div>
   
 <div style="display:none;">
@@ -404,7 +403,7 @@ Add <strong>Dhamma.Gift</strong> to your Home Screen?
   <input type="text" id="ssearch" name="ssearch" tabindex="-1" autocomplete="off">
 </div>
 
-         <div style="max-width: 300px;" class="my-2"> 
+<div class="my-2 max-w-300"> 
     
 <div class="align-items-center form-check-inline mt-3">
   <div class="mb-2"><button class="btn btn-secondary rounded-pill insert-letter" data-letter="ā" autocomplete="off">ā</button>
@@ -422,12 +421,8 @@ Add <strong>Dhamma.Gift</strong> to your Home Screen?
 </div>
 
 <div class="mt-3">
-  <a 
-  type="button"
-  onclick="toggleQuickModal()" 
-  aria-label="Open Cattāri Ariyasaccāni" 
-  class="common-size-icon4" 
-  style="color: grey; cursor: pointer; height: 25px">
+<a type="button" onclick="toggleQuickModal()" aria-label="Open Cattāri Ariyasaccāni" class="common-size-icon4 cursor-pointer h-25px">
+
   <i class="fa-solid fa-compass"></i>
 </a>
 
@@ -449,7 +444,7 @@ Add <strong>Dhamma.Gift</strong> to your Home Screen?
 
 
  <h5 class="mt-4"><?php echo $regexMemoh5;?></h5> 
-<div class="mt-4" style="text-align: left;">
+<div class="mt-4 text-start">
   <button class="btn btn-primary btn-sm rounded-pill insert-letter" data-letter=" -exc "><strong>X -exc Y Z</strong></button> - <?php echo $exc;?> <br>
   <button class="btn rounded-pill btn-primary btn-sm rounded-pill insert-letter" data-letter=" -la<?php echo $defaultla;?> "><strong>-la<?php echo $defaultla;?> X</strong></button> - <?php echo $lax;?> <br>
   <button class="btn btn-primary btn-sm rounded-pill insert-letter" data-letter=" -lb<?php echo $defaultla;?> "><strong>-lb<?php echo $defaultla;?> X</strong></button> - <?php echo $lbx;?> <br>
@@ -685,7 +680,7 @@ include 'assets/common/horizontalMenuEn.php';
 ?>
 
 <!--Slideshow section-->
-<div style="max-width: 450px;" class="container-lg my-5">
+<div class="max-w-450 container-lg my-5">
  <!-- <h4><?php echo $carouseltitle;?>:</h4><br> -->
  
 <div id="carouselWithCaptions" class="carousel slide" data-bs-ride="carousel">
@@ -710,7 +705,7 @@ foreach ($slides as $index => $slide) {
     <h5><?php echo $title; ?></h5>
     <span><?php echo $desc; ?></span>
 	<br>
-    <a href="<?php echo $link; ?>" style="text-align: left;"><?php echo $read; ?></a>
+    <a href="<?php echo $link; ?>" class="text-start"><?php echo $read; ?></a>
 </div>
 
 <?php
@@ -823,13 +818,13 @@ foreach ($slides as $index => $slide) {
 <iframe src="<?php echo $linkhowtovideo;?>" title="<?php echo $titledeschowtovideo;?>" frameborder="0" allowfullscreen></iframe>
 </div>-->
 
-<div style="max-width: 600px;" class="container-lg">
+<div class="container-lg max-w-600">
 <div class="alert alert-warning float-start text-left mb-3" role="alert">
 <?php echo $transwarning;?>
 </div>
 </div>
    
-<div style="max-width: 992px;" class="container-lg">
+<div class="container-lg max-w-992">
 <h2 class="page-section-heading text-center text-uppercase text-secondary mb-3"><?php echo $headerexamples; ?></h2>  
 <div class="container mb-5">
 <ol class="col-lg-8 col-md-10 mx-auto text-start">
@@ -852,8 +847,8 @@ foreach ($slides as $index => $slide) {
                 <!-- Portfolio Grid Items-->
 <div class="row justify-content-center">
 
-<div style="max-width: 600px;" class="container-lg text-start">
-<div data-bs-toggle="tooltip" style="cursor: pointer;" data-bs-placement="bottom" title="<?php echo $howtosearchquotetooltip;?>"></div>
+<div class="container-lg text-start max-w-600">
+<div data-bs-toggle="tooltip" class="cursor-pointer" data-bs-placement="bottom" title="<?php echo $howtosearchquotetooltip;?>"></div>
 <?php echo $howtosearchquote;?>
 
 </div>
@@ -1248,7 +1243,7 @@ foreach ($slides as $index => $slide) {
 
 <p class="lead mt-4">
 <?php echo $poweredby; ?>
- <a class="text-white text-decoration-none me-0" data-bs-html="true" data-bs-toggle="tooltip" style="cursor: pointer;" data-bs-placement="top" title="<?php echo $tooltippoweredby;?>"> *</a></p>
+ <a class="text-white text-decoration-none me-0 cursor-pointer" data-bs-html="true" data-bs-toggle="tooltip" data-bs-placement="top" title="<?php echo $tooltippoweredby;?>"> *</a></p>
 
                     </div>
                 </div>
@@ -1259,7 +1254,7 @@ foreach ($slides as $index => $slide) {
 <div id="copyright" class="copyright py-4 text-center text-white " >
 <div class="container"><a target="_blank" rel="license" href="<?php echo $cclink; ?>" title="<?php echo $cctitle; ?>"><img alt="Creative Commons License" style="border-width:0" src="/assets/img/88x31.png" loading="lazy" /></a><small> Copyright <a class="text-white text-decoration-none" href="/assets/readylinebyline.html">&copy;</a> Dhamma.Gift <?php echo $mode; ?> <a class="text-white text-decoration-none" href="/assets/countdowntable.php">2022</a>-<?php echo date("Y"); ?></small>  <small id="copyrightnote">
  
-<p class="text-muted text-center mx-auto" style="max-width: 650px;">
+<p class="text-muted text-center mx-auto max-w-650">
    <?php echo $copyrightnote; ?> 
 </p>
 

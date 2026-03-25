@@ -24,12 +24,11 @@ $gearbutton = 'дополнительные настройки';
 $linksothermat = 'https://drive.google.com/drive/u/1/folders/1UU-y5idRNpfcVTripRUtyTVcOgdwjMGN';
 $linktextbook = "$linktextbookru";
 
-$siteAnnounce = '<div style="max-width: 450px; " class="alert alert-primary alert-dismissible fade show mt-3" role=alert id=infoUpdate><strong>Отличная новость.</strong> Поиск на пали и англ стал намного быстрее. В процессе поиск на русском. Пока, поиск доступен только по всем совпадениям. Если вы обнаружите ошибки в работе, пожалуйста <a class="alert-link" href="#contacts">сообщите <i class="fa-regular fa-comment"></i></a><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
-
+$siteAnnounce = '<div class="alert alert-primary alert-dismissible fade show mt-3 max-w-450" role=alert id=infoUpdate><strong>Отличная новость.</strong> Поиск на пали и англ стал намного быстрее. В процессе поиск на русском. Пока, поиск доступен только по всем совпадениям. Если вы обнаружите ошибки в работе, пожалуйста <a class="alert-link" href="#contacts">сообщите <i class="fa-regular fa-comment"></i></a><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
 
 $ctaButtons =' <div class="d-flex flex-wrap flex-column flex-sm-row justify-content-center align-items-center my-3 mb-2">
     
-    <button class="ms-2 mb-2 p-0 border-0 bg-transparent" id="installPWA" style="cursor:pointer;">
+    <button class="ms-2 mb-2 p-0 border-0 bg-transparent cursor-pointer" id="installPWA">
         <img src="/assets/img/buttons/pwa-cta.png" class="cta-img" title="Установить Dhamma.gift как Прогрессивное Веб-Приложение (PWA)">
     </button>
 
@@ -220,7 +219,7 @@ $inonesutta = 'искать Y в одной Сутте ДН22';
 $regexlink = 'ИИ может сгенерировать регулярное выражение для grep -Ei, к примеру <a class="text-white" href="https://chat.openai.com/" target=_blank>ChatGPT</a>, <a class="text-white" href="https://chat.deepseek.com/" target=_blank>DeepSeek</a>, <a class="text-white" href="https://gemini.google.com/app" target=_blank>Gemini AI</a>, <a class="text-white" href="https://codepal.ai/regex-generator" target=_blank>Codepal.ai</a>
 <br>';
 
-$regexMemo = '<p style="text-align: left;">
+$regexMemo = '<p class="text-start">
   <!--   <strong>-onl "(X|Y|...)"</strong> - найти тексты содержащие только все совпадения X, Y ... и т.д.<br> -->
         </p>     ';
 $titlehowtovideo = 'Как пользоваться?';  
@@ -655,7 +654,7 @@ $defaults = '
 <!-- Модальное окно "Настройки" -->
 <div class="modal fade" id="settings" tabindex="-1" aria-labelledby="settingsLabel" aria-hidden="true" data-bs-focus="false">
 <div class="modal-dialog modal-dialog-centered">
-<div class="modal-content">
+<div class="modal-content text-body">
 <div class="modal-header">
 <h2 class="modal-title" id="settingsLabel">Настройки</h2>
 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
@@ -663,7 +662,7 @@ $defaults = '
 <div class="modal-body">
 <div class="mb-2">
 <!-- Дропдаун для выбора системы письма -->
-<label for="script-select"><h5 style="text-align: left;">Система письма:</h5></label>
+<label for="script-select"><h5 class="text-start">Система письма:</h5></label>
 <select class="dropdown droponmain rounded-pill text-black border-2 border-secondary text-center input-group-append" id="script-select">
 <option value="ISOPali">ISOPali</option>
 <option value="Devanagari">Devanagari</option>
@@ -674,7 +673,7 @@ $defaults = '
 </div>
 <div class="mb-2">
 <!-- Дропдаун для выбора системы письма -->
-<label for="dict-select"><h5 style="text-align: left;">Словарь по клику:</h5></label>
+<label for="dict-select"><h5 class="text-start">Словарь по клику:</h5></label>
 <select class="dropdown droponmain rounded-pill text-black border-2 border-secondary text-center input-group-append" id="dict-select">
 <option value="standaloneru">DPD Встроенный</option>
 <option value="dpdFullRu">DPD Онлайн </option>
@@ -693,15 +692,15 @@ $defaults = '
 </div>
 
 <div class="mb-2 d-flex align-items-center">
-    <label class="h5 mb-0" style="text-align: left;"><h5>Размер:</h5></label>
+    <label class="h5 mb-0 text-start"><h5>Размер:</h5></label>
     <div class="d-flex align-items-center">
-        <button type="button" class="btn-sm btn-secondary rounded-circle d-flex align-items-center justify-content-center p-0 ms-2" 
-                id="fontDec" style="width: 32px; height: 32px; font-weight: bold;">−</button>
+        <button type="button" class="btn-sm btn-secondary rounded-circle d-flex align-items-center justify-content-center p-0 ms-2 btn-size-32" 
+                id="fontDec">−</button>
         
-        <span class="mx-2 fw-bold" id="fontVal" style="min-width: 45px; text-align: center;">100%</span>
+        <span class="mx-2 fw-bold min-w-45" id="fontVal">100%</span>
         
-        <button type="button" class="btn-sm btn-secondary rounded-circle d-flex align-items-center justify-content-center p-0" 
-                id="fontInc" style="width: 32px; height: 32px; font-weight: bold;">+</button>
+        <button type="button" class="btn-sm btn-secondary rounded-circle d-flex align-items-center justify-content-center p-0 btn-size-32" 
+                id="fontInc">+</button>
     </div>
    <label class="plain-label ms-2" for="fontVal">
   <strong>Alt "+-"</strong> 
@@ -723,7 +722,7 @@ $defaults = '
 
 </div>
 <!--        <div class="mb-2">
-                    <label for="reader-select"><h5 style="text-align: left;">Интерфейс:</h5></label>
+                    <label for="reader-select"><h5 class="text-start">Интерфейс:</h5></label>
                     <select class="dropdown droponmain rounded-pill text-black border-2 border-secondary text-center input-group-append" id="reader-select">
                         <option value="st">Стандартный</option>
                         <option value="ml">Мульти</option>
@@ -734,7 +733,7 @@ $defaults = '
                     </select>
                 </div> -->
 
-<h5 style="text-align: left;">Выберите Режим Чтения:</h5>
+<h5 class="text-start">Выберите Режим Чтения:</h5>
 <div class="container">
 
 
@@ -1045,7 +1044,7 @@ $inonesutta = 'find Y in DN22 only';
 $regexlink = 'AI can generate RegEx for grep -Ei, e.g. <a class="text-white" href="https://chat.openai.com/" target=_blank>ChatGPT</a>, <a class="text-white" href="https://chat.deepseek.com/" target=_blank>DeepSeek</a>, <a class="text-white" href="https://gemini.google.com/app" target=_blank>Gemini AI</a>, <a class="text-white" href="https://codepal.ai/regex-generator" target=_blank>Codepal.ai</a><br>';
 
 $regexMemo = '
-          <p style="text-align: left;">
+          <p class="text-start">
      <!--  <strong>-onl "(X|Y|...)"</strong> - find texts containing only all of the X, Y ... etc patterns<br> -->
 
 </p>          ';
@@ -1287,10 +1286,9 @@ Create an issue on github or send an email, if you\'ll find other criteria.
 <br><br>
 </p>';
 
-
 $ctaButtons =' <div class="d-flex flex-wrap flex-column flex-sm-row justify-content-center align-items-center my-3 mb-2">
     
-    <button class="ms-2 mb-2 p-0 border-0 bg-transparent" id="installPWA" style="cursor:pointer;">
+    <button class="ms-2 mb-2 p-0 border-0 bg-transparent cursor-pointer" id="installPWA">
         <img src="/assets/img/buttons/pwa-cta.png" class="cta-img"  title="Install Dhamma.gift as progressive web app">
     </button>
 
@@ -1368,7 +1366,7 @@ $defaults = '<!-- Dictionary OnClick Popup -->
 <!-- Модальное окно "Настройки" -->
 <div class="modal fade" id="settings" tabindex="-1" aria-labelledby="settingsLabel" aria-hidden="true" data-bs-focus="false">
 <div class="modal-dialog modal-dialog-centered">
-<div class="modal-content">
+<div class="modal-content text-body">
 <div class="modal-header">
 <h2 class="modal-title" id="settingsLabel">Settings</h2>
 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -1376,7 +1374,7 @@ $defaults = '<!-- Dictionary OnClick Popup -->
 <div class="modal-body">
 <div class="mb-2">
 <!-- Dropdown for script selection -->
-<label for="script-select"><h5 style="text-align: left;">Script system:</h5></label>
+<label for="script-select"><h5 class="text-start">Script system:</h5></label>
 <select class="dropdown droponmain rounded-pill text-black border-2 border-secondary text-center input-group-append" id="script-select">
 <option value="ISOPali">ISOPali</option>
 <option value="Devanagari">Devanagari</option>
@@ -1387,7 +1385,7 @@ $defaults = '<!-- Dictionary OnClick Popup -->
 
 <div class="mb-2">
 <!-- Дропдаун для выбора режима словаря -->
-<label for="dict-select"><h5 style="text-align: left;">On click dictionary:</h5></label>
+<label for="dict-select"><h5 class="text-start">On click dictionary:</h5></label>
 <select class="dropdown droponmain rounded-pill text-black border-2 border-secondary text-center input-group-append" id="dict-select">
 <option value="standalone">DPD Built-in </option>
 <option value="dpdFull">DPD Online </option>
@@ -1398,24 +1396,25 @@ $defaults = '<!-- Dictionary OnClick Popup -->
 <option value="dictTango">DictTango Android</option>
 <option value="mdict">Mdict IOS</option>
 <option value="goldenpc">GoldenDict-NG Desktop</option>
-<option value="standaloneru" style="display: none;">Ru DPD Built-in </option>
-<option value="dpdFullRu" style="display: none;">Ru DPD Online </option>
-<option value="newwindowru" style="display: none;">Ru DPD Online New Window </option>
-<option value="dpdCompactRu" style="display: none;">Ru DPD Online mini </option>
+
+<option value="standaloneru">Ru DPD Built-in </option>
+<option value="dpdFullRu" class="d-none">Ru DPD Online </option>
+<option value="newwindowru" class="d-none">Ru DPD Online New Window </option>
+<option value="dpdCompactRu" class="d-none">Ru DPD Online mini </option>
 
 </select> <a href="/assets/common/dictHelp.html">?</a>
 </div>
 
 <div class="mb-2 d-flex align-items-center">
-    <label class="h5 mb-0" style="text-align: left;"><h5>Font Size:</h5></label>
+    <label class="h5 mb-0 text-start"><h5>Font Size:</h5></label>
     <div class="d-flex align-items-center">
-        <button type="button" class="btn-sm btn-secondary rounded-circle d-flex align-items-center justify-content-center p-0 ms-2" 
-                id="fontDec" style="width: 32px; height: 32px; font-weight: bold;">−</button>
+        <button type="button" class="btn-sm btn-secondary rounded-circle d-flex align-items-center justify-content-center p-0 ms-2 btn-size-32" 
+                id="fontDec">−</button>
         
-        <span class="mx-2 fw-bold" id="fontVal" style="min-width: 45px; text-align: center;">100%</span>
+        <span class="mx-2 fw-bold min-w-45" id="fontVal">100%</span>
         
-        <button type="button" class="btn-sm btn-secondary rounded-circle d-flex align-items-center justify-content-center p-0" 
-                id="fontInc" style="width: 32px; height: 32px; font-weight: bold;">+</button>
+        <button type="button" class="btn-sm btn-secondary rounded-circle d-flex align-items-center justify-content-center p-0 btn-size-32" 
+                id="fontInc">+</button>
     </div>
    <label class="plain-label ms-2" for="fontVal">
   <strong>Alt "+-"</strong> 
@@ -1435,7 +1434,7 @@ $defaults = '<!-- Dictionary OnClick Popup -->
 </div>
 
 </div>
-<h5 style="text-align: left;">Select Reading Mode: </h5>
+<h5 class="text-start">Select Reading Mode: </h5>
 <div class="container">
 <!-- Standard -->
 <div class="row align-items-center mb-2">
@@ -1810,7 +1809,10 @@ $mainreadlink = '/th/read.php';
     $inonesutta = 'ค้นหา Y ใน DN22 เท่านั้น';
     $regexlink = 'AI สามารถช่วยสร้าง RegEx สำหรับ grep -Ei ได้ เช่น <a class="text-white" href="https://chat.openai.com/" target=_blank>ChatGPT</a>, <a class="text-white" href="https://chat.deepseek.com/" target=_blank>DeepSeek</a>, <a class="text-white" href="https://gemini.google.com/app" target=_blank>Gemini AI</a><br>';
 
-    $regexMemo = '<p style="text-align: left;"></p>';
+$regexMemo = '
+          <p class="text-start">
+     </p>          ';
+
     $titlehowtovideo = 'วิดีโอแนะนำวิธีใช้';
     $linkhowtovideo = 'https://youtu.be/Jle0XDs_roc?si=-FJFTpdOwZ4lIdo3';
     $titledeschowtovideo = 'วิธีค้นหาในพระสูตรและพระวินัยบาลีด้วย Dhamma.Gift';
