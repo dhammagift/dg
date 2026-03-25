@@ -18,7 +18,7 @@ homeButton.addEventListener("click", () => {
   document.location.search = "";
 });
 
-async function buildSutta(slug) {
+function buildSutta(slug) {
   
   let translator = "";
   let texttype = "sutta";
@@ -61,10 +61,13 @@ async function buildSutta(slug) {
   const slugReady = parseSlug(slug);
  // console.log("slugReady is " + slugReady + " slug is " + slug); 
 
-      if (translator === "") {
-          translator = await getTranslator(texttype, slugReady, pathLang);
-      }
 
+
+$.ajax({
+       url: "/read/php/translator-lookup.php?fromjs=" +texttype +"/" +slugReady
+    }).done(function(data) {
+      const trnsResp = data.split(" ");
+      let translator = trnsResp[0];
 
 //if (slug.match(/^mn([1-9]|1[0-9]|2[0-1])$/)) {
  
@@ -204,7 +207,7 @@ const rootResponse = fetch(rootpath)
   const translationResponse = fetch(trnpath).then(response => response.json());
   const htmlResponse = fetch(htmlpath).then(response => response.json());
 async function fetchVariant() {
-  const paths = [varpath, varpathLocal];
+  const paths = [varpathLocal, varpath];
 
   for (const path of paths) {
     try {
@@ -222,75 +225,19 @@ async function fetchVariant() {
   return {}; // Если все пути недоступны
 }
 
-const varResponse = fetchVariant();    
- 
+const varResponse = window.fetchVariantData(varpathLocal, varpath);
+  
+
 //  console.log(trnpath);
 //  console.log(rustrnpath);
 Promise.all([rootResponse, translationResponse, htmlResponse, varResponse]).then(responses => {
     const [paliData, transData, htmlData, varData] = responses;
 	
-// === НАЧАЛО ИЗМЕНЕНИЙ: Логика объединения Гатх ===
-    const segments = Object.keys(htmlData);
+    // === ВЫЗЫВАЕМ ГЛОБАЛЬНУЮ ФУНКЦИЮ ОБЪЕДИНЕНИЯ ГАТХ ===
+    const segments = window.mergeGathas(htmlData, paliData, transData, varData);
     
     for (let i = 0; i < segments.length; i++) {
       let segment = segments[i];
-
-      // Проверки на undefined (как в оригинале)
-      if (transData[segment] === undefined) transData[segment] = "";
-      if (transData[segment] === "") transData[segment] = "";
-
-      // ЛОГИКА ОБЪЕДИНЕНИЯ (MERGE):
-      // Проверяем, является ли текущий сегмент частью стиха (verse-line)
-      // и есть ли следующий сегмент, который тоже часть стиха.
-      let nextSegment = segments[i + 1];
-      
-      if (htmlData[segment] && htmlData[segment].includes('verse-line') &&
-          nextSegment && htmlData[nextSegment] && htmlData[nextSegment].includes('verse-line')) {
-          
-          
-          let [nextOpen, nextClose] = htmlData[nextSegment].split(/{}/);
-          
-          // Проверяем, что следующий сегмент не начинает новый абзац
-          if (!nextOpen.includes('<p>')) {
-              
-              // Функция для перевода первой буквы в нижний регистр
-              const toLower = (str) => {
-                  if (!str) return "";
-                  // Если строка начинается с кавычки или скобки, пробуем понизить вторую букву, 
-                  // но для простоты понижаем первую найденную букву.
-                  // Здесь простой вариант:
-                  return str.charAt(0).toLowerCase() + str.slice(1);
-              };
-
-              // 1. Объединяем ПАЛИ
-              if (paliData[nextSegment]) {
-                  // trim() убирает пробелы по краям
-                  // " " добавляет ровно один пробел между частями
-                  // toLower() делает вторую часть с маленькой буквы
-                  paliData[segment] = (paliData[segment] || "").trim() + " " + toLower(paliData[nextSegment].trim());
-              }
-
-              // 2. Объединяем ПЕРЕВОД (Русский)
-              if (transData[nextSegment]) {
-                  transData[segment] = (transData[segment] || "").trim() + " " + toLower(transData[nextSegment].trim());
-              }
-
-              // 3. Объединяем ВАРИАНТЫ (если есть)
-              if (varData[nextSegment]) {
-                  varData[segment] = (varData[segment] || "").trim() + " " + toLower(varData[nextSegment].trim());
-              }
-
-              // 4. Склеиваем HTML (оставляем обертку)
-              let [currOpen, currClose] = htmlData[segment].split(/{}/);
-              
-              // Переписываем htmlData текущего сегмента: начало от первого, конец от второго
-              htmlData[segment] = (currOpen || '') + "{}" + (nextClose || '');
-              
-              // 5. Пропускаем следующий сегмент (мы его только что приклеили)
-              i++; 
-          }
-      }
-      // === КОНЕЦ ЛОГИКИ ОБЪЕДИНЕНИЯ ===
 
       let [openHtml, closeHtml] = htmlData[segment].split(/{}/);
       openHtml = openHtml || ''; 
@@ -328,8 +275,8 @@ Promise.all([rootResponse, translationResponse, htmlResponse, varResponse]).then
         }
       }
 
-      const linkToCopyStart = `<a class="text-decoration-none copyLink copyLink-start" style="cursor: pointer;" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;
-      let linkToCopy = `<a class="text-decoration-none copyLink" style="cursor: pointer;" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`
+      const linkToCopyStart = `<a class="text-decoration-none copyLink copyLink-start" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;
+      let linkToCopy = `<a class="text-decoration-none copyLink" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`
 
       if (paliData[segment] !== undefined && transData[segment] !== undefined && varData[segment] !== undefined) {
         html += `${openHtml}<span id="${anchor}">
@@ -353,30 +300,34 @@ Promise.all([rootResponse, translationResponse, htmlResponse, varResponse]).then
         html += openHtml + '<span id="' + anchor + '"><span class="rus-lang" lang="ru">' + linkToCopyStart + transData[segment].trim() + linkToCopy + '</span></span>' + closeHtml + '\n\n';
       }
     }
-
   if (slug.match(/bi-pm/)) {
      translator = "adelina";
   }
-
-  // Назначаем дефолтные значения, если файла не нашлось
-  if (translator === "") {
-      if (texttype === "vinaya") translator = "brahmali";
-      else translator = "sujato";
-  }
-
-  // ОБЯЗАТЕЛЬНО ОБЪЯВЛЯЕМ ПЕРЕМЕННУЮ, чтобы не было ReferenceError (и бесконечного цикла!)
-  let translatorforuser = translator; 
-
-  // Пытаемся взять красивое имя из JSON, который мы загрузили в common.js
-  if (window.siteTranslators) {
-      if (window.siteTranslators[pathLang] && window.siteTranslators[pathLang][translator]) {
-          // Ищем в списке текущего языка
-          translatorforuser = window.siteTranslators[pathLang][translator];
-      } else if (window.siteTranslators["en"] && window.siteTranslators["en"][translator]) {
-          // Фолбэк: ищем в списке "en"
-          translatorforuser = window.siteTranslators["en"][translator];
-      }
-  }
+  
+if (translator === "o") {
+  translatorforuser = '<a href=/assets/common/o.html>o</a> с Пали';
+} else if (translator === "sv") {
+  translatorforuser = 'SV theravada.ru с Англ';
+} else if (translator === "adelina") {
+  translatorforuser = 'Adel NamaRupa с Англ';
+} else if ((translator === "" && texttype === "sutta" ) || (translator === "sujato" )) {
+  translatorforuser = 'Bhikkhu Sujato';
+} else if ((translator === "" && texttype === "vinaya") || (translator === "brahmali" ))  {
+  translatorforuser = 'Bhikkhu Brahmali';
+} else if (translator === "syrkin" ) {
+  translatorforuser = '<a href=/assets/texts/syrkin.html>А.Я. Сыркин</a> с Пали';
+} else if (translator === "syrkin+edited+o" ) {
+  translatorforuser = '<a href=/assets/texts/syrkin.html>А.Я. Сыркин</a> с Пали, ред. <a href=/assets/common/o.html>o</a>';
+} else if (translator === "sv+edited+o" ) {
+  translatorforuser = 'SV theravada.ru с Англ, ред. <a href=/assets/common/o.html>o</a>';
+} else if (translator === "myagkih+edited+tr" ) {
+  translatorforuser = 'К. Мягких с Англ, ред. ТР';
+}
+else if (translator === "o+in+progress" ) {
+  translatorforuser = '<a href=/assets/common/o.html>o</a>, в процессе';
+} else {
+	translatorforuser = translator ;
+}
 
 //const translatorCapitalized = translator.charAt(0).toUpperCase() + translator.slice(1);
 
@@ -393,6 +344,8 @@ const enUrl = ruUrl.replace("/r/", "/read/");
 scLink += `<a title='Английский (Alt+1)' href="${enUrl}">En</a>&nbsp;`;
  
   
+
+
 //   onclick="alert(this.getAttribute('data-slug'))"
       // === 1. МГНОВЕННЫЙ ВЫВОД ТЕКСТА НА ЭКРАН ===
       const origUrl = window.location.href;
@@ -410,9 +363,9 @@ scLink += `<a title='Английский (Alt+1)' href="${enUrl}">En</a>&nbsp;`
       const isWarningClosed = localStorage.getItem('warningClosed');
 
       const warning = `
-        <div style="max-width: 550px; margin: 0 auto; text-align: center;" class="warning-container">
+        <div class="warning-container warning-box">
           <p class='warning'>
-            <strong>Заметка:</strong><a style='cursor: pointer;' class='text-decoration-none' target='' href='${dUrl}'>&nbsp;</a>Переводы, словари и комментарии сделаны не Благословенным.<a style='cursor: pointer;' class='text-decoration-none' target='' href='${thUrl}'>&nbsp;</a>Сверяйтесь с Пали в 4 основных никаях.
+            <strong>Заметка:</strong><a class='text-decoration-none cursor-pointer' target='' href='${dUrl}'>&nbsp;</a>Переводы, словари и комментарии сделаны не Благословенным.<a class='text-decoration-none cursor-pointer' target='' href='${thUrl}'>&nbsp;</a>Сверяйтесь с Пали в 4 основных никаях.
                  ${canShowClose && !isWarningClosed ? `<span class="close-warning">×</span>` : ''} 
           </p>
         </div>
@@ -420,13 +373,18 @@ scLink += `<a title='Английский (Alt+1)' href="${enUrl}">En</a>&nbsp;`
 
       // Выводим текст СРАЗУ, оставив пустые <div> для верхних и нижних ссылок
       suttaArea.innerHTML = 
-          `<div id="top-links-container" style="min-height: 24px;"></div><br>` + 
+          `<div id="top-links-container" class="min-h-24"></div><br>` + 
           (!isWarningClosed ? warning : '') + 
           translatorByline + 
           html + 
           translatorByline + 
           (!isWarningClosed ? warning : '') + 
-          `<div id="bottom-links-container" style="min-height: 24px;"></div>`;
+          `<div id="bottom-links-container" class="min-h-24"></div>`;
+          
+if (typeof window.setupVariantVisibility === 'function') {
+    window.setupVariantVisibility();
+}
+          
 
       // === 2. НАСТРОЙКА ИНТЕРФЕЙСА (ПОКА ТЕКСТ УЖЕ МОЖНО ЧИТАТЬ) ===
       if (canShowClose && !isWarningClosed) {
@@ -460,6 +418,7 @@ scLink += `<a title='Английский (Alt+1)' href="${enUrl}">En</a>&nbsp;`
       document.head.appendChild(ogDescriptionMeta);
 
       toggleThePali();
+
 // === ГЕНЕРАЦИЯ ССЫЛОК (DPR, BJT, SC, BB, TBW, Th.ru, Th.su) ИЗ COMMON.JS ===
 scLink += generateThirdPartyLinks(slug, slugReady, texttype, translator);
 scLink += "</p>";
@@ -533,6 +492,9 @@ window.location.href = newUrl;
     С главной страницы доступно больше настроек поиска.
 <br></p>`;
 });
+    }
+
+    );
 	
 // в конец функции можно добавить скролл
 
@@ -582,14 +544,11 @@ setLanguage(language);
       <li><span class="abbr">dhp</span> Dhammapada</li>
       <li><span class="abbr">thag</span> Theragāthā</li>
       <li><span class="abbr">thig</span> Therīgāthā</li>
-   <!--	     <li><span class="abbr">snp</span> Sutta-nipāta</li>
- <li><span class="abbr">kp</span> Khuddakapāṭha</li>-->
-  </ul>
+   </ul>
   </div>  
   
   <div>
- <!-- <h2>Виная</h2> -->
-  <div class="vinaya">
+ <div class="vinaya">
   <div>
   <h3>Бхиккху Виная</h3><br>
 <ul>
@@ -693,27 +652,38 @@ function showPali() {
   suttaArea.classList.remove('column-view'); // Отключаем двухколоночный режим
 }
 
-// 2. Функция с анимацией прозрачности
 function toggleThePali() {
   const languageButton = document.getElementById("language-button");
-  const suttaContainer = document.getElementById("sutta"); // Получаем контейнер текста
 
   if (!localStorage.paliToggle) {
     localStorage.paliToggle = "pli-2nd";
   }
 
-  languageButton.addEventListener("click", () => {
-    
-    // 1. Запоминаем позицию ДО начала анимации
-    const anchorData = getTopVisibleSegment();
+  // Клонируем кнопку, чтобы сбросить старые слушатели (исправляем баг с мульти-кликом)
+  const newButton = languageButton.cloneNode(true);
+  languageButton.parentNode.replaceChild(newButton, languageButton);
 
-    // 2. Скрываем текст (Fade Out)
-    suttaContainer.classList.add("text-hidden");
-
-    // Ждем 200мс, пока текст исчезнет, и только потом меняем язык
-    setTimeout(() => {
-        
-        // --- СМЕНА ЯЗЫКА (происходит пока невидимо) ---
+  newButton.addEventListener("click", () => {
+    // Используем единую плавную обертку из common.js
+    if (typeof runWithTransition === 'function') {
+        runWithTransition(() => {
+            // Логика переключения точно как в твоем старом коде
+            if (language === "pli-2nd") {
+              showPali();
+              language = "pli";
+              localStorage.paliToggle = "pli";
+            } else if (language === "2nd") {
+              showPaliEnglish();
+              language = "pli-2nd";
+              localStorage.paliToggle = "pli-2nd";
+            } else if (language === "pli") {
+              showEnglish();
+              language = "2nd";
+              localStorage.paliToggle = "2nd";
+            }
+        });
+    } else {
+        // Фолбэк, если common.js еще не подгрузился
         if (language === "pli-2nd") {
           showPali();
           language = "pli";
@@ -727,36 +697,9 @@ function toggleThePali() {
           language = "2nd";
           localStorage.paliToggle = "2nd";
         }
-
-        // --- ВОССТАНОВЛЕНИЕ ПОЗИЦИИ (Ядерный метод) ---
-        if (anchorData && anchorData.element) {
-             const currentRect = anchorData.element.getBoundingClientRect();
-             const currentAbsoluteTop = window.scrollY + currentRect.top;
-             const targetPos = currentAbsoluteTop - anchorData.topOffset;
-
-             // Отключаем плавный скролл браузера для рывка
-             const html = document.documentElement;
-             const savedBehavior = html.style.scrollBehavior;
-             html.style.cssText += "scroll-behavior: auto !important;";
-             
-             // Мгновенный прыжок
-             window.scrollTo(0, targetPos);
-
-             // Возвращаем настройки скролла
-             html.style.scrollBehavior = savedBehavior;
-             html.style.removeProperty('scroll-behavior');
-        }
-
-        // 3. Показываем текст обратно (Fade In)
-        // requestAnimationFrame гарантирует, что браузер отрисовал скролл перед тем как показать текст
-        requestAnimationFrame(() => {
-            suttaContainer.classList.remove("text-hidden");
-        });
-
-    }, 150); // Тайминг должен совпадать с CSS transition (0.2s = 200ms)
+    }
   });
 }
-
 
 // clicking an abbreviation on the home page will replace the input field with that abbreviation
 const abbreviations = document.querySelectorAll("span.abbr");
@@ -767,27 +710,3 @@ abbreviations.forEach(book => {
     citation.focus();
   });
 });
-
-function handleVariantVisibility() {
-  const toggleButton = document.getElementById("toggle-variants");
-  const variantElements = document.querySelectorAll(".variant");
-
-  if (!toggleButton || variantElements.length === 0) return;
-
-  const storedState = localStorage.getItem("variantVisibility");
-
-  // Применяем сохраненное состояние при загрузке
-  if (storedState === "hidden") {
-    variantElements.forEach((el) => el.classList.add("hidden-variant"));
-  }
-
-  // Добавляем обработчик клика для переключения видимости
-  toggleButton.addEventListener("click", function () {
-    const isHidden = variantElements[0].classList.contains("hidden-variant");
-    variantElements.forEach((el) => el.classList.toggle("hidden-variant"));
-    localStorage.setItem("variantVisibility", isHidden ? "visible" : "hidden");
-  });
-
-  
-}
-
