@@ -1020,70 +1020,10 @@ window.addEventListener('load', обновитьКнопкиВвода);
             return originalFetch.apply(this, arguments);
         };
 
-        function convertPaliToDevanagari(str) {
-            const mapping = {
-                'kh':'ख', 'gh':'घ', 'ch':'छ', 'jh':'झ', 'ṭh':'ठ', 'ḍh':'ढ', 'th':'थ', 'dh':'ध', 'ph':'फ', 'bh':'भ',
-                'k':'क', 'g':'ग', 'ṅ':'ङ', 'c':'च', 'j':'ज', 'ñ':'ञ', 'ṭ':'ट', 'ḍ':'ड', 'ṇ':'ण', 't':'त', 'd':'द', 'n':'न',
-                'p':'प', 'b':'ब', 'm':'म', 'y':'य', 'r':'र', 'l':'ल', 'ḷ':'ळ', 'v':'व', 's':'स', 'h':'ह'
-            };
-            const vowels = {'a':'अ', 'ā':'आ', 'i':'इ', 'ī':'ई', 'u':'उ', 'ū':'ऊ', 'e':'ए', 'o':'ओ'};
-            const marks = {'ā':'ा', 'i':'ि', 'ī':'ी', 'u':'ु', 'ū':'ू', 'e':'े', 'o':'ो'};
-            
-            let res = ""; 
-            let i = 0; 
-            str = str.toLowerCase();
-
-            const isSingleWord = !str.trim().includes(' ');
-
-            if (isSingleWord) {
-                const cleanWord = str.replace(/[.,;!?\n|]/g, '').trim();
-                const specialCases = {};
-                
-                if (specialCases[cleanWord]) {
-                    let punctuation = str.match(/[.,;!?\n|]+$/);
-                    return specialCases[cleanWord] + (punctuation ? punctuation[0] : '');
-                }
-            }
-
-            while (i < str.length) {
-                let char = str[i]; 
-                let nextChar = str[i+1] || ''; 
-                let doubleChar = char + nextChar;
-                
-                if (char === 'ṃ' || char === 'ṁ') { 
-                    res += (isSingleWord && i === str.length - 1) ? 'ङ्' : 'ं'; 
-                    i++; 
-                    continue; 
-                }
-                
-                if (vowels[char]) {
-                    if (i === 0 || !str[i-1].match(/[a-zāīūṭḍṇṅñṃḷ]/i) || vowels[str[i-1]]) res += vowels[char];
-                    i++; continue;
-                }
-                
-                let cons = mapping[doubleChar] ? doubleChar : (mapping[char] ? char : null);
-                if (cons) {
-                    res += mapping[cons]; 
-                    i += cons.length; 
-                    let v = str[i];
-                    if (vowels[v]) {
-                        if (v !== 'a') res += marks[v];
-                        i++;
-                    } else if (!v || (v !== ' ' && !v.match(/[.,;!?\n]/))) {
-                        res += '्'; 
-                        if (v === 'h' && char === 'm') res += '\u200C';
-                    }
-                    continue;
-                }
-                res += char; 
-                i++;
-            }
-            return res;
-        }
 
         function startMemoTTS(isRestart = false) {
             if (isRestart !== true) {
-                resetGlobalSessionTimer(); // Сбрасываем таймер только если это старт с нуля (не луп)
+                resetGlobalSessionTimer();
                 window.memoLoopsPlayed = 0;
                 if (window.memoCountdownInterval) clearInterval(window.memoCountdownInterval);
                 const container = document.getElementById('dummy-ab-timer-container');
@@ -1134,6 +1074,45 @@ window.addEventListener('load', обновитьКнопкиВвода);
                 return;
             }
 
+            // === ТОЧНЫЙ АВТО-КУРСОР: ПОИСК СЕГМЕНТА ===
+            let cursorIndex = 0;
+            const ta = document.getElementById("inputText");
+            if (ta && typeof ta.selectionStart === 'number') {
+                let caret = ta.selectionStart;
+                let searchPos = 0;
+                for (let i = 0; i < segments.length; i++) {
+                    const txt = segments[i];
+                    let matchPos = ta.value.indexOf(txt, searchPos);
+                    if (matchPos !== -1) {
+                        let endPos = matchPos + txt.length;
+                        if (caret <= endPos) {
+                            cursorIndex = i;
+                            break;
+                        }
+                        searchPos = endPos;
+                    }
+                }
+            }
+            
+            // Передаем точный индекс плееру через глобальную переменную
+            window.memoPendingCursorIndex = cursorIndex;
+            
+            // Регистрируем перехватчик старта один раз. 
+            // Он сработает точно после сборки плейлиста, но до начала звука.
+            if (!window.memoCursorListenerAdded) {
+                document.addEventListener('tts-playback-started', () => {
+                    if (window.memoPendingCursorIndex !== undefined && window.memoPendingCursorIndex !== -1 && window.ttsAPI) {
+                        const state = window.ttsAPI.getState();
+                        state.currentIndex = window.memoPendingCursorIndex;
+                        state.startIndex = 0;
+                        if (state.playlist) state.endIndex = state.playlist.length - 1;
+                        window.memoPendingCursorIndex = -1; // Сбрасываем после перехвата
+                    }
+                });
+                window.memoCursorListenerAdded = true;
+            }
+            // ===========================================
+
             const delaySec = parseFloat(document.getElementById("ttsDelay").value) || 0;
             window.TTS_SEGMENT_DELAY = delaySec * 1000;
             window.isLoopingPause = false;
@@ -1155,6 +1134,10 @@ window.addEventListener('load', обновитьКнопкиВвода);
                     span.style.maxWidth = '100%';
                     span.style.overflowWrap = 'break-word';
                     span.style.wordBreak = 'break-word';
+
+                    if (index === cursorIndex) {
+                        span.classList.add('active-word');
+                    }
                     
                     if (/[\u0900-\u097F]/.test(seg)) {
                         span.className = 'pli-lang';
@@ -1169,7 +1152,8 @@ window.addEventListener('load', обновитьКнопкиВвода);
                         } else {
                             span.className = 'pli-lang';
                             span.textContent = seg; 
-                            window.mockPaliJson[id] = "“" + convertPaliToDevanagari(seg) + "”"; 
+                            window.mockPaliJson[id] = "“" + window.convertPaliToDevanagari(seg)
+ + "”"; 
                         }
                     }
                     container.appendChild(span);
@@ -1185,20 +1169,11 @@ window.addEventListener('load', обновитьКнопкиВвода);
             const modeSelect = document.getElementById('tts-mode-select');
             if (modeSelect) modeSelect.value = targetMode;
 
+            // Запускаем плеер (он вызовет событие tts-playback-started)
             document.getElementById('hiddenVoiceLink').click();
 
             document.body.style.transition = 'padding-bottom 0.4s ease';
             document.body.style.paddingBottom = '120px';
-
-            setTimeout(() => {
-                if (window.ttsAPI) {
-                    const state = window.ttsAPI.getState();
-                    if (state.playlist && state.playlist.length > 0) {
-                        state.startIndex = 0;
-                        state.endIndex = state.playlist.length - 1;
-                    }
-                }
-            }, 400);
         }
 
         function stopMemoTTS(fullReset = true) {
@@ -1213,17 +1188,20 @@ window.addEventListener('load', обновитьКнопкиВвода);
                     let searchPos = 0;
                     for (let i = 0; i <= state.currentIndex; i++) {
                         const txt = spans[i].textContent;
-                        searchPos = ta.value.indexOf(txt, searchPos);
+                        let matchPos = ta.value.indexOf(txt, searchPos);
                         
-                        if (i === state.currentIndex && searchPos !== -1) {
-                            let lineEnd = ta.value.indexOf('\n', searchPos);
-                            if (lineEnd === -1) lineEnd = ta.value.length; 
-                            
+                        if (i === state.currentIndex && matchPos !== -1) {
                             ta.focus();
-                            ta.setSelectionRange(lineEnd, lineEnd);
-                            ta.scrollTop = ta.scrollHeight * (lineEnd / ta.value.length);
+                            
+                            // ИСПРАВЛЕНИЕ: Ставим курсор точно в конец прочитанного сегмента
+                            let endPos = matchPos + txt.length;
+                            ta.setSelectionRange(endPos, endPos);
+                            
+                            // Мягкий скролл к курсору
+                            const scrollRatio = endPos / ta.value.length;
+                            ta.scrollTop = ta.scrollHeight * scrollRatio - (ta.clientHeight / 2);
                         }
-                        if (searchPos !== -1) searchPos += txt.length;
+                        if (matchPos !== -1) searchPos = matchPos + txt.length;
                     }
                 }
             }
@@ -1243,7 +1221,7 @@ window.addEventListener('load', обновитьКнопкиВвода);
             }
             
             if (fullReset) {
-                resetGlobalSessionTimer(); // Сброс глобального таймера на полное выключение
+                resetGlobalSessionTimer();
 
                 const container = document.getElementById("tts-virtual-container");
                 if (container) {
@@ -1272,6 +1250,7 @@ window.addEventListener('load', обновитьКнопкиВвода);
             
             window.memoLoopsPlayed = 0;
         }
+
 
         document.addEventListener('tts-range-finished', () => {
             const isLoop = document.getElementById('ttsIsLoop').checked;

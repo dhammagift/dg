@@ -114,10 +114,10 @@ let params = new URLSearchParams(document.location.search);
    const savedScript = localStorage.getItem('selectedScript');
 
  if (( script === "devanagari" ) || ( savedScript === "Devanagari" ) ) {
-var rootpath = `/assets/texts/devanagari/root/pli/ms/${texttype}/${slugReady}_rootd-pli-ms.json`
+var rootpath = `/assets/texts/en/${texttype}/${slugReady}_root-pli-ms.json`
  } 
  else if (( script === "thai" ) || ( savedScript === "Thai" ) ) {
-var rootpath = `/assets/texts/th/root/pli/ms/${texttype}/${slugReady}_rootth-pli-ms.json`
+var rootpath = `/assets/texts/en/${texttype}/${slugReady}_root-pli-ms.json`
  } 
 else {
 var rootpath = `/assets/texts/en/${texttype}/${slugReady}_root-pli-ms.json`

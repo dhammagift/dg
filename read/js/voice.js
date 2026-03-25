@@ -67,6 +67,14 @@ let googleVoicesList = [];
 // Дефолтные настройки для Пали
 const DEFAULT_PALI_CONFIG = { languageCode: 'pa-IN', name: 'pa-IN-Chirp3-HD-Achird' };
 
+// --- Изолируем память для BB ---
+function getSavedSlugName(slug) {
+    if (!slug) return slug;
+    return window.location.pathname.includes('/b/') ? 'bb_' + slug : slug;
+}
+
+
+
 // --- ЛОГИКА ОПРЕДЕЛЕНИЯ КОНТЕКСТА (URL) ---
 function getContextInfo() {
   const path = window.location.pathname;
@@ -303,7 +311,8 @@ function cleanTextForTTS(text) {
     .replace(/’ति/g, 'ति')
     .replace(/\{.*?\}/g, '')
     .replace(/\(.*?\)/g, '')
-    .replace(/[ \t]+/g, ' ')
+    .replace(/[ \t]+/g, ' ')  
+    .replace(/[-–—]/g, ' ')
     .replace(/_/g, '').trim();
 
   // --- УМНАЯ ЛОГИКА (SMART SPLIT) ---
@@ -337,6 +346,11 @@ function resetUI() {
 }
 
 async function fetchSegmentsData(slug) {
+  // Принудительно отключаем загрузку SC-файлов для текстов Бхиккху Бодхи
+  if (window.location.pathname.includes('/b/')) {
+      return null;
+  }
+  
   try {
     const response = await fetch(makeJsonUrl(slug));
     return response.ok ? await response.json() : null;
@@ -345,6 +359,7 @@ async function fetchSegmentsData(slug) {
     return null; 
   }
 }
+
 
 /*
 function detectTranslationLang() {
@@ -810,7 +825,20 @@ async function prepareTextData(slug) {
           lookAheadIndex++;
         }
       }
+    } else if (paliElement) {
+      // --- ФОЛБЭК ДЛЯ BB (/b/) ---
+      // Файл не качался, берем текст с экрана (он может быть латиницей или деванагари)
+      let rawDomText = paliElement.textContent.replace(/<[^>]*>/g, '').trim();
+      let cleanedText = cleanTextForTTS(rawDomText);
+      
+      // Конвертируем для Google TTS (функция не тронет текст, если он уже деванагари)
+      if (window.convertPaliToDevanagari) {
+          paliDev = window.convertPaliToDevanagari(cleanedText);
+      } else {
+          paliDev = cleanedText;
+      }
     }
+
     
     if (translationElement) {
       const clone = translationElement.cloneNode(true);
@@ -915,10 +943,12 @@ async function playCurrentSegment() {
     if (ttsState.currentIndex >= ttsState.playlist.length - 2) {
        clearTtsStorage(); 
     } else {
-       localStorage.setItem(LAST_SLUG_KEY, ttsState.currentSlug);
+       // Оборачиваем слаг в наш хелпер
+       localStorage.setItem(LAST_SLUG_KEY, getSavedSlugName(ttsState.currentSlug));
        localStorage.setItem(LAST_INDEX_KEY, ttsState.currentIndex);
     }
   }
+
   
   if (item.element) {
     document.querySelectorAll('.active-word').forEach(e => e.classList.remove('active-word'));
@@ -1522,10 +1552,12 @@ async function startPlayback(container, mode, slug, startIndex = 0) {
     if (actualStartIndex === 0 && slug) {
       const lastSlug = localStorage.getItem(LAST_SLUG_KEY);
       const lastIndex = parseInt(localStorage.getItem(LAST_INDEX_KEY) || '0');
-      if (lastSlug === slug && lastIndex < playlist.length) {
+      // Оборачиваем текущий слаг в наш хелпер для проверки
+      if (lastSlug === getSavedSlugName(slug) && lastIndex < playlist.length) {
         actualStartIndex = lastIndex;
       }
     }
+
   }
   
   synth.cancel();
@@ -2729,3 +2761,67 @@ document.addEventListener('focusin', (e) => {
     }
 });
 // ---------------------------------------------------
+
+
+// --- Глобальная функция конвертации Pāli -> Devanagari ---
+window.convertPaliToDevanagari = function(str) {
+    if (!str) return str;
+    const mapping = {
+        'kh':'ख', 'gh':'घ', 'ch':'छ', 'jh':'झ', 'ṭh':'ठ', 'ḍh':'ढ', 'th':'थ', 'dh':'ध', 'ph':'फ', 'bh':'भ',
+        'k':'क', 'g':'ग', 'ṅ':'ङ', 'c':'च', 'j':'ज', 'ñ':'ञ', 'ṭ':'ट', 'ḍ':'ड', 'ṇ':'ण', 't':'त', 'd':'द', 'n':'न',
+        'p':'प', 'b':'ब', 'm':'म', 'y':'य', 'r':'र', 'l':'ल', 'ḷ':'ळ', 'v':'व', 's':'स', 'h':'ह'
+    };
+    const vowels = {'a':'अ', 'ā':'आ', 'i':'इ', 'ī':'ई', 'u':'उ', 'ū':'ऊ', 'e':'ए', 'o':'ओ'};
+    const marks = {'ā':'ा', 'i':'ि', 'ī':'ी', 'u':'ु', 'ū':'ू', 'e':'े', 'o':'ो'};
+    
+    let res = ""; 
+    let i = 0; 
+    str = str.toLowerCase();
+
+    const isSingleWord = !str.trim().includes(' ');
+
+    if (isSingleWord) {
+        const cleanWord = str.replace(/[.,;!?\n|]/g, '').trim();
+        const specialCases = {};
+        
+        if (specialCases[cleanWord]) {
+            let punctuation = str.match(/[.,;!?\n|]+$/);
+            return specialCases[cleanWord] + (punctuation ? punctuation[0] : '');
+        }
+    }
+
+    while (i < str.length) {
+        let char = str[i]; 
+        let nextChar = str[i+1] || ''; 
+        let doubleChar = char + nextChar;
+        
+        if (char === 'ṃ' || char === 'ṁ') { 
+            res += (isSingleWord && i === str.length - 1) ? 'ङ्' : 'ं'; 
+            i++; 
+            continue; 
+        }
+        
+        if (vowels[char]) {
+            if (i === 0 || !str[i-1].match(/[a-zāīūṭḍṇṅñṃḷ]/i) || vowels[str[i-1]]) res += vowels[char];
+            i++; continue;
+        }
+        
+        let cons = mapping[doubleChar] ? doubleChar : (mapping[char] ? char : null);
+        if (cons) {
+            res += mapping[cons]; 
+            i += cons.length; 
+            let v = str[i];
+            if (vowels[v]) {
+                if (v !== 'a') res += marks[v];
+                i++;
+            } else if (!v || (v !== ' ' && !v.match(/[.,;!?\n]/))) {
+                res += '्'; 
+                if (v === 'h' && char === 'm') res += '\u200C';
+            }
+            continue;
+        }
+        res += char; 
+        i++;
+    }
+    return res;
+};
