@@ -11,8 +11,6 @@
     <link rel="stylesheet" href="/read/css/voice.css">
     <link href="/assets/css/paliLookup.css" rel="stylesheet" />
     <link href="/memo/memo.css" rel="stylesheet" />
-
-
 </head>
 <body>
 <div id="global-session-timer" style="display: none;">00:00</div>
@@ -816,7 +814,32 @@ window.addEventListener('DOMContentLoaded', () => {
             window.memoCountdownInterval = setInterval(tick, 1000);
         };
 
+        function добавитьПробелыВКонцеСтрок() {
+            const ta = document.getElementById("inputText");
+            if (!ta) return;
+            
+            const lines = ta.value.split('\n');
+            let modified = false;
+            
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i].length > 0 && !lines[i].endsWith(' ')) {
+                    lines[i] = lines[i] + ' ';
+                    modified = true;
+                }
+            }
+            
+            if (modified) {
+                // Запоминаем позицию курсора, чтобы он не улетал при добавлении пробелов
+                const start = ta.selectionStart;
+                const end = ta.selectionEnd;
+                ta.value = lines.join('\n');
+                ta.setSelectionRange(start, end);
+                localStorage.setItem("входнойТекст", ta.value);
+            }
+        }
+
         function преобразоватьТекст() {
+            добавитьПробелыВКонцеСтрок();
             const входнойТекст = document.getElementById("inputText").value;
             localStorage.setItem("входнойТекст", входнойТекст);
             const строкиСКавычками = входнойТекст.split('\n');
@@ -1039,6 +1062,7 @@ window.addEventListener('load', обновитьКнопкиВвода);
 
 
         function startMemoTTS(isRestart = false) {
+            добавитьПробелыВКонцеСтрок();
             if (isRestart !== true) {
                 resetGlobalSessionTimer();
                 window.memoLoopsPlayed = 0;
@@ -1092,27 +1116,10 @@ window.addEventListener('load', обновитьКнопкиВвода);
             }
 
             // === ТОЧНЫЙ АВТО-КУРСОР: ПОИСК СЕГМЕНТА ===
+            // Игнорируем позицию курсора при старте и всегда начинаем с 0
             let cursorIndex = 0;
             const ta = document.getElementById("inputText");
-            if (ta && typeof ta.selectionStart === 'number') {
-                let caret = ta.selectionStart;
-                let searchPos = 0;
-                for (let i = 0; i < segments.length; i++) {
-                    const txt = segments[i];
-                    let matchPos = ta.value.indexOf(txt, searchPos);
-                    if (matchPos !== -1) {
-                        let endPos = matchPos + txt.length;
-                        if (caret <= endPos) {
-                            cursorIndex = i;
-                            break;
-                        }
-                        searchPos = endPos;
-                    }
-                }
-            }
-            
-            // Передаем точный индекс плееру через глобальную переменную
-            window.memoPendingCursorIndex = cursorIndex;
+            window.memoPendingCursorIndex = 0;
             
             // Регистрируем перехватчик старта один раз. 
             // Он сработает точно после сборки плейлиста, но до начала звука.
@@ -1194,6 +1201,7 @@ window.addEventListener('load', обновитьКнопкиВвода);
         }
 
         function stopMemoTTS(fullReset = true) {
+            добавитьПробелыВКонцеСтрок();
             const editToggle = document.getElementById('editModeToggle');
             const ta = document.getElementById("inputText");
             
@@ -1210,12 +1218,17 @@ window.addEventListener('load', обновитьКнопкиВвода);
                         if (i === state.currentIndex && matchPos !== -1) {
                             ta.focus();
                             
-                            // ИСПРАВЛЕНИЕ: Ставим курсор точно в конец прочитанного сегмента
-                            let endPos = matchPos + txt.length;
-                            ta.setSelectionRange(endPos, endPos);
+                            // ИСПРАВЛЕНИЕ: Ищем конец текущей строки
+                            let endOfLinePos = ta.value.indexOf('\n', matchPos);
+                            if (endOfLinePos === -1) {
+                                endOfLinePos = ta.value.length; // Если это последняя строка текста
+                            }
+                            
+                            // Ставим курсор в самый конец строки (после точки и пробела)
+                            ta.setSelectionRange(endOfLinePos, endOfLinePos);
                             
                             // Мягкий скролл к курсору
-                            const scrollRatio = endPos / ta.value.length;
+                            const scrollRatio = endOfLinePos / ta.value.length;
                             ta.scrollTop = ta.scrollHeight * scrollRatio - (ta.clientHeight / 2);
                         }
                         if (matchPos !== -1) searchPos = matchPos + txt.length;
@@ -1423,9 +1436,6 @@ window.addEventListener('load', обновитьКнопкиВвода);
     <script src="/assets/js/paliLookup.js" defer></script>
     <script src="/assets/js/autopali.js" defer></script>
 
-<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
 
 </body>
 </html>
