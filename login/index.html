@@ -262,13 +262,23 @@ body.dark .form-control::placeholder,
             const phrase = input.value;
             if (phrase && phrase.trim().length >= 8) {
                 const syncPhraseId = "phrase_" + phrase.trim().toLowerCase().replace(/\s+/g, '-');
-                if (typeof showBubbleNotification === 'function') showBubbleNotification(isRu ? "Синхронизация включена" : "Sync enabled");
+                
+                // Блокируем кнопку и вешаем спиннер
+                const btn = document.getElementById('btn-phrase-login');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin me-2"></i>` + (isRu ? "Вход..." : "Logging in...");
+                }
+
+                if (typeof showBubbleNotification === 'function') showBubbleNotification(isRu ? "🔄 Вход..." : "🔄 Logging in...");
+                
                 input.value = ''; 
                 syncEnablePhrase(syncPhraseId);
             } else {
                 alert(isRu ? "Фраза слишком короткая! Нужно минимум 8 символов." : "Passphrase too short! Minimum 8 characters needed.");
             }
         }
+
 
         function uiDeleteAccount() {
             const msg = isRu 
@@ -311,6 +321,11 @@ body.dark .form-control::placeholder,
 
         window.renderLoginPageUI = function(user, phraseId) {
             const el = (id) => document.getElementById(id);
+            if (!el('sync-logged-out')) return;
+
+            // Разблокируем кнопки на случай, если мы вернулись из состояния "Выйти"
+            if (el('btn-google-login')) el('btn-google-login').disabled = false;
+            if (el('btn-phrase-login')) el('btn-phrase-login').disabled = false;
 
             const t = isRu ? {
                 title: "Облачная синхронизация", desc: "Сохраняйте историю, избранное и настройки.",

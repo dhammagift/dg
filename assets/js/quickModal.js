@@ -29,7 +29,7 @@ function buildQuickModalDOM() {
   const dpdTheme = isDark ? "dark" : "light";
   const dpdUrl = `https://dict.dhamma.gift${isRu ? '/ru/' : '/'}?theme=${dpdTheme}`;
 
-  // Создаем узлы (теперь без инлайн-стилей!)
+  // Создаем узлы
   quickOverlay = document.createElement("div");
   quickOverlay.className = "quick-overlay-element";
   
@@ -55,11 +55,15 @@ function buildQuickModalDOM() {
           <button class="quick-tab-btn" data-tab="tab-dpd">${tabDpdText}</button>
         </div>
         
-        <div class="quick-actions-right" style="display: flex; gap: 8px; align-items: center;">
+        <div class="quick-actions-right">
+            <span class="action-btn" id="btn-sync-now" title="${isRu ? 'Синхронизировать' : 'Sync Now'}">
+               <img src="/assets/svg/rotate-solid-full.svg" width="20" height="20" alt="Login & Sync">
+            </span>
+
             <span class="clear-all-btn action-btn" id="main-trash-icon" title="${titleClearAll}">
                <img src="/assets/svg/trash-can-regular-full.svg" width="25" height="25" alt="Reset">
             </span>
-            <span class="action-btn" id="main-open-window-icon" title="${isRu ? 'Открыть в новом окне' : 'Open in new window'}" style="display: none; cursor: pointer;">
+            <span class="action-btn cursor-pointer" id="main-open-window-icon" title="${isRu ? 'Открыть в новом окне' : 'Open in new window'}" style="display: none;">
                <img src="/assets/svg/open-link.svg" width="20" height="20" alt="Open">
             </span>
         </div>
@@ -82,6 +86,12 @@ function buildQuickModalDOM() {
           </div>
         </h6>
         <div id="quick-history-container"></div>
+        
+        <div class="quick-all-history-wrapper">
+            <a href="${isRu ? '/ru/history.php' : '/history.php'}" class="quick-all-history-link">
+                ${isRu ? "Общая история →" : "Common history →"}
+            </a>
+        </div>
       </div>
 
       <div id="tab-4as" class="quick-tab-content">
@@ -162,10 +172,11 @@ function buildQuickModalDOM() {
   document.body.appendChild(quickModal);
 
   // Обработка вкладок
-   const tabBtns = quickModal.querySelectorAll('.quick-tab-btn');
+  const tabBtns = quickModal.querySelectorAll('.quick-tab-btn');
   const tabContents = quickModal.querySelectorAll('.quick-tab-content');
   const mainTrashIcon = document.getElementById('main-trash-icon');
-  const mainOpenWindowIcon = document.getElementById('main-open-window-icon'); // <-- Добавили
+  const mainOpenWindowIcon = document.getElementById('main-open-window-icon'); 
+  const btnSyncNow = document.getElementById('btn-sync-now');
 
   tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -188,14 +199,36 @@ function buildQuickModalDOM() {
       if (mainTrashIcon) {
           mainTrashIcon.style.display = targetTab === 'tab-fav' ? 'block' : 'none';
       }
+      // Переключаем видимость кнопки Sync
+      if (btnSyncNow) {
+          btnSyncNow.style.display = targetTab === 'tab-fav' ? 'block' : 'none';
+      }
       if (mainOpenWindowIcon) {
           mainOpenWindowIcon.style.display = (targetTab === 'tab-memo' || targetTab === 'tab-dpd') ? 'block' : 'none';
       }
     });
   });
 
+  // --- ЛОГИКА НАЖАТИЯ КНОПКИ СИНХРОНИЗАЦИИ ---
+  if (btnSyncNow) {
+      btnSyncNow.addEventListener('click', (e) => {
+          e.preventDefault();
+          
+          // Проверяем авторизацию (либо кодовая фраза, либо аккаунт Google из Firebase)
+          const isLoggedWithPhrase = !!localStorage.getItem('syncPhraseId');
+          const isLoggedWithGoogle = typeof auth !== 'undefined' && auth && auth.currentUser;
+          
+          if (isLoggedWithPhrase || isLoggedWithGoogle) {
+              // Запускаем синхронизацию
+              if (typeof forceSyncNow === 'function') forceSyncNow();
+          } else {
+              // Перенаправляем на логин
+              window.location.href = isRu ? '/ru/login' : '/login';
+          }
+      });
+  }
 
-  // Логика закрытия модалки (теперь просто скрываем)
+  // Логика закрытия модалки
   const closeQuickModal = () => {
     if(quickModalIsOpen) toggleQuickModal();
   };
@@ -207,7 +240,7 @@ function buildQuickModalDOM() {
       window.initPaliAutocomplete('#quickSearchInput');
   }
 
-  // Прикрепляем функции рендера глобально, чтобы мы могли вызывать их при переоткрытии окна
+  // Прикрепляем функции рендера глобально
   window.refreshQuickModalData = function() {
     renderQuickLists(isRu, queryBase);
   };
@@ -263,18 +296,15 @@ function buildQuickModalDOM() {
       });
   }
 
-  // --- ЛОГИКА НОВОЙ КНОПКИ "ОТКРЫТЬ В НОВОМ ОКНЕ" ---
+  // --- ЛОГИКА КНОПКИ "ОТКРЫТЬ В НОВОМ ОКНЕ" ---
   if (mainOpenWindowIcon) {
       mainOpenWindowIcon.addEventListener('click', () => {
-          // Ищем, какая вкладка сейчас активна
           const activeTab = quickModal.querySelector('.quick-tab-content.active');
           if (!activeTab) return;
 
-          // Ищем iframe внутри активной вкладки
           const iframe = activeTab.querySelector('iframe');
           if (!iframe) return;
 
-          // Берем ссылку (сначала из src, а если там пусто из-за ленивой загрузки - из data-src)
           const urlToOpen = iframe.getAttribute('src') || iframe.getAttribute('data-src');
           
           if (urlToOpen) {
@@ -284,8 +314,6 @@ function buildQuickModalDOM() {
           }
       });
   }
-
-
 
   // Обработчики заголовков для сортировки/скрытия
   setupQuickModalHeaders();
@@ -307,7 +335,6 @@ function renderQuickLists(isRu, queryBase) {
 
     // Рендер Избранного
     if (favData.length === 0) {
-      // ИСПОЛЬЗУЕМ КЛАСС ВМЕСТО ИНЛАЙН СТИЛЕЙ
       favContainer.innerHTML = `<p class="quick-empty-msg">${isRu ? "Избранного пока нет." : "No favorites yet."}</p>`;
       favHeader.style.display = 'none';
       favContainer.style.display = 'block';
@@ -334,7 +361,6 @@ function renderQuickLists(isRu, queryBase) {
 
     // Рендер Истории
     if (histData.length === 0) {
-      // ИСПОЛЬЗУЕМ КЛАСС ВМЕСТО ИНЛАЙН СТИЛЕЙ
       histContainer.innerHTML = `<p class="quick-empty-msg">${isRu ? "История пуста." : "History is empty."}</p>`;
       histHeader.style.display = 'none';
       histContainer.style.display = 'block';
@@ -358,11 +384,6 @@ function renderQuickLists(isRu, queryBase) {
         <span class="action-btn toggle-fav-btn-hist" data-slug="${realSlug}" data-display="${h[0]}" data-url="${h[1]}">${isFav ? "★" : "☆"}</span></li>`;
       });
       histHtml += '</ul>';
-      
-      if (histData.length > 84) {
-        // ИСПОЛЬЗУЕМ КЛАССЫ ВМЕСТО ИНЛАЙН СТИЛЕЙ
-        histHtml += `<div class="quick-all-history-wrapper"><a href="${isRu ? '/ru/history.php' : '/history.php'}" class="quick-all-history-link">${isRu ? "Вся история →" : "All history →"}</a></div>`;
-      }
       histContainer.innerHTML = histHtml;
       document.querySelector('.sort-icon-hist').textContent = histAlphaSort ? 'A-Z' : '⇅';
     }
@@ -404,4 +425,3 @@ window.toggleQuickModal = function() {
     }, 100);
   }
 };
-

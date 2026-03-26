@@ -1556,3 +1556,38 @@ end   QUICK MODAL STYLES (Оптимизировано) end Css for settings.js
 .max-w-992 {
     max-width: 992px;
 }
+
+
+/* Контейнер кнопок справа (Синхронизация, Корзина, Новое окно) */
+.quick-actions-right {
+    display: flex;
+    gap: 2px; /* Минимальное расстояние МЕЖДУ иконками */
+    align-items: center;
+    margin-left: 5px; /* Отступ слева, чтобы иконки не "прилипали" к вкладкам */
+}
+
+/* Настройки самих кнопок внутри этого блока */
+.quick-actions-right .action-btn {
+    margin-left: 0; /* Убираем лишние отступы, оставляем только gap */
+    padding: 0 4px; /* Делаем зону клика комфортной */
+}
+
+
+/* Стили для новой кнопки синхронизации */
+.sync-mini-btn {
+    padding: 2px 4px;
+    font-size: 0.85rem;
+    background: transparent;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    color: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.sync-mini-btn:hover {
+    color: #859900;
+    border-color: #859900;
+}
