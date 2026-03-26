@@ -260,13 +260,17 @@ function buildQuickModalDOM() {
   const favContainer = quickModal.querySelector('#quick-favorites-container');
   const histContainer = quickModal.querySelector('#quick-history-container');
   
-  favContainer.addEventListener('click', (e) => {
+    favContainer.addEventListener('click', (e) => {
       if (e.target.classList.contains('remove-fav-btn')) {
           const slug = e.target.dataset.slug;
           if (confirm(isRu ? "Удалить из избранного?" : "Remove from favorites?")) {
               let favData = JSON.parse(localStorage.getItem('dg_favorites')) || [];
               favData = favData.filter(f => f.slug !== slug);
               localStorage.setItem('dg_favorites', JSON.stringify(favData));
+              
+              // --- ДОБАВЛЕНО: Отправка изменений в БД ---
+              if (typeof backupToCloud === 'function') backupToCloud();
+              
               window.refreshQuickModalData();
           }
       }
@@ -286,7 +290,7 @@ function buildQuickModalDOM() {
              const parser = new URL(url, window.location.origin);
              const isSearchPage = parser.pathname === '/' || parser.pathname === '/ru/' || parser.pathname.endsWith('index.php');
              let finalTitle = displayKey;
-             if (isSearchPage && !finalTitle.startsWith("")) finalTitle = "🔎 " + finalTitle;
+             if (isSearchPage && !finalTitle.startsWith("")) finalTitle =  finalTitle;
 
              currentFavs.unshift({
                  slug: slug, id: slug, title: finalTitle, 
@@ -294,18 +298,27 @@ function buildQuickModalDOM() {
              });
           }
           localStorage.setItem('dg_favorites', JSON.stringify(currentFavs));
+          
+          // --- ДОБАВЛЕНО: Отправка изменений в БД ---
+          if (typeof backupToCloud === 'function') backupToCloud();
+          
           window.refreshQuickModalData();
       }
   });
 
   if (mainTrashIcon) {
       mainTrashIcon.addEventListener('click', () => {
-          if (confirm(isRu ? "Очистить ВСЮ историю поиска?" : "Clear ALL search history?")) {
+          if (confirm(isRu ? "Очистить ВСЮ историю поиска, включая в Облаке?" : "Clear ALL search history, including Cloud?")) {
               localStorage.setItem('localSearchHistory', JSON.stringify([]));
+              
+              // --- ДОБАВЛЕНО: Отправка изменений в БД ---
+              if (typeof backupToCloud === 'function') backupToCloud();
+              
               window.refreshQuickModalData();
           }
       });
   }
+
 
   // --- ЛОГИКА КНОПКИ "ОТКРЫТЬ В НОВОМ ОКНЕ" ---
   if (mainOpenWindowIcon) {
