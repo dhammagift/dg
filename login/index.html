@@ -114,9 +114,6 @@ body.dark .form-control::placeholder,
         
     </style>
 
-    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
 </head>
 <body class="bg-body text-body">
 
@@ -335,10 +332,6 @@ async function uiDeleteAccount() {
                     const hashArray = Array.from(new Uint8Array(hashBuffer));
                     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
                     const hashedId = "anon_" + hashHex.substring(0, 24);
-
-                    if (typeof showBubbleNotification === 'function') {
-                        showBubbleNotification(isRu ? "Вход..." : "Logging in...");
-                    }
 
                     input.value = ''; 
                     syncEnablePhrase(rawPhrase, hashedId);
