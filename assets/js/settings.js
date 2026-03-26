@@ -187,6 +187,28 @@ if (path.includes('/memo/') && !path.includes('/memorize/')) {
     });
 })();
 
+
+// Глобальные уведомления с настраиваемым таймером
+window.showBubbleNotification = function(text, duration = 2500) {
+    let bubble = document.getElementById('bubbleNotification') || document.querySelector('.bubble-notification');
+
+    if (!bubble) {
+        bubble = document.createElement('div');
+        bubble.id = 'bubbleNotification';
+        bubble.className = 'bubble-notification';
+        document.body.appendChild(bubble);
+    }
+
+    bubble.textContent = text;
+    bubble.classList.add('show');
+
+    if (window.bubbleNotificationTimer) clearTimeout(window.bubbleNotificationTimer);
+
+    window.bubbleNotificationTimer = setTimeout(() => {
+        bubble.classList.remove('show');
+    }, duration);
+};
+
 // === UI ВЫДЕЛЕНИЯ ТЕКСТА И КНОПКА PLAY (Работает до загрузки voice.js) ===
 window.removeAllHighlights = function() {
     document.querySelectorAll(".active-word").forEach(el => el.classList.remove("active-word"));

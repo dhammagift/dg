@@ -1,11 +1,3 @@
-// Функция для добавления стилей и элемента уведомления
-function initCopyNotification() {
-  // Создаем элемент уведомления
-  const bubble = document.createElement('div');
-  bubble.id = 'bubbleNotification';
-  bubble.className = 'bubble-notification';
-  document.body.appendChild(bubble);
-}
 
 // Функция для определения языка
 function getNotificationText() {
@@ -22,10 +14,7 @@ function getNotificationText() {
 
 // Основная функция копирования
 function copyToClipboard(text = "") {
-  // Инициализация уведомления
-  if (!document.getElementById('bubbleNotification')) {
-    initCopyNotification();
-  }
+
 
   // Обработка URL
   if (text === 127) {
@@ -150,18 +139,6 @@ function fallbackCopy(text) {
   document.body.removeChild(textarea);
 }
 
-// Показать уведомление
-function showBubbleNotification(text) {
-  const bubble = document.getElementById('bubbleNotification');
-  if (!bubble) return;
-
-  bubble.textContent = text;
-  bubble.classList.add('show');
-
-  setTimeout(() => {
-    bubble.classList.remove('show');
-  }, 2000);
-}
 
 // Скрыть share icon на production
 document.addEventListener('DOMContentLoaded', function() {
@@ -170,8 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
     shareOnlineElement.style.display = 'none';
   }
 
-  // Инициализируем уведомление при загрузке
-  initCopyNotification();
+
 
   let pressTimer = null;
 
