@@ -456,35 +456,42 @@ function resetGlobalSessionTimer() {
                 };
             }
 
-            if (favBtn) {
-                function updateMemoIcon() {
-                    const data = getMemoData();
-                    if (data && typeof isFavorite === 'function') {
-                        const saved = isFavorite(data.slug);
-                        iconOutline.style.display = saved ? 'none' : 'inline-block';
-                        iconSolid.style.display = saved ? 'inline-block' : 'none';
-                    } else {
-                        iconOutline.style.display = 'inline-block';
-                        iconSolid.style.display = 'none';
-                    }
-                }
+if (favBtn) {
+    function updateMemoIcon() {
+        const data = getMemoData();
+        // Используем глобальную проверку из settings.js
+        if (data && typeof isFavorite === 'function') {
+            const saved = isFavorite(data.slug);
+            iconOutline.style.display = saved ? 'none' : 'inline-block';
+            iconSolid.style.display = saved ? 'inline-block' : 'none';
+        }
+    }
 
-                setTimeout(updateMemoIcon, 100);
-                textInput.addEventListener('input', updateMemoIcon);
+    // СЛУШАЕМ СИГНАЛ ОБ ОБНОВЛЕНИИ
+    window.addEventListener('favoritesUpdated', updateMemoIcon);
+    
+    // Синхронизация, если открыто несколько вкладок
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'dg_favorites') updateMemoIcon();
+    });
 
-                favBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const positionData = getMemoData();
-                    
-                    if (positionData && typeof toggleFavoriteGlobal === 'function') {
-                        toggleFavoriteGlobal(positionData);
-                        updateMemoIcon();
-                        if (typeof window.syncSmartIcons === 'function') setTimeout(window.syncSmartIcons, 50);
-                    } else if (!positionData) {
-                        alert(window.memoLang === 'ru' ? 'Сначала введите текст!' : 'Please enter text first!');
-                    }
-                });
-            }
+    setTimeout(updateMemoIcon, 100);
+    textInput.addEventListener('input', updateMemoIcon);
+
+    favBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const positionData = getMemoData();
+        
+        if (positionData && typeof toggleFavoriteGlobal === 'function') {
+            // Просто вызываем глобальную функцию. 
+            // Она сама покажет бабл и через событие 'favoritesUpdated' зажжет звезду.
+            toggleFavoriteGlobal(positionData);
+        } else if (!positionData) {
+            alert(window.memoLang === 'ru' ? 'Сначала введите текст!' : 'Please enter text first!');
+        }
+    });
+}
+
 
             if (shareBtn) {
                 shareBtn.addEventListener('click', (e) => {

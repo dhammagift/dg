@@ -441,20 +441,27 @@ function formatSlug(str) {
     if (!str) return '';
     const trimmed = String(str).trim();
 
+    // 1. МЕМО (цитаты): оставляем как есть, сохраняем оригинальный регистр
+    if (trimmed.startsWith('memo_')) {
+        return trimmed;
+    }
+
     // Находим позицию самого первого пробела
     const firstSpaceIndex = trimmed.indexOf(' ');
 
-    // Если пробелов вообще нет, значит это просто одиночный slug (например, "MN16")
+    // 2. ПОИСК ИЛИ СУТТА БЕЗ ПРОБЕЛОВ (например, "kacchapa" или "MN16")
     if (firstSpaceIndex === -1) {
         return trimmed.toLowerCase();
     }
 
-    // Разделяем строку на две части по первому пробелу
-    const slug = trimmed.slice(0, firstSpaceIndex).toLowerCase(); // "mn16"
-    const title = trimmed.slice(firstSpaceIndex); // " Mahāsīhanāda Sutta" (включая пробел)
+    // 3. ПОИСК ИЛИ СУТТА С ПРОБЕЛАМИ (например, "MN16 Mahāsīhanāda Sutta")
+    // Первое слово (id/запрос) с маленькой, остальное (title) как есть
+    const slug = trimmed.slice(0, firstSpaceIndex).toLowerCase(); 
+    const title = trimmed.slice(firstSpaceIndex); 
 
     return slug + title;
 }
+
 
 async function addToSearchHistory() {
     try {
@@ -1999,9 +2006,14 @@ function getFavorites() {
 }
 
 function isFavorite(slug) {
+    // Прогоняем запрос через единые правила перед проверкой
+    if (typeof formatSlug === 'function') {
+        slug = formatSlug(slug);
+    }
     const favs = getFavorites();
     return favs.some(fav => fav.slug === slug);
 }
+
 
 
 function toggleFavoriteGlobal(itemData) {
@@ -2042,6 +2054,13 @@ function toggleFavoriteGlobal(itemData) {
         window.refreshQuickModalData();
     }
     
+    window.dispatchEvent(new CustomEvent('favoritesUpdated', { 
+        detail: { 
+            slug: itemData.slug, 
+            isAdded: isAdded 
+        } 
+    }));
+
     return isAdded;
 }
 
