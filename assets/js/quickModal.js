@@ -412,7 +412,6 @@ function setupQuickModalHeaders() {
   });
 }
 
-// ПЕРЕЗАПИСЫВАЕМ глобальную функцию-заглушку реальной функцией!
 window.toggleQuickModal = function() {
   if (!window.isQuickModalRendered) {
     buildQuickModalDOM();
@@ -424,18 +423,36 @@ window.toggleQuickModal = function() {
     window.quickModal.classList.remove("open");
     window.quickModalIsOpen = false;
   } else {
+    // 1. Показываем локальные данные мгновенно, чтобы не было задержки
     window.refreshQuickModalData();
+    
     window.quickOverlay.classList.add("open");
     window.quickModal.classList.add("open");
     window.quickModalIsOpen = true;
 
-    // Фокус на инпут для быстрого поиска
+    // 2. Фокус на инпут для быстрого поиска
     setTimeout(() => {
         const searchInput = document.getElementById('quickSearchInput');
         if (searchInput) searchInput.focus();
     }, 100);
+
+    // --- 3. НОВОЕ: ФОНОВАЯ СИНХРОНИЗАЦИЯ ПРИ ОТКРЫТИИ ---
+    const isLoggedWithPhrase = !!localStorage.getItem('syncPhraseId');
+    const isLoggedWithGoogle = typeof auth !== 'undefined' && auth && auth.currentUser;
+    
+    if ((isLoggedWithPhrase || isLoggedWithGoogle) && typeof forceSyncNow === 'function') {
+        // Запускаем синк асинхронно (без await), чтобы окно не зависало при плохом интернете
+        forceSyncNow().then(() => {
+            // Когда облако пришлет свежие данные и сольет их, просто перерисовываем списки
+            // (проверяем, что окно все еще открыто, чтобы не рендерить впустую)
+            if (window.quickModalIsOpen && typeof window.refreshQuickModalData === 'function') {
+                window.refreshQuickModalData();
+            }
+        });
+    }
   }
 };
+
 
 
 // === КРОСС-ВКЛАДОЧНАЯ СИНХРОНИЗАЦИЯ ===

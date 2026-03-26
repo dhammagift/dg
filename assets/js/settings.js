@@ -2330,35 +2330,31 @@ window.syncDeleteData = async function() {
 window.forceSyncNow = async function() {
     const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
     
-   /* if (typeof showBubbleNotification === 'function') {
-        showBubbleNotification(isRu ? "Синхронизация..." : "Syncing...");
-    }
- */   
     // 1. ВКЛЮЧАЕМ АНИМАЦИЮ
-    // Для обычных иконок FontAwesome (как на странице логина)
     const syncIcons = document.querySelectorAll('.fa-rotate');
     syncIcons.forEach(icon => icon.classList.add('fa-spin'));
 
-    // Для SVG-картинок (как в модальном окне QuickModal)
     const activeModalImg = document.querySelector('#btn-sync-now img');
     if (activeModalImg) {
         activeModalImg.classList.add('custom-spin');
     }
 
     try {
-        await backupToCloud();
         const user = auth ? auth.currentUser : null;
         const phraseId = localStorage.getItem('syncPhraseId');
         
-        if (user) await restoreFromCloud(user);
-        else if (phraseId) await restoreFromCloud({ uid: phraseId });
+        // --- ИСПРАВЛЕНИЕ ЗДЕСЬ ---
+        // 1. СНАЧАЛА ЗАГРУЖАЕМ И СЛИВАЕМ ДАННЫЕ ИЗ ОБЛАКА (Pull)
+        if (user) {
+            await restoreFromCloud(user);
+        } else if (phraseId) {
+            await restoreFromCloud({ uid: phraseId });
+        }
 
-   /*     if (typeof showBubbleNotification === 'function') {
-            setTimeout(() => { 
-                showBubbleNotification(isRu ? "Готово" : "Success"); 
-            }, 500);
-        } 
-        */
+        // 2. ТОЛЬКО ПОСЛЕ СЛИЯНИЯ ОТПРАВЛЯЕМ ПОЛНЫЙ КЭШ ОБРАТНО (Push)
+        // Теперь мы отправляем в облако локальную историю + то, что пришло с других устройств
+        await backupToCloud();
+
     } catch (error) {
         console.error("Sync error:", error);
     } finally {
