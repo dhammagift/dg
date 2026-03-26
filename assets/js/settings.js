@@ -2069,6 +2069,7 @@ let db = null;
 let auth = null;
 let googleProvider = null;
 
+// 1. Инициализация и слушатель состояния
 async function initFirebase() {
     if (firebase.apps.length) return;
     try {
@@ -2083,26 +2084,34 @@ async function initFirebase() {
         googleProvider = new firebase.auth.GoogleAuthProvider();
 
         auth.onAuthStateChanged((user) => {
-            const phraseId = localStorage.getItem('syncPhraseId');
+            const phraseId = localStorage.getItem('syncPhraseId'); // Хэш для базы
+            const phraseRaw = localStorage.getItem('syncPhraseRaw'); // Открытая фраза для UI
+            
             if (user) restoreFromCloud(user);
             else if (phraseId) restoreFromCloud({ uid: phraseId });
 
             updateGlobalSyncButtons(user, phraseId);
-            if (typeof renderLoginPageUI === 'function') renderLoginPageUI(user, phraseId);
+            
+            // Сообщаем странице логина актуальное состояние
+            if (typeof renderLoginPageUI === 'function') {
+                renderLoginPageUI(user, phraseRaw);
+            }
         });
     } catch (error) { console.error("Firebase Init Error:", error); }
 }
 
 initFirebase();
 
-// Функция обновления времени для UI
+// Обновление времени и интерфейса
 function refreshSyncTimeUI() {
     localStorage.setItem('lastSyncTime', Date.now());
     if (typeof renderLoginPageUI === 'function') {
         const user = auth ? auth.currentUser : null;
-        renderLoginPageUI(user, localStorage.getItem('syncPhraseId'));
+        renderLoginPageUI(user, localStorage.getItem('syncPhraseRaw'));
     }
 }
+
+// 2. РАБОТА С ДАННЫМИ (С ФИЛЬТРАЦИЕЙ СЕКРЕТОВ)
 
 window.backupToCloud = async function() {
     if (!db || !auth) return;
@@ -2110,13 +2119,19 @@ window.backupToCloud = async function() {
     const uid = user ? user.uid : localStorage.getItem('syncPhraseId');
     if (!uid) return;
 
+    // Клонируем данные и ПРИНУДИТЕЛЬНО удаляем секреты перед отправкой
+    const dataToCloud = { ...localStorage };
+    delete dataToCloud.syncPhraseRaw; // Фраза не должна попасть в базу Google
+    delete dataToCloud.syncPhraseId;  // Хэш тоже не нужен внутри документа
+    delete dataToCloud.lastSyncTime;  // У каждого устройства свое время
+
     try {
         await db.collection("users").doc(uid).set({
-            settings: JSON.stringify(localStorage),
+            settings: JSON.stringify(dataToCloud),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        refreshSyncTimeUI(); // Обновляем время после отправки
-    } catch (error) { console.error("Backup Error:", error); }
+        refreshSyncTimeUI();
+    } catch (error) { console.error("Cloud Backup Error:", error); }
 };
 
 window.restoreFromCloud = async function(userObj) {
@@ -2126,75 +2141,94 @@ window.restoreFromCloud = async function(userObj) {
         if (doc.exists) {
             const cloudData = JSON.parse(doc.data().settings);
             let needsReload = false;
+            
             for (const key in cloudData) {
-                // Исключаем системные ключи из перезаписи
-                if (key !== 'syncPhraseId' && key !== 'lastSyncTime' && localStorage.getItem(key) !== cloudData[key]) {
+                // Облако не может перезаписать локальные ключи авторизации
+                if (key !== 'syncPhraseRaw' && key !== 'syncPhraseId' && localStorage.getItem(key) !== cloudData[key]) {
                     localStorage.setItem(key, cloudData[key]);
                     needsReload = true; 
                 }
             }
-            refreshSyncTimeUI(); // Обновляем время после загрузки
-
-            // --- НОВОЕ: Обновляем списки после "приземления" облачных данных ---
-            if (typeof window.refreshQuickModalData === 'function' && window.quickModalIsOpen) {
-                window.refreshQuickModalData();
-            }
-
+            if (needsReload) refreshSyncTimeUI();
         } else {
-            backupToCloud();
+            backupToCloud(); // Если в облаке пусто — создаем бэкап
         }
-    } catch (error) { console.error("Restore Error:", error); }
+    } catch (error) { console.error("Cloud Restore Error:", error); }
 };
 
-
-window.forceSyncNow = async function() {
-    const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
-    if (typeof showBubbleNotification === 'function') showBubbleNotification(isRu ? "Синхронизация..." : "Syncing...");
-    
-    await backupToCloud();
-    const user = auth ? auth.currentUser : null;
-    const phraseId = localStorage.getItem('syncPhraseId');
-    if (user) await restoreFromCloud(user);
-    else if (phraseId) await restoreFromCloud({ uid: phraseId });
-};
+// 3. УПРАВЛЕНИЕ АВТОРИЗАЦИЕЙ
 
 window.syncLoginGoogle = async function() {
     if (!auth) return;
-    try { await auth.signInWithPopup(googleProvider); } catch (error) { console.error("Login Error:", error); }
+    const btn = document.getElementById('btn-google-login');
+    const originalHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin me-2"></i>` + btn.textContent;
+    }
+    try { await auth.signInWithPopup(googleProvider); } 
+    catch (error) { 
+        console.error("Login Error:", error); 
+        if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
+    }
 };
 
-window.syncEnablePhrase = function(phraseId) {
-    localStorage.setItem('syncPhraseId', phraseId);
-    restoreFromCloud({ uid: phraseId });
-    updateGlobalSyncButtons(null, phraseId);
+window.syncEnablePhrase = function(rawPhrase, hashedId) {
+    localStorage.setItem('syncPhraseRaw', rawPhrase);
+    localStorage.setItem('syncPhraseId', hashedId);
+    restoreFromCloud({ uid: hashedId });
+    updateGlobalSyncButtons(null, hashedId);
 };
 
 window.syncLogout = async function() {
     if (auth && auth.currentUser) await auth.signOut();
     localStorage.removeItem('syncPhraseId');
-    localStorage.removeItem('lastSyncTime'); // Сбрасываем время
+    localStorage.removeItem('syncPhraseRaw');
+    localStorage.removeItem('lastSyncTime');
     if (typeof renderLoginPageUI === 'function') renderLoginPageUI(null, null);
     updateGlobalSyncButtons(null, null);
 };
 
-// ИСПРАВЛЕННАЯ ФУНКЦИЯ УДАЛЕНИЯ (ТОЛЬКО ОБЛАКО)
 window.syncDeleteData = async function() {
     const user = auth ? auth.currentUser : null;
     const uid = user ? user.uid : localStorage.getItem('syncPhraseId');
-
     if (uid && db) {
         try {
             await db.collection("users").doc(uid).delete();
-            if (user) await user.delete(); // Удаляем профиль Гугл из системы авторизации
+            if (user) await user.delete();
         } catch (error) { console.error("Delete Error:", error); }
     }
+    syncLogout(); // Чистим локальные данные
+};
+
+// 4. ГЛОБАЛЬНЫЕ ДЕЙСТВИЯ
+
+window.forceSyncNow = async function() {
+    const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
     
-    // Удаляем ТОЛЬКО настройки синхронизации, но оставляем историю, словари и избранное
-    localStorage.removeItem('syncPhraseId');
-    localStorage.removeItem('lastSyncTime');
+    if (typeof showBubbleNotification === 'function') {
+        showBubbleNotification(isRu ? "🔄 Синхронизация..." : "🔄 Syncing...");
+    }
     
-    if (typeof renderLoginPageUI === 'function') renderLoginPageUI(null, null);
-    updateGlobalSyncButtons(null, null);
+    // Включаем вращение иконок
+    const syncIcons = document.querySelectorAll('.fa-rotate');
+    syncIcons.forEach(icon => icon.classList.add('fa-spin'));
+
+    try {
+        await backupToCloud();
+        const user = auth ? auth.currentUser : null;
+        const phraseId = localStorage.getItem('syncPhraseId');
+        if (user) await restoreFromCloud(user);
+        else if (phraseId) await restoreFromCloud({ uid: phraseId });
+
+        if (typeof showBubbleNotification === 'function') {
+            setTimeout(() => { 
+                showBubbleNotification(isRu ? "✅ Синхронизировано" : "✅ Synced successfully"); 
+            }, 500);
+        }
+    } finally {
+        syncIcons.forEach(icon => icon.classList.remove('fa-spin'));
+    }
 };
 
 function updateGlobalSyncButtons(user, phraseId) {
@@ -2212,37 +2246,18 @@ function updateGlobalSyncButtons(user, phraseId) {
 
 // === ПЕРЕХВАТ КЛИКОВ ПО HISTORY.PHP ===
 document.addEventListener('click', function(e) {
-    // 1. Ищем клик по ссылке, содержащей history.php
     const historyLink = e.target.closest('a[href*="history.php"]');
-    
     if (historyLink) {
-        // ИСКЛЮЧЕНИЕ: Если клик произошел по ссылке внутри модалки 
-        // (у нее есть класс quick-all-history-link), то ничего не делаем, 
-        // позволяя браузеру совершить обычный переход.
-        if (historyLink.classList.contains('quick-all-history-link')) {
-            return; 
-        }
-
-        // 2. Проверяем наличие локальной истории
+        if (historyLink.classList.contains('quick-all-history-link')) return; 
         const historyData = localStorage.getItem("localSearchHistory");
-        
         if (historyData) {
             try {
                 const historyArray = JSON.parse(historyData);
-                
-                // 3. Если история есть и не пустая — перехватываем клик
                 if (Array.isArray(historyArray) && historyArray.length > 0) {
-                    e.preventDefault(); // Отменяем переход по ссылке
-                    
-                    // 4. Открываем модальное окно
-                    if (typeof window.toggleQuickModal === 'function') {
-                        window.toggleQuickModal();
-                    }
+                    e.preventDefault();
+                    if (typeof window.toggleQuickModal === 'function') window.toggleQuickModal();
                 }
-            } catch (err) {
-                console.error("Ошибка чтения истории для перехвата ссылки:", err);
-            }
+            } catch (err) { console.error("History intercept error:", err); }
         }
     }
 });
-

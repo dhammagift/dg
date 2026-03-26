@@ -269,28 +269,93 @@ body.dark .form-control::placeholder,
             // ========================================================
         });
 
+// 1. ГЛАВНАЯ ФУНКЦИЯ ВХОДА (Хэширование SHA-256)
+async function uiLoginPhrase() {
+    const input = document.getElementById('sync-phrase-input');
+    const phrase = input.value;
+    
+    if (phrase && phrase.trim().length >= 8) {
+        // Нормализация: строчные буквы, удаление лишних пробелов
+        const rawPhrase = phrase.trim().toLowerCase().replace(/\s+/g, '-');
+        
+        // Визуальный отклик на кнопке
+        const btn = document.getElementById('btn-phrase-login');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin me-2"></i>` + (isRu ? "Шифруем..." : "Encrypting...");
+        }
 
-        function uiLoginPhrase() {
-            const input = document.getElementById('sync-phrase-input');
-            const phrase = input.value;
-            if (phrase && phrase.trim().length >= 8) {
-                const syncPhraseId = "phrase_" + phrase.trim().toLowerCase().replace(/\s+/g, '-');
-                
-                // Блокируем кнопку и вешаем спиннер
-                const btn = document.getElementById('btn-phrase-login');
-                if (btn) {
-                    btn.disabled = true;
-                    btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin me-2"></i>` + (isRu ? "Вход..." : "Logging in...");
-                }
+        try {
+            // Создаем криптографический хэш (SHA-256)
+            const msgUint8 = new TextEncoder().encode(rawPhrase);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            // Формируем ID для базы (используем часть хэша для краткости)
+            const hashedId = "anon_" + hashHex.substring(0, 24);
 
-                if (typeof showBubbleNotification === 'function') showBubbleNotification(isRu ? "🔄 Вход..." : "🔄 Logging in...");
-                
-                input.value = ''; 
-                syncEnablePhrase(syncPhraseId);
-            } else {
-                alert(isRu ? "Фраза слишком короткая! Нужно минимум 8 символов." : "Passphrase too short! Minimum 8 characters needed.");
+            if (typeof showBubbleNotification === 'function') {
+                showBubbleNotification(isRu ? "🔄 Вход..." : "🔄 Logging in...");
+            }
+
+            input.value = ''; 
+            // Передаем в ядро открытую фразу (для экрана) и хэш (для связи с БД)
+            syncEnablePhrase(rawPhrase, hashedId);
+        } catch(e) {
+            console.error("Hashing failed:", e);
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = isRu ? "Ошибка шифрования" : "Encryption error";
             }
         }
+    } else {
+        alert(isRu ? "Фраза слишком короткая! Нужно минимум 8 символов." : "Passphrase too short! Minimum 8 characters needed.");
+    }
+}
+
+// 2. ОТРИСОВКА ИНТЕРФЕЙСА (Теперь принимает открытую фразу)
+window.renderLoginPageUI = function(user, phraseRaw) {
+    const el = (id) => document.getElementById(id);
+    if (!el('sync-logged-out')) return;
+
+    // Снимаем блокировку с кнопок после завершения процессов
+    if (el('btn-google-login')) {
+        el('btn-google-login').disabled = false;
+        el('btn-google-login').innerHTML = `<i class="fa-brands fa-google me-2"></i> ${isRu ? "Войти через Google" : "Sign in with Google"}`;
+    }
+    if (el('btn-phrase-login')) {
+        el('btn-phrase-login').disabled = false;
+        el('btn-phrase-login').textContent = isRu ? "Анонимный вход" : "Anonymous Login";
+    }
+
+    el('sync-last-time').textContent = getFormattedTime();
+
+    if (user || phraseRaw) {
+        el('sync-logged-out').style.display = 'none';
+        el('sync-logged-in').style.display = 'block';
+
+        if (user) {
+            el('sync-status-label').textContent = isRu ? "Подключено через Google:" : "Connected via Google:";
+            el('sync-user-info').textContent = user.email;
+        } else {
+            el('sync-status-label').textContent = isRu ? "Анонимное подключение по фразе:" : "Connected anonymously via phrase:";
+            const starsPhrase = '•'.repeat(phraseRaw.length);
+            
+            el('sync-user-info').innerHTML = `
+                <div class="d-flex align-items-center">
+                    <span id="sync-phrase-value-status" style="letter-spacing: 2px;">${starsPhrase}</span>
+                    <span id="sync-phrase-real-status" class="text-primary" style="display:none; font-family: monospace; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: rgba(128, 128, 128, 0.1);">${phraseRaw}</span>
+                    <button class="btn btn-sm p-0 ms-2 opacity-75" style="border:0; background:transparent;" type="button" onclick="uiToggleEyeStatus()" id="sync-status-eye-btn">
+                        <i class="fa-solid text-muted fa-eye"></i>
+                    </button>
+                </div>`;
+        }
+    } else {
+        el('sync-logged-out').style.display = 'block';
+        el('sync-logged-in').style.display = 'none';
+    }
+};
 
 
         function uiDeleteAccount() {

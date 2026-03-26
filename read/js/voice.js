@@ -1306,18 +1306,28 @@ async function handleSuttaClick(e) {
         if (panel.classList.contains('visible')) {
             if (icon) icon.style.transform = 'rotate(90deg)';
         } else {
+            // КОГДА ПАНЕЛЬ ЗАКРЫВАЕТСЯ ЦЕЛИКОМ, СБРАСЫВАЕМ ВСЕ В ДЕФОЛТ
             if (icon) icon.style.transform = 'rotate(0deg)';
+            
             const advSettings = document.getElementById('tts-advanced-settings');
             if (advSettings) advSettings.classList.remove('visible');
+            
             const basicPanel = document.getElementById('tts-basic-settings');
             if (basicPanel) {
                 basicPanel.style.maxHeight = '200px';
                 basicPanel.style.opacity = '1';
             }
+            
+            // ---> ВОТ ЭТО ДОБАВЛЯЕМ ДЛЯ ВОССТАНОВЛЕНИЯ DELAY <---
+            const delayLabel = document.querySelector('.tts-delay-label')?.parentElement;
+            if (delayLabel) {
+                delayLabel.style.display = 'flex';
+            }
         }
     }
     return;
   }
+
 
   const container = e.target.closest('.sutta-container') || document;
   const voiceLink = e.target.closest('.voice-link');
