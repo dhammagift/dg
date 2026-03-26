@@ -1514,6 +1514,9 @@ var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         }
 </script>
 
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
 
 </body>
 

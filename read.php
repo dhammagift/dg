@@ -22211,6 +22211,10 @@ const resources = [...commonResources, langSpecific];
 <script src="/assets/js/paliLookup.js"></script>
 <script src="/assets/js/settings.js"></script>
 
+
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
 </body>
 <?php
 ?>  
