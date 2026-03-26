@@ -223,7 +223,7 @@ body.dark .form-control::placeholder,
     <script src="/assets/js/settings.js"></script>
 
     <script>
-              const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
+        const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
         
         document.addEventListener("DOMContentLoaded", () => {
             // Адаптация ссылок "Домик" и "Лупа"
@@ -234,19 +234,21 @@ body.dark .form-control::placeholder,
                 if (navSearchLink) navSearchLink.href = "/ru/?q=";
             }
 
-            // Переключатель En/Ru (В виде текста)
+            // Переключатель En/Ru (В виде кнопок)
             const switcher = document.getElementById('lang-switcher');
             if (switcher) {
                 const currentPath = window.location.pathname;
                 const currentSearch = window.location.search;
+                let ruPath, enPath;
+
                 if (isRu) {
-                    let enPath = currentPath.replace(/^\/(ru|r|ml)\//, '/');
+                    enPath = currentPath.replace(/^\/(ru|r|ml)\//, '/');
                     switcher.innerHTML = `
                         <a class="btn btn-sm btn-secondary rounded-pill py-0 px-1 text-decoration-none me-0" href="${enPath + currentSearch}">en</a>
                         <span class="py-0 px-1 text-muted">ru</span>
                     `;
                 } else {
-                    let ruPath = '/ru' + (currentPath === '/' ? '' : currentPath);
+                    ruPath = '/ru' + (currentPath === '/' ? '' : currentPath);
                     switcher.innerHTML = `
                         <span class="py-0 px-1 text-muted me-0">en</span>
                         <a class="btn btn-sm btn-secondary rounded-pill py-0 px-1 text-decoration-none" href="${ruPath + currentSearch}">ru</a>
@@ -254,82 +256,115 @@ body.dark .form-control::placeholder,
                 }
             }
 
-            // Обработка Enter в поле ввода
+            // === НОВЫЙ КОД: ОБРАБОТКА НАЖАТИЯ ENTER В ПОЛЕ ВВОДА ===
             const phraseInput = document.getElementById('sync-phrase-input');
             if (phraseInput) {
                 phraseInput.addEventListener('keypress', function (e) {
                     if (e.key === 'Enter') {
-                        e.preventDefault();
-                        uiLoginPhrase();
+                        e.preventDefault(); // Предотвращаем стандартное поведение браузера
+                        uiLoginPhrase();    // Запускаем ту же функцию, что и при клике на кнопку
                     }
                 });
             }
+            // ========================================================
         });
 
-        // 1. НАДЕЖНОЕ КОПИРОВАНИЕ + РОДНОЙ БАБЛ
-        window.copySyncPhrase = function() {
-            const realPhraseSpan = document.getElementById('sync-phrase-real-status');
-            if (!realPhraseSpan) return;
-            
-            const phraseToCopy = realPhraseSpan.textContent;
+// 1. ГЛАВНАЯ ФУНКЦИЯ ВХОДА (Хэширование SHA-256)
+async function uiLoginPhrase() {
+    const input = document.getElementById('sync-phrase-input');
+    const phrase = input.value;
+    
+    if (phrase && phrase.trim().length >= 8) {
+        // Нормализация: строчные буквы, удаление лишних пробелов
+        const rawPhrase = phrase.trim().toLowerCase().replace(/\s+/g, '-');
+        
+        // Визуальный отклик на кнопке
+        const btn = document.getElementById('btn-phrase-login');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin me-2"></i>` + (isRu ? "Шифруем..." : "Encrypting...");
+        }
 
-            if (phraseToCopy) {
-                const tempTextarea = document.createElement("textarea");
-                tempTextarea.value = phraseToCopy;
-                tempTextarea.style.position = "fixed";
-                tempTextarea.style.left = "-999999px";
-                document.body.appendChild(tempTextarea);
-                tempTextarea.select();
-                
-                try {
-                    document.execCommand("copy");
-                    if (typeof showBubbleNotification === 'function') {
-                        showBubbleNotification(isRu ? '📋 Скопировано в буфер' : '📋 Copied to Clipboard');
-                    }
-                } catch (err) {
-                    console.error('Ошибка копирования:', err);
-                }
-                document.body.removeChild(tempTextarea);
+        try {
+            // Создаем криптографический хэш (SHA-256)
+            const msgUint8 = new TextEncoder().encode(rawPhrase);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            // Формируем ID для базы (используем часть хэша для краткости)
+            const hashedId = "anon_" + hashHex.substring(0, 24);
+
+            if (typeof showBubbleNotification === 'function') {
+                showBubbleNotification(isRu ? "🔄 Вход..." : "🔄 Logging in...");
             }
-        };
 
-        // 2. ФУНКЦИЯ ВХОДА (SHA-256)
-        async function uiLoginPhrase() {
-            const input = document.getElementById('sync-phrase-input');
-            const phrase = input.value;
+            input.value = ''; 
+            // Передаем в ядро открытую фразу (для экрана) и хэш (для связи с БД)
+            syncEnablePhrase(rawPhrase, hashedId);
+        } catch(e) {
+            console.error("Hashing failed:", e);
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = isRu ? "Ошибка шифрования" : "Encryption error";
+            }
+        }
+    } else {
+        alert(isRu ? "Фраза слишком короткая! Нужно минимум 8 символов." : "Passphrase too short! Minimum 8 characters needed.");
+    }
+}
+
+// 2. ОТРИСОВКА ИНТЕРФЕЙСА (Теперь принимает открытую фразу)
+window.renderLoginPageUI = function(user, phraseRaw) {
+    const el = (id) => document.getElementById(id);
+    if (!el('sync-logged-out')) return;
+
+    // Снимаем блокировку с кнопок после завершения процессов
+    if (el('btn-google-login')) {
+        el('btn-google-login').disabled = false;
+        el('btn-google-login').innerHTML = `<i class="fa-brands fa-google me-2"></i> ${isRu ? "Войти через Google" : "Sign in with Google"}`;
+    }
+    if (el('btn-phrase-login')) {
+        el('btn-phrase-login').disabled = false;
+        el('btn-phrase-login').textContent = isRu ? "Анонимный вход" : "Anonymous Login";
+    }
+
+    el('sync-last-time').textContent = getFormattedTime();
+
+    if (user || phraseRaw) {
+        el('sync-logged-out').style.display = 'none';
+        el('sync-logged-in').style.display = 'block';
+
+        if (user) {
+            el('sync-status-label').textContent = isRu ? "Подключено через Google:" : "Connected via Google:";
+            el('sync-user-info').textContent = user.email;
+        } else {
+            el('sync-status-label').textContent = isRu ? "Анонимное подключение по фразе:" : "Connected anonymously via phrase:";
+            const starsPhrase = '•'.repeat(phraseRaw.length);
             
-            if (phrase && phrase.trim().length >= 8) {
-                const rawPhrase = phrase.trim().toLowerCase().replace(/\s+/g, '-');
-                const btn = document.getElementById('btn-phrase-login');
-                if (btn) {
-                    btn.disabled = true;
-                    btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin me-2"></i>` + (isRu ? "Вход..." : "Logging in...");
-                }
+            el('sync-user-info').innerHTML = `
+                <div class="d-flex align-items-center">
+                    <span id="sync-phrase-value-status" style="letter-spacing: 2px;">${starsPhrase}</span>
+                    <span id="sync-phrase-real-status" class="text-primary" style="display:none; font-family: monospace; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: rgba(128, 128, 128, 0.1);">${phraseRaw}</span>
+                    <button class="btn btn-sm p-0 ms-2 opacity-75" style="border:0; background:transparent;" type="button" onclick="uiToggleEyeStatus()" id="sync-status-eye-btn">
+                        <i class="fa-solid text-muted fa-eye"></i>
+                    </button>
+                </div>`;
+        }
+    } else {
+        el('sync-logged-out').style.display = 'block';
+        el('sync-logged-in').style.display = 'none';
+    }
+};
 
-                try {
-                    const msgUint8 = new TextEncoder().encode(rawPhrase);
-                    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
-                    const hashArray = Array.from(new Uint8Array(hashBuffer));
-                    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-                    const hashedId = "anon_" + hashHex.substring(0, 24);
 
-                    if (typeof showBubbleNotification === 'function') {
-                        showBubbleNotification(isRu ? "🔄 Вход..." : "🔄 Logging in...");
-                    }
-
-                    input.value = ''; 
-                    syncEnablePhrase(rawPhrase, hashedId);
-                } catch(e) {
-                    console.error("Hashing failed:", e);
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.textContent = isRu ? "Ошибка" : "Error";
-                    }
-                }
-            } else {
-                if (typeof showBubbleNotification === 'function') {
-                    showBubbleNotification(isRu ? "❌ Слишком короткая фраза" : "❌ Phrase too short");
-                }
+        function uiDeleteAccount() {
+            const msg = isRu 
+                ? "Удалить ваши данные из облака? \n\n(Вся локальная история и закладки на этом устройстве сохранятся)." 
+                : "Delete your data from the cloud? \n\n(Local history and bookmarks on this device will be kept).";
+            if (confirm(msg)) {
+                syncDeleteData();
+                if (typeof showBubbleNotification === 'function') showBubbleNotification(isRu ? "Облако очищено" : "Cloud cleared");
             }
         }
 
@@ -355,52 +390,47 @@ body.dark .form-control::placeholder,
         function getFormattedTime() {
             const ts = localStorage.getItem('lastSyncTime');
             if (!ts) return isRu ? "Никогда" : "Never";
+            
             const date = new Date(parseInt(ts));
             return date.toLocaleString(isRu ? 'ru-RU' : 'en-US', {
                 day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
             });
         }
 
-        // 3. ОТРИСОВКА ИНТЕРФЕЙСА (ГАРАНТИРОВАННО СНИМАЕТ БЛОКИРОВКУ)
         window.renderLoginPageUI = function(user, phraseId) {
             const el = (id) => document.getElementById(id);
             if (!el('sync-logged-out')) return;
 
-            // РАЗБЛОКИРУЕМ КНОПКИ ВСЕГДА ПРИ ПЕРЕРИСОВКЕ
-            const btnGoogle = el('btn-google-login');
-            if (btnGoogle) {
-                btnGoogle.disabled = false;
-                btnGoogle.innerHTML = `<i class="fa-brands fa-google me-2"></i> ${isRu ? "Войти через Google" : "Sign in with Google"}`;
-            }
-            const btnPhrase = el('btn-phrase-login');
-            if (btnPhrase) {
-                btnPhrase.disabled = false;
-                btnPhrase.textContent = isRu ? "Анонимный вход" : "Anonymous Login";
-            }
+            // Разблокируем кнопки на случай, если мы вернулись из состояния "Выйти"
+            if (el('btn-google-login')) el('btn-google-login').disabled = false;
+            if (el('btn-phrase-login')) el('btn-phrase-login').disabled = false;
 
             const t = isRu ? {
-                title: "Облачная синхронизация", desc: "История, избранное и настройки.",
-                google: "Войти через Google", or: "или", phraseLabel: "Секретная фраза",
-                hint: "Минимум 8 символов. Полная анонимность.", 
+                title: "Облачная синхронизация", desc: "Сохраняйте историю, избранное и настройки.",
+                google: "Войти через Google", or: "или", phraseLabel: "Войти Анонимно по Секретной фразе",
+                hint: "Минимум 8 символов. Это безопасный и полностью анонимный способ синхронизировать данные с любого устройства.", 
                 loginPhrase: "Анонимный вход",
-                statusLabelGoogle: "Google аккаунт:", statusLabelPhrase: "Ваша фраза:",
+                statusLabelGoogle: "Подключено через Google:", statusLabelPhrase: "Анонимное подключение по фразе:",
                 syncLabel: "Синхронизировано:", lblSync: "Синхр.",
-                logout: "Выйти", delete: "Удалить данные"
+                logout: "Выйти", delete: "Удалить мои данные из облака"
             } : {
-                title: "Cloud Sync", desc: "History, favorites, and settings.",
-                google: "Sign in with Google", or: "or", phraseLabel: "Secret Passphrase",
-                hint: "Min 8 chars. Completely anonymous.", 
+                title: "Cloud Sync", desc: "Sync your history, favorites, and settings.",
+                google: "Sign in with Google", or: "or", phraseLabel: "Login Anonymously with Secret Passphrase",
+                hint: "Min 8 chars. This is a safe and completely anonymous way to sync data across devices.", 
                 loginPhrase: "Anonymous Login",
-                statusLabelGoogle: "Google Account:", statusLabelPhrase: "Your Phrase:",
+                statusLabelGoogle: "Connected via Google:", statusLabelPhrase: "Connected anonymously via phrase:",
                 syncLabel: "Last synced:", lblSync: "Sync",
-                logout: "Logout", delete: "Delete Cloud Data"
+                logout: "Logout", delete: "Delete my cloud data"
             };
 
             el('sync-page-title').textContent = t.title;
             el('sync-page-desc').textContent = t.desc;
-            if (el('sync-or')) el('sync-or').textContent = t.or;
+            el('btn-google-login').innerHTML = `<i class="fa-brands fa-google me-2"></i> ${t.google}`;
+            el('sync-or').textContent = t.or;
             el('sync-phrase-label').textContent = t.phraseLabel;
             el('sync-hint').textContent = t.hint;
+            el('btn-phrase-login').textContent = t.loginPhrase;
+            
             el('sync-time-label').textContent = t.syncLabel;
             el('lbl-sync').textContent = t.lblSync;
             el('lbl-logout').textContent = t.logout;
@@ -416,14 +446,13 @@ body.dark .form-control::placeholder,
                     el('sync-user-info').textContent = user.email;
                 } else {
                     el('sync-status-label').textContent = t.statusLabelPhrase;
-                    const realPhrase = (typeof phraseId === 'string') ? phraseId.replace('phrase_', '') : phraseId;
+                    const realPhrase = phraseId.replace('phrase_', '');
                     const starsPhrase = '•'.repeat(realPhrase.length);
-                    const copyHint = isRu ? "Копировать" : "Copy";
                     
                     el('sync-user-info').innerHTML = `
                         <div class="d-flex align-items-center">
-                            <span id="sync-phrase-value-status" onclick="window.copySyncPhrase()" title="${copyHint}" style="letter-spacing: 2px; cursor: pointer;">${starsPhrase}</span>
-                            <span id="sync-phrase-real-status" onclick="window.copySyncPhrase()" title="${copyHint}" class="text-primary" style="display:none; font-family: monospace; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: rgba(128, 128, 128, 0.1); cursor: pointer;">${realPhrase}</span>
+                            <span id="sync-phrase-value-status" style="letter-spacing: 2px;">${starsPhrase}</span>
+                            <span id="sync-phrase-real-status" class="text-primary" style="display:none; font-family: monospace; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: rgba(128, 128, 128, 0.1);">${realPhrase}</span>
                             <button class="btn btn-sm p-0 ms-2 opacity-75" style="border:0; background:transparent;" type="button" onclick="uiToggleEyeStatus()" id="sync-status-eye-btn">
                                 <i class="fa-solid text-muted fa-eye"></i>
                             </button>
@@ -434,7 +463,6 @@ body.dark .form-control::placeholder,
                 el('sync-logged-in').style.display = 'none';
             }
         };
-
     </script>
 </body>
 </html>

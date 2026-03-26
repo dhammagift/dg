@@ -2114,70 +2114,95 @@ function refreshSyncTimeUI() {
 // 2. РАБОТА С ДАННЫМИ (С ФИЛЬТРАЦИЕЙ СЕКРЕТОВ)
 
 window.backupToCloud = async function() {
-    if (!db || !auth) return;
-    const user = auth.currentUser;
+    if (!db) {
+        refreshSyncTimeUI(); // Снимаем спиннер, если нет подключения
+        return;
+    }
+    const user = auth ? auth.currentUser : null;
     const uid = user ? user.uid : localStorage.getItem('syncPhraseId');
-    if (!uid) return;
+    if (!uid) {
+        refreshSyncTimeUI();
+        return;
+    }
 
-    // Клонируем данные и ПРИНУДИТЕЛЬНО удаляем секреты перед отправкой
-    const dataToCloud = { ...localStorage };
-    delete dataToCloud.syncPhraseRaw; // Фраза не должна попасть в базу Google
-    delete dataToCloud.syncPhraseId;  // Хэш тоже не нужен внутри документа
-    delete dataToCloud.lastSyncTime;  // У каждого устройства свое время
+    // Вычисляем дату: текущее время + 6 месяцев
+    const expireDate = new Date();
+    expireDate.setMonth(expireDate.getMonth() + 6);
 
     try {
         await db.collection("users").doc(uid).set({
-            settings: JSON.stringify(dataToCloud),
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            settings: JSON.stringify(localStorage),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            expireAt: expireDate // Добавляем поле для автоматического удаления (TTL)
         });
-        refreshSyncTimeUI();
-    } catch (error) { console.error("Cloud Backup Error:", error); }
+    } catch (error) { 
+        console.error("Backup Error:", error); 
+    } finally {
+        refreshSyncTimeUI(); // <--- ИСПРАВЛЕНИЕ: Всегда обновляем UI в конце
+    }
 };
 
 window.restoreFromCloud = async function(userObj) {
-    if (!db) return;
+    if (!db) {
+        refreshSyncTimeUI(); // Снимаем спиннер, если нет подключения
+        return;
+    }
     try {
         const doc = await db.collection("users").doc(userObj.uid).get();
         if (doc.exists) {
             const cloudData = JSON.parse(doc.data().settings);
-            let needsReload = false;
             
             for (const key in cloudData) {
                 // Облако не может перезаписать локальные ключи авторизации
                 if (key !== 'syncPhraseRaw' && key !== 'syncPhraseId' && localStorage.getItem(key) !== cloudData[key]) {
                     localStorage.setItem(key, cloudData[key]);
-                    needsReload = true; 
                 }
             }
-            if (needsReload) refreshSyncTimeUI();
+            refreshSyncTimeUI(); // <--- ИСПРАВЛЕНИЕ: ВСЕГДА обновляем UI, чтобы снять спиннер (даже если данные не изменились)
         } else {
-            backupToCloud(); // Если в облаке пусто — создаем бэкап
+            await backupToCloud(); // Если в облаке пусто — создаем бэкап
         }
-    } catch (error) { console.error("Cloud Restore Error:", error); }
+    } catch (error) { 
+        console.error("Cloud Restore Error:", error); 
+        refreshSyncTimeUI(); // В случае ошибки тоже снимаем блокировку
+    }
 };
 
 // 3. УПРАВЛЕНИЕ АВТОРИЗАЦИЕЙ
-
 window.syncLoginGoogle = async function() {
-    if (!auth) return;
+    if (!auth) {
+        // Защита: разблокируем интерфейс, если Firebase не загрузился
+        const btn = document.getElementById('btn-google-login');
+        if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fa-brands fa-google me-2"></i> Войти через Google`; }
+        return;
+    }
+    
     const btn = document.getElementById('btn-google-login');
     const originalHtml = btn ? btn.innerHTML : '';
     if (btn) {
         btn.disabled = true;
         btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin me-2"></i>` + btn.textContent;
     }
-    try { await auth.signInWithPopup(googleProvider); } 
-    catch (error) { 
+    try { 
+        await auth.signInWithPopup(googleProvider); 
+        // При успехе кнопка разблокируется сама в onAuthStateChanged
+    } catch (error) { 
         console.error("Login Error:", error); 
         if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
     }
 };
-
-window.syncEnablePhrase = function(rawPhrase, hashedId) {
+window.syncEnablePhrase = async function(rawPhrase, hashedId) {
     localStorage.setItem('syncPhraseRaw', rawPhrase);
     localStorage.setItem('syncPhraseId', hashedId);
-    restoreFromCloud({ uid: hashedId });
+    
+    await restoreFromCloud({ uid: hashedId }); // Ждем окончания загрузки данных
+    
     updateGlobalSyncButtons(null, hashedId);
+    
+    // Принудительно разблокируем интерфейс логина после успешной выгрузки
+    if (typeof renderLoginPageUI === 'function') {
+        renderLoginPageUI(null, rawPhrase);
+    }
 };
 
 window.syncLogout = async function() {
@@ -2207,7 +2232,7 @@ window.forceSyncNow = async function() {
     const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
     
     if (typeof showBubbleNotification === 'function') {
-        showBubbleNotification(isRu ? "🔄 Синхронизация..." : "🔄 Syncing...");
+        showBubbleNotification(isRu ? "Синхронизация..." : "Syncing...");
     }
     
     // Включаем вращение иконок
@@ -2223,7 +2248,7 @@ window.forceSyncNow = async function() {
 
         if (typeof showBubbleNotification === 'function') {
             setTimeout(() => { 
-                showBubbleNotification(isRu ? "✅ Синхронизировано" : "✅ Synced successfully"); 
+                showBubbleNotification(isRu ? "Готово" : "Success"); 
             }, 500);
         }
     } finally {
