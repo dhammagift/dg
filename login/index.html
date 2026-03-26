@@ -229,9 +229,9 @@ body.dark .form-control::placeholder,
             // Адаптация ссылок "Домик" и "Лупа"
             if (isRu) {
                 const navHomeLink = document.getElementById('nav_home_link');
-                if (navHomeLink) navHomeLink.href = "/ru/";
+                if (navHomeLink) navHomeLink.href = "/ru/read.php";
                 const navSearchLink = document.getElementById('nav_search_link');
-                if (navSearchLink) navSearchLink.href = "/ru/?q=";
+                if (navSearchLink) navSearchLink.href = "/ru/";
             }
 
             // Переключатель En/Ru (В виде текста)
@@ -284,7 +284,7 @@ body.dark .form-control::placeholder,
                 try {
                     document.execCommand("copy");
                     if (typeof showBubbleNotification === 'function') {
-                        showBubbleNotification(isRu ? '📋 Скопировано в буфер' : '📋 Copied to Clipboard');
+                        showBubbleNotification(isRu ? ' Скопировано' : 'Copied to Clipboard');
                     }
                 } catch (err) {
                     console.error('Ошибка копирования:', err);
@@ -292,6 +292,29 @@ body.dark .form-control::placeholder,
                 document.body.removeChild(tempTextarea);
             }
         };
+
+async function uiDeleteAccount() {
+    const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
+    
+    // Текст с уточнением про локальные данные
+    const confirmMsg = isRu 
+        ? "Вы уверены? Это удалит данные ТОЛЬКО из облака. \n\nВаша локальная история и избранное на этом устройстве останутся нетронутыми." 
+        : "Are you sure? This will delete data ONLY from the cloud. \n\nYour local history and favorites on this device will remain safe.";
+
+    if (confirm(confirmMsg)) {
+        const btnDelete = document.getElementById('lbl-delete');
+        if (btnDelete) btnDelete.textContent = isRu ? "Удаление..." : "Deleting...";
+
+        if (typeof showBubbleNotification === 'function') {
+            showBubbleNotification(isRu ? "🗑️ Данные в облаке удалены" : "🗑️ Cloud data deleted");
+        }
+
+        // Вызов основной логики из settings.js
+        if (typeof syncDeleteData === 'function') {
+            await syncDeleteData();
+        }
+    }
+}
 
         // 2. ФУНКЦИЯ ВХОДА (SHA-256)
         async function uiLoginPhrase() {
@@ -314,7 +337,7 @@ body.dark .form-control::placeholder,
                     const hashedId = "anon_" + hashHex.substring(0, 24);
 
                     if (typeof showBubbleNotification === 'function') {
-                        showBubbleNotification(isRu ? "🔄 Вход..." : "🔄 Logging in...");
+                        showBubbleNotification(isRu ? "Вход..." : "Logging in...");
                     }
 
                     input.value = ''; 
