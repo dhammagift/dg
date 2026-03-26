@@ -1591,3 +1591,14 @@ end   QUICK MODAL STYLES (Оптимизировано) end Css for settings.js
     color: #859900;
     border-color: #859900;
 }
+
+
+/* Универсальная анимация вращения */
+.custom-spin {
+    animation: fa-spin 2s infinite linear;
+}
+
+@keyframes fa-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

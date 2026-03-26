@@ -2227,7 +2227,6 @@ window.syncDeleteData = async function() {
 };
 
 // 4. ГЛОБАЛЬНЫЕ ДЕЙСТВИЯ
-
 window.forceSyncNow = async function() {
     const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
     
@@ -2235,9 +2234,13 @@ window.forceSyncNow = async function() {
         showBubbleNotification(isRu ? "Синхронизация..." : "Syncing...");
     }
     
-    // Включаем вращение иконок
-    const syncIcons = document.querySelectorAll('.fa-rotate');
-    syncIcons.forEach(icon => icon.classList.add('fa-spin'));
+    // 1. Ищем все иконки: и FA, и картинку в модальном окне
+    const faIcons = document.querySelectorAll('.fa-rotate');
+    const modalSyncImg = document.querySelector('#btn-sync-now img'); // картинка в модалке
+
+    // Включаем вращение
+    faIcons.forEach(icon => icon.classList.add('fa-spin'));
+    if (modalSyncImg) modalSyncImg.classList.add('custom-spin');
 
     try {
         await backupToCloud();
@@ -2252,7 +2255,10 @@ window.forceSyncNow = async function() {
             }, 500);
         }
     } finally {
-        syncIcons.forEach(icon => icon.classList.remove('fa-spin'));
+        // 2. Выключаем вращение (ищем заново, чтобы избежать stale references)
+        document.querySelectorAll('.fa-rotate').forEach(icon => icon.classList.remove('fa-spin'));
+        const activeModalImg = document.querySelector('#btn-sync-now img');
+        if (activeModalImg) activeModalImg.classList.remove('custom-spin');
     }
 };
 
