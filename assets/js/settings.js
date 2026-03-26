@@ -449,7 +449,6 @@ async function saveToHistory(key, url) {
     const value = url.pathname + url.search + url.hash;
     const timestamp = new Date().toISOString();
   
-    
     let history = JSON.parse(localStorage.getItem("localSearchHistory")) || [];
     
     // Определяем базовый ключ для сравнения
@@ -470,7 +469,13 @@ async function saveToHistory(key, url) {
     // Ограничиваем историю
     localStorage.setItem("localSearchHistory", 
         JSON.stringify(history.slice(0, MAX_HISTORY)));
-          if (typeof backupToCloud === 'function') backupToCloud();
+    
+    if (typeof backupToCloud === 'function') backupToCloud();
+
+    // --- НОВОЕ: Мгновенное обновление UI модалки ---
+    if (typeof window.refreshQuickModalData === 'function' && window.quickModalIsOpen) {
+        window.refreshQuickModalData();
+    }
 }
 
 //установка фокуса в инпуте по нажатию / 
@@ -1972,9 +1977,17 @@ function toggleFavoriteGlobal(itemData) {
     }
 
     localStorage.setItem(FAV_STORAGE_KEY, JSON.stringify(favs));
-      if (typeof backupToCloud === 'function') backupToCloud();
+    
+    if (typeof backupToCloud === 'function') backupToCloud();
+
+    // --- НОВОЕ: Мгновенное обновление UI, если модалка открыта ---
+    if (typeof window.refreshQuickModalData === 'function' && window.quickModalIsOpen) {
+        window.refreshQuickModalData();
+    }
+    
     return isAdded;
 }
+
 
 // АВТО-СОХРАНЕНИЕ В ИСТОРИЮ ПРИ ОТКРЫТИИ ССЫЛКИ
 document.addEventListener("DOMContentLoaded", () => {
@@ -2121,11 +2134,18 @@ window.restoreFromCloud = async function(userObj) {
                 }
             }
             refreshSyncTimeUI(); // Обновляем время после загрузки
+
+            // --- НОВОЕ: Обновляем списки после "приземления" облачных данных ---
+            if (typeof window.refreshQuickModalData === 'function' && window.quickModalIsOpen) {
+                window.refreshQuickModalData();
+            }
+
         } else {
             backupToCloud();
         }
     } catch (error) { console.error("Restore Error:", error); }
 };
+
 
 window.forceSyncNow = async function() {
     const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
@@ -2189,3 +2209,40 @@ function updateGlobalSyncButtons(user, phraseId) {
         syncBtn.style.display = (user || phraseId) ? 'inline-block' : 'none';
     }
 }
+
+// === ПЕРЕХВАТ КЛИКОВ ПО HISTORY.PHP ===
+document.addEventListener('click', function(e) {
+    // 1. Ищем клик по ссылке, содержащей history.php
+    const historyLink = e.target.closest('a[href*="history.php"]');
+    
+    if (historyLink) {
+        // ИСКЛЮЧЕНИЕ: Если клик произошел по ссылке внутри модалки 
+        // (у нее есть класс quick-all-history-link), то ничего не делаем, 
+        // позволяя браузеру совершить обычный переход.
+        if (historyLink.classList.contains('quick-all-history-link')) {
+            return; 
+        }
+
+        // 2. Проверяем наличие локальной истории
+        const historyData = localStorage.getItem("localSearchHistory");
+        
+        if (historyData) {
+            try {
+                const historyArray = JSON.parse(historyData);
+                
+                // 3. Если история есть и не пустая — перехватываем клик
+                if (Array.isArray(historyArray) && historyArray.length > 0) {
+                    e.preventDefault(); // Отменяем переход по ссылке
+                    
+                    // 4. Открываем модальное окно
+                    if (typeof window.toggleQuickModal === 'function') {
+                        window.toggleQuickModal();
+                    }
+                }
+            } catch (err) {
+                console.error("Ошибка чтения истории для перехвата ссылки:", err);
+            }
+        }
+    }
+});
+

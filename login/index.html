@@ -153,7 +153,7 @@ body.dark .form-control::placeholder,
 ">
 
     <img src="/assets/img/pwa-bold-monocolor-192.png" alt="logo" style="width: 55px; height: 55px;">
-    <i class="fa-solid fa-cloud" "></i>
+    <i class="fa-solid fa-cloud"></i>
 </div>
             
             <h2 id="sync-page-title" class="text-center mb-2 fw-bold">Cloud Sync</h2>
@@ -244,18 +244,31 @@ body.dark .form-control::placeholder,
                 if (isRu) {
                     enPath = currentPath.replace(/^\/(ru|r|ml)\//, '/');
                     switcher.innerHTML = `
-                        <a class="btn btn-sm btn-secondary rounded-pill py-0 px-2 text-decoration-none me-1" href="${enPath + currentSearch}" onclick="localStorage.siteLanguage = 'en';">En</a>
-                        <span class="py-0 text-muted px-2">Ru</span>
+                        <a class="btn btn-sm btn-secondary rounded-pill py-0 px-2 text-decoration-none me-1" href="${enPath + currentSearch}">En</a>
+                        <span class="btn btn-sm btn-primary rounded-pill py-0 px-2 fw-bold text-white">Ru</span>
                     `;
                 } else {
                     ruPath = '/ru' + (currentPath === '/' ? '' : currentPath);
                     switcher.innerHTML = `
-                        <span class="py-0 px-2 text-muted me-1">En</span>
-                        <a class="btn btn-sm btn-secondary rounded-pill py-0 px-2 text-decoration-none" href="${ruPath + currentSearch}" onclick="localStorage.siteLanguage = 'ru';">Ru</a>
+                        <span class="btn btn-sm btn-primary rounded-pill py-0 px-2 fw-bold text-white me-1">En</span>
+                        <a class="btn btn-sm btn-secondary rounded-pill py-0 px-2 text-decoration-none" href="${ruPath + currentSearch}">Ru</a>
                     `;
                 }
             }
+
+            // === НОВЫЙ КОД: ОБРАБОТКА НАЖАТИЯ ENTER В ПОЛЕ ВВОДА ===
+            const phraseInput = document.getElementById('sync-phrase-input');
+            if (phraseInput) {
+                phraseInput.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault(); // Предотвращаем стандартное поведение браузера
+                        uiLoginPhrase();    // Запускаем ту же функцию, что и при клике на кнопку
+                    }
+                });
+            }
+            // ========================================================
         });
+
 
         function uiLoginPhrase() {
             const input = document.getElementById('sync-phrase-input');

@@ -211,22 +211,33 @@ function buildQuickModalDOM() {
 
   // --- ЛОГИКА НАЖАТИЯ КНОПКИ СИНХРОНИЗАЦИИ ---
   if (btnSyncNow) {
-      btnSyncNow.addEventListener('click', (e) => {
+      btnSyncNow.addEventListener('click', async (e) => { // <-- Добавили async
           e.preventDefault();
           
-          // Проверяем авторизацию (либо кодовая фраза, либо аккаунт Google из Firebase)
           const isLoggedWithPhrase = !!localStorage.getItem('syncPhraseId');
           const isLoggedWithGoogle = typeof auth !== 'undefined' && auth && auth.currentUser;
           
           if (isLoggedWithPhrase || isLoggedWithGoogle) {
-              // Запускаем синхронизацию
-              if (typeof forceSyncNow === 'function') forceSyncNow();
+              // Делаем иконку полупрозрачной для визуального отклика
+              btnSyncNow.style.opacity = '0.5';
+              
+              if (typeof forceSyncNow === 'function') {
+                  await forceSyncNow(); // <-- Ждем окончания облачной синхронизации
+              }
+              
+              // Обновляем локальные списки модального окна
+              if (typeof window.refreshQuickModalData === 'function') {
+                  window.refreshQuickModalData();
+              }
+              
+              // Возвращаем иконке нормальный вид
+              btnSyncNow.style.opacity = '1';
           } else {
-              // Перенаправляем на логин
               window.location.href = isRu ? '/ru/login' : '/login';
           }
       });
   }
+
 
   // Логика закрытия модалки
   const closeQuickModal = () => {
@@ -425,3 +436,14 @@ window.toggleQuickModal = function() {
     }, 100);
   }
 };
+
+
+// === КРОСС-ВКЛАДОЧНАЯ СИНХРОНИЗАЦИЯ ===
+// Слушаем изменения localStorage из соседних вкладок браузера
+window.addEventListener('storage', (e) => {
+    if ((e.key === 'dg_favorites' || e.key === 'localSearchHistory') && window.quickModalIsOpen) {
+        if (typeof window.refreshQuickModalData === 'function') {
+            window.refreshQuickModalData();
+        }
+    }
+});
