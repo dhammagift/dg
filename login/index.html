@@ -244,14 +244,14 @@ body.dark .form-control::placeholder,
                 if (isRu) {
                     enPath = currentPath.replace(/^\/(ru|r|ml)\//, '/');
                     switcher.innerHTML = `
-                        <a class="btn btn-sm btn-secondary rounded-pill py-0 px-2 text-decoration-none me-1" href="${enPath + currentSearch}">En</a>
-                        <span class="btn btn-sm btn-primary rounded-pill py-0 px-2 fw-bold text-white">Ru</span>
+                        <a class="btn btn-sm btn-secondary rounded-pill py-0 px-1 text-decoration-none me-0" href="${enPath + currentSearch}">en</a>
+                        <span class="py-0 px-1 text-muted">ru</span>
                     `;
                 } else {
                     ruPath = '/ru' + (currentPath === '/' ? '' : currentPath);
                     switcher.innerHTML = `
-                        <span class="btn btn-sm btn-primary rounded-pill py-0 px-2 fw-bold text-white me-1">En</span>
-                        <a class="btn btn-sm btn-secondary rounded-pill py-0 px-2 text-decoration-none" href="${ruPath + currentSearch}">Ru</a>
+                        <span class="py-0 px-1 text-muted me-0">en</span>
+                        <a class="btn btn-sm btn-secondary rounded-pill py-0 px-1 text-decoration-none" href="${ruPath + currentSearch}">ru</a>
                     `;
                 }
             }
