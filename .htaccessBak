@@ -71,12 +71,12 @@ RewriteRule ^/$ / [L,R=302]
 
     # Остальные html/json — кэшируем (1 день)
     <FilesMatch "\.(html|json)$">
-        Header set Cache-Control "public, max-age=6400"
+        Header set Cache-Control "public, max-age=86400"
     </FilesMatch>
     
 # Изображения — кэшировать на полгода (6 месяцев), с immutable
     <FilesMatch "\.(jpg|jpeg|png|gif|svg)$">
-        Header set Cache-Control "public, max-age=5200, immutable"
+        Header set Cache-Control "public, max-age=15552000, immutable"
     </FilesMatch>
 
     # Шрифты — оставим как есть, тоже можно кэшировать на год, если хочешь
@@ -86,12 +86,12 @@ RewriteRule ^/$ / [L,R=302]
 
     # CSS — умеренно долго (1 месяц)
     <FilesMatch "\.(css)$">
-        Header set Cache-Control "public, max-age=4800"
+        Header set Cache-Control "public, max-age=604800"
     </FilesMatch>
 
     # JS — 1 неделя
     <FilesMatch "\.(js)$">
-        Header set Cache-Control "public, max-age=4000"
+        Header set Cache-Control "public, max-age=864000"
     </FilesMatch>
 
 </IfModule>
