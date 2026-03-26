@@ -1461,6 +1461,12 @@ body.dark .compact-list li { border-bottom-color: #444; }
 body.dark .hist-icon img { filter: invert(0.7); opacity: 1; }
 .item-date { font-size: 0.75rem; color: #888; min-width: 65px; text-align: right; }
 
+.hidden-delete-fav, 
+.hidden-delete-hist {
+    cursor: default; /* Обычная стрелочка, как над интерфейсом */
+    user-select: none; /* Запрещает выделять текст даты двойным кликом, чтобы клики работали чище */
+}
+
 .action-btn { margin-left: 10px; cursor: pointer; opacity: 0.8; transition: opacity 0.2s, color 0.2s; padding: 0 4px; user-select: none; }
 .action-btn:hover { opacity: 1; }
 .remove-fav-btn { font-size: 1.2rem; }

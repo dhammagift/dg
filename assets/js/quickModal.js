@@ -276,7 +276,8 @@ function buildQuickModalDOM() {
       }
   });
 
-  histContainer.addEventListener('click', (e) => {
+    histContainer.addEventListener('click', (e) => {
+      // 1. Логика добавления/удаления из избранного (клик по звездочке)
       if (e.target.classList.contains('toggle-fav-btn-hist')) {
           const slug = e.target.dataset.slug;
           const displayKey = e.target.dataset.display;
@@ -299,10 +300,45 @@ function buildQuickModalDOM() {
           }
           localStorage.setItem('dg_favorites', JSON.stringify(currentFavs));
           
-          // --- ДОБАВЛЕНО: Отправка изменений в БД ---
+          // Отправка изменений в БД
           if (typeof backupToCloud === 'function') backupToCloud();
           
           window.refreshQuickModalData();
+      }
+
+      // 2. Скрытое удаление из истории (клик по дате) с логикой "Надгробий" (Tombstones)
+      if (e.target.classList.contains('hidden-delete-hist')) {
+          const slug = e.target.dataset.slug;
+          
+          if (confirm(isRu ? "Стереть этот запрос из истории?" : "Delete this search from history?")) {
+              
+              // --- СОЗДАНИЕ МЕТКИ УДАЛЕНИЯ ---
+              let deletedHist = JSON.parse(localStorage.getItem('dg_deleted_history')) || [];
+              deletedHist.push({ slug: slug, deletedAt: Date.now() });
+              // Ограничиваем список меток, чтобы не забивать память (300 штук достаточно)
+              if (deletedHist.length > 300) deletedHist.shift(); 
+              localStorage.setItem('dg_deleted_history', JSON.stringify(deletedHist));
+
+              // --- УДАЛЕНИЕ ИЗ ЛОКАЛЬНОГО МАССИВА ---
+              let histData = JSON.parse(localStorage.getItem('localSearchHistory')) || [];
+              
+              histData = histData.filter(h => {
+                  let currentSlug = h[0];
+                  try { 
+                      const p = new URL(h[1], window.location.origin); 
+                      if (p.searchParams.has('q')) currentSlug = p.searchParams.get('q'); 
+                  } catch(err) {}
+                  
+                  return currentSlug !== slug;
+              });
+
+              localStorage.setItem('localSearchHistory', JSON.stringify(histData));
+              
+              // Отправка изменений в БД (включая новую метку)
+              if (typeof backupToCloud === 'function') backupToCloud();
+              
+              window.refreshQuickModalData();
+          }
       }
   });
 
@@ -404,9 +440,11 @@ function renderQuickLists(isRu, queryBase) {
         try { const p = new URL(h[1], window.location.origin); if(p.searchParams.has('q')) realSlug = p.searchParams.get('q'); } catch(e){}
         const isFav = favData.some(f => f.slug === realSlug);
         
-        histHtml += `<li><span class="hist-icon"><img src="/assets/svg/clock-rotate-left.svg" width="14" height="14"></span>
-        <a href="${h[1]}">${h[0]}</a><span class="item-date">${dateStr}</span>
-        <span class="action-btn toggle-fav-btn-hist" data-slug="${realSlug}" data-display="${h[0]}" data-url="${h[1]}">${isFav ? "★" : "☆"}</span></li>`;
+// Добавили hidden-delete-hist и data-slug
+histHtml += `<li><span class="hist-icon"><img src="/assets/svg/clock-rotate-left.svg" width="14" height="14"></span>
+<a href="${h[1]}">${h[0]}</a><span class="item-date hidden-delete-hist" data-slug="${realSlug}">${dateStr}</span>
+<span class="action-btn toggle-fav-btn-hist" data-slug="${realSlug}" data-display="${h[0]}" data-url="${h[1]}">${isFav ? "★" : "☆"}</span></li>`;
+
       });
       histHtml += '</ul>';
       histContainer.innerHTML = histHtml;

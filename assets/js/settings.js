@@ -2246,7 +2246,29 @@ window.restoreFromCloud = async function(userObj) {
         if (doc.exists) {
             const cloudData = JSON.parse(doc.data().settings);
 
-            // --- 1. УМНОЕ СЛИЯНИЕ ИСТОРИИ ПОИСКА (Дедупликация сутт + таймстампы) ---
+            // --- 0. СЛИЯНИЕ МЕТОК УДАЛЕНИЯ (Tombstones) ---
+            let delMap = new Map();
+            if (cloudData['dg_deleted_history'] || localStorage.getItem('dg_deleted_history')) {
+                let localDel = JSON.parse(localStorage.getItem('dg_deleted_history')) || [];
+                let cloudDel = cloudData['dg_deleted_history'] ? JSON.parse(cloudData['dg_deleted_history']) : [];
+                
+                let mergedDel = [...localDel, ...cloudDel];
+                mergedDel.forEach(item => {
+                    let existing = delMap.get(item.slug);
+                    if (!existing || item.deletedAt > existing.deletedAt) {
+                        delMap.set(item.slug, item);
+                    }
+                });
+                
+                // Храним только свежие 300 меток
+                let finalDel = Array.from(delMap.values())
+                    .sort((a, b) => a.deletedAt - b.deletedAt)
+                    .slice(-300); 
+                localStorage.setItem('dg_deleted_history', JSON.stringify(finalDel));
+                delete cloudData['dg_deleted_history'];
+            }
+
+            // --- 1. УМНОЕ СЛИЯНИЕ ИСТОРИИ ПОИСКА (Дедупликация сутт + Таймстампы + Tombstones) ---
             if (cloudData['localSearchHistory']) {
                 let localHist = JSON.parse(localStorage.getItem('localSearchHistory')) || [];
                 let cloudHist = JSON.parse(cloudData['localSearchHistory']) || [];
@@ -2277,6 +2299,19 @@ window.restoreFromCloud = async function(userObj) {
                 });
                 
                 let finalHist = Array.from(uniqueMap.values())
+                    .filter(item => {
+                        // Фильтруем историю через метки удаления
+                        let baseKey = /\d/.test(item[0]) ? item[0].split(/\s+/)[0] : item[0];
+                        
+                        let delRecord = delMap.get(baseKey) || delMap.get(item[0]);
+                        if (delRecord) {
+                            // Если дата удаления ПОЗЖЕ, чем дата поиска, значит запрос мертв
+                            if (delRecord.deletedAt > new Date(item[2]).getTime()) {
+                                return false; // Выкидываем из истории
+                            }
+                        }
+                        return true; // Оставляем
+                    })
                     .sort((a, b) => new Date(b[2]) - new Date(a[2])) // Новые сверху
                     .slice(0, 8400); 
                     
@@ -2328,6 +2363,7 @@ window.restoreFromCloud = async function(userObj) {
         refreshSyncTimeUI(); 
     }
 };
+
 
 // 4. УПРАВЛЕНИЕ АВТОРИЗАЦИЕЙ И КНОПКАМИ
 window.syncLoginGoogle = async function() {
