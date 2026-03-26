@@ -366,32 +366,6 @@ function checkStorage(key) {
 const MAX_HISTORY = 8400;
 let textinfoCache = null; // Кеш для данных сутт
 
-async function addToSearchHistory() {
-    try {
-        const url = new URL(window.location.href);
-        const qParam = url.searchParams.get("q");
-        if (!qParam) return;
-
-        let key = processSearchQuery(qParam);
-
-        // Основное сохранение (оригинальный ключ)
-        await saveToHistory(key, url);
-
-        // Попытка улучшить ключ (асинхронно)
-        if (/\d/.test(key) && !key.includes(' ')) {
-            try {
-                const enhancedKey = await tryEnhanceKey(key);
-                if (enhancedKey !== key) {
-                    await saveToHistory(enhancedKey, url);
-                }
-            } catch (e) {
-                console.debug("Не удалось добавить название:", e);
-            }
-        }
-    } catch (e) {
-        console.error("Ошибка сохранения истории:", e);
-    }
-}
 
 function processSearchQuery(query) {
     return query.toLowerCase()
@@ -482,39 +456,83 @@ function formatSlug(str) {
     return slug + title;
 }
 
+async function addToSearchHistory() {
+    try {
+        const url = new URL(window.location.href);
+        const qParam = url.searchParams.get("q");
+        if (!qParam) return;
+
+        let key = processSearchQuery(qParam);
+
+        // 1. Быстрое локальное сохранение (функция вернет ключ, возможно уже улучшенный из истории)
+        const savedKey = await saveToHistory(key, url);
+
+        // 2. Попытка улучшить ключ через базу textinfo (асинхронно)
+        // Запускаем ТОЛЬКО если это сутта (есть цифры) и НЕТ пробела (т.е. названия еще нет)
+        if (/\d/.test(savedKey) && !savedKey.includes(' ')) {
+            try {
+                const enhancedKey = await tryEnhanceKey(savedKey);
+                // Сохраняем повторно, только если база реально дала новое длинное имя
+                if (enhancedKey && enhancedKey !== savedKey) {
+                    await saveToHistory(enhancedKey, url);
+                }
+            } catch (e) {
+                console.debug("Не удалось добавить название:", e);
+            }
+        }
+    } catch (e) {
+        console.error("Ошибка сохранения истории:", e);
+    }
+}
 
 async function saveToHistory(key, url) {
-    key = formatSlug(key); // <-- Централизованная обработка
+    key = formatSlug(key); 
     const value = url.pathname + url.search + url.hash;
     const timestamp = new Date().toISOString();
   
     let history = JSON.parse(localStorage.getItem("localSearchHistory")) || [];
     
-    // Определяем базовый ключ для сравнения
-    const baseKey = /\d/.test(key) ? key.split(/\s+/)[0] : key;
+    // Умное определение корня сутты. 
+    // Берем первое слово. Если в нем есть цифра (напр. "mn91") - это сутта.
+    // Это чинит баг, когда обычные запросы с цифрами (напр. "kamma 1") затирали друг друга
+    const firstWord = key.split(/\s+/)[0];
+    const isSutta = /\d/.test(firstWord);
+    const rootKey = isSutta ? firstWord : key;
+
+    let bestKey = key; // То, что мы в итоге сохраним
     
-    // Удаляем все старые записи с таким же базовым ключом
     history = history.filter(([k]) => {
-        if (k === key) return false; // Точное совпадение
-        if (!/\d/.test(key)) return true; // Для не-сутт оставляем другие
+        if (k === key) return false; // Точное совпадение удаляем (мы его поднимем наверх)
         
-        const kBase = k.split(/\s+/)[0];
-        return kBase !== baseKey;
+        // Если это сутта, ищем дубли (mn91 vs mn91 Brahmayusutta)
+        if (isSutta) {
+            const kRoot = k.split(/\s+/)[0];
+            if (kRoot === rootKey) {
+                // Если в старой истории название длиннее, забираем его себе!
+                if (k.length > bestKey.length) {
+                    bestKey = k;
+                }
+                return false; // Старый дубль (короткий или старый) удаляем
+            }
+        }
+        return true;
     });
     
-    // Добавляем новую запись в начало
-    history.unshift([key, value, timestamp]);
+    // Добавляем запись в начало
+    history.unshift([bestKey, value, timestamp]);
     
     // Ограничиваем историю
-    localStorage.setItem("localSearchHistory", 
-        JSON.stringify(history.slice(0, MAX_HISTORY)));
+    localStorage.setItem("localSearchHistory", JSON.stringify(history.slice(0, MAX_HISTORY)));
     
     if (typeof backupToCloud === 'function') backupToCloud();
 
-    // --- НОВОЕ: Мгновенное обновление UI модалки ---
+    // Мгновенное обновление UI модалки
     if (typeof window.refreshQuickModalData === 'function' && window.quickModalIsOpen) {
         window.refreshQuickModalData();
     }
+
+    // Возвращаем реальный ключ, чтобы addToSearchHistory знала, нужно ли искать дальше
+    return bestKey; 
 }
 
 //установка фокуса в инпуте по нажатию / 
@@ -2209,7 +2227,7 @@ window.restoreFromCloud = async function(userObj) {
         if (doc.exists) {
             const cloudData = JSON.parse(doc.data().settings);
 
-            // --- УМНОЕ СЛИЯНИЕ ИСТОРИИ ПОИСКА (По таймстампам) ---
+            // --- 1. УМНОЕ СЛИЯНИЕ ИСТОРИИ ПОИСКА (Дедупликация сутт + таймстампы) ---
             if (cloudData['localSearchHistory']) {
                 let localHist = JSON.parse(localStorage.getItem('localSearchHistory')) || [];
                 let cloudHist = JSON.parse(cloudData['localSearchHistory']) || [];
@@ -2218,23 +2236,36 @@ window.restoreFromCloud = async function(userObj) {
                 let uniqueMap = new Map();
                 
                 mergedHist.forEach(item => {
-                    let key = item[0];
-                    let existing = uniqueMap.get(key);
-                    // Оставляем самую свежую запись для каждого ключа
-                    if (!existing || new Date(item[2]) > new Date(existing[2])) {
-                        uniqueMap.set(key, item);
+                    if (!item || !item[0]) return;
+                    let key = String(item[0]);
+                    
+                    // Находим "базу" (например "mn91" из "mn91 Brahmayusutta")
+                    let baseKey = /\d/.test(key) ? key.split(/\s+/)[0] : key;
+                    let existing = uniqueMap.get(baseKey);
+                    
+                    if (!existing) {
+                        uniqueMap.set(baseKey, item);
+                    } else {
+                        // Оставляем вариант с самым длинным названием
+                        let bestKey = key.length > existing[0].length ? key : existing[0];
+                        // Берем самую свежую дату и URL
+                        let isNewer = new Date(item[2]) > new Date(existing[2]);
+                        let bestDate = isNewer ? item[2] : existing[2];
+                        let bestUrl = isNewer ? item[1] : existing[1];
+                        
+                        uniqueMap.set(baseKey, [bestKey, bestUrl, bestDate]);
                     }
                 });
                 
                 let finalHist = Array.from(uniqueMap.values())
-                    .sort((a, b) => new Date(b[2]) - new Date(a[2])) // Сортируем: новые сверху
-                    .slice(0, 8400); // Ограничение по длине из твоих констант
+                    .sort((a, b) => new Date(b[2]) - new Date(a[2])) // Новые сверху
+                    .slice(0, 8400); 
                     
                 localStorage.setItem('localSearchHistory', JSON.stringify(finalHist));
-                delete cloudData['localSearchHistory']; // Удаляем, чтобы цикл ниже не стер результат
+                delete cloudData['localSearchHistory']; 
             }
 
-            // --- УМНОЕ СЛИЯНИЕ ИЗБРАННОГО (По таймстампам) ---
+            // --- 2. УМНОЕ СЛИЯНИЕ ИЗБРАННОГО ---
             if (cloudData['dg_favorites']) {
                 let localFavs = JSON.parse(localStorage.getItem('dg_favorites')) || [];
                 let cloudFavs = JSON.parse(cloudData['dg_favorites']) || [];
@@ -2244,7 +2275,6 @@ window.restoreFromCloud = async function(userObj) {
                 
                 mergedFavs.forEach(item => {
                     let existing = favMap.get(item.slug);
-                    // Оставляем самую свежую запись
                     if (!existing || item.timestamp > existing.timestamp) {
                         favMap.set(item.slug, item);
                     }
@@ -2254,12 +2284,19 @@ window.restoreFromCloud = async function(userObj) {
                     .sort((a, b) => b.timestamp - a.timestamp);
                     
                 localStorage.setItem('dg_favorites', JSON.stringify(finalFavs));
-                delete cloudData['dg_favorites']; // Удаляем из слепой перезаписи
+                delete cloudData['dg_favorites'];
             }
 
-            // --- ВОССТАНОВЛЕНИЕ ОСТАЛЬНЫХ НАСТРОЕК (Слепая перезапись) ---
+            // --- 3. ВОССТАНОВЛЕНИЕ ОСТАЛЬНЫХ НАСТРОЕК ---
             for (const key in cloudData) {
-                if (key !== 'syncPhraseRaw' && key !== 'syncPhraseId' && localStorage.getItem(key) !== cloudData[key]) {
+                // Игнорируем пароли
+                if (key === 'syncPhraseRaw' || key === 'syncPhraseId' || key === 'lastSyncTime') continue;
+                
+                // Игнорируем ВСЕ ключи модалки (dg_...), чтобы облако не сбрасывало локальный UI
+                if (key.startsWith('dg_')) continue;
+
+                // Синхронизируем все остальные полезные настройки (размер шрифта, словари и т.д.)
+                if (localStorage.getItem(key) !== cloudData[key]) {
                     localStorage.setItem(key, cloudData[key]);
                 }
             }
@@ -2269,7 +2306,7 @@ window.restoreFromCloud = async function(userObj) {
     } catch (error) { 
         console.error("Cloud Restore Error:", error); 
     } finally {
-        refreshSyncTimeUI(); // Снимает спиннер всегда
+        refreshSyncTimeUI(); 
     }
 };
 

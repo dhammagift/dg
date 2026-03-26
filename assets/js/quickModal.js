@@ -339,8 +339,9 @@ function renderQuickLists(isRu, queryBase) {
     const favHeader = document.querySelector('#fav-header');
     const histHeader = document.querySelector('#hist-header');
     
-    let favAlphaSort = window.favAlphaSort || false;
-    let histAlphaSort = window.histAlphaSort || false;
+    // Сортировка Избранного берется из памяти, а Истории — просто из временной переменной
+    let favAlphaSort = localStorage.getItem('dg_favAlphaSort') === 'true';
+    let histAlphaSort = window.histAlphaSort || false; 
     let favCollapsed = localStorage.getItem('dg_favCollapsed') === 'true';
     let histCollapsed = localStorage.getItem('dg_histCollapsed') === 'true';
 
@@ -402,15 +403,32 @@ function renderQuickLists(isRu, queryBase) {
 
 function setupQuickModalHeaders() {
   document.querySelector('#fav-header').addEventListener('click', (e) => {
-      if (e.target.classList.contains('sort-trigger')) { window.favAlphaSort = !window.favAlphaSort; window.refreshQuickModalData(); } 
-      else if (e.target.closest('.header-title')) { localStorage.setItem('dg_favCollapsed', localStorage.getItem('dg_favCollapsed') !== 'true'); window.refreshQuickModalData(); }
+      if (e.target.classList.contains('sort-trigger')) { 
+          // Избранное: сохраняем сортировку в память навсегда
+          localStorage.setItem('dg_favAlphaSort', localStorage.getItem('dg_favAlphaSort') !== 'true'); 
+          window.refreshQuickModalData(); 
+      } 
+      else if (e.target.closest('.header-title')) { 
+          // Свернутость сохраняем
+          localStorage.setItem('dg_favCollapsed', localStorage.getItem('dg_favCollapsed') !== 'true'); 
+          window.refreshQuickModalData(); 
+      }
   });
 
   document.querySelector('#hist-header').addEventListener('click', (e) => {
-      if (e.target.classList.contains('sort-trigger')) { window.histAlphaSort = !window.histAlphaSort; window.refreshQuickModalData(); } 
-      else if (e.target.closest('.header-title')) { localStorage.setItem('dg_histCollapsed', localStorage.getItem('dg_histCollapsed') !== 'true'); window.refreshQuickModalData(); }
+      if (e.target.classList.contains('sort-trigger')) { 
+          // История: сохраняем сортировку только во временную переменную
+          window.histAlphaSort = !window.histAlphaSort; 
+          window.refreshQuickModalData(); 
+      } 
+      else if (e.target.closest('.header-title')) { 
+          // Свернутость сохраняем
+          localStorage.setItem('dg_histCollapsed', localStorage.getItem('dg_histCollapsed') !== 'true'); 
+          window.refreshQuickModalData(); 
+      }
   });
 }
+
 
 window.toggleQuickModal = function() {
   if (!window.isQuickModalRendered) {
