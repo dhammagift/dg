@@ -685,44 +685,22 @@ function shouldIgnoreKeyEvent() {
 window.addEventListener("keydown", (event) => {
     if (event.key === 'Escape' || event.code === 'Escape') {
 
-// --- B. Подсказка о голосах (Voice Hint) ---
-      const voiceHint = document.getElementById('active-voice-hint');
-      if (voiceHint) {
-        const closeHintBtn = document.getElementById('closeVoiceHintBtn');
-        if (closeHintBtn) closeHintBtn.click();
-        event.preventDefault();
-        return;
-      }
-
-      // --- C. TTS Плеер и Выделения ---
-      const dropdown = document.querySelector('.voice-dropdown');
-      const isDropdownActive = dropdown && dropdown.classList.contains('active');
-      const isHighlightActive = document.querySelector('.active-word');
-
-      // Если что-то играет, открыто меню или выделен текст
-      if (ttsState.speaking || ttsState.paused || isDropdownActive || isHighlightActive) {
-        event.preventDefault();
+        // ==========================================
+        // ПРИОРИТЕТ 1: ПОДСКАЗКИ (Hints)
+        // ==========================================
         
-        stopPlayback();        // Остановить звук, сбросить state
-        removeAllHighlights(); // Убрать желтое выделение и мини-кнопку
-        
-        // Закрываем само меню плеера визуально
-        if (dropdown) dropdown.classList.remove('active');
-        return;
-      }
-	  
-    // --- 0. Close PWA banner ---
-    const pwaBanner = document.getElementById('pwa-banner');
-    if (pwaBanner && pwaBanner.offsetParent !== null) { // проверка, что видим
-        const closePwaBtn = document.getElementById('closePwaBanner');
-        if (closePwaBtn) {
-            closePwaBtn.click();
-            event.preventDefault();
-            return;
+        // --- 1.1. Voice Hint ---
+        const voiceHint = document.getElementById('active-voice-hint');
+        if (voiceHint) {
+            const closeHintBtn = document.getElementById('closeVoiceHintBtn');
+            if (closeHintBtn) {
+                closeHintBtn.click();
+                event.preventDefault();
+                return;
+            }
         }
-    }
 
-      // --- 1. Close the hint popup ---
+        // --- 1.2. General Hint Popup ---
         const hintElement = document.querySelector('.hint');
         if (hintElement && hintElement.offsetParent !== null) { // проверка, что видимо
             const closeHintButton = document.getElementById('closeHintBtn');
@@ -732,25 +710,25 @@ window.addEventListener("keydown", (event) => {
                 return;
             }
         }
-        
-        // --- 1. Close the fdgPopup from openFdg.js ---
-        // We look for the fdg-popup element and check if it's visible.
+
+        // ==========================================
+        // ПРИОРИТЕТ 2: СЛОВАРИ (Dictionaries)
+        // ==========================================
+
+        // --- 2.1. FDG Popup ---
         const fdgPopupElement = document.querySelector('.fdg-popup');
         if (fdgPopupElement && fdgPopupElement.style.display === 'block') {
-            // If the popup is open, we simulate a click on its close button.
             const fdgCloseButton = fdgPopupElement.querySelector('.fdg-close-btn');
             if (fdgCloseButton) {
                 fdgCloseButton.click();
-                event.preventDefault(); // Prevent any other action.
-                return; // Stop further execution.
+                event.preventDefault();
+                return;
             }
         }
 
-        // --- 2. Close the main dictionary popup from paliLookup.js ---
-        // We look for the main lookup popup element and check its visibility.
+        // --- 2.2. Pali Lookup Popup (Главный словарь) ---
         const paliLookupPopupElement = document.querySelector('.popup');
         if (paliLookupPopupElement && paliLookupPopupElement.style.display === 'block') {
-            // If the popup is open, we simulate a click on its close button.
             const paliLookupCloseButton = paliLookupPopupElement.querySelector('.close-btn');
             if (paliLookupCloseButton) {
                 paliLookupCloseButton.click();
@@ -759,27 +737,77 @@ window.addEventListener("keydown", (event) => {
             }
         }
 
-// --- 3. Close the Quick Modal (Cattāri Ariyasaccāni) ---
-if (window.quickModalIsOpen) {
-    if (typeof window.toggleQuickModal === 'function') {
-        window.toggleQuickModal(); 
-        event.preventDefault();
-        return;
-    }
-}
+        // ==========================================
+        // ПРИОРИТЕТ 3: МОДАЛЬНЫЕ ОКНА (Modals & Banners)
+        // ==========================================
 
+        // --- 3.1. Quick Modal (Cattāri Ariyasaccāni) ---
+        if (window.quickModalIsOpen) {
+            if (typeof window.toggleQuickModal === 'function') {
+                window.toggleQuickModal(); 
+                event.preventDefault();
+                return;
+            }
+        }
+
+        // --- 3.2. PWA Banner ---
+        const pwaBanner = document.getElementById('pwa-banner');
+        if (pwaBanner && pwaBanner.offsetParent !== null) { 
+            const closePwaBtn = document.getElementById('closePwaBanner');
+            if (closePwaBtn) {
+                closePwaBtn.click();
+                event.preventDefault();
+                return;
+            }
+        }
+
+        // --- 3.3. Основные модальные окна (Settings, Help и т.д.) ---
         const closeBtnElements = document.querySelectorAll('.btn-close');
         if (closeBtnElements.length > 0) {
+            let modalClosed = false;
             closeBtnElements.forEach(button => {
                 if (button.offsetParent !== null) {
                     button.click();
+                    modalClosed = true;
                 }
             });
+            // Возвращаемся, только если действительно закрыли видимое окно
+            if (modalClosed) {
+                event.preventDefault();
+                return; 
+            }
+        }
+
+        // ==========================================
+        // ПРИОРИТЕТ 4: TTS И ВЫДЕЛЕНИЯ (Active Word)
+        // ==========================================
+        
+        const dropdown = document.querySelector('.voice-dropdown');
+        const isDropdownActive = dropdown && dropdown.classList.contains('active');
+        const isHighlightActive = document.querySelector('.active-word');
+
+        // Безопасная проверка, чтобы не уронить скрипт до загрузки voice.js
+        const isTtsActive = typeof ttsState !== 'undefined' && (ttsState.speaking || ttsState.paused);
+
+        // Если что-то играет, открыто меню или выделен текст
+        if (isTtsActive || isDropdownActive || isHighlightActive) {
             event.preventDefault();
-            return; 
+            
+            if (typeof stopPlayback === 'function') {
+                stopPlayback();        // Остановить звук, сбросить state
+            }
+            if (typeof removeAllHighlights === 'function') {
+                removeAllHighlights(); // Убрать желтое выделение и мини-кнопку
+            }
+            
+            // Закрываем меню плеера визуально
+            if (dropdown) dropdown.classList.remove('active');
+            return;
         }
     }
- }, true);
+}, true);
+
+
 
     // Добавляем обработчик сочетания клавиш Alt + Space (физическая клавиша)
 document.addEventListener("keydown", (event) => {
