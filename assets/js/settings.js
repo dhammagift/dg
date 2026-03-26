@@ -2208,6 +2208,56 @@ window.restoreFromCloud = async function(userObj) {
         const doc = await db.collection("users").doc(userObj.uid).get();
         if (doc.exists) {
             const cloudData = JSON.parse(doc.data().settings);
+
+            // --- УМНОЕ СЛИЯНИЕ ИСТОРИИ ПОИСКА (По таймстампам) ---
+            if (cloudData['localSearchHistory']) {
+                let localHist = JSON.parse(localStorage.getItem('localSearchHistory')) || [];
+                let cloudHist = JSON.parse(cloudData['localSearchHistory']) || [];
+                
+                let mergedHist = [...localHist, ...cloudHist];
+                let uniqueMap = new Map();
+                
+                mergedHist.forEach(item => {
+                    let key = item[0];
+                    let existing = uniqueMap.get(key);
+                    // Оставляем самую свежую запись для каждого ключа
+                    if (!existing || new Date(item[2]) > new Date(existing[2])) {
+                        uniqueMap.set(key, item);
+                    }
+                });
+                
+                let finalHist = Array.from(uniqueMap.values())
+                    .sort((a, b) => new Date(b[2]) - new Date(a[2])) // Сортируем: новые сверху
+                    .slice(0, 8400); // Ограничение по длине из твоих констант
+                    
+                localStorage.setItem('localSearchHistory', JSON.stringify(finalHist));
+                delete cloudData['localSearchHistory']; // Удаляем, чтобы цикл ниже не стер результат
+            }
+
+            // --- УМНОЕ СЛИЯНИЕ ИЗБРАННОГО (По таймстампам) ---
+            if (cloudData['dg_favorites']) {
+                let localFavs = JSON.parse(localStorage.getItem('dg_favorites')) || [];
+                let cloudFavs = JSON.parse(cloudData['dg_favorites']) || [];
+                
+                let mergedFavs = [...localFavs, ...cloudFavs];
+                let favMap = new Map();
+                
+                mergedFavs.forEach(item => {
+                    let existing = favMap.get(item.slug);
+                    // Оставляем самую свежую запись
+                    if (!existing || item.timestamp > existing.timestamp) {
+                        favMap.set(item.slug, item);
+                    }
+                });
+                
+                let finalFavs = Array.from(favMap.values())
+                    .sort((a, b) => b.timestamp - a.timestamp);
+                    
+                localStorage.setItem('dg_favorites', JSON.stringify(finalFavs));
+                delete cloudData['dg_favorites']; // Удаляем из слепой перезаписи
+            }
+
+            // --- ВОССТАНОВЛЕНИЕ ОСТАЛЬНЫХ НАСТРОЕК (Слепая перезапись) ---
             for (const key in cloudData) {
                 if (key !== 'syncPhraseRaw' && key !== 'syncPhraseId' && localStorage.getItem(key) !== cloudData[key]) {
                     localStorage.setItem(key, cloudData[key]);
