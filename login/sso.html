@@ -22,192 +22,164 @@
 </head>
 <body>
 
-    <h2>Тест Синхронизации ☁️</h2>
+<h2>Тест Синхронизации ☁️</h2>
 
-    <div class="card" id="auth-section">
-        <span id="auth-status">Статус: Не в сети (Локальный режим)</span>
-        
-        <div id="login-buttons">
-            <button class="btn-google" onclick="loginWithGoogle()">Войти через Google</button>
-            <button class="btn-phrase" onclick="loginWithPhrase()">Вход по секретной фразе</button>
-        </div>
+<div class="card" id="auth-section">
+    <span id="auth-status">Статус: Не в сети (Локальный режим)</span>
 
-        <div id="user-info" style="display: none;">
-            <button class="btn-danger" onclick="logout()">Выйти</button>
-        </div>
+    <div id="login-buttons">
+        <button class="btn-google" onclick="loginWithGoogle()">Войти через Google</button>
+        <button class="btn-phrase" onclick="loginWithPhrase()">Вход по секретной фразе</button>
     </div>
 
-    <div class="card">
-        <h3>Эмуляция данных сайта</h3>
-        <p style="font-size: 14px; color: #666;">Нажмите кнопку, чтобы добавить тестовую закладку в локальную память. Если вы залогинены, она должна сразу улететь в облако.</p>
-        
-        <button class="btn-action" onclick="addTestData()">+ Добавить тестовую закладку</button>
-        <button class="btn-action" onclick="clearLocalData()" style="background: #ccc;">Очистить локально</button>
-        
-        <h4 style="margin-top: 20px;">Содержимое localStorage:</h4>
-        <pre id="local-storage-display">Пусто...</pre>
+    <div id="user-info" style="display: none;">
+        <button class="btn-danger" onclick="logout()">Выйти</button>
     </div>
+</div>
 
-    <script>
-        // === 1. ИНИЦИАЛИЗАЦИЯ FIREBASE ===
-        const firebaseConfig = {
-          apiKey: "AIzaSyDwatpN1h2w0g1HvQn1yyHUWgR5ONy5Di8",
-          authDomain: "dg-sync-data.firebaseapp.com",
-          projectId: "dg-sync-data",
-          storageBucket: "dg-sync-data.firebasestorage.app",
-          messagingSenderId: "777733337986",
-          appId: "1:777733337986:web:24dac9e062f5d048bad59b"
-        };
+<div class="card">
+    <h3>Эмуляция данных сайта</h3>
+    <p style="font-size: 14px; color: #666;">Нажмите кнопку, чтобы добавить тестовую закладку в локальную память.</p>
 
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-        const googleProvider = new firebase.auth.GoogleAuthProvider();
+    <button class="btn-action" onclick="addTestData()">+ Добавить тестовую закладку</button>
+    <button class="btn-action" onclick="clearLocalData()" style="background: #ccc;">Очистить локально</button>
+    <button class="btn-action" onclick="copyStorage()">Скопировать</button>
 
-        // === 2. ЛОГИКА АВТОРИЗАЦИИ ===
-        async function loginWithGoogle() {
-            try { await auth.signInWithPopup(googleProvider); } 
-            catch (error) { console.error(error); alert("Ошибка Google: " + error.message); }
-        }
+    <h4 style="margin-top: 20px;">Содержимое localStorage:</h4>
+    <pre id="local-storage-display">Пусто...</pre>
+</div>
 
-        function loginWithPhrase() {
-            const phrase = prompt("Введите секретную фразу (минимум 6 символов):");
-            if (phrase && phrase.length >= 6) {
-                const phraseId = "phrase_" + phrase.trim().toLowerCase().replace(/\s+/g, '-');
-                localStorage.setItem('syncPhraseId', phraseId);
-                updateUI();
-                syncFromCloud(phraseId); // Пытаемся скачать данные для этой фразы
-            } else if (phrase) {
-                alert("Слишком короткая фраза!");
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDwatpN1h2w0g1HvQn1yyHUWgR5ONy5Di8",
+  authDomain: "dg-sync-data.firebaseapp.com",
+  projectId: "dg-sync-data",
+  storageBucket: "dg-sync-data.firebasestorage.app",
+  messagingSenderId: "777733337986",
+  appId: "1:777733337986:web:24dac9e062f5d048bad59b"
+};
+
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+async function loginWithGoogle() {
+    try { await auth.signInWithPopup(googleProvider); } 
+    catch (error) { alert("Ошибка Google: " + error.message); }
+}
+
+function loginWithPhrase() {
+    const phrase = prompt("Введите секретную фразу:");
+    if (phrase && phrase.length >= 6) {
+        const phraseId = "phrase_" + phrase.trim().toLowerCase().replace(/\s+/g, '-');
+        localStorage.setItem('syncPhraseId', phraseId);
+        updateUI();
+        syncFromCloud(phraseId);
+    }
+}
+
+async function logout() {
+    await auth.signOut();
+    localStorage.removeItem('syncPhraseId');
+    updateUI();
+}
+
+function getCurrentUserId() {
+    const user = auth.currentUser;
+    const phraseId = localStorage.getItem('syncPhraseId');
+    if (user) return user.uid;
+    if (phraseId) return phraseId;
+    return null;
+}
+
+async function syncToCloud() {
+    const uid = getCurrentUserId();
+    if (!uid) return;
+
+    const dataToSave = JSON.stringify(localStorage);
+    await db.collection("users").doc(uid).set({
+        settings: dataToSave,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+}
+
+async function syncFromCloud(uid) {
+    const doc = await db.collection("users").doc(uid).get();
+    if (doc.exists) {
+        const cloudData = JSON.parse(doc.data().settings);
+        for (const key in cloudData) {
+            if (key !== 'syncPhraseId') {
+                localStorage.setItem(key, cloudData[key]);
             }
         }
+        updateStorageDisplay();
+    } else {
+        syncToCloud();
+    }
+}
 
-        async function logout() {
-            await auth.signOut();
-            localStorage.removeItem('syncPhraseId');
-            updateUI();
-        }
+auth.onAuthStateChanged(() => {
+    updateUI();
+    const uid = getCurrentUserId();
+    if (uid) syncFromCloud(uid);
+});
 
-        // === 3. ЛОГИКА СИНХРОНИЗАЦИИ ===
-        
-        // Получить текущий ID пользователя (Google UID или ID Фразы)
-        function getCurrentUserId() {
-            const user = auth.currentUser;
-            const phraseId = localStorage.getItem('syncPhraseId');
-            if (user) return user.uid;
-            if (phraseId) return phraseId;
-            return null;
-        }
+function updateUI() {
+    const user = auth.currentUser;
+    const phraseId = localStorage.getItem('syncPhraseId');
 
-        // Выгрузка в базу (Backup)
-        async function syncToCloud() {
-            const uid = getCurrentUserId();
-            if (!uid) return;
+    const loginBtns = document.getElementById('login-buttons');
+    const userInfo = document.getElementById('user-info');
+    const statusText = document.getElementById('auth-status');
 
-            const dataToSave = JSON.stringify(localStorage);
-            try {
-                await db.collection("users").doc(uid).set({
-                    settings: dataToSave,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                console.log("Успешно сохранено в облако!");
-            } catch (error) {
-                console.error("Ошибка сохранения:", error);
-                alert("Ошибка сохранения: проверьте правила Firestore!");
-            }
-        }
+    if (user) {
+        loginBtns.style.display = 'none';
+        userInfo.style.display = 'block';
+        statusText.innerText = `Статус: Google (${user.email})`;
+    } else if (phraseId) {
+        loginBtns.style.display = 'none';
+        userInfo.style.display = 'block';
+        statusText.innerText = `Статус: Фраза (${phraseId})`;
+    } else {
+        loginBtns.style.display = 'block';
+        userInfo.style.display = 'none';
+        statusText.innerText = 'Статус: Локально';
+    }
 
-        // Загрузка из базы (Restore)
-        async function syncFromCloud(uid) {
-            try {
-                const doc = await db.collection("users").doc(uid).get();
-                if (doc.exists) {
-                    const cloudData = JSON.parse(doc.data().settings);
-                    
-                    // Записываем данные в браузер
-                    for (const key in cloudData) {
-                        if (key !== 'syncPhraseId') { // Фразу не перезаписываем
-                            localStorage.setItem(key, cloudData[key]);
-                        }
-                    }
-                    console.log("Данные стянуты из облака!");
-                    updateStorageDisplay();
-                } else {
-                    console.log("В облаке пусто, отправляем туда текущие данные...");
-                    syncToCloud();
-                }
-            } catch (error) {
-                console.error("Ошибка загрузки:", error);
-            }
-        }
+    updateStorageDisplay();
+}
 
-        // Слушатель состояния (запускается при старте страницы)
-        auth.onAuthStateChanged((user) => {
-            updateUI();
-            const uid = getCurrentUserId();
-            if (uid) syncFromCloud(uid);
-        });
+function addTestData() {
+    const rand = Math.floor(Math.random() * 100);
+    localStorage.setItem(`test_${rand}`, `MN ${rand}`);
+    updateStorageDisplay();
+    syncToCloud();
+}
 
-        // === 4. UI И ТЕСТОВЫЕ ДАННЫЕ ===
+function clearLocalData() {
+    const phrase = localStorage.getItem('syncPhraseId');
+    localStorage.clear();
+    if (phrase) localStorage.setItem('syncPhraseId', phrase);
+    updateStorageDisplay();
+    syncToCloud();
+}
 
-        function updateUI() {
-            const user = auth.currentUser;
-            const phraseId = localStorage.getItem('syncPhraseId');
-            
-            const loginBtns = document.getElementById('login-buttons');
-            const userInfo = document.getElementById('user-info');
-            const statusText = document.getElementById('auth-status');
+function updateStorageDisplay() {
+    const display = document.getElementById('local-storage-display');
+    const data = { ...localStorage };
+    display.innerText = Object.keys(data).length
+        ? JSON.stringify(data, null, 2)
+        : "Пусто";
+}
 
-            if (user) {
-                loginBtns.style.display = 'none';
-                userInfo.style.display = 'block';
-                statusText.innerText = `Статус: В сети (Google: ${user.email})`;
-                statusText.style.color = '#4285F4';
-            } else if (phraseId) {
-                loginBtns.style.display = 'none';
-                userInfo.style.display = 'block';
-                statusText.innerText = `Статус: В сети (Фраза: ${phraseId.replace('phrase_', '')})`;
-                statusText.style.color = '#34A853';
-            } else {
-                loginBtns.style.display = 'block';
-                userInfo.style.display = 'none';
-                statusText.innerText = 'Статус: Не в сети (Локальный режим)';
-                statusText.style.color = '#333';
-            }
-            updateStorageDisplay();
-        }
+function copyStorage() {
+    const text = document.getElementById('local-storage-display').innerText;
+    navigator.clipboard.writeText(text);
+}
 
-        // Добавляем тестовые данные (имитируем работу сайта)
-        function addTestData() {
-            const randNum = Math.floor(Math.random() * 100);
-            localStorage.setItem(`test_sutta_${randNum}`, `Сутта MN ${randNum} добавлена в ${new Date().toLocaleTimeString()}`);
-            updateStorageDisplay();
-            
-            // Как только добавили локально, сразу шлем в облако!
-            syncToCloud();
-        }
+setInterval(updateStorageDisplay, 1000);
+</script>
 
-        // Очистка для удобства тестирования
-        function clearLocalData() {
-            const phrase = localStorage.getItem('syncPhraseId');
-            localStorage.clear();
-            if (phrase) localStorage.setItem('syncPhraseId', phrase); // Возвращаем фразу, чтобы не разлогиниться
-            updateStorageDisplay();
-            syncToCloud(); // Очищаем и облако тоже
-        }
-
-        // Рисуем табличку с данными
-        function updateStorageDisplay() {
-            const display = document.getElementById('local-storage-display');
-            const dataObj = { ...localStorage };
-            display.innerText = Object.keys(dataObj).length > 0 
-                ? JSON.stringify(dataObj, null, 2) 
-                : "Локальное хранилище пусто";
-        }
-
-        // Обновляем экран каждую секунду (для наглядности)
-        setInterval(updateStorageDisplay, 1000);
-    </script>
 </body>
 </html>
-

@@ -192,37 +192,49 @@ function buildQuickModalDOM() {
       const targetContent = quickModal.querySelector(`#${targetTab}`);
       targetContent.classList.add('active');
       
+      // --- НАЧАЛО: ЛОГИКА ЛЕНИВОЙ ЗАГРУЗКИ ---
       const iframe = targetContent.querySelector('iframe');
       if (iframe && !iframe.getAttribute('src')) {
           iframe.setAttribute('src', iframe.getAttribute('data-src'));
       }
+      // --- КОНЕЦ ---
 
-      if (mainTrashIcon) mainTrashIcon.style.display = targetTab === 'tab-fav' ? 'block' : 'none';
-      if (btnSyncNow) btnSyncNow.style.display = targetTab === 'tab-fav' ? 'block' : 'none';
+      // Переключаем видимость иконок
+      if (mainTrashIcon) {
+          mainTrashIcon.style.display = targetTab === 'tab-fav' ? 'block' : 'none';
+      }
+      // Переключаем видимость кнопки Sync
+      if (btnSyncNow) {
+          btnSyncNow.style.display = targetTab === 'tab-fav' ? 'block' : 'none';
+      }
       if (mainOpenWindowIcon) {
           mainOpenWindowIcon.style.display = (targetTab === 'tab-memo' || targetTab === 'tab-dpd') ? 'block' : 'none';
       }
     });
   });
 
+  // --- ЛОГИКА НАЖАТИЯ КНОПКИ СИНХРОНИЗАЦИИ ---
   if (btnSyncNow) {
-      btnSyncNow.addEventListener('click', async (e) => { 
+      btnSyncNow.addEventListener('click', async (e) => { // <-- Добавили async
           e.preventDefault();
           
           const isLoggedWithPhrase = !!localStorage.getItem('syncPhraseId');
           const isLoggedWithGoogle = typeof auth !== 'undefined' && auth && auth.currentUser;
           
           if (isLoggedWithPhrase || isLoggedWithGoogle) {
+              // Делаем иконку полупрозрачной для визуального отклика
               btnSyncNow.style.opacity = '0.5';
               
               if (typeof forceSyncNow === 'function') {
-                  await forceSyncNow(); 
+                  await forceSyncNow(); // <-- Ждем окончания облачной синхронизации
               }
               
+              // Обновляем локальные списки модального окна
               if (typeof window.refreshQuickModalData === 'function') {
                   window.refreshQuickModalData();
               }
               
+              // Возвращаем иконке нормальный вид
               btnSyncNow.style.opacity = '1';
           } else {
               window.location.href = isRu ? '/ru/login' : '/login';
@@ -230,6 +242,8 @@ function buildQuickModalDOM() {
       });
   }
 
+
+  // Логика закрытия модалки
   const closeQuickModal = () => {
     if(quickModalIsOpen) toggleQuickModal();
   };
@@ -241,14 +255,16 @@ function buildQuickModalDOM() {
       window.initPaliAutocomplete('#quickSearchInput');
   }
 
+  // Прикрепляем функции рендера глобально
   window.refreshQuickModalData = function() {
     renderQuickLists(isRu, queryBase);
   };
   
+  // Делегирование событий на клики внутри списков
   const favContainer = quickModal.querySelector('#quick-favorites-container');
   const histContainer = quickModal.querySelector('#quick-history-container');
   
-  favContainer.addEventListener('click', (e) => {
+    favContainer.addEventListener('click', (e) => {
       if (e.target.classList.contains('remove-fav-btn')) {
           const slug = e.target.dataset.slug;
           if (confirm(isRu ? "Удалить из избранного?" : "Remove from favorites?")) {
@@ -256,18 +272,16 @@ function buildQuickModalDOM() {
               favData = favData.filter(f => f.slug !== slug);
               localStorage.setItem('dg_favorites', JSON.stringify(favData));
               
-              // --- ИЗМЕНЕНО: Атомарная отправка ---
-              if (typeof syncFavoriteItemToCloud === 'function') {
-                  syncFavoriteItemToCloud({slug: slug}, true);
-              }
+              // --- ДОБАВЛЕНО: Отправка изменений в БД ---
+              if (typeof backupToCloud === 'function') backupToCloud();
               
               window.refreshQuickModalData();
           }
       }
   });
 
-  histContainer.addEventListener('click', (e) => {
-      // 1. Избранное из истории
+    histContainer.addEventListener('click', (e) => {
+      // 1. Логика добавления/удаления из избранного (клик по звездочке)
       if (e.target.classList.contains('toggle-fav-btn-hist')) {
           const slug = e.target.dataset.slug;
           const displayKey = e.target.dataset.display;
@@ -275,58 +289,57 @@ function buildQuickModalDOM() {
           let currentFavs = JSON.parse(localStorage.getItem('dg_favorites')) || [];
           const idx = currentFavs.findIndex(f => f.slug === slug);
           
-          const parser = new URL(url, window.location.origin);
-          const isSearchPage = parser.pathname === '/' || parser.pathname === '/ru/' || parser.pathname.endsWith('index.php');
-          let finalTitle = displayKey;
-          if (isSearchPage && !finalTitle.startsWith("")) finalTitle = finalTitle;
-          
-          const favObj = {
-              slug: slug, id: slug, title: finalTitle, 
-              path: parser.pathname, search: parser.search, timestamp: Date.now()
-          };
-
           if (idx !== -1) {
              currentFavs.splice(idx, 1);
           } else {
-             currentFavs.unshift(favObj);
+             const parser = new URL(url, window.location.origin);
+             const isSearchPage = parser.pathname === '/' || parser.pathname === '/ru/' || parser.pathname.endsWith('index.php');
+             let finalTitle = displayKey;
+             if (isSearchPage && !finalTitle.startsWith("")) finalTitle =  finalTitle;
+
+             currentFavs.unshift({
+                 slug: slug, id: slug, title: finalTitle, 
+                 path: parser.pathname, search: parser.search, timestamp: Date.now()
+             });
           }
           localStorage.setItem('dg_favorites', JSON.stringify(currentFavs));
           
-          // --- ИЗМЕНЕНО: Атомарная отправка ---
-          if (typeof syncFavoriteItemToCloud === 'function') {
-              syncFavoriteItemToCloud(favObj, idx !== -1);
-          }
+          // Отправка изменений в БД
+          if (typeof backupToCloud === 'function') backupToCloud();
           
           window.refreshQuickModalData();
       }
 
-      // 2. Скрытое удаление из истории
+      // 2. Скрытое удаление из истории (клик по дате) с логикой "Надгробий" (Tombstones)
       if (e.target.classList.contains('hidden-delete-hist')) {
           const slug = e.target.dataset.slug;
           
           if (confirm(isRu ? "Стереть этот запрос из истории?" : "Delete this search from history?")) {
               
+              // --- СОЗДАНИЕ МЕТКИ УДАЛЕНИЯ ---
               let deletedHist = JSON.parse(localStorage.getItem('dg_deleted_history')) || [];
               deletedHist.push({ slug: slug, deletedAt: Date.now() });
+              // Ограничиваем список меток, чтобы не забивать память (300 штук достаточно)
               if (deletedHist.length > 300) deletedHist.shift(); 
               localStorage.setItem('dg_deleted_history', JSON.stringify(deletedHist));
 
+              // --- УДАЛЕНИЕ ИЗ ЛОКАЛЬНОГО МАССИВА ---
               let histData = JSON.parse(localStorage.getItem('localSearchHistory')) || [];
+              
               histData = histData.filter(h => {
                   let currentSlug = h[0];
                   try { 
                       const p = new URL(h[1], window.location.origin); 
                       if (p.searchParams.has('q')) currentSlug = p.searchParams.get('q'); 
                   } catch(err) {}
+                  
                   return currentSlug !== slug;
               });
 
               localStorage.setItem('localSearchHistory', JSON.stringify(histData));
               
-              // --- ИЗМЕНЕНО: Атомарная отправка ---
-              if (typeof syncHistoryItemToCloud === 'function') {
-                  syncHistoryItemToCloud(slug, null, null, true);
-              }
+              // Отправка изменений в БД (включая новую метку)
+              if (typeof backupToCloud === 'function') backupToCloud();
               
               window.refreshQuickModalData();
           }
@@ -338,14 +351,16 @@ function buildQuickModalDOM() {
           if (confirm(isRu ? "Очистить ВСЮ историю поиска, включая в Облаке?" : "Clear ALL search history, including Cloud?")) {
               localStorage.setItem('localSearchHistory', JSON.stringify([]));
               
-              // --- ИЗМЕНЕНО: Отправка команды на очистку коллекции ---
-              if (typeof clearCloudHistory === 'function') clearCloudHistory();
+              // --- ДОБАВЛЕНО: Отправка изменений в БД ---
+              if (typeof backupToCloud === 'function') backupToCloud();
               
               window.refreshQuickModalData();
           }
       });
   }
 
+
+  // --- ЛОГИКА КНОПКИ "ОТКРЫТЬ В НОВОМ ОКНЕ" ---
   if (mainOpenWindowIcon) {
       mainOpenWindowIcon.addEventListener('click', () => {
           const activeTab = quickModal.querySelector('.quick-tab-content.active');
@@ -355,13 +370,18 @@ function buildQuickModalDOM() {
           if (!iframe) return;
 
           const urlToOpen = iframe.getAttribute('src') || iframe.getAttribute('data-src');
-          if (urlToOpen) window.open(urlToOpen, '_blank');
+          
+          if (urlToOpen) {
+              window.open(urlToOpen, '_blank');
+          } else {
+              console.log("Ссылка не найдена");
+          }
       });
   }
 
+  // Обработчики заголовков для сортировки/скрытия
   setupQuickModalHeaders();
 }
-
 
 function renderQuickLists(isRu, queryBase) {
     const favData = JSON.parse(localStorage.getItem('dg_favorites')) || [];
@@ -489,23 +509,20 @@ window.toggleQuickModal = function() {
         if (searchInput) searchInput.focus();
     }, 100);
 
-    // 3. Фоновая синхронизация
-    if (typeof forceSyncNow === 'function') {
-        const syncImg = document.querySelector('#btn-sync-now img');
-        
-        // Включаем вращение своей независимой CSS анимацией
-        if (syncImg) syncImg.classList.add('custom-spin');
-
-        // Вызываем синхронизацию (без await, чтобы не блокировать окно)
+    // --- 3. НОВОЕ: ФОНОВАЯ СИНХРОНИЗАЦИЯ ПРИ ОТКРЫТИИ ---
+    const isLoggedWithPhrase = !!localStorage.getItem('syncPhraseId');
+    const isLoggedWithGoogle = typeof auth !== 'undefined' && auth && auth.currentUser;
+    
+    if ((isLoggedWithPhrase || isLoggedWithGoogle) && typeof forceSyncNow === 'function') {
+        // Запускаем синк асинхронно (без await), чтобы окно не зависало при плохом интернете
         forceSyncNow().then(() => {
+            // Когда облако пришлет свежие данные и сольет их, просто перерисовываем списки
+            // (проверяем, что окно все еще открыто, чтобы не рендерить впустую)
             if (window.quickModalIsOpen && typeof window.refreshQuickModalData === 'function') {
                 window.refreshQuickModalData();
             }
-            // Выключаем вращение, когда загрузка завершена
-            if (syncImg) syncImg.classList.remove('custom-spin');
         });
     }
-
   }
 };
 

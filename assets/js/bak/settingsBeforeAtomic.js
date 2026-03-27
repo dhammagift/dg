@@ -499,42 +499,48 @@ async function saveToHistory(key, url) {
   
     let history = JSON.parse(localStorage.getItem("localSearchHistory")) || [];
     
+    // Умное определение корня сутты. 
+    // Берем первое слово. Если в нем есть цифра (напр. "mn91") - это сутта.
+    // Это чинит баг, когда обычные запросы с цифрами (напр. "kamma 1") затирали друг друга
     const firstWord = key.split(/\s+/)[0];
     const isSutta = /\d/.test(firstWord);
     const rootKey = isSutta ? firstWord : key;
 
-    let bestKey = key; 
+    let bestKey = key; // То, что мы в итоге сохраним
     
     history = history.filter(([k]) => {
-        if (k === key) return false; 
+        if (k === key) return false; // Точное совпадение удаляем (мы его поднимем наверх)
         
+        // Если это сутта, ищем дубли (mn91 vs mn91 Brahmayusutta)
         if (isSutta) {
             const kRoot = k.split(/\s+/)[0];
             if (kRoot === rootKey) {
+                // Если в старой истории название длиннее, забираем его себе!
                 if (k.length > bestKey.length) {
                     bestKey = k;
                 }
-                return false; 
+                return false; // Старый дубль (короткий или старый) удаляем
             }
         }
         return true;
     });
     
+    // Добавляем запись в начало
     history.unshift([bestKey, value, timestamp]);
+    
+    // Ограничиваем историю
     localStorage.setItem("localSearchHistory", JSON.stringify(history.slice(0, MAX_HISTORY)));
     
-    // --- ИЗМЕНЕНО: Атомарная отправка истории ---
-    if (typeof syncHistoryItemToCloud === 'function') {
-        syncHistoryItemToCloud(bestKey, value, timestamp);
-    }
+    if (typeof backupToCloud === 'function') backupToCloud();
 
+    // Мгновенное обновление UI модалки
     if (typeof window.refreshQuickModalData === 'function' && window.quickModalIsOpen) {
         window.refreshQuickModalData();
     }
 
+    // Возвращаем реальный ключ, чтобы addToSearchHistory знала, нужно ли искать дальше
     return bestKey; 
 }
-
 
 //установка фокуса в инпуте по нажатию / 
 document.addEventListener('keydown', function(event) {
@@ -1195,26 +1201,28 @@ if (savedScript) {
 localStorage.setItem('selectedScript', 'ISOPali');
 }
 
+
+
 if (applyButton) {
   applyButton.addEventListener('click', function() {
+    // Сохраняем все выбранные настройки
     localStorage.setItem('selectedScript', scriptSelect.value);
     localStorage.setItem('selectedDict', dictSelect.value);
     
+    // Сохраняем состояние чекбокса removePunct (если он есть на странице)
     const removePunctCheckbox = document.querySelector('.setting-checkbox[data-key="removePunct"]');
     if (removePunctCheckbox) {
       localStorage.setItem('removePunct', removePunctCheckbox.checked);
     }
     
     localStorage.setItem("firstVisitShowSettingsClosed", "true");
-    saveExactScrollPosition(); 
     
-    // --- ИЗМЕНЕНО: Атомарная отправка настроек ---
-    if (typeof syncSettingsToCloud === 'function') syncSettingsToCloud();  
-    
+saveExactScrollPosition(); 
+  if (typeof backupToCloud === 'function') backupToCloud();  
+    // Перезагружаем страницу для применения всех изменений
     location.reload();
   });
 }
-
 
   // Функция для применения сохраненного значения
 function applySavedDict(dict) {
@@ -2007,12 +2015,15 @@ function isFavorite(slug) {
 }
 
 
+
 function toggleFavoriteGlobal(itemData) {
     if (!itemData || !itemData.slug) return false;
 
+    // <-- Централизованная обработка перед сохранением
     itemData.slug = formatSlug(itemData.slug);
     if (itemData.id) itemData.id = formatSlug(itemData.id);
 
+    // --- ОПРЕДЕЛЯЕМ ЯЗЫК ДЛЯ УВЕДОМЛЕНИЙ ---
     const currentPath = window.location.pathname;
     const isRu = currentPath.includes('/ru/') || currentPath.includes('/r/') || currentPath.includes('/ml/');
     
@@ -2024,32 +2035,35 @@ function toggleFavoriteGlobal(itemData) {
     let isAdded = false;
 
     if (existingIndex !== -1) {
-        favs.splice(existingIndex, 1); 
+        favs.splice(existingIndex, 1); // Удаляем
         if (typeof showBubbleNotification === 'function') showBubbleNotification(textRemoved);
     } else {
+    //    if (favs.length >= 84) favs.pop(); // Лимит 84
         itemData.timestamp = Date.now();
-        favs.unshift(itemData); 
+        favs.unshift(itemData); // Добавляем
         isAdded = true;
         if (typeof showBubbleNotification === 'function') showBubbleNotification(textSaved);
     }
 
     localStorage.setItem(FAV_STORAGE_KEY, JSON.stringify(favs));
     
-    // --- ИЗМЕНЕНО: Атомарная отправка избранного ---
-    if (typeof syncFavoriteItemToCloud === 'function') {
-        syncFavoriteItemToCloud(itemData, !isAdded); // Передаем флаг удаления
-    }
+    if (typeof backupToCloud === 'function') backupToCloud();
 
+    // --- НОВОЕ: Мгновенное обновление UI, если модалка открыта ---
     if (typeof window.refreshQuickModalData === 'function' && window.quickModalIsOpen) {
         window.refreshQuickModalData();
     }
     
     window.dispatchEvent(new CustomEvent('favoritesUpdated', { 
-        detail: { slug: itemData.slug, isAdded: isAdded } 
+        detail: { 
+            slug: itemData.slug, 
+            isAdded: isAdded 
+        } 
     }));
 
     return isAdded;
 }
+
 
 // АВТО-СОХРАНЕНИЕ В ИСТОРИЮ ПРИ ОТКРЫТИИ ССЫЛКИ
 document.addEventListener("DOMContentLoaded", () => {
@@ -2124,34 +2138,29 @@ document.addEventListener("DOMContentLoaded", () => {
 })();
 
 // ==========================================
-// УМНАЯ ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ FIREBASE (Subcollections)
+// ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ FIREBASE (УМНАЯ ЗАГРУЗКА)
 // ==========================================
 
 let db = null;
 let auth = null;
 let googleProvider = null;
 
-function getUid() {
-    const user = auth ? auth.currentUser : null;
-    return user ? user.uid : localStorage.getItem('syncPhraseId');
-}
-
-function sanitizeId(str) {
-    return encodeURIComponent(str).replace(/\./g, '%2E');
-}
-
+// 1. Автоматический загрузчик скриптов Firebase
 function loadFirebaseScripts() {
     return new Promise((resolve) => {
         if (window.firebase) { resolve(); return; }
+
         const scripts = [
             "https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js",
             "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js",
             "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"
         ];
+
         let loadedCount = 0;
         scripts.forEach(src => {
             const script = document.createElement('script');
-            script.src = src; script.async = true; 
+            script.src = src;
+            script.async = true; 
             script.onload = () => {
                 loadedCount++;
                 if (loadedCount === scripts.length) resolve();
@@ -2161,9 +2170,11 @@ function loadFirebaseScripts() {
     });
 }
 
+// 2. Инициализация
 async function initFirebase() {
     try {
-        await loadFirebaseScripts();
+        await loadFirebaseScripts(); // Ждем загрузки скриптов
+
         if (firebase.apps.length) return;
 
         const response = await fetch('/config/sync-config.json?update=' + Date.now());
@@ -2183,8 +2194,12 @@ async function initFirebase() {
             if (user) restoreFromCloud(user);
             else if (phraseId) restoreFromCloud({ uid: phraseId });
 
-            if (typeof updateGlobalSyncButtons === 'function') updateGlobalSyncButtons(user, phraseId);
-            if (typeof renderLoginPageUI === 'function') renderLoginPageUI(user, phraseRaw);
+            if (typeof updateGlobalSyncButtons === 'function') {
+                updateGlobalSyncButtons(user, phraseId);
+            }
+            if (typeof renderLoginPageUI === 'function') {
+                renderLoginPageUI(user, phraseRaw);
+            }
         });
     } catch (error) { console.error("Firebase Init Error:", error); }
 }
@@ -2199,198 +2214,185 @@ function refreshSyncTimeUI() {
     }
 }
 
-// === АТОМАРНЫЕ ФУНКЦИИ ===
+// 3. РАБОТА С ДАННЫМИ
+window.backupToCloud = async function() {
+    if (!db) { refreshSyncTimeUI(); return; }
+    
+    const user = auth ? auth.currentUser : null;
+    const uid = user ? user.uid : localStorage.getItem('syncPhraseId');
+    if (!uid) { refreshSyncTimeUI(); return; }
 
-window.syncSettingsToCloud = async function() {
-    if (!db || !getUid()) return;
-    const uid = getUid();
-    const settingsToSave = {};
-
-    // ⛔ ЧЕРНЫЙ СПИСОК (Отсекаем кэш таблиц и системные ключи)
-    const ignorePrefixes = ['DataTables_', 'dg_', 'syncPhrase'];
-    // Игнорируем историю (сохраняется отдельно) и локальный таймер
-    const ignoreExact = ['localSearchHistory', 'lastSyncTime'];
-
-    // Собираем полезные настройки (suttaProgress, currentMemoText, тема и т.д. теперь здесь!)
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        
-        const isIgnoredPrefix = ignorePrefixes.some(prefix => key.startsWith(prefix));
-        const isIgnoredExact = ignoreExact.includes(key);
-
-        if (!isIgnoredPrefix && !isIgnoredExact) {
-            settingsToSave[key] = localStorage.getItem(key);
-        }
-    }
-
-    if (Object.keys(settingsToSave).length === 0) return;
+    const expireDate = new Date();
+    expireDate.setMonth(expireDate.getMonth() + 6);
 
     try {
         await db.collection("users").doc(uid).set({
-            settings: settingsToSave,
-            updatedAt: Date.now()
-        }, { merge: true });
-        refreshSyncTimeUI();
-    } catch (e) { console.error("Settings Sync Error:", e); }
-};
-
-window.forceSyncNow = async function() {
-    const uid = getUid();
-    if (!uid) return; 
-
-    // Запускаем вращение иконок
-    document.querySelectorAll('.fa-rotate, #btn-sync-now img').forEach(icon => {
-        icon.classList.add(icon.tagName === 'IMG' ? 'custom-spin' : 'fa-spin');
-    });
-
-    try {
-        // 1. УМНАЯ ОТПРАВКА: Только если настройки реально менялись
-        if (window.dg_settingsChanged) {
-            await syncSettingsToCloud();
-            window.dg_settingsChanged = false; // Сбрасываем флаг после успешной отправки
-        }
-        
-        // 2. СКАЧИВАНИЕ: Обновляем историю и избранное из облака
-        await restoreFromCloud({ uid: uid });
-
-    } catch (error) { 
-        console.error("Sync error:", error); 
-    } finally {
-        // Выключаем вращение
-        document.querySelectorAll('.fa-rotate, #btn-sync-now img').forEach(icon => {
-            icon.classList.remove('fa-spin', 'custom-spin');
+            settings: JSON.stringify(localStorage),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            expireAt: expireDate
         });
+    } catch (error) { 
+        console.error("Backup Error:", error); 
+    } finally {
+        refreshSyncTimeUI(); // Снимает спиннер всегда
     }
 };
 
-window.syncFavoriteItemToCloud = async function(favData, isDeleted = false) {
-    if (!db || !getUid()) return;
-    const uid = getUid();
-    const docId = sanitizeId(favData.slug);
-    const docRef = db.collection("users").doc(uid).collection("favorites").doc(docId);
-
-    try {
-        if (isDeleted) await docRef.delete();
-        else await docRef.set({ ...favData, updatedAt: Date.now() });
-        refreshSyncTimeUI();
-    } catch (e) { console.error("Fav Sync Error:", e); }
-};
-
-window.syncHistoryItemToCloud = async function(key, url, timestamp, isDeleted = false) {
-    if (!db || !getUid()) return;
-    const uid = getUid();
-    const baseKey = /\d/.test(key) ? key.split(/\s+/)[0] : key;
-    const docId = sanitizeId(baseKey);
-    const docRef = db.collection("users").doc(uid).collection("history").doc(docId);
-
-    try {
-        if (isDeleted) await docRef.delete();
-        else await docRef.set({ key, url, timestamp, updatedAt: Date.now() });
-        refreshSyncTimeUI();
-    } catch (e) { console.error("History Sync Error:", e); }
-};
-
-window.clearCloudHistory = async function() {
-    if (!db || !getUid()) return;
-    const uid = getUid();
-    try {
-        const snap = await db.collection("users").doc(uid).collection("history").get();
-        const batch = db.batch();
-        snap.docs.forEach(doc => batch.delete(doc.ref));
-        await batch.commit();
-        refreshSyncTimeUI();
-    } catch (e) { console.error("Error clearing history:", e); }
-};
-
-// === УМНОЕ ВОССТАНОВЛЕНИЕ (Smart Merge) ===
-
 window.restoreFromCloud = async function(userObj) {
-    if (!db) return;
-    const uid = userObj.uid;
-
+    if (!db) { refreshSyncTimeUI(); return; }
+    
     try {
-        // 1. Настройки
-        const userDoc = await db.collection("users").doc(uid).get();
-        if (userDoc.exists && userDoc.data().settings) {
-            const cloudSettings = userDoc.data().settings;
-            for (const k in cloudSettings) {
-                if (localStorage.getItem(k) !== cloudSettings[k]) {
-                    localStorage.setItem(k, cloudSettings[k]);
+        const doc = await db.collection("users").doc(userObj.uid).get();
+        if (doc.exists) {
+            const cloudData = JSON.parse(doc.data().settings);
+
+            // --- 0. СЛИЯНИЕ МЕТОК УДАЛЕНИЯ (Tombstones) ---
+            let delMap = new Map();
+            if (cloudData['dg_deleted_history'] || localStorage.getItem('dg_deleted_history')) {
+                let localDel = JSON.parse(localStorage.getItem('dg_deleted_history')) || [];
+                let cloudDel = cloudData['dg_deleted_history'] ? JSON.parse(cloudData['dg_deleted_history']) : [];
+                
+                let mergedDel = [...localDel, ...cloudDel];
+                mergedDel.forEach(item => {
+                    let existing = delMap.get(item.slug);
+                    if (!existing || item.deletedAt > existing.deletedAt) {
+                        delMap.set(item.slug, item);
+                    }
+                });
+                
+                // Храним только свежие 300 меток
+                let finalDel = Array.from(delMap.values())
+                    .sort((a, b) => a.deletedAt - b.deletedAt)
+                    .slice(-300); 
+                localStorage.setItem('dg_deleted_history', JSON.stringify(finalDel));
+                delete cloudData['dg_deleted_history'];
+            }
+
+            // --- 1. УМНОЕ СЛИЯНИЕ ИСТОРИИ ПОИСКА (Дедупликация сутт + Таймстампы + Tombstones) ---
+            if (cloudData['localSearchHistory']) {
+                let localHist = JSON.parse(localStorage.getItem('localSearchHistory')) || [];
+                let cloudHist = JSON.parse(cloudData['localSearchHistory']) || [];
+                
+                let mergedHist = [...localHist, ...cloudHist];
+                let uniqueMap = new Map();
+                
+                mergedHist.forEach(item => {
+                    if (!item || !item[0]) return;
+                    let key = String(item[0]);
+                    
+                    // Находим "базу" (например "mn91" из "mn91 Brahmayusutta")
+                    let baseKey = /\d/.test(key) ? key.split(/\s+/)[0] : key;
+                    let existing = uniqueMap.get(baseKey);
+                    
+                    if (!existing) {
+                        uniqueMap.set(baseKey, item);
+                    } else {
+                        // Оставляем вариант с самым длинным названием
+                        let bestKey = key.length > existing[0].length ? key : existing[0];
+                        // Берем самую свежую дату и URL
+                        let isNewer = new Date(item[2]) > new Date(existing[2]);
+                        let bestDate = isNewer ? item[2] : existing[2];
+                        let bestUrl = isNewer ? item[1] : existing[1];
+                        
+                        uniqueMap.set(baseKey, [bestKey, bestUrl, bestDate]);
+                    }
+                });
+                
+                let finalHist = Array.from(uniqueMap.values())
+                    .filter(item => {
+                        // Фильтруем историю через метки удаления
+                        let baseKey = /\d/.test(item[0]) ? item[0].split(/\s+/)[0] : item[0];
+                        
+                        let delRecord = delMap.get(baseKey) || delMap.get(item[0]);
+                        if (delRecord) {
+                            // Если дата удаления ПОЗЖЕ, чем дата поиска, значит запрос мертв
+                            if (delRecord.deletedAt > new Date(item[2]).getTime()) {
+                                return false; // Выкидываем из истории
+                            }
+                        }
+                        return true; // Оставляем
+                    })
+                    .sort((a, b) => new Date(b[2]) - new Date(a[2])) // Новые сверху
+                    .slice(0, 8400); 
+                    
+                localStorage.setItem('localSearchHistory', JSON.stringify(finalHist));
+                delete cloudData['localSearchHistory']; 
+            }
+
+            // --- 2. УМНОЕ СЛИЯНИЕ ИЗБРАННОГО ---
+            if (cloudData['dg_favorites']) {
+                let localFavs = JSON.parse(localStorage.getItem('dg_favorites')) || [];
+                let cloudFavs = JSON.parse(cloudData['dg_favorites']) || [];
+                
+                let mergedFavs = [...localFavs, ...cloudFavs];
+                let favMap = new Map();
+                
+                mergedFavs.forEach(item => {
+                    let existing = favMap.get(item.slug);
+                    if (!existing || item.timestamp > existing.timestamp) {
+                        favMap.set(item.slug, item);
+                    }
+                });
+                
+                let finalFavs = Array.from(favMap.values())
+                    .sort((a, b) => b.timestamp - a.timestamp);
+                    
+                localStorage.setItem('dg_favorites', JSON.stringify(finalFavs));
+                delete cloudData['dg_favorites'];
+            }
+
+            // --- 3. ВОССТАНОВЛЕНИЕ ОСТАЛЬНЫХ НАСТРОЕК ---
+            for (const key in cloudData) {
+                // Игнорируем пароли
+                if (key === 'syncPhraseRaw' || key === 'syncPhraseId' || key === 'lastSyncTime') continue;
+                
+                // Игнорируем ВСЕ ключи модалки (dg_...), чтобы облако не сбрасывало локальный UI
+                if (key.startsWith('dg_')) continue;
+
+                // Синхронизируем все остальные полезные настройки (размер шрифта, словари и т.д.)
+                if (localStorage.getItem(key) !== cloudData[key]) {
+                    localStorage.setItem(key, cloudData[key]);
                 }
             }
         } else {
-            syncSettingsToCloud();
+            await backupToCloud();
         }
-
-        // 2. Избранное
-        const favSnap = await db.collection("users").doc(uid).collection("favorites").get();
-        let localFavs = JSON.parse(localStorage.getItem('dg_favorites')) || [];
-        let favMap = new Map();
-
-        localFavs.forEach(f => favMap.set(f.slug, f)); 
-
-        favSnap.forEach(doc => {
-            const cloudFav = doc.data();
-            const localFav = favMap.get(cloudFav.slug);
-            
-            if (!localFav || cloudFav.updatedAt > localFav.timestamp) {
-                favMap.set(cloudFav.slug, cloudFav);
-            } else if (localFav.timestamp > cloudFav.updatedAt) {
-                syncFavoriteItemToCloud(localFav);
-            }
-        });
-
-        const finalFavs = Array.from(favMap.values()).sort((a, b) => b.timestamp - a.timestamp);
-        localStorage.setItem('dg_favorites', JSON.stringify(finalFavs));
-
-        // 3. История
-        const histSnap = await db.collection("users").doc(uid).collection("history").get();
-        let localHist = JSON.parse(localStorage.getItem('localSearchHistory')) || [];
-        let histMap = new Map();
-
-        localHist.forEach(h => {
-            const baseKey = /\d/.test(h[0]) ? h[0].split(/\s+/)[0] : h[0];
-            histMap.set(baseKey, { key: h[0], url: h[1], timestamp: new Date(h[2]).getTime() });
-        });
-
-        histSnap.forEach(doc => {
-            const cloudHist = doc.data();
-            const baseKey = /\d/.test(cloudHist.key) ? cloudHist.key.split(/\s+/)[0] : cloudHist.key;
-            const localH = histMap.get(baseKey);
-            const cloudTime = new Date(cloudHist.timestamp).getTime();
-
-            if (!localH || cloudTime > localH.timestamp) {
-                histMap.set(baseKey, cloudHist);
-            } else if (localH.timestamp > cloudTime) {
-                syncHistoryItemToCloud(localH.key, localH.url, new Date(localH.timestamp).toISOString());
-            }
-        });
-
-        const finalHist = Array.from(histMap.values())
-            .sort((a, b) => b.timestamp - a.timestamp)
-            .map(h => [h.key, h.url, new Date(h.timestamp).toISOString()])
-            .slice(0, 8400);
-
-        localStorage.setItem('localSearchHistory', JSON.stringify(finalHist));
-
-        if (typeof window.refreshQuickModalData === 'function' && window.quickModalIsOpen) {
-            window.refreshQuickModalData();
-        }
-
-    } catch (error) { console.error("Cloud Restore Error:", error); } 
-    finally { refreshSyncTimeUI(); }
+    } catch (error) { 
+        console.error("Cloud Restore Error:", error); 
+    } finally {
+        refreshSyncTimeUI(); 
+    }
 };
 
+
+// 4. УПРАВЛЕНИЕ АВТОРИЗАЦИЕЙ И КНОПКАМИ
 window.syncLoginGoogle = async function() {
-    if (!auth) return;
-    try { await auth.signInWithPopup(googleProvider); } 
-    catch (error) { console.error("Login Error:", error); }
+    if (!auth) {
+        const btn = document.getElementById('btn-google-login');
+        if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fa-brands fa-google me-2"></i> Войти через Google`; }
+        return;
+    }
+    
+    const btn = document.getElementById('btn-google-login');
+    const originalHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin me-2"></i>` + btn.textContent;
+    }
+    try { 
+        await auth.signInWithPopup(googleProvider); 
+    } catch (error) { 
+        console.error("Login Error:", error); 
+        if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
+    }
 };
 
 window.syncEnablePhrase = async function(rawPhrase, hashedId) {
     localStorage.setItem('syncPhraseRaw', rawPhrase);
     localStorage.setItem('syncPhraseId', hashedId);
+    
     await restoreFromCloud({ uid: hashedId }); 
+    
     if (typeof updateGlobalSyncButtons === 'function') updateGlobalSyncButtons(null, hashedId);
     if (typeof renderLoginPageUI === 'function') renderLoginPageUI(null, rawPhrase);
 };
@@ -2400,20 +2402,17 @@ window.syncLogout = async function() {
     localStorage.removeItem('syncPhraseId');
     localStorage.removeItem('syncPhraseRaw');
     localStorage.removeItem('lastSyncTime');
+    
     if (typeof renderLoginPageUI === 'function') renderLoginPageUI(null, null);
     if (typeof updateGlobalSyncButtons === 'function') updateGlobalSyncButtons(null, null);
 };
 
 window.syncDeleteData = async function() {
-    const uid = getUid();
+    const user = auth ? auth.currentUser : null;
+    const uid = user ? user.uid : localStorage.getItem('syncPhraseId');
     if (uid && db) {
         try {
-            // Удаляем документ настроек
             await db.collection("users").doc(uid).delete();
-            // Подколлекции нужно удалять батчами (или просто игнорировать, если аккаунт удаляется)
-            // Но для надежности можно вызвать очистку:
-            await clearCloudHistory(); 
-            const user = auth ? auth.currentUser : null;
             if (user) await user.delete();
         } catch (error) { console.error("Delete Error:", error); }
     }
@@ -2421,21 +2420,42 @@ window.syncDeleteData = async function() {
 };
 
 window.forceSyncNow = async function() {
-    const uid = getUid();
-    if (!uid) return; 
+    const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
     
-    // Включаем вращение (FontAwesome там где есть, custom-spin для SVG картинок)
-    document.querySelectorAll('.fa-rotate').forEach(icon => icon.classList.add('fa-spin'));
-    document.querySelectorAll('#btn-sync-now img').forEach(icon => icon.classList.add('custom-spin'));
-    
+    // 1. ВКЛЮЧАЕМ АНИМАЦИЮ
+    const syncIcons = document.querySelectorAll('.fa-rotate');
+    syncIcons.forEach(icon => icon.classList.add('fa-spin'));
+
+    const activeModalImg = document.querySelector('#btn-sync-now img');
+    if (activeModalImg) {
+        activeModalImg.classList.add('custom-spin');
+    }
+
     try {
-        await restoreFromCloud({ uid: uid });
-        await syncSettingsToCloud();
-    } catch (error) { console.error("Sync error:", error); } 
-    finally {
-        // Выключаем вращение
+        const user = auth ? auth.currentUser : null;
+        const phraseId = localStorage.getItem('syncPhraseId');
+        
+        // --- ИСПРАВЛЕНИЕ ЗДЕСЬ ---
+        // 1. СНАЧАЛА ЗАГРУЖАЕМ И СЛИВАЕМ ДАННЫЕ ИЗ ОБЛАКА (Pull)
+        if (user) {
+            await restoreFromCloud(user);
+        } else if (phraseId) {
+            await restoreFromCloud({ uid: phraseId });
+        }
+
+        // 2. ТОЛЬКО ПОСЛЕ СЛИЯНИЯ ОТПРАВЛЯЕМ ПОЛНЫЙ КЭШ ОБРАТНО (Push)
+        // Теперь мы отправляем в облако локальную историю + то, что пришло с других устройств
+        await backupToCloud();
+
+    } catch (error) {
+        console.error("Sync error:", error);
+    } finally {
+        // 2. ВЫКЛЮЧАЕМ АНИМАЦИЮ (убираем классы)
         document.querySelectorAll('.fa-rotate').forEach(icon => icon.classList.remove('fa-spin'));
-        document.querySelectorAll('#btn-sync-now img').forEach(icon => icon.classList.remove('custom-spin'));
+        
+        if (activeModalImg) {
+            activeModalImg.classList.remove('custom-spin');
+        }
     }
 };
 
@@ -2452,27 +2472,3 @@ window.updateGlobalSyncButtons = function(user, phraseId) {
     }
 };
 
-// ==========================================
-// УМНЫЙ НАБЛЮДАТЕЛЬ (Находит изменения без хардкода)
-// ==========================================
-window.dg_settingsChanged = false; // Флаг: были ли изменения?
-
-(function() {
-    const originalSetItem = localStorage.setItem;
-    
-    // Список того, что МЫ ИГНОРИРУЕМ (мусор)
-    const ignoreList = ['DataTables_', 'localSearchHistory', 'lastSyncTime', 'syncPhrase', 'dg_'];
-
-    localStorage.setItem = function(key, value) {
-        // 1. Проверяем, не мусор ли это?
-        const isImportant = !ignoreList.some(prefix => key.startsWith(prefix));
-        
-        // 2. Если изменилось что-то важное — ставим пометку
-        if (isImportant && localStorage.getItem(key) !== String(value)) {
-            window.dg_settingsChanged = true;
-            // console.log(`Изменилась настройка: ${key}. Нужна синхронизация.`);
-        }
-        
-        originalSetItem.apply(this, arguments);
-    };
-})();

@@ -886,15 +886,15 @@ window.startMemoVisualTimer = function(durationMs, textPrefix) {
                 const end = ta.selectionEnd;
                 ta.value = lines.join('\n');
                 ta.setSelectionRange(start, end);
-                localStorage.setItem("входнойТекст", ta.value);
+                localStorage.setItem("currentMemoText", ta.value);
             }
         }
 
         function преобразоватьТекст() {
             добавитьПробелыВКонцеСтрок();
-            const входнойТекст = document.getElementById("inputText").value;
-            localStorage.setItem("входнойТекст", входнойТекст);
-            const строкиСКавычками = входнойТекст.split('\n');
+            const currentMemoText = document.getElementById("inputText").value;
+            localStorage.setItem("currentMemoText", currentMemoText);
+            const строкиСКавычками = currentMemoText.split('\n');
             const строки = строкиСКавычками.map(строка => {
                 return строка.replace(/"/g, ' " ').replace(/—/g, ' — ').replace(/“/g, ' “ ').replace(/‘/g, " ‘ ").replace(/\?/g, " ? ").replace(/,/g, " , ").replace(/\./g, " . ").replace(/:/g, " : ").replace(/;/g, " ; ");
             });
@@ -921,7 +921,7 @@ window.startMemoVisualTimer = function(durationMs, textPrefix) {
                 document.getElementById("inputText").value = "";
                 document.getElementById("результат").innerText = "";
                 document.getElementById("result_header").style.display = 'none';
-                localStorage.removeItem("входнойТекст");
+                localStorage.removeItem("currentMemoText");
                 localStorage.removeItem("результат");
                 
                 // Прячем кнопки копирования и очистки, так как текста больше нет
@@ -1009,23 +1009,23 @@ window.addEventListener('load', обновитьКнопкиВвода);
             if (textParam) {
                 // Загрузка обычного текста
                 document.getElementById("inputText").value = textParam;
-                localStorage.setItem("входнойТекст", textParam); 
+                localStorage.setItem("currentMemoText", textParam); 
                 document.getElementById("результат").innerText = "";
                 document.getElementById("result_header").style.display = 'none';
                 if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
             } else if (isMeditationPreset) {
                 // Загрузка таймера медитации - принудительно очищаем поле и кэш
                 document.getElementById("inputText").value = "";
-                localStorage.removeItem("входнойТекст");
+                localStorage.removeItem("currentMemoText");
                 document.getElementById("результат").innerText = "";
                 document.getElementById("result_header").style.display = 'none';
                 if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
             } else {
                 // Обычная загрузка страницы без параметров - достаем из кэша
-                const входнойТекст = localStorage.getItem("входнойТекст");
+                const currentMemoText = localStorage.getItem("currentMemoText");
                 const результат = localStorage.getItem("результат");
-                if (входнойТекст) {
-                    document.getElementById("inputText").value = входнойТекст;
+                if (currentMemoText) {
+                    document.getElementById("inputText").value = currentMemoText;
                     if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
                 }
                 if (результат && результат.trim() !== "") {

@@ -27,14 +27,6 @@ const ScrollManager = {
         });
     },
 
-    // Вспомогательная функция для нормализации ключа (как в settings.js)
-    normalizeSlug(slug) {
-        if (!slug) return '';
-        const s = String(slug).trim();
-        if (s.startsWith('memo_')) return s;
-        return s.toLowerCase();
-    },
-
     // 1. УМНОЕ ОЖИДАНИЕ АСИНХРОННОГО ЭЛЕМЕНТА
     waitForElement(id) {
         return new Promise((resolve) => {
@@ -114,7 +106,7 @@ const ScrollManager = {
         const urlParams = new URLSearchParams(window.location.search);
         const hasHash = !!window.location.hash;
 
-        // ПРИОРИТЕТ 1: Одноразовый прыжок из настроек (Apply)
+        // Приоритет 1: Одноразовый прыжок из настроек
         const rawSettingsData = localStorage.getItem('exactScrollAnchor');
         if (rawSettingsData) {
             try {
@@ -125,22 +117,33 @@ const ScrollManager = {
             } catch(e) {}
         }
 
-        // ПРИОРИТЕТ 2: Поиск текста по параметру ?s=...
+        // Приоритет 2: Поиск текста по параметру ?s=...
         const finder = urlParams.get("s");
         const query = urlParams.get("q");
         
+        // Срабатываем, только если нет четкого якоря (hash/localstorage) и есть параметры s и q
         if (!anchorId && !hasHash && finder && finder.trim() !== "" && query) {
             const textElement = await this.waitForText(finder);
             if (textElement) {
                 textElement.scrollIntoView({ behavior: "smooth", block: "start" });
-                return; 
+                return; // Прерываем функцию, текст найден и мы к нему прыгнули
             }
         }
 
-        // ПРИОРИТЕТ 3: Автосохраненный прогресс (Избранное / История)
-        // Теперь срабатывает ВСЕГДА, если в URL нет конкретного #якоря
-        if (!anchorId && !hasHash) {
-            const slug = this.normalizeSlug(urlParams.get('q'));
+        // Проверка: перезагрузил ли пользователь страницу?
+        let isReloadOrHistory = false;
+        if (window.performance) {
+            const navEntries = performance.getEntriesByType("navigation");
+            if (navEntries.length > 0) {
+                isReloadOrHistory = (navEntries[0].type === 'reload' || navEntries[0].type === 'back_forward');
+            } else if (performance.navigation) { 
+                isReloadOrHistory = (performance.navigation.type === 1 || performance.navigation.type === 2);
+            }
+        }
+
+        // Приоритет 3: Автосохраненный прогресс
+        if (!anchorId && (!hasHash || isReloadOrHistory)) {
+            const slug = urlParams.get('q');
             if (slug) {
                 try {
                     const progressData = JSON.parse(localStorage.getItem('suttaProgress') || '{}');
@@ -154,10 +157,11 @@ const ScrollManager = {
         }
 
         if (anchorId) {
+            // Ждем асинхронную загрузку элемента и прыгаем
             const el = await this.waitForElement(anchorId);
             if (el) this.executeScroll(el, offset, true); 
         } else {
-            // ПРИОРИТЕТ 4: Обычный хеш в URL
+            // Приоритет 4: Обычный хеш в URL
             this.scrollToHash();
         }
     },
@@ -196,7 +200,7 @@ const ScrollManager = {
         if (isInstant || window.isRestoringProgress) {
             const html = document.documentElement;
             const prevBehavior = getComputedStyle(html).scrollBehavior;
-            html.style.scrollBehavior = 'auto'; 
+            html.style.scrollBehavior = 'auto'; // Жесткий прыжок
             
             window.scrollTo({ top: targetY, behavior: 'auto' });
             
@@ -212,10 +216,10 @@ const ScrollManager = {
         }
     },
 
-    // 5. СОХРАНЕНИЕ ПРОГРЕССА
+    // 5. ОПТИМИЗИРОВАННОЕ СОХРАНЕНИЕ ПРОГРЕССА
     saveReadingProgress() {
         const urlParams = new URLSearchParams(window.location.search);
-        const slug = this.normalizeSlug(urlParams.get('q'));
+        const slug = urlParams.get('q');
         if (!slug) return;
 
         const suttaContainer = document.getElementById('sutta');
@@ -252,10 +256,10 @@ const ScrollManager = {
             };
 
             const keys = Object.keys(progressData);
-            if (keys.length > 30) { // Увеличил лимит до 30 сутт
+            if (keys.length > 20) {
                 keys.sort((a, b) => progressData[b].time - progressData[a].time);
                 const newProgressData = {};
-                for (let i = 0; i < 30; i++) {
+                for (let i = 0; i < 20; i++) {
                     newProgressData[keys[i]] = progressData[keys[i]];
                 }
                 progressData = newProgressData;
@@ -265,7 +269,7 @@ const ScrollManager = {
         }
     },
 
-    // 6. ПОИСК ЭЛЕМЕНТА
+    // 6. ПОИСК ЭЛЕМЕНТА С ОТКАТОМ ДО ПРЕДЫДУЩЕГО ID
     findFallbackElement(baseId) {
         if (!baseId) return null;
         const idStr = String(baseId);
@@ -285,7 +289,7 @@ const ScrollManager = {
         return null;
     },
 
-    // 7. АНИМАЦИИ
+    // 7. АНИМАЦИИ И ПОДСВЕТКА
     highlightAllById(elementId) {
         const element = this.findFallbackElement(elementId);
         if (!element) return;
@@ -308,9 +312,12 @@ const ScrollManager = {
 
         const overlay = document.createElement('div');
         overlay.style.position = 'absolute';
-        overlay.style.top = '0'; overlay.style.left = '0';
-        overlay.style.width = '100%'; overlay.style.height = '100%';
-        overlay.style.pointerEvents = 'none'; overlay.style.zIndex = '10';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.pointerEvents = 'none';
+        overlay.style.zIndex = '10';
         overlay.style.borderRadius = getComputedStyle(element).borderRadius;
         overlay.style.transition = 'background-color 0.45s ease-in-out';
         overlay.style.backgroundColor = 'transparent';
@@ -368,6 +375,7 @@ const ScrollManager = {
         }, 400);
     },
 
+    // 8. КНОПКА "НАВЕРХ"
     setupScrollToTop() {
         const scrollToTopBtn = document.createElement('button');
         scrollToTopBtn.id = 'scrollToTopBtn';
