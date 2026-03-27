@@ -87,11 +87,15 @@ function buildQuickModalDOM() {
         </h6>
         <div id="quick-history-container"></div>
         
-        <div class="quick-all-history-wrapper">
+        <div class="quick-all-history-wrapper" style="display: flex; justify-content: space-between; align-items: center;">
+            <a href="${isRu ? '/ru/assets/common/history.html' : '/assets/common/history.html'}" class="quick-all-history-link">
+                ${isRu ? "← Ваша история" : "← Your history"}
+            </a>
             <a href="${isRu ? '/ru/history.php' : '/history.php'}" class="quick-all-history-link">
                 ${isRu ? "Общая история →" : "Common history →"}
             </a>
         </div>
+
       </div>
 
       <div id="tab-4as" class="quick-tab-content">
