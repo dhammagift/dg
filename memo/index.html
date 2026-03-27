@@ -558,10 +558,13 @@ if (favBtn) {
                         let titleWords = text.split(/\s+/).slice(0, 5).join(' ');
                         if (text.split(/\s+/).length > 5) titleWords += '...';
                         options.title = titleWords;
+                        options.artist = "Dhamma.gift Voice";
+                        options.artwork = [{ src: '/assets/img/albumart-memo.png', sizes: '1024x1024', type: 'image/png' }];
                     } else {
-                        options.title = "Memorize Text";
+                        options.title = window.memoLang === 'ru' ? 'Медитация' : 'Meditation Timer';
+                        options.artist = "Dhamma.gift Timer";
+                        options.artwork = [{ src: '/assets/img/albumart-samadhi.png', sizes: '1024x1024', type: 'image/png' }];
                     }
-                    options.artist = "Dhamma.gift Voice";
                 }
                 return new OriginalMediaMetadata(options);
             };
@@ -1227,6 +1230,14 @@ function startMemoTTS(isRestart = false) {
         document.body.style.transition = 'padding-bottom 0.4s ease';
         document.body.style.paddingBottom = '120px';
         
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: window.memoLang === 'ru' ? 'Медитация' : 'Meditation Timer',
+                artist: 'Dhamma.gift Timer',
+                artwork: [{ src: '/assets/img/albumart-samadhi.png', sizes: '1024x1024', type: 'image/png' }]
+            });
+        }
+
         startGlobalSessionTimer();
         runMeditationCycle();
         return; 
@@ -1338,8 +1349,7 @@ function startMemoTTS(isRestart = false) {
     document.body.style.paddingBottom = '120px';
 }
 
-
-        function stopMemoTTS(fullReset = true) {
+function stopMemoTTS(fullReset = true) {
       
             добавитьПробелыВКонцеСтрок();
             const editToggle = document.getElementById('editModeToggle');
