@@ -42,12 +42,12 @@
   },
   "bb": {
     "bodhi": "Bhikkhu Bodhi",
-    "sujato+walton": "Sujato & Walton",
-    "anandajoti": "Anandajoti Bhikkhu",
-    "buddharakkhita": "Acharya Buddharakkhita",
-    "kelly": "John Kelly",
     "thanissaro": "Thanissaro Bhikkhu",
+    "anandajoti": "Anandajoti Bhikkhu",
+    "sujato+walton": "Sujato & Walton",
+    "buddharakkhita": "Acharya Buddharakkhita",
     "walshe": "Maurice Walshe",
+    "kelly": "John Kelly",
     "o": "<a href=/assets/common/o-en.html>o</a>"
   },
   "th": {

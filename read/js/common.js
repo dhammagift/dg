@@ -728,7 +728,7 @@ function renderNavigation(slug, slugReady) {
 }
 
 // ==========================================================================
-// АСИНХРОННЫЙ ПОИСК ДОСТУПНОГО ПЕРЕВОДЧИКА (С ПОДДЕРЖКОЙ ИМЕН)
+// АСИНХРОННЫЙ ПОИСК ДОСТУПНОГО ПЕРЕВОДЧИКА (PHP + ФОЛБЭК НА HEAD ЗАПРОСЫ)
 // ==========================================================================
 
 window.siteTranslators = null; // Создаем глобальную переменную для имен
@@ -736,25 +736,38 @@ window.siteTranslators = null; // Создаем глобальную перем
 async function getTranslator(texttype, slugReady, lang = "ru") {
     let translatorsData = {}; 
     
+    // 1. Обязательно загружаем словарь имен (он нужен для UI, чтобы красиво писать "Bhikkhu Sujato" и т.д.)
     try {
         const trResp = await fetch("/assets/js/translators.json");
         if (trResp.ok) {
             translatorsData = await trResp.json();
-            window.siteTranslators = translatorsData; // Сохраняем весь JSON для красивых имен
+            window.siteTranslators = translatorsData; 
         }
     } catch (e) {
         console.log("Файл translators.json не найден.");
     }
     
-    // Получаем список для нужного языка (или пустой объект)
+    // 2. ПЫТАЕМСЯ НАЙТИ ЧЕРЕЗ PHP (Быстрый путь)
+    try {
+        const phpResponse = await fetch(`/read/php/translator-lookup.php?fromjs=${texttype}/${slugReady}`);
+        if (phpResponse.ok) {
+            const data = await phpResponse.text();
+            const trnsResp = data.split(" ");
+            // Если PHP вернул строку, берем первое слово и сразу отдаем результат
+            if (trnsResp[0] && trnsResp[0].trim() !== "") {
+                return trnsResp[0].trim();
+            }
+        }
+    } catch (e) {
+        console.log("PHP поиск недоступен или вернул ошибку, переходим к запасному варианту.");
+    }
+
+    // 3. ФОЛБЭК: Ищем перебором через HEAD-запросы (Если PHP упал или ничего не нашел)
     const currentListObj = translatorsData[lang] || {};
-    
-    // Object.keys берет ключи (ID) в том самом порядке, в котором они записаны в JSON!
     const translatorIds = Object.keys(currentListObj); 
     
     if (translatorIds.length === 0) return lang === "en" ? "sujato" : "o";
     
-    // Формируем запросы
     const fetchPromises = translatorIds.map(tr => {
         let testPath = `/assets/texts/${lang}/${texttype}/${slugReady}_translation-${lang}-${tr}.json`;
         return fetch(testPath, { method: 'HEAD' }).then(response => {
@@ -767,6 +780,7 @@ async function getTranslator(texttype, slugReady, lang = "ru") {
         let foundTranslator = await Promise.any(fetchPromises);
         return foundTranslator.trim();
     } catch (e) {
+        // Если вообще ничего не нашли, отдаем дефолтные значения
         return lang === "en" ? "sujato" : "o"; 
     }
 }
