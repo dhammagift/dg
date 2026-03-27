@@ -362,11 +362,18 @@ function startGlobalSessionTimer() {
             window.globalSessionSeconds++;
             let m = Math.floor(window.globalSessionSeconds / 60).toString().padStart(2, '0');
             let s = (window.globalSessionSeconds % 60).toString().padStart(2, '0');
+            
+            // Маленький таймер слева
             let el = document.getElementById('global-session-timer');
             if (el) el.innerText = `${m}:${s}`;
+            
+            // Большой таймер по центру
+            let bigEl = document.getElementById('large-global-timer');
+            if (bigEl) bigEl.innerText = `${m}:${s}`;
         }, 1000);
     }
 }
+
 
 function pauseGlobalSessionTimer() {
     if (window.globalSessionInterval) {
@@ -781,38 +788,54 @@ window.addEventListener('DOMContentLoaded', () => {
         })();
 
         // --- ВИЗУАЛЬНЫЙ ТАЙМЕР ---
-        window.startMemoVisualTimer = function(durationMs, textPrefix) {
-            if (window.memoCountdownInterval) clearInterval(window.memoCountdownInterval);
-            const container = document.getElementById('dummy-ab-timer-container');
-            const span = document.getElementById('ab-btn-timer');
-            if (!container || !span) return;
+window.startMemoVisualTimer = function(durationMs, textPrefix) {
+    if (window.memoCountdownInterval) clearInterval(window.memoCountdownInterval);
+    const container = document.getElementById('dummy-ab-timer-container');
+    const span = document.getElementById('ab-btn-timer');
+    
+    if (container) {
+        container.style.display = 'inline-flex';
+        container.style.alignItems = 'center'; 
+    }
+    
+    const endTime = Date.now() + durationMs;
+    window.memoNextAllowedTime = endTime; 
+    window.memoLockId++;
+    
+    const iconSVG = `<img src="/assets/svg/hourglass-regular-full.svg" class="memo-timer-icon spaced" alt="timer">`;
+    
+    const tick = () => {
+        const left = endTime - Date.now();
+        if (left <= 0) {
+            clearInterval(window.memoCountdownInterval);
+            if (span) span.innerHTML = `<img src="/assets/svg/hourglass-regular-full.svg" class="memo-timer-icon" alt="timer">`; 
             
-            container.style.display = 'inline-flex';
-            container.style.alignItems = 'center'; 
-            const endTime = Date.now() + durationMs;
-            
-            window.memoNextAllowedTime = endTime; 
-            window.memoLockId++;
-            
-            const iconSVG = `<img src="/assets/svg/hourglass-regular-full.svg" class="memo-timer-icon spaced" alt="timer">`;
-            
-            const tick = () => {
-                const left = endTime - Date.now();
-                if (left <= 0) {
-                    clearInterval(window.memoCountdownInterval);
-                    span.innerHTML = `<img src="/assets/svg/hourglass-regular-full.svg" class="memo-timer-icon" alt="timer">`; 
-                    return;
-                }
-                const mins = Math.floor(left / 60000);
-                const secs = Math.floor((left % 60000) / 1000);
-                const timeStr = mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}`;
-                
-                const prefixHtml = textPrefix ? `<span style="margin-right:4px;">${textPrefix}</span>` : iconSVG;
-                span.innerHTML = `${prefixHtml}<span style="font-variant-numeric: tabular-nums;">${timeStr}</span>`;
-            };
-            tick();
-            window.memoCountdownInterval = setInterval(tick, 1000);
-        };
+            const bigCountdown = document.getElementById('large-countdown-timer');
+            if (bigCountdown) bigCountdown.innerText = '00:00';
+            return;
+        }
+        
+        const mins = Math.floor(left / 60000);
+        const secs = Math.floor((left % 60000) / 1000);
+        
+        // Формат для маленького таймера (скрывает нули минут)
+        const timeStr = mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}`;
+        // Формат для большого таймера (всегда 00:00)
+        const timeStrBig = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`; 
+        
+        if (span) {
+            const prefixHtml = textPrefix ? `<span style="margin-right:4px;">${textPrefix}</span>` : iconSVG;
+            span.innerHTML = `${prefixHtml}<span style="font-variant-numeric: tabular-nums;">${timeStr}</span>`;
+        }
+        
+        const bigCountdown = document.getElementById('large-countdown-timer');
+        if (bigCountdown) bigCountdown.innerText = timeStrBig;
+    };
+    
+    tick();
+    window.memoCountdownInterval = setInterval(tick, 1000);
+};
+
 
         function добавитьПробелыВКонцеСтрок() {
             const ta = document.getElementById("inputText");
@@ -1061,146 +1084,220 @@ window.addEventListener('load', обновитьКнопкиВвода);
         };
 
 
-        function startMemoTTS(isRestart = false) {
-            добавитьПробелыВКонцеСтрок();
-            if (isRestart !== true) {
-                resetGlobalSessionTimer();
-                window.memoLoopsPlayed = 0;
-                if (window.memoCountdownInterval) clearInterval(window.memoCountdownInterval);
-                const container = document.getElementById('dummy-ab-timer-container');
-                if (container) {
-                    container.style.display = 'none';
-                    const span = document.getElementById('ab-btn-timer');
-                    if (span) span.innerHTML = '';
-                }
-            }
+function runMeditationCycle() {
+    if (!window.isMemoPlaying) return; 
 
-            updatePlayButtonState(true); 
+    // Используем существующий в voice.js механизм тишины
+    if (window.ttsAPI && window.ttsAPI.keepSilenceAlive) {
+        window.ttsAPI.keepSilenceAlive(true);
+    }
 
-            const settingsPanel = document.getElementById('ttsSettings');
-            if (settingsPanel && settingsPanel.classList.contains('show')) {
-                const bsCollapse = bootstrap.Collapse.getInstance(settingsPanel);
-                if (bsCollapse) bsCollapse.hide();
-                else settingsPanel.classList.remove('show');
-            }
+    const soundChoice = document.getElementById('ttsSound').value;
+    const isLoop = document.getElementById('ttsIsLoop').checked;
+    const loopInput = document.getElementById('ttsLoopCount').value;
+    let targetLoops = loopInput === '∞' ? Infinity : parseInt(loopInput) || Infinity;
 
-            let text = document.getElementById("inputText").value.trim();
-            if (!text) {
-                updatePlayButtonState(false);
-                return;
-            }
+    const endDelaySec = parseFloat(document.getElementById("ttsEndDelay").value) || 0;
+    const delaySec = parseFloat(document.getElementById("ttsDelay").value) || 0;
+    const totalPause = (endDelaySec > 0 ? endDelaySec : delaySec) * 1000; 
 
-            let detectedLang = 'en'; 
-            if (/[а-яА-ЯёЁ]/.test(text)) detectedLang = 'ru'; 
-            else if (/[\u0E00-\u0E7F]/.test(text)) detectedLang = 'th'; 
-            window.memoDetectedTrnLang = detectedLang; 
+    if (totalPause <= 0) {
+        alert(window.memoLang === 'ru' ? 'Установите время таймера' : 'Set timer duration');
+        stopMemoTTS(true);
+        return;
+    }
 
-            let rawDelim = document.getElementById("ttsDelimiter").value;
-            rawDelim = rawDelim.replace(/\\n/g, '\n'); 
-            
-            let segments = [text];
-            if (rawDelim) {
-                for (let char of rawDelim) {
-                    let newSegments = [];
-                    for (let seg of segments) {
-                        newSegments.push(...seg.split(char));
-                    }
-                    segments = newSegments;
-                }
-            }
-            segments = segments.map(s => s.trim()).filter(s => s.length > 0);
+    const lCycle = window.memoLang === 'ru' ? 'Медитация' : 'Meditation';
+    window.startMemoVisualTimer(totalPause, lCycle);
 
-            if (segments.length === 0) {
-                updatePlayButtonState(false);
-                return;
-            }
-
-            // === ТОЧНЫЙ АВТО-КУРСОР: ПОИСК СЕГМЕНТА ===
-            // Игнорируем позицию курсора при старте и всегда начинаем с 0
-            let cursorIndex = 0;
-            const ta = document.getElementById("inputText");
-            window.memoPendingCursorIndex = 0;
-            
-            // Регистрируем перехватчик старта один раз. 
-            // Он сработает точно после сборки плейлиста, но до начала звука.
-            if (!window.memoCursorListenerAdded) {
-                document.addEventListener('tts-playback-started', () => {
-                    if (window.memoPendingCursorIndex !== undefined && window.memoPendingCursorIndex !== -1 && window.ttsAPI) {
-                        const state = window.ttsAPI.getState();
-                        state.currentIndex = window.memoPendingCursorIndex;
-                        state.startIndex = 0;
-                        if (state.playlist) state.endIndex = state.playlist.length - 1;
-                        window.memoPendingCursorIndex = -1; // Сбрасываем после перехвата
-                    }
-                });
-                window.memoCursorListenerAdded = true;
-            }
-            // ===========================================
-
-            const delaySec = parseFloat(document.getElementById("ttsDelay").value) || 0;
-            window.TTS_SEGMENT_DELAY = delaySec * 1000;
-            window.isLoopingPause = false;
-
-            const isTranslation = document.getElementById("ttsIsTranslation").checked;
-            const container = document.getElementById("tts-virtual-container");
-            
-            if (!container.innerHTML) {
-                container.style.display = 'block'; 
-                window.mockPaliJson = {}; 
-                
-                segments.forEach((seg, index) => {
-                    const id = `memo_custom:1.${index+1}`; 
-                    const span = document.createElement('span');
-                    span.id = id;
-                    span.style.display = 'inline-block';
-                    span.style.margin = '2px 4px';
-                
-                    span.style.maxWidth = '100%';
-                    span.style.overflowWrap = 'break-word';
-                    span.style.wordBreak = 'break-word';
-
-                    if (index === cursorIndex) {
-                        span.classList.add('active-word');
-                    }
-                    
-                    if (/[\u0900-\u097F]/.test(seg)) {
-                        span.className = 'pli-lang';
-                        span.textContent = seg;
-                        window.mockPaliJson[id] = "“" + seg + "”"; 
-                    } else {
-                        if (isTranslation) {
-                            if (detectedLang === 'ru') span.className = 'rus-lang';
-                            else if (detectedLang === 'th') span.className = 'tha-lang';
-                            else span.className = 'eng-lang';
-                            span.textContent = seg;
-                        } else {
-                            span.className = 'pli-lang';
-                            span.textContent = seg; 
-                            window.mockPaliJson[id] = "“" + window.convertPaliToDevanagari(seg)
- + "”"; 
-                        }
-                    }
-                    container.appendChild(span);
-                });
-
-                window.detectTranslationLang = function() {
-                    return window.memoDetectedTrnLang;
-                };
-            }
-
-            const targetMode = isTranslation ? 'trn' : 'pi';
-            localStorage.setItem('tts_preferred_mode', targetMode);
-            const modeSelect = document.getElementById('tts-mode-select');
-            if (modeSelect) modeSelect.value = targetMode;
-
-            // Запускаем плеер (он вызовет событие tts-playback-started)
-            document.getElementById('hiddenVoiceLink').click();
-
-            document.body.style.transition = 'padding-bottom 0.4s ease';
-            document.body.style.paddingBottom = '120px';
+    window.memoRestartTimeout = setTimeout(() => {
+        if (!window.isMemoPlaying) return;
+        
+        if (soundChoice !== 'none') {
+            // Воспроизведение звука гонга/тика
+            new Audio(`/assets/sounds/${soundChoice}`).play().catch(e => console.warn(e));
         }
 
+        window.memoLoopsPlayed++;
+
+        if (isLoop && window.memoLoopsPlayed < targetLoops) {
+            runMeditationCycle();
+        } else {
+            stopMemoTTS(true);
+        }
+    }, totalPause);
+}
+
+function startMemoTTS(isRestart = false) {
+    добавитьПробелыВКонцеСтрок();
+    if (isRestart !== true) {
+        resetGlobalSessionTimer();
+        window.memoLoopsPlayed = 0;
+        if (window.memoCountdownInterval) clearInterval(window.memoCountdownInterval);
+        const container = document.getElementById('dummy-ab-timer-container');
+        if (container) {
+            container.style.display = 'none';
+            const span = document.getElementById('ab-btn-timer');
+            if (span) span.innerHTML = '';
+        }
+    }
+
+    updatePlayButtonState(true); 
+
+    const settingsPanel = document.getElementById('ttsSettings');
+    if (settingsPanel && settingsPanel.classList.contains('show')) {
+        const bsCollapse = bootstrap.Collapse.getInstance(settingsPanel);
+        if (bsCollapse) bsCollapse.hide();
+        else settingsPanel.classList.remove('show');
+    }
+
+    let text = document.getElementById("inputText").value.trim();
+
+    // ===== РЕЖИМ ТАЙМЕРА С БОЛЬШИМ ИНТЕРФЕЙСОМ =====
+    if (!text) {
+        const container = document.getElementById("tts-virtual-container");
+        container.style.display = 'block';
+        
+        let m = Math.floor(window.globalSessionSeconds / 60).toString().padStart(2, '0');
+        let s = (window.globalSessionSeconds % 60).toString().padStart(2, '0');
+        
+        const titleGlobal = window.memoLang === 'ru' ? 'Общее время' : 'Total Time';
+        const titleNext = window.memoLang === 'ru' ? 'До гонга' : 'Next Bell';
+
+        // Рисуем крупные цифры и якорь для скролла
+        container.innerHTML = `
+            <div id="meditation-anchor" class="timer-mode-display" style="text-align: center; padding: 40px 20px; background: rgba(128,128,128,0.03); border-radius: 16px; max-width: 450px; margin: 0 auto; border: 1px dashed rgba(128,128,128,0.3);">
+                <div style="font-size: 1rem; color: #888; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1.5px;">${titleGlobal}</div>
+                <div id="large-global-timer" style="font-size: 4.5rem; font-weight: 300; font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 35px; " class="text-muted">${m}:${s}</div>
+                
+                <div style="font-size: 0.9rem; color: #888; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1.5px;">${titleNext}</div>
+                <div id="large-countdown-timer" style="font-size: 3rem; font-weight: 400; color: #6f42c1; font-variant-numeric: tabular-nums; line-height: 1;">--:--</div>
+            </div>
+        `;
+        
+        // Скролл к таймеру
+        setTimeout(() => {
+            const anchor = document.getElementById('meditation-anchor');
+            if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+
+        document.body.style.transition = 'padding-bottom 0.4s ease';
+        document.body.style.paddingBottom = '120px';
+        
+        startGlobalSessionTimer();
+        runMeditationCycle();
+        return; 
+    }
+    // ===============================================
+
+    let detectedLang = 'en'; 
+    if (/[а-яА-ЯёЁ]/.test(text)) detectedLang = 'ru'; 
+    else if (/[\u0E00-\u0E7F]/.test(text)) detectedLang = 'th'; 
+    window.memoDetectedTrnLang = detectedLang; 
+
+    let rawDelim = document.getElementById("ttsDelimiter").value;
+    rawDelim = rawDelim.replace(/\\n/g, '\n'); 
+    
+    let segments = [text];
+    if (rawDelim) {
+        for (let char of rawDelim) {
+            let newSegments = [];
+            for (let seg of segments) {
+                newSegments.push(...seg.split(char));
+            }
+            segments = newSegments;
+        }
+    }
+    segments = segments.map(s => s.trim()).filter(s => s.length > 0);
+
+    if (segments.length === 0) {
+        updatePlayButtonState(false);
+        return;
+    }
+
+    // === ТОЧНЫЙ АВТО-КУРСОР: ПОИСК СЕГМЕНТА ===
+    let cursorIndex = 0;
+    const ta = document.getElementById("inputText");
+    window.memoPendingCursorIndex = 0;
+    
+    if (!window.memoCursorListenerAdded) {
+        document.addEventListener('tts-playback-started', () => {
+            if (window.memoPendingCursorIndex !== undefined && window.memoPendingCursorIndex !== -1 && window.ttsAPI) {
+                const state = window.ttsAPI.getState();
+                state.currentIndex = window.memoPendingCursorIndex;
+                state.startIndex = 0;
+                if (state.playlist) state.endIndex = state.playlist.length - 1;
+                window.memoPendingCursorIndex = -1;
+            }
+        });
+        window.memoCursorListenerAdded = true;
+    }
+    // ===========================================
+
+    const delaySec = parseFloat(document.getElementById("ttsDelay").value) || 0;
+    window.TTS_SEGMENT_DELAY = delaySec * 1000;
+    window.isLoopingPause = false;
+
+    const isTranslation = document.getElementById("ttsIsTranslation").checked;
+    const container = document.getElementById("tts-virtual-container");
+    
+    if (!container.innerHTML) {
+        container.style.display = 'block'; 
+        window.mockPaliJson = {}; 
+        
+        segments.forEach((seg, index) => {
+            const id = `memo_custom:1.${index+1}`; 
+            const span = document.createElement('span');
+            span.id = id;
+            span.style.display = 'inline-block';
+            span.style.margin = '2px 4px';
+        
+            span.style.maxWidth = '100%';
+            span.style.overflowWrap = 'break-word';
+            span.style.wordBreak = 'break-word';
+
+            if (index === cursorIndex) {
+                span.classList.add('active-word');
+            }
+            
+            if (/[\u0900-\u097F]/.test(seg)) {
+                span.className = 'pli-lang';
+                span.textContent = seg;
+                window.mockPaliJson[id] = "“" + seg + "”"; 
+            } else {
+                if (isTranslation) {
+                    if (detectedLang === 'ru') span.className = 'rus-lang';
+                    else if (detectedLang === 'th') span.className = 'tha-lang';
+                    else span.className = 'eng-lang';
+                    span.textContent = seg;
+                } else {
+                    span.className = 'pli-lang';
+                    span.textContent = seg; 
+                    window.mockPaliJson[id] = "“" + (window.convertPaliToDevanagari ? window.convertPaliToDevanagari(seg) : seg) + "”"; 
+                }
+            }
+            container.appendChild(span);
+        });
+
+        window.detectTranslationLang = function() {
+            return window.memoDetectedTrnLang;
+        };
+    }
+
+    const targetMode = isTranslation ? 'trn' : 'pi';
+    localStorage.setItem('tts_preferred_mode', targetMode);
+    const modeSelect = document.getElementById('tts-mode-select');
+    if (modeSelect) modeSelect.value = targetMode;
+
+    document.getElementById('hiddenVoiceLink').click();
+
+    document.body.style.transition = 'padding-bottom 0.4s ease';
+    document.body.style.paddingBottom = '120px';
+}
+
+
         function stopMemoTTS(fullReset = true) {
+      
             добавитьПробелыВКонцеСтрок();
             const editToggle = document.getElementById('editModeToggle');
             const ta = document.getElementById("inputText");
@@ -1235,6 +1332,11 @@ window.addEventListener('load', обновитьКнопкиВвода);
                     }
                 }
             }
+      
+
+    if (window.ttsAPI && window.ttsAPI.keepSilenceAlive) {
+        window.ttsAPI.keepSilenceAlive(false);
+    }
       
             updatePlayButtonState(false); 
             window.isLoopingPause = false;
