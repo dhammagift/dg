@@ -76,7 +76,9 @@
         </svg>
     </div>
      
-    <textarea id="inputText" class="form-control mb-3 inputdiv" rows="10" placeholder="Paste text that you want to memorize or ponder on">atthi imasmiṁ kāye kesā lomā nakhā dantā 
+    <textarea id="inputText" class="form-control mb-3 inputdiv" rows="10" placeholder="Paste text that you want to memorize or ponder on. 
+
+Or use this page as a meditation time without entering any text">atthi imasmiṁ kāye kesā lomā nakhā dantā 
 taco maṁsaṁ nhāru aṭṭhi aṭṭhimiñjaṁ 
 vakkaṁ hadayaṁ yakanaṁ kilomakaṁ pihakaṁ papphāsaṁ antaṁ antaguṇaṁ udariyaṁ karīsaṁ 
 pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā lasikā muttanti |</textarea>
@@ -436,13 +438,36 @@ function resetGlobalSessionTimer() {
 
             function getMemoData() {
                 const currentText = textInput.value.trim();
-                if (!currentText) return null;
+                let memoSlug, memoTitle;
 
-                const memoSlug = "memo_" + currentText.substring(0, 50).replace(/\s+/g, '_'); 
-                const memoTitle = "📝 " + currentText.substring(0, 35) + (currentText.length > 35 ? "..." : "");
+                if (currentText) {
+                    // Если есть текст, сохраняем как текстовую заметку
+                    memoSlug = "memo_" + currentText.substring(0, 50).replace(/\s+/g, '_'); 
+                    memoTitle = "📝 " + currentText.substring(0, 35) + (currentText.length > 35 ? "..." : "");
+                } else {
+                    // Если текста нет, сохраняем как таймер медитации
+                    const endDelaySec = parseFloat(document.getElementById("ttsEndDelay").value) || 0;
+                    const delaySec = parseFloat(document.getElementById("ttsDelay").value) || 0;
+                    const totalSec = endDelaySec > 0 ? endDelaySec : delaySec;
+                    
+                    const sound = document.getElementById("ttsSound").value;
+                    const lc = document.getElementById("ttsLoopCount").value || "∞";
+                    memoSlug = `memo_timer_d${delaySec}_e${endDelaySec}_s${sound}_lc${lc}`;
+                    
+                    let timeStr = "";
+                    if (totalSec >= 60) {
+                        const m = Math.floor(totalSec / 60);
+                        const s = totalSec % 60;
+                        timeStr = m + (window.memoLang === 'ru' ? ' мин' : ' min');
+                        if (s > 0) timeStr += " " + s + (window.memoLang === 'ru' ? ' сек' : ' sec');
+                    } else {
+                        timeStr = totalSec + (window.memoLang === 'ru' ? ' сек' : ' sec');
+                    }
+                    memoTitle = "🧘 " + timeStr;
+                }
 
                 const params = new URLSearchParams();
-                params.set('text', currentText);
+                if (currentText) params.set('text', currentText);
                 params.set('delay', document.getElementById("ttsDelay").value || "0");
                 params.set('end', document.getElementById("ttsEndDelay").value || "0");
                 params.set('trn', document.getElementById("ttsIsTranslation").checked ? "1" : "0");
@@ -460,6 +485,7 @@ function resetGlobalSessionTimer() {
                     timestamp: Date.now()
                 };
             }
+
 
 if (favBtn) {
     function updateMemoIcon() {
@@ -573,7 +599,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const navSearchLink = document.getElementById('nav_search_link');
         if (navSearchLink) navSearchLink.href = '/ru/';
 
-        document.getElementById('inputText').placeholder = 'Вставьте текст, который хотите выучить или изучить в медитации';
+        document.getElementById('inputText').placeholder = 'Вставьте текст, который хотите выучить или изучить в медитации.\n\nЕсли не вводить текст, это будет таймер для медитации';
         document.getElementById('tts_header').innerText = 'Настройки голоса (TTS)';
         document.getElementById('tts_delim_label').innerText = 'Разделитель:';
         document.getElementById('tts_delay_label').innerText = 'Интервал (сек):';
@@ -974,15 +1000,31 @@ window.addEventListener('load', обновитьКнопкиВвода);
             const urlParams = new URLSearchParams(window.location.search);
             const textParam = urlParams.get('text');
             
+            // Проверяем, является ли ссылка пресетом медитации (есть настройки таймера, но нет текста)
+            const isMeditationPreset = !urlParams.has('text') && (urlParams.has('delay') || urlParams.has('end') || urlParams.has('snd'));
+            
             if (textParam) {
+                // Загрузка обычного текста
                 document.getElementById("inputText").value = textParam;
                 localStorage.setItem("входнойТекст", textParam); 
                 document.getElementById("результат").innerText = "";
                 document.getElementById("result_header").style.display = 'none';
+                if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
+            } else if (isMeditationPreset) {
+                // Загрузка таймера медитации - принудительно очищаем поле и кэш
+                document.getElementById("inputText").value = "";
+                localStorage.removeItem("входнойТекст");
+                document.getElementById("результат").innerText = "";
+                document.getElementById("result_header").style.display = 'none';
+                if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
             } else {
+                // Обычная загрузка страницы без параметров - достаем из кэша
                 const входнойТекст = localStorage.getItem("входнойТекст");
                 const результат = localStorage.getItem("результат");
-                if (входнойТекст) document.getElementById("inputText").value = входнойТекст;
+                if (входнойТекст) {
+                    document.getElementById("inputText").value = входнойТекст;
+                    if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
+                }
                 if (результат && результат.trim() !== "") {
                     document.getElementById("результат").innerText = результат;
                     document.getElementById("result_header").style.display = 'none';
@@ -1024,6 +1066,7 @@ window.addEventListener('load', обновитьКнопкиВвода);
 
             toggleLoopInputVisibility();
         });
+
 
         function toggleLoopInputVisibility() {
             const loopInput = document.getElementById('ttsLoopCount');
