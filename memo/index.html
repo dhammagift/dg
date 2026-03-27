@@ -1137,6 +1137,15 @@ function runMeditationCycle() {
     if (window.ttsAPI && window.ttsAPI.keepSilenceAlive) {
         window.ttsAPI.keepSilenceAlive(true);
     }
+    
+    // >>> ИСПРАВЛЕНИЕ: Обновляем шторку ПОСЛЕ запуска фонового аудио <<<
+    if ('mediaSession' in navigator) {
+        setTimeout(() => {
+            // Передаем 'memo_custom', чтобы сработал наш перехватчик
+            // Он сам увидит, что текста нет, и поставит albumart-samadhi.png
+            navigator.mediaSession.metadata = new MediaMetadata({ title: 'memo_custom' });
+        }, 50); // Небольшая задержка гарантирует, что аудио успело стартовать
+    }
 
     const soundChoice = document.getElementById('ttsSound').value;
     const isLoop = document.getElementById('ttsIsLoop').checked;
@@ -1230,14 +1239,6 @@ function startMemoTTS(isRestart = false) {
         document.body.style.transition = 'padding-bottom 0.4s ease';
         document.body.style.paddingBottom = '120px';
         
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.metadata = new MediaMetadata({
-                title: window.memoLang === 'ru' ? 'Медитация' : 'Meditation Timer',
-                artist: 'Dhamma.gift Timer',
-                artwork: [{ src: '/assets/img/albumart-samadhi.png', sizes: '1024x1024', type: 'image/png' }]
-            });
-        }
-
         startGlobalSessionTimer();
         runMeditationCycle();
         return; 
