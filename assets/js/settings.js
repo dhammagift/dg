@@ -2124,12 +2124,17 @@ document.addEventListener("DOMContentLoaded", () => {
 })();
 
 // ==========================================
-// УМНАЯ ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ FIREBASE (Subcollections)
+// УМНАЯ ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ FIREBASE (Local-First Architecture)
 // ==========================================
 
 let db = null;
 let auth = null;
 let googleProvider = null;
+
+// Переменные для отписки от слушателей Firebase
+let unsubSettings = null;
+let unsubFavs = null;
+let unsubHist = null;
 
 function getUid() {
     const user = auth ? auth.currentUser : null;
@@ -2173,15 +2178,32 @@ async function initFirebase() {
         firebase.initializeApp(firebaseConfig);
         
         db = firebase.firestore();
+
+        // 1. ВКЛЮЧАЕМ OFFLINE PERSISTENCE (Кэширование базы в браузере)
+        try {
+            await db.enablePersistence({
+                synchronizeTabs: true // Синхронизация между вкладками браузера
+            });
+        } catch (err) {
+            if (err.code === 'failed-precondition') {
+                console.warn('Firebase: Открыто несколько вкладок, кэширование активно в главной.');
+            } else if (err.code === 'unimplemented') {
+                console.warn('Firebase: Браузер не поддерживает offline-режим.');
+            }
+        }
+
         auth = firebase.auth();
         googleProvider = new firebase.auth.GoogleAuthProvider();
 
         auth.onAuthStateChanged((user) => {
             const phraseId = localStorage.getItem('syncPhraseId'); 
             const phraseRaw = localStorage.getItem('syncPhraseRaw'); 
+            const uid = user ? user.uid : phraseId;
             
-            if (user) restoreFromCloud(user);
-            else if (phraseId) restoreFromCloud({ uid: phraseId });
+            if (uid) {
+                // 2. ПОДКЛЮЧАЕМ РЕАКТИВНЫЕ СЛУШАТЕЛИ
+                setupCloudListeners(uid);
+            }
 
             if (typeof updateGlobalSyncButtons === 'function') updateGlobalSyncButtons(user, phraseId);
             if (typeof renderLoginPageUI === 'function') renderLoginPageUI(user, phraseRaw);
@@ -2199,22 +2221,114 @@ function refreshSyncTimeUI() {
     }
 }
 
-// === АТОМАРНЫЕ ФУНКЦИИ ===
+// === РЕАКТИВНЫЕ СЛУШАТЕЛИ (onSnapshot) ===
+
+window.setupCloudListeners = function(uid) {
+    if (!db || !uid) return;
+
+    if (unsubSettings) unsubSettings();
+    if (unsubFavs) unsubFavs();
+    if (unsubHist) unsubHist();
+
+    const userRef = db.collection("users").doc(uid);
+
+    // Слушатель Настроек
+    unsubSettings = userRef.onSnapshot((doc) => {
+        if (doc.metadata.hasPendingWrites) return; 
+
+        if (doc.exists && doc.data().settings) {
+            const cloudSettings = doc.data().settings;
+            let uiNeedsRefresh = false;
+
+            for (const k in cloudSettings) {
+                if (localStorage.getItem(k) !== cloudSettings[k]) {
+                    window.dg_ignoreNextStorageEvent = true; 
+                    localStorage.setItem(k, cloudSettings[k]);
+                    uiNeedsRefresh = true;
+                }
+            }
+            if (uiNeedsRefresh) window.dg_settingsChanged = false; 
+        }
+    });
+
+    // Слушатель Избранного
+    unsubFavs = userRef.collection("favorites").onSnapshot((snapshot) => {
+        if (snapshot.metadata.hasPendingWrites) return;
+
+        let localFavs = JSON.parse(localStorage.getItem('dg_favorites')) || [];
+        let favMap = new Map();
+        localFavs.forEach(f => favMap.set(f.slug, f)); 
+
+        snapshot.docChanges().forEach((change) => {
+            const cloudFav = change.doc.data();
+            if (change.type === "added" || change.type === "modified") {
+                favMap.set(cloudFav.slug, cloudFav);
+            }
+            if (change.type === "removed") {
+                favMap.delete(cloudFav.slug);
+            }
+        });
+
+        const finalFavs = Array.from(favMap.values()).sort((a, b) => b.timestamp - a.timestamp);
+        localStorage.setItem('dg_favorites', JSON.stringify(finalFavs));
+
+        if (typeof window.refreshQuickModalData === 'function' && window.quickModalIsOpen) {
+            window.refreshQuickModalData();
+        }
+    });
+
+    // Слушатель Истории
+    unsubHist = userRef.collection("history").onSnapshot((snapshot) => {
+        if (snapshot.metadata.hasPendingWrites) return;
+
+        let localHist = JSON.parse(localStorage.getItem('localSearchHistory')) || [];
+        let histMap = new Map();
+
+        localHist.forEach(h => {
+            const baseKey = /\d/.test(h[0]) ? h[0].split(/\s+/)[0] : h[0];
+            histMap.set(baseKey, { key: h[0], url: h[1], timestamp: new Date(h[2]).getTime() });
+        });
+
+        snapshot.docChanges().forEach((change) => {
+            const cloudHist = change.doc.data();
+            const baseKey = /\d/.test(cloudHist.key) ? cloudHist.key.split(/\s+/)[0] : cloudHist.key;
+
+            if (change.type === "added" || change.type === "modified") {
+                const cloudTime = cloudHist.updatedAt && cloudHist.updatedAt.toDate 
+                    ? cloudHist.updatedAt.toDate().getTime() 
+                    : (new Date(cloudHist.timestamp).getTime() || Date.now());
+                histMap.set(baseKey, { ...cloudHist, timestamp: cloudTime });
+            }
+            if (change.type === "removed") {
+                histMap.delete(baseKey);
+            }
+        });
+
+        const finalHist = Array.from(histMap.values())
+            .sort((a, b) => b.timestamp - a.timestamp)
+            .map(h => [h.key, h.url, new Date(h.timestamp).toISOString()])
+            .slice(0, 8400);
+
+        localStorage.setItem('localSearchHistory', JSON.stringify(finalHist));
+
+        if (typeof window.refreshQuickModalData === 'function' && window.quickModalIsOpen) {
+            window.refreshQuickModalData();
+        }
+    });
+};
+
+// === АТОМАРНЫЕ ЗАПИСИ ===
 
 window.syncSettingsToCloud = async function() {
     if (!db || !getUid()) return;
     const uid = getUid();
     const settingsToSave = {};
 
-    // ⛔ ЧЕРНЫЙ СПИСОК (Отсекаем кэш таблиц и системные ключи)
     const ignorePrefixes = ['DataTables_', 'dg_', 'syncPhrase'];
-    // Игнорируем историю (сохраняется отдельно) и локальный таймер
     const ignoreExact = ['localSearchHistory', 'lastSyncTime'];
 
-    // Собираем полезные настройки (suttaProgress, currentMemoText, тема и т.д. теперь здесь!)
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        
         const isIgnoredPrefix = ignorePrefixes.some(prefix => key.startsWith(prefix));
         const isIgnoredExact = ignoreExact.includes(key);
 
@@ -2228,39 +2342,10 @@ window.syncSettingsToCloud = async function() {
     try {
         await db.collection("users").doc(uid).set({
             settings: settingsToSave,
-            updatedAt: Date.now()
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
         refreshSyncTimeUI();
     } catch (e) { console.error("Settings Sync Error:", e); }
-};
-
-window.forceSyncNow = async function() {
-    const uid = getUid();
-    if (!uid) return; 
-
-    // Запускаем вращение иконок
-    document.querySelectorAll('.fa-rotate, #btn-sync-now img').forEach(icon => {
-        icon.classList.add(icon.tagName === 'IMG' ? 'custom-spin' : 'fa-spin');
-    });
-
-    try {
-        // 1. УМНАЯ ОТПРАВКА: Только если настройки реально менялись
-        if (window.dg_settingsChanged) {
-            await syncSettingsToCloud();
-            window.dg_settingsChanged = false; // Сбрасываем флаг после успешной отправки
-        }
-        
-        // 2. СКАЧИВАНИЕ: Обновляем историю и избранное из облака
-        await restoreFromCloud({ uid: uid });
-
-    } catch (error) { 
-        console.error("Sync error:", error); 
-    } finally {
-        // Выключаем вращение
-        document.querySelectorAll('.fa-rotate, #btn-sync-now img').forEach(icon => {
-            icon.classList.remove('fa-spin', 'custom-spin');
-        });
-    }
 };
 
 window.syncFavoriteItemToCloud = async function(favData, isDeleted = false) {
@@ -2270,8 +2355,14 @@ window.syncFavoriteItemToCloud = async function(favData, isDeleted = false) {
     const docRef = db.collection("users").doc(uid).collection("favorites").doc(docId);
 
     try {
-        if (isDeleted) await docRef.delete();
-        else await docRef.set({ ...favData, updatedAt: Date.now() });
+        if (isDeleted) {
+            await docRef.delete();
+        } else {
+            await docRef.set({ 
+                ...favData, 
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
+            }, { merge: true });
+        }
         refreshSyncTimeUI();
     } catch (e) { console.error("Fav Sync Error:", e); }
 };
@@ -2284,8 +2375,14 @@ window.syncHistoryItemToCloud = async function(key, url, timestamp, isDeleted = 
     const docRef = db.collection("users").doc(uid).collection("history").doc(docId);
 
     try {
-        if (isDeleted) await docRef.delete();
-        else await docRef.set({ key, url, timestamp, updatedAt: Date.now() });
+        if (isDeleted) {
+            await docRef.delete();
+        } else {
+            await docRef.set({ 
+                key, url, timestamp,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        }
         refreshSyncTimeUI();
     } catch (e) { console.error("History Sync Error:", e); }
 };
@@ -2302,83 +2399,30 @@ window.clearCloudHistory = async function() {
     } catch (e) { console.error("Error clearing history:", e); }
 };
 
-// === УМНОЕ ВОССТАНОВЛЕНИЕ (Smart Merge) ===
+// === УТИЛИТЫ И АВТОРИЗАЦИЯ ===
 
-window.restoreFromCloud = async function(userObj) {
-    if (!db) return;
-    const uid = userObj.uid;
+window.forceSyncNow = async function() {
+    const uid = getUid();
+    if (!uid) return; 
+
+    document.querySelectorAll('.fa-rotate').forEach(icon => icon.classList.add('fa-spin'));
+    document.querySelectorAll('#btn-sync-now img').forEach(icon => icon.classList.add('custom-spin'));
 
     try {
-        // 1. Настройки
-        const userDoc = await db.collection("users").doc(uid).get();
-        if (userDoc.exists && userDoc.data().settings) {
-            const cloudSettings = userDoc.data().settings;
-            for (const k in cloudSettings) {
-                if (localStorage.getItem(k) !== cloudSettings[k]) {
-                    localStorage.setItem(k, cloudSettings[k]);
-                }
-            }
-        } else {
-            syncSettingsToCloud();
+        // Скачивание больше не нужно, onSnapshot делает это сам.
+        // Оправляем только локальные настройки, если они были изменены.
+        if (window.dg_settingsChanged) {
+            await syncSettingsToCloud();
+            window.dg_settingsChanged = false; 
         }
-
-        // 2. Избранное
-        const favSnap = await db.collection("users").doc(uid).collection("favorites").get();
-        let localFavs = JSON.parse(localStorage.getItem('dg_favorites')) || [];
-        let favMap = new Map();
-
-        localFavs.forEach(f => favMap.set(f.slug, f)); 
-
-        favSnap.forEach(doc => {
-            const cloudFav = doc.data();
-            const localFav = favMap.get(cloudFav.slug);
-            
-            if (!localFav || cloudFav.updatedAt > localFav.timestamp) {
-                favMap.set(cloudFav.slug, cloudFav);
-            } else if (localFav.timestamp > cloudFav.updatedAt) {
-                syncFavoriteItemToCloud(localFav);
-            }
-        });
-
-        const finalFavs = Array.from(favMap.values()).sort((a, b) => b.timestamp - a.timestamp);
-        localStorage.setItem('dg_favorites', JSON.stringify(finalFavs));
-
-        // 3. История
-        const histSnap = await db.collection("users").doc(uid).collection("history").get();
-        let localHist = JSON.parse(localStorage.getItem('localSearchHistory')) || [];
-        let histMap = new Map();
-
-        localHist.forEach(h => {
-            const baseKey = /\d/.test(h[0]) ? h[0].split(/\s+/)[0] : h[0];
-            histMap.set(baseKey, { key: h[0], url: h[1], timestamp: new Date(h[2]).getTime() });
-        });
-
-        histSnap.forEach(doc => {
-            const cloudHist = doc.data();
-            const baseKey = /\d/.test(cloudHist.key) ? cloudHist.key.split(/\s+/)[0] : cloudHist.key;
-            const localH = histMap.get(baseKey);
-            const cloudTime = new Date(cloudHist.timestamp).getTime();
-
-            if (!localH || cloudTime > localH.timestamp) {
-                histMap.set(baseKey, cloudHist);
-            } else if (localH.timestamp > cloudTime) {
-                syncHistoryItemToCloud(localH.key, localH.url, new Date(localH.timestamp).toISOString());
-            }
-        });
-
-        const finalHist = Array.from(histMap.values())
-            .sort((a, b) => b.timestamp - a.timestamp)
-            .map(h => [h.key, h.url, new Date(h.timestamp).toISOString()])
-            .slice(0, 8400);
-
-        localStorage.setItem('localSearchHistory', JSON.stringify(finalHist));
-
-        if (typeof window.refreshQuickModalData === 'function' && window.quickModalIsOpen) {
-            window.refreshQuickModalData();
-        }
-
-    } catch (error) { console.error("Cloud Restore Error:", error); } 
-    finally { refreshSyncTimeUI(); }
+        // Небольшая задержка для UI-фидбека (чтобы иконка успела покрутиться)
+        await new Promise(res => setTimeout(res, 800));
+    } catch (error) { 
+        console.error("Sync error:", error); 
+    } finally {
+        document.querySelectorAll('.fa-rotate').forEach(icon => icon.classList.remove('fa-spin'));
+        document.querySelectorAll('#btn-sync-now img').forEach(icon => icon.classList.remove('custom-spin'));
+    }
 };
 
 window.syncLoginGoogle = async function() {
@@ -2390,16 +2434,21 @@ window.syncLoginGoogle = async function() {
 window.syncEnablePhrase = async function(rawPhrase, hashedId) {
     localStorage.setItem('syncPhraseRaw', rawPhrase);
     localStorage.setItem('syncPhraseId', hashedId);
-    await restoreFromCloud({ uid: hashedId }); 
+    setupCloudListeners(hashedId); 
     if (typeof updateGlobalSyncButtons === 'function') updateGlobalSyncButtons(null, hashedId);
     if (typeof renderLoginPageUI === 'function') renderLoginPageUI(null, rawPhrase);
 };
 
 window.syncLogout = async function() {
+    if (unsubSettings) unsubSettings();
+    if (unsubFavs) unsubFavs();
+    if (unsubHist) unsubHist();
+
     if (auth && auth.currentUser) await auth.signOut();
     localStorage.removeItem('syncPhraseId');
     localStorage.removeItem('syncPhraseRaw');
     localStorage.removeItem('lastSyncTime');
+    
     if (typeof renderLoginPageUI === 'function') renderLoginPageUI(null, null);
     if (typeof updateGlobalSyncButtons === 'function') updateGlobalSyncButtons(null, null);
 };
@@ -2408,35 +2457,13 @@ window.syncDeleteData = async function() {
     const uid = getUid();
     if (uid && db) {
         try {
-            // Удаляем документ настроек
             await db.collection("users").doc(uid).delete();
-            // Подколлекции нужно удалять батчами (или просто игнорировать, если аккаунт удаляется)
-            // Но для надежности можно вызвать очистку:
             await clearCloudHistory(); 
             const user = auth ? auth.currentUser : null;
             if (user) await user.delete();
         } catch (error) { console.error("Delete Error:", error); }
     }
     syncLogout(); 
-};
-
-window.forceSyncNow = async function() {
-    const uid = getUid();
-    if (!uid) return; 
-    
-    // Включаем вращение (FontAwesome там где есть, custom-spin для SVG картинок)
-    document.querySelectorAll('.fa-rotate').forEach(icon => icon.classList.add('fa-spin'));
-    document.querySelectorAll('#btn-sync-now img').forEach(icon => icon.classList.add('custom-spin'));
-    
-    try {
-        await restoreFromCloud({ uid: uid });
-        await syncSettingsToCloud();
-    } catch (error) { console.error("Sync error:", error); } 
-    finally {
-        // Выключаем вращение
-        document.querySelectorAll('.fa-rotate').forEach(icon => icon.classList.remove('fa-spin'));
-        document.querySelectorAll('#btn-sync-now img').forEach(icon => icon.classList.remove('custom-spin'));
-    }
 };
 
 window.updateGlobalSyncButtons = function(user, phraseId) {
@@ -2453,24 +2480,25 @@ window.updateGlobalSyncButtons = function(user, phraseId) {
 };
 
 // ==========================================
-// УМНЫЙ НАБЛЮДАТЕЛЬ (Находит изменения без хардкода)
+// БЕЗОПАСНЫЙ НАБЛЮДАТЕЛЬ ЗА НАСТРОЙКАМИ
 // ==========================================
-window.dg_settingsChanged = false; // Флаг: были ли изменения?
+window.dg_settingsChanged = false; 
+window.dg_ignoreNextStorageEvent = false;
 
 (function() {
     const originalSetItem = localStorage.setItem;
-    
-    // Список того, что МЫ ИГНОРИРУЕМ (мусор)
     const ignoreList = ['DataTables_', 'localSearchHistory', 'lastSyncTime', 'syncPhrase', 'dg_'];
 
     localStorage.setItem = function(key, value) {
-        // 1. Проверяем, не мусор ли это?
+        if (window.dg_ignoreNextStorageEvent) {
+            originalSetItem.apply(this, arguments);
+            window.dg_ignoreNextStorageEvent = false; 
+            return;
+        }
+
         const isImportant = !ignoreList.some(prefix => key.startsWith(prefix));
-        
-        // 2. Если изменилось что-то важное — ставим пометку
         if (isImportant && localStorage.getItem(key) !== String(value)) {
             window.dg_settingsChanged = true;
-            // console.log(`Изменилась настройка: ${key}. Нужна синхронизация.`);
         }
         
         originalSetItem.apply(this, arguments);
