@@ -165,8 +165,16 @@
         
         if (state.playlist && state.playlist.length) {
             const targetB = memState.lineB || memState.lineA;
-            let sIdx = state.playlist.findIndex(item => item.id === memState.lineA);
-            let eIdx = state.playlist.findIndex(item => item.id === targetB);
+let sIdx = state.playlist.findIndex(item => item.id === memState.lineA);
+// Ищем ПОСЛЕДНЕЕ совпадение для targetB, чтобы захватить оба языка
+let eIdx = -1;
+for (let i = state.playlist.length - 1; i >= 0; i--) {
+    if (state.playlist[i].id === targetB) {
+        eIdx = i;
+        break;
+    }
+}
+
             
             if (sIdx === -1) sIdx = 0;
             if (eIdx === -1) eIdx = state.playlist.length - 1;
