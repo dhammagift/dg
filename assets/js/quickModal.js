@@ -205,7 +205,8 @@ function buildQuickModalDOM() {
     });
   });
 
-  if (btnSyncNow) {
+    if (btnSyncNow) {
+      // Существующий обработчик левого клика
       btnSyncNow.addEventListener('click', async (e) => { 
           e.preventDefault();
           
@@ -228,7 +229,25 @@ function buildQuickModalDOM() {
               window.location.href = isRu ? '/ru/login' : '/login';
           }
       });
+
+      // НОВОЕ: Обработчик правого клика и долгого нажатия на мобильных (contextmenu)
+      btnSyncNow.addEventListener('contextmenu', (e) => {
+          e.preventDefault(); // Отключаем стандартное контекстное меню браузера
+          window.location.href = isRu ? '/ru/login' : '/login';
+      });
+
+      // НОВОЕ: Обработчик клика колесиком мыши (auxclick)
+      btnSyncNow.addEventListener('auxclick', (e) => {
+          if (e.button === 1) { // button 1 означает среднюю кнопку (колесико)
+              e.preventDefault();
+              // Если нужно открывать в новой вкладке при клике колесиком:
+              // window.open(isRu ? '/ru/login' : '/login', '_blank');
+              // Или в той же вкладке, как просили:
+              window.location.href = isRu ? '/ru/login' : '/login';
+          }
+      });
   }
+
 
   const closeQuickModal = () => {
     if(quickModalIsOpen) toggleQuickModal();

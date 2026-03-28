@@ -483,7 +483,6 @@
             el('lbl-sync').textContent = t.lblSync;
             el('lbl-logout').textContent = t.logout;
             el('lbl-delete').textContent = t.delete;
-            el('sync-last-time').textContent = getFormattedTime();
 
             if (user || phraseId) {
                 el('sync-logged-out').style.display = 'none';
@@ -507,11 +506,37 @@
                             </button>
                         </div>`;
                 }
+
+                // --- ЛОГИКА ПЕРВОЙ СИНХРОНИЗАЦИИ ---
+                if (!localStorage.getItem('lastSyncTime') && !window.isInitialSyncing) {
+                    window.isInitialSyncing = true; // Защита от двойного запуска
+                    el('sync-last-time').textContent = isRu ? "Синхронизация..." : "Syncing...";
+                    el('sync-last-time').classList.add('text-primary'); // Выделяем цветом
+                    
+                    if (typeof forceSyncNow === 'function') {
+                        forceSyncNow().then(() => {
+                            localStorage.setItem('lastSyncTime', Date.now());
+                            el('sync-last-time').textContent = getFormattedTime();
+                            el('sync-last-time').classList.remove('text-primary');
+                            window.isInitialSyncing = false;
+                        });
+                    } else {
+                        localStorage.setItem('lastSyncTime', Date.now());
+                        el('sync-last-time').textContent = getFormattedTime();
+                        window.isInitialSyncing = false;
+                    }
+                } else if (!window.isInitialSyncing) {
+                    // Если это не первый вход и прямо сейчас не идет авто-синхронизация
+                    el('sync-last-time').textContent = getFormattedTime();
+                }
+
             } else {
+                el('sync-last-time').textContent = getFormattedTime();
                 el('sync-logged-out').style.display = 'block';
                 el('sync-logged-in').style.display = 'none';
             }
         };
+
     </script>
 </body>
 </html>

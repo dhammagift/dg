@@ -2123,6 +2123,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 })();
 
+
 // ==========================================
 // УМНАЯ ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ FIREBASE (Local-First Architecture)
 // ==========================================
@@ -2166,7 +2167,8 @@ function loadFirebaseScripts() {
     });
 }
 
-async function initFirebase() {
+// Делаем функцию глобальной, чтобы ее можно было вызвать при логине
+window.initFirebase = async function() {
     try {
         await loadFirebaseScripts();
         if (firebase.apps.length) return;
@@ -2182,7 +2184,7 @@ async function initFirebase() {
         // 1. ВКЛЮЧАЕМ OFFLINE PERSISTENCE (Кэширование базы в браузере)
         try {
             await db.enablePersistence({
-                synchronizeTabs: true // Синхронизация между вкладками браузера
+                synchronizeTabs: true
             });
         } catch (err) {
             if (err.code === 'failed-precondition') {
@@ -2200,21 +2202,33 @@ async function initFirebase() {
             const phraseRaw = localStorage.getItem('syncPhraseRaw'); 
             const uid = user ? user.uid : phraseId;
             
+            // Запоминаем факт сессии для будущих перезагрузок страницы
+            if (user) {
+                localStorage.setItem('dg_cloud_session', 'true');
+            }
+
             if (uid) {
                 // 2. ПОДКЛЮЧАЕМ РЕАКТИВНЫЕ СЛУШАТЕЛИ
                 setupCloudListeners(uid);
+                // 3. ВКЛЮЧАЕМ НАБЛЮДАТЕЛЯ ЗА НАСТРОЙКАМИ ТОЛЬКО ТЕПЕРЬ
+                if (typeof initSettingsObserver === 'function') initSettingsObserver();
             }
 
             if (typeof updateGlobalSyncButtons === 'function') updateGlobalSyncButtons(user, phraseId);
             if (typeof renderLoginPageUI === 'function') renderLoginPageUI(user, phraseRaw);
         });
         
-        
-        
     } catch (error) { console.error("Firebase Init Error:", error); }
-}
+};
 
-initFirebase();
+// --- ОТЛОЖЕННЫЙ ЗАПУСК FIREBASE ---
+// Инициализируем только если есть активная сессия (Google) или фраза
+const hasPhrase = localStorage.getItem('syncPhraseId');
+const hasCloudSession = localStorage.getItem('dg_cloud_session') === 'true';
+if (hasPhrase || hasCloudSession) {
+    window.initFirebase();
+}
+// ----------------------------------
 
 function refreshSyncTimeUI() {
     localStorage.setItem('lastSyncTime', Date.now());
@@ -2225,7 +2239,6 @@ function refreshSyncTimeUI() {
 }
 
 // === РЕАКТИВНЫЕ СЛУШАТЕЛИ (onSnapshot) ===
-
 window.setupCloudListeners = function(uid) {
     if (!db || !uid) return;
 
@@ -2321,7 +2334,6 @@ window.setupCloudListeners = function(uid) {
 };
 
 // === АТОМАРНЫЕ ЗАПИСИ ===
-
 window.syncSettingsToCloud = async function() {
     if (!db || !getUid()) return;
     const uid = getUid();
@@ -2403,22 +2415,18 @@ window.clearCloudHistory = async function() {
 };
 
 // === УТИЛИТЫ И АВТОРИЗАЦИЯ ===
-
 window.forceSyncNow = async function() {
     const uid = getUid();
-    if (!uid) return; 
+    if (!uid || !db) return; 
 
     document.querySelectorAll('.fa-rotate').forEach(icon => icon.classList.add('fa-spin'));
     document.querySelectorAll('#btn-sync-now img').forEach(icon => icon.classList.add('custom-spin'));
 
     try {
-        // Скачивание больше не нужно, onSnapshot делает это сам.
-        // Оправляем только локальные настройки, если они были изменены.
         if (window.dg_settingsChanged) {
             await syncSettingsToCloud();
             window.dg_settingsChanged = false; 
         }
-        // Небольшая задержка для UI-фидбека (чтобы иконка успела покрутиться)
         await new Promise(res => setTimeout(res, 800));
     } catch (error) { 
         console.error("Sync error:", error); 
@@ -2429,15 +2437,27 @@ window.forceSyncNow = async function() {
 };
 
 window.syncLoginGoogle = async function() {
+    if (!window.firebase) await window.initFirebase(); // Подгружаем на лету, если еще нет
     if (!auth) return;
-    try { await auth.signInWithPopup(googleProvider); } 
+    try { 
+        await auth.signInWithPopup(googleProvider);
+        localStorage.setItem('dg_cloud_session', 'true'); // Ставим флаг сессии
+    } 
     catch (error) { console.error("Login Error:", error); }
 };
 
 window.syncEnablePhrase = async function(rawPhrase, hashedId) {
     localStorage.setItem('syncPhraseRaw', rawPhrase);
     localStorage.setItem('syncPhraseId', hashedId);
-    setupCloudListeners(hashedId); 
+    localStorage.setItem('dg_cloud_session', 'true'); // Флаг тоже полезен
+    
+    if (!window.firebase) {
+        await window.initFirebase(); // Загрузит скрипты и сам подхватит фразу из localStorage
+    } else {
+        setupCloudListeners(hashedId);
+        if (typeof initSettingsObserver === 'function') initSettingsObserver();
+    }
+    
     if (typeof updateGlobalSyncButtons === 'function') updateGlobalSyncButtons(null, hashedId);
     if (typeof renderLoginPageUI === 'function') renderLoginPageUI(null, rawPhrase);
 };
@@ -2451,6 +2471,7 @@ window.syncLogout = async function() {
     localStorage.removeItem('syncPhraseId');
     localStorage.removeItem('syncPhraseRaw');
     localStorage.removeItem('lastSyncTime');
+    localStorage.removeItem('dg_cloud_session'); // Удаляем флаг сессии
     
     if (typeof renderLoginPageUI === 'function') renderLoginPageUI(null, null);
     if (typeof updateGlobalSyncButtons === 'function') updateGlobalSyncButtons(null, null);
@@ -2483,38 +2504,37 @@ window.updateGlobalSyncButtons = function(user, phraseId) {
 };
 
 // ==========================================
-// БЕЗОПАСНЫЙ НАБЛЮДАТЕЛЬ ЗА НАСТРОЙКАМИ
+// БЕЗОПАСНЫЙ НАБЛЮДАТЕЛЬ ЗА НАСТРОЙКАМИ (ОТЛОЖЕННЫЙ ЗАПУСК)
 // ==========================================
 window.dg_settingsChanged = false; 
 window.dg_ignoreNextStorageEvent = false;
+let isObserverInitialized = false;
 
-(function() {
+window.initSettingsObserver = function() {
+    if (isObserverInitialized) return;
+    isObserverInitialized = true;
+
     const originalSetItem = localStorage.setItem;
+    
+    // Список того, что МЫ ИГНОРИРУЕМ (мусор)
     const ignoreList = ['DataTables_', 'localSearchHistory', 'lastSyncTime', 'syncPhrase', 'dg_'];
 
     localStorage.setItem = function(key, value) {
+        // Пропускаем запись, если это наша собственная синхронизация из Облака
         if (window.dg_ignoreNextStorageEvent) {
             originalSetItem.apply(this, arguments);
             window.dg_ignoreNextStorageEvent = false; 
             return;
         }
 
+        // 1. Проверяем, не мусор ли это?
         const isImportant = !ignoreList.some(prefix => key.startsWith(prefix));
+        
+        // 2. Если изменилось что-то важное — ставим пометку
         if (isImportant && localStorage.getItem(key) !== String(value)) {
             window.dg_settingsChanged = true;
         }
         
         originalSetItem.apply(this, arguments);
     };
-})();
-
-
-
-
-        
-
-
-
-
-
-
+};
