@@ -3,60 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Тест Синхронизации Dhamma.gift</title>
+    <title>Отладка Синхронизации | Dhamma.gift</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 0 15px; background: #f9f9f9;}
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        button { padding: 10px 15px; margin: 5px 0; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px;}
+        /* Базовая компактность: шрифт меньше, padding меньше */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: #f4f5f7; color: #333; margin: 0; padding: 10px; font-size: 13px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* Заголовок-карточка: всё в один ряд */
+        .card { background: #fff; padding: 10px 15px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); margin-bottom: 8px; flex-shrink: 0; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .header-title { font-size: 16px; margin: 0; color: #2c3e50; font-weight: bold; }
+        
+        .status-badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; background: #eee; white-space: nowrap; }
+        .status-google { background: #e8f0fe; color: #1a73e8; }
+        .status-phrase { background: #e6f4ea; color: #1e8e3e; }
+
+        /* Кнопки: меньше */
+        button { padding: 6px 10px; margin: 2px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: opacity 0.2s; white-space: nowrap; }
+        button:hover { opacity: 0.9; }
         .btn-google { background: #4285F4; color: white; }
         .btn-phrase { background: #34A853; color: white; }
+        .btn-sync { background: #FBBC05; color: #333; }
         .btn-danger { background: #EA4335; color: white; }
-        .btn-action { background: #FBBC05; color: #333; font-weight: bold; width: auto; margin-right: 5px; }
-        pre { background: #eee; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
-        #auth-status { font-weight: bold; color: #333; margin-bottom: 15px; display: block;}
-    </style>
+        .btn-dark { background: #34495e; color: white; }
 
+        /* Статистика: компактно, в один ряд */
+        .stats-row { display: flex; gap: 15px; border-top: 1px solid #e9ecef; padding-top: 8px; color: #6c757d; font-size: 12px; align-items: center;}
+        .data-value { font-size: 14px; font-weight: bold; color: #333; margin-left: 4px; }
+
+        /* Сырые данные: теперь занимает всё пространство с внутренним скроллом */
+        #raw-container { flex-grow: 1; display: flex; flex-direction: column; border-radius: 8px; overflow: hidden; }
+        pre { background: #2d2d2d; color: #a9b7c6; padding: 10px; margin: 0; overflow: auto; font-size: 12px; flex-grow: 1; font-family: Consolas, Monaco, 'Courier New', monospace; line-height: 1.4; tab-size: 2; -moz-tab-size: 2;}
+    </style>
+    
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
-<h2>Тест Синхронизации ☁️</h2>
-
-<div class="card" id="auth-section">
-    <span id="auth-status">Статус: Не в сети (Локальный режим)</span>
-
-    <div id="login-buttons">
-        <button class="btn-google" onclick="loginWithGoogle()">Войти через Google</button>
-        <button class="btn-phrase" onclick="loginWithPhrase()">Вход по секретной фразе</button>
+<div class="card">
+    <div class="header-top">
+        <h2 class="header-title">🛠 Dhamma.gift Debug</h2>
+        
+        <div id="auth-controls" style="display:flex; align-items:center; gap: 4px;">
+            <button class="btn-google" id="btn-login-google" onclick="loginWithGoogle()">Google</button>
+            <button class="btn-phrase" id="btn-login-phrase" onclick="loginWithPhrase()">🔑 Фраза</button>
+            <button class="btn-danger" id="btn-logout" style="display:none;" onclick="logout()">Выйти</button>
+            <span class="status-badge" id="auth-badge">⏳ Загрузка...</span>
+        </div>
     </div>
 
-    <div id="user-info" style="display: none;">
-        <button class="btn-danger" onclick="logout()">Выйти</button>
+    <div class="stats-row">
+        <div>🕒 <span id="val-last-sync">Никогда</span></div>
+        <div>⭐ Favs:<span class="data-value" id="val-fav-count">0</span></div>
+        <div>📜 Hist:<span class="data-value" id="val-hist-count">0</span></div>
+        <div>💾 Ключей:<span class="data-value" id="val-total-keys">0</span></div>
+        <div style="flex-grow:1; text-align:right;">
+            <button class="btn-dark" onclick="copyLocalStorage()">📋 JSON</button>
+            <button class="btn-sync" onclick="forceSyncNow()">🔄 Синхр.</button>
+            <button class="btn-danger" onclick="clearFullLocalStorage()">🗑 Полная очистка</button>
+        </div>
     </div>
 </div>
 
-<div class="card">
-    <h3>Эмуляция данных сайта</h3>
-    <p style="font-size: 14px; color: #666;">Нажмите кнопку, чтобы добавить тестовую закладку в локальную память.</p>
-
-    <button class="btn-action" onclick="addTestData()">+ Добавить тестовую закладку</button>
-    <button class="btn-action" onclick="clearLocalData()" style="background: #ccc;">Очистить локально</button>
-    <button class="btn-action" onclick="copyStorage()">Скопировать</button>
-
-    <h4 style="margin-top: 20px;">Содержимое localStorage:</h4>
-    <pre id="local-storage-display">Пусто...</pre>
+<div id="raw-container">
+    <pre id="raw-data-view">Загрузка данных...</pre>
 </div>
 
 <script>
+// Настройки Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyDwatpN1h2w0g1HvQn1yyHUWgR5ONy5Di8",
-  authDomain: "dg-sync-data.firebaseapp.com",
-  projectId: "dg-sync-data",
-  storageBucket: "dg-sync-data.firebasestorage.app",
-  messagingSenderId: "777733337986",
-  appId: "1:777733337986:web:24dac9e062f5d048bad59b"
+    apiKey: "AIzaSyDwatpN1h2w0g1HvQn1yyHUWgR5ONy5Di8",
+    authDomain: "dg-sync-data.firebaseapp.com",
+    projectId: "dg-sync-data",
+    storageBucket: "dg-sync-data.firebasestorage.app",
+    messagingSenderId: "777733337986",
+    appId: "1:777733337986:web:24dac9e062f5d048bad59b"
 };
 
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
@@ -64,122 +86,187 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-async function loginWithGoogle() {
-    try { await auth.signInWithPopup(googleProvider); } 
-    catch (error) { alert("Ошибка Google: " + error.message); }
+// Получение ID пользователя
+function getUid() {
+    const user = auth.currentUser;
+    return user ? user.uid : localStorage.getItem('syncPhraseId');
 }
 
+// Запись времени синхронизации
+function setSyncTime() {
+    localStorage.setItem('lastSyncTime', Date.now());
+    updateDebuggerUI();
+}
+
+// Вход через Google
+async function loginWithGoogle() {
+    try { 
+        await auth.signInWithPopup(googleProvider); 
+    } catch (error) { alert("Ошибка Google: " + error.message); }
+}
+
+// Вход по фразе
 function loginWithPhrase() {
     const phrase = prompt("Введите секретную фразу:");
-    if (phrase && phrase.length >= 6) {
-        const phraseId = "phrase_" + phrase.trim().toLowerCase().replace(/\s+/g, '-');
-        localStorage.setItem('syncPhraseId', phraseId);
-        updateUI();
-        syncFromCloud(phraseId);
+    if (phrase && phrase.trim().length >= 6) {
+        const rawPhrase = phrase.trim();
+        const hashedId = "phrase_" + rawPhrase.toLowerCase().replace(/\s+/g, '-');
+        
+        localStorage.setItem('syncPhraseId', hashedId);
+        localStorage.setItem('syncPhraseRaw', rawPhrase);
+        
+        syncFromCloud(hashedId); // Сразу тянем данные
+    } else if (phrase) {
+        alert("Фраза должна быть не короче 6 символов.");
     }
 }
 
+// Выход
 async function logout() {
-    await auth.signOut();
+    if (auth.currentUser) await auth.signOut();
     localStorage.removeItem('syncPhraseId');
-    updateUI();
+    localStorage.removeItem('syncPhraseRaw');
+    localStorage.removeItem('lastSyncTime');
+    updateDebuggerUI();
 }
 
-function getCurrentUserId() {
-    const user = auth.currentUser;
-    const phraseId = localStorage.getItem('syncPhraseId');
-    if (user) return user.uid;
-    if (phraseId) return phraseId;
-    return null;
+// Принудительная синхронизация
+async function forceSyncNow() {
+    const uid = getUid();
+    if (!uid) {
+        alert("Сначала авторизуйтесь!");
+        return;
+    }
+    
+    // Эмулируем логику отправки настроек
+    const settingsToSave = {};
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key.startsWith('dg_') && key !== 'localSearchHistory' && key !== 'lastSyncTime' && key !== 'syncPhraseId' && key !== 'syncPhraseRaw') {
+            settingsToSave[key] = localStorage.getItem(key);
+        }
+    }
+
+    try {
+        if (Object.keys(settingsToSave).length > 0) {
+            await db.collection("users").doc(uid).set({
+                settings: settingsToSave,
+                updatedAt: Date.now()
+            }, { merge: true });
+        }
+        await syncFromCloud(uid);
+    } catch (e) { console.error("Sync error:", e); }
 }
 
-async function syncToCloud() {
-    const uid = getCurrentUserId();
-    if (!uid) return;
-
-    const dataToSave = JSON.stringify(localStorage);
-    await db.collection("users").doc(uid).set({
-        settings: dataToSave,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-}
-
+// Скачивание данных из облака
 async function syncFromCloud(uid) {
-    const doc = await db.collection("users").doc(uid).get();
-    if (doc.exists) {
-        const cloudData = JSON.parse(doc.data().settings);
-        for (const key in cloudData) {
-            if (key !== 'syncPhraseId') {
-                localStorage.setItem(key, cloudData[key]);
+    if (!uid) return;
+    try {
+        const doc = await db.collection("users").doc(uid).get();
+        if (doc.exists && doc.data().settings) {
+            const cloudSettings = doc.data().settings;
+            for (const key in cloudSettings) {
+                localStorage.setItem(key, cloudSettings[key]);
             }
         }
-        updateStorageDisplay();
-    } else {
-        syncToCloud();
-    }
+        setSyncTime(); // Фиксируем время
+    } catch (e) { console.error("Restore error:", e); }
 }
 
-auth.onAuthStateChanged(() => {
-    updateUI();
-    const uid = getCurrentUserId();
-    if (uid) syncFromCloud(uid);
+// Автоматический подхват статуса при загрузке
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        await syncFromCloud(user.uid);
+    }
+    updateDebuggerUI();
 });
 
-function updateUI() {
+// Кнопка очистки
+function clearFullLocalStorage() {
+    if (confirm("ВНИМАНИЕ!\nЭто полностью удалит все локальные настройки, историю словаря и избранное на этом устройстве.\n\nПродолжить?")) {
+        localStorage.clear();
+        sessionStorage.clear();
+        updateDebuggerUI();
+        alert("Очищено.");
+    }
+}
+
+// Кнопка копирования
+function copyLocalStorage() {
+    const data = document.getElementById('raw-data-view').innerText;
+    navigator.clipboard.writeText(data).then(() => alert("JSON скопирован в буфер!"));
+}
+
+// Отрисовка интерфейса (вызывается каждую секунду)
+function updateDebuggerUI() {
     const user = auth.currentUser;
     const phraseId = localStorage.getItem('syncPhraseId');
-
-    const loginBtns = document.getElementById('login-buttons');
-    const userInfo = document.getElementById('user-info');
-    const statusText = document.getElementById('auth-status');
+    
+    const badge = document.getElementById('auth-badge');
+    const btnGoogle = document.getElementById('btn-login-google');
+    const btnPhrase = document.getElementById('btn-login-phrase');
+    const btnLogout = document.getElementById('btn-logout');
 
     if (user) {
-        loginBtns.style.display = 'none';
-        userInfo.style.display = 'block';
-        statusText.innerText = `Статус: Google (${user.email})`;
+        badge.className = 'status-badge status-google';
+        badge.innerText = '👤 Google: ' + user.email;
+        btnGoogle.style.display = 'none';
+        btnPhrase.style.display = 'none';
+        btnLogout.style.display = 'inline-block';
     } else if (phraseId) {
-        loginBtns.style.display = 'none';
-        userInfo.style.display = 'block';
-        statusText.innerText = `Статус: Фраза (${phraseId})`;
+        badge.className = 'status-badge status-phrase';
+        badge.innerText = '🔑 Фраза: ' + phraseId;
+        btnGoogle.style.display = 'none';
+        btnPhrase.style.display = 'none';
+        btnLogout.style.display = 'inline-block';
     } else {
-        loginBtns.style.display = 'block';
-        userInfo.style.display = 'none';
-        statusText.innerText = 'Статус: Локально';
+        badge.className = 'status-badge';
+        badge.innerText = 'Локально (Не в сети)';
+        btnGoogle.style.display = 'inline-block';
+        btnPhrase.style.display = 'inline-block';
+        btnLogout.style.display = 'none';
     }
 
-    updateStorageDisplay();
+    const syncTime = localStorage.getItem('lastSyncTime');
+    const syncText = document.getElementById('val-last-sync');
+    if (syncTime) {
+        const d = new Date(parseInt(syncTime));
+        syncText.innerText = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + ' ' + d.toLocaleDateString();
+    } else {
+        syncText.innerText = 'Никогда';
+    }
+
+    try {
+        const favs = JSON.parse(localStorage.getItem('dg_favorites') || '[]');
+        document.getElementById('val-fav-count').innerText = favs.length;
+    } catch(e) { document.getElementById('val-fav-count').innerText = 'Ошибка'; }
+
+    try {
+        const hist = JSON.parse(localStorage.getItem('localSearchHistory') || '[]');
+        document.getElementById('val-hist-count').innerText = hist.length;
+    } catch(e) { document.getElementById('val-hist-count').innerText = 'Ошибка'; }
+
+    document.getElementById('val-total-keys').innerText = localStorage.length;
+
+    // Сборка полного красивого JSON без схлопывания
+    const viewData = {};
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        let val = localStorage.getItem(key);
+        // Пытаемся распарсить строковые массивы/объекты для красивого отступа
+        try { 
+            if (val.startsWith('[') || val.startsWith('{')) {
+                val = JSON.parse(val); 
+            }
+        } catch(e) {}
+        viewData[key] = val;
+    }
+    // Используем tab-size для более компактного отступа (см. CSS)
+    document.getElementById('raw-data-view').innerText = JSON.stringify(viewData, null, '\t');
 }
 
-function addTestData() {
-    const rand = Math.floor(Math.random() * 100);
-    localStorage.setItem(`test_${rand}`, `MN ${rand}`);
-    updateStorageDisplay();
-    syncToCloud();
-}
-
-function clearLocalData() {
-    const phrase = localStorage.getItem('syncPhraseId');
-    localStorage.clear();
-    if (phrase) localStorage.setItem('syncPhraseId', phrase);
-    updateStorageDisplay();
-    syncToCloud();
-}
-
-function updateStorageDisplay() {
-    const display = document.getElementById('local-storage-display');
-    const data = { ...localStorage };
-    display.innerText = Object.keys(data).length
-        ? JSON.stringify(data, null, 2)
-        : "Пусто";
-}
-
-function copyStorage() {
-    const text = document.getElementById('local-storage-display').innerText;
-    navigator.clipboard.writeText(text);
-}
-
-setInterval(updateStorageDisplay, 1000);
+setInterval(updateDebuggerUI, 1000);
+updateDebuggerUI();
 </script>
-
 </body>
 </html>

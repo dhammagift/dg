@@ -2208,6 +2208,9 @@ async function initFirebase() {
             if (typeof updateGlobalSyncButtons === 'function') updateGlobalSyncButtons(user, phraseId);
             if (typeof renderLoginPageUI === 'function') renderLoginPageUI(user, phraseRaw);
         });
+        
+        
+        
     } catch (error) { console.error("Firebase Init Error:", error); }
 }
 
@@ -2504,3 +2507,14 @@ window.dg_ignoreNextStorageEvent = false;
         originalSetItem.apply(this, arguments);
     };
 })();
+
+
+
+
+        
+
+
+
+
+
+
