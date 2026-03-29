@@ -93,7 +93,6 @@ if (isset($_GET['ml']) && $_GET['ml'] === 'on') {
 <link href="/assets/css/extrastyles.css" rel="stylesheet" />
 
 <script src="/assets/js/jquery-3.7.0.min.js"></script>
-<script src="/assets/js/jquery-ui.min.js"></script>
 <link href="/assets/css/paliLookup.css" rel="stylesheet" />
 <script>
 // Получаем текущие параметры URL

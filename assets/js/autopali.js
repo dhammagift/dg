@@ -1,3 +1,5 @@
+// === Файл: /assets/js/autopali.js ===
+
 function uniCoder(textInput) {
     if (!textInput || textInput === "") return textInput;
     return textInput
@@ -14,10 +16,8 @@ function uniCoder(textInput) {
         .replace(/\.h/g, "ḥ");
 }
 
-// Кэшируем словарь, чтобы не качать его дважды при открытии окна
 let suttaWordsCache = null;
 
-// Выносим словарь раскладки наружу для лучшей производительности
 const ruToEn = {
     'а': 'f', 'в': 'd', 'е': 't', 'к': 'r', 'м': 'v',
     'н': 'y', 'о': 'j', 'п': 'g', 'р': 'h', 'с': 'c',
@@ -28,24 +28,47 @@ const ruToEn = {
     'щ': 'o', 'б': ',', 'ю': '.', ' ': ' '
 };
 
-// Делаем функцию доступной для вызова из модального окна
+// --- УТИЛИТЫ ДЛЯ УМНОЙ ЗАГРУЗКИ ---
+window._dgLoadPromises = window._dgLoadPromises || {};
+
+function _loadStyle(href) {
+    if (!document.querySelector(`link[href="${href}"]`)) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        document.head.appendChild(link);
+    }
+}
+
+function _loadScript(src) {
+    // Если скрипт уже грузится, возвращаем существующий Promise (защита от двойной загрузки)
+    if (window._dgLoadPromises[src]) return window._dgLoadPromises[src];
+    
+    window._dgLoadPromises[src] = new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) {
+            resolve();
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+    
+    return window._dgLoadPromises[src];
+}
+// -----------------------------------
+
 window.initPaliAutocomplete = function(selector) {
     let inputEl = document.querySelector(selector);
     if (!inputEl) return;
 
-    // Защита от двойного навешивания событий
     if (inputEl.dataset.autopaliBound === "true") return;
     inputEl.dataset.autopaliBound = "true";
 
-    // ФИКС Z-INDEX: Жестко задаем стиль, чтобы подсказки были ПОВЕРХ модального окна
-    if (!document.getElementById('autopali-zindex-fix')) {
-        let style = document.createElement('style');
-        style.id = 'autopali-zindex-fix';
-        style.textContent = '.ui-autocomplete { z-index: 10005 !important; }';
-        document.head.appendChild(style);
-    }
-
-    // Подключаем конвертер Юникода
+    // 1. Мгновенно вешаем конвертер Юникода. Он легкий и должен работать сразу, 
+    // даже пока грузятся тяжелые скрипты
     inputEl.addEventListener("input", function () {
         let textInput = inputEl.value;
         let convertedText = uniCoder(textInput);
@@ -54,33 +77,79 @@ window.initPaliAutocomplete = function(selector) {
         }
     });
 
-    // Показ истории при пустом клике
-    inputEl.addEventListener("click", function() {
-        if (inputEl.value === "" && $(inputEl).hasClass('ui-autocomplete-input')) {
-            $(inputEl).autocomplete("search", "");
-        }
-    });
+    // 2. Логика отложенной загрузки
+    let isLoaded = false;
+    let isLoading = false;
 
-    // Загружаем базу слов (с кэшированием)
-    if (suttaWordsCache) {
-        bindAutocomplete(selector, suttaWordsCache);
-    } else {
-        $.ajax({
-            url: "/assets/texts/sutta_words.txt",
-            dataType: "text",
-            success: function(data) {
-                suttaWordsCache = data.split('\n');
-                bindAutocomplete(selector, suttaWordsCache);
-            },
-            error: function() {
-                console.error("Не удалось загрузить словарь sutta_words.txt");
+    const lazyLoadAndInit = async (e) => {
+        if (isLoaded) return;
+        
+        // Запоминаем, был ли это клик по пустому полю (чтобы показать историю)
+        const triggerEmptySearch = (e.type === 'click' && inputEl.value === '');
+
+        if (isLoading) return;
+        isLoading = true;
+
+        try {
+            // Подгружаем стили
+            _loadStyle('/assets/css/jquery-ui.min.css');
+
+            // Фикс z-index для модальных окон
+            if (!document.getElementById('autopali-zindex-fix')) {
+                let style = document.createElement('style');
+                style.id = 'autopali-zindex-fix';
+                style.textContent = '.ui-autocomplete { z-index: 10005 !important; }';
+                document.head.appendChild(style);
             }
-        });
-    }
+
+            // Подгружаем jQuery и jQuery UI строго последовательно
+            if (typeof jQuery === 'undefined') {
+                await _loadScript('/assets/js/jquery-3.7.0.min.js');
+            }
+            if (typeof jQuery === 'undefined' || typeof jQuery.ui === 'undefined') {
+                await _loadScript('/assets/js/jquery-ui.min.js');
+            }
+
+            // Загружаем словарь через нативный fetch
+            if (!suttaWordsCache) {
+                const response = await fetch("/assets/texts/sutta_words.txt");
+                if (!response.ok) throw new Error("Ошибка загрузки словаря");
+                const text = await response.text();
+                suttaWordsCache = text.split('\n');
+            }
+
+            // Инициализируем автокомплит
+            bindAutocomplete(selector, suttaWordsCache);
+            isLoaded = true;
+
+            // Вешаем обработчик для будущих кликов по пустому полю (когда скрипт уже загружен)
+            inputEl.addEventListener("click", function() {
+                if (inputEl.value === "" && $(inputEl).hasClass('ui-autocomplete-input')) {
+                    $(inputEl).autocomplete("search", "");
+                }
+            });
+
+            // Восстанавливаем действие пользователя, которое инициировало загрузку
+            if (triggerEmptySearch) {
+                $(inputEl).autocomplete("search", "");
+            } else if (inputEl.value !== "") {
+                $(inputEl).autocomplete("search", inputEl.value);
+            }
+
+        } catch (error) {
+            console.error("Ошибка ленивой загрузки Autopali:", error);
+        } finally {
+            isLoading = false;
+        }
+    };
+
+    // Слушаем взаимодействия для старта загрузки
+    inputEl.addEventListener("focus", lazyLoadAndInit);
+    inputEl.addEventListener("input", lazyLoadAndInit);
+    inputEl.addEventListener("click", lazyLoadAndInit);
 };
 
 function bindAutocomplete(selector, allWords) {
-    // Очищенный accentMap (двойные ключи убраны, m с точками приводятся к m)
     var accentMap = {
         "ā": "a", "ī": "i", "ū": "u", 
         "ḍ": "d", "ḷ": "l", 
@@ -124,8 +193,6 @@ function bindAutocomplete(selector, allWords) {
             var minLengthForSearch = 3;
 
             var history = JSON.parse(localStorage.getItem("localSearchHistory")) || [];
-            
-            // БЕЗОПАСНОЕ извлечение (защита от ошибок, если в истории лежат старые форматы)
             var historyKeys = history.map(item => Array.isArray(item) ? item[0] : item);
 
             if (!lastTerm) {
@@ -145,10 +212,7 @@ function bindAutocomplete(selector, allWords) {
             var normLastTerm = normalize(lastTerm);
             var re = $.ui.autocomplete.escapeRegex(normLastTerm);
             
-            // 1. Делаем каждую букву опционально двойной (k -> k{1,2})
             var modifiedRe = re.replace(/([a-zA-Z])/g, "$1{1,2}");
-            
-            // 2. Делаем 'm' и 'n' полностью взаимозаменяемыми для поиска (m -> [mn], n -> [mn])
             modifiedRe = modifiedRe.replace(/m|n/g, "[mn]");
 
             var matchbeginonly = new RegExp("^" + modifiedRe, "i");
@@ -186,7 +250,6 @@ function bindAutocomplete(selector, allWords) {
             if (/\d/.test(selectedValue)) {
                 this.value = selectedValue.split(/\s+/)[0]; 
                 
-                // Умный поиск кнопки Submit, чтобы правильно обрабатывать и главную строку, и модалку
                 const form = this.closest('form');
                 if (form) {
                     const submitBtn = form.querySelector('[type="submit"]');
@@ -210,7 +273,6 @@ function bindAutocomplete(selector, allWords) {
     }).autocomplete("widget").addClass("fixed-height");
 }
 
-// Запускаем инициализацию для главной строки поиска корректно и вовремя
 function setupMainInput() {
     if (document.getElementById("paliauto")) {
         initPaliAutocomplete("#paliauto");
