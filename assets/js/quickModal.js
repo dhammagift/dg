@@ -267,15 +267,27 @@ function buildQuickModalDOM() {
   const favContainer = quickModal.querySelector('#quick-favorites-container');
   const histContainer = quickModal.querySelector('#quick-history-container');
   
-  favContainer.addEventListener('click', (e) => {
+    favContainer.addEventListener('click', (e) => {
       if (e.target.classList.contains('remove-fav-btn')) {
           const slug = e.target.dataset.slug;
           if (confirm(isRu ? "Удалить из избранного?" : "Remove from favorites?")) {
               let favData = JSON.parse(localStorage.getItem('dg_favorites')) || [];
+              
+              // === НОВОЕ: Ищем и стираем длинный текст из кэша перед удалением ссылки ===
+              const itemToDelete = favData.find(f => f.slug === slug);
+              if (itemToDelete && itemToDelete.search) {
+                  const params = new URLSearchParams(itemToDelete.search);
+                  const savedId = params.get('saved_id');
+                  if (savedId) {
+                      localStorage.removeItem(savedId); // Освобождаем память!
+                  }
+              }
+              // =========================================================================
+
               favData = favData.filter(f => f.slug !== slug);
               localStorage.setItem('dg_favorites', JSON.stringify(favData));
               
-              // --- ИЗМЕНЕНО: Атомарная отправка ---
+              // Атомарная отправка
               if (typeof syncFavoriteItemToCloud === 'function') {
                   syncFavoriteItemToCloud({slug: slug}, true);
               }

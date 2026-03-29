@@ -438,10 +438,11 @@ document.addEventListener('click', function(e) {
 
     const isWordInsideAB = activeWord && activeWord.closest('.memorize-highlight') !== null;
     let textToPass = '';
-    const MAX_CHARS = 1200; 
+    const MAX_CHARS = 1200; // Лимит для захвата экрана вниз
+    const URL_MAX_LENGTH = 1500; // Порог переключения между URL и localStorage
 
     // =======================================================
-    // ПРИОРИТЕТ 1: ЦИКЛ А-Б (Только его диапазон)
+    // ПРИОРИТЕТ 1: ЦИКЛ А-Б (Только его диапазон) - БЕЗ ЛИМИТА
     // =======================================================
     if (highlighted.length > 0 && (!activeWord || isWordInsideAB)) {
         // Проверяем, скрыт ли Пали визуально
@@ -455,23 +456,17 @@ document.addEventListener('click', function(e) {
         // Оставляем только нужный язык (или общие блоки без языковых классов)
         let abElements = highlighted.filter(el => el.classList.contains(targetClass) || !el.className.includes('-lang'));
         
-        let currentLength = 0;
         let textArr = [];
         for (let el of abElements) {
             let text = (el.innerText || el.textContent).trim();
             if (text) {
-                if (currentLength + text.length > MAX_CHARS) {
-                    textArr.push(text.substring(0, Math.max(0, MAX_CHARS - currentLength - 3)) + '...');
-                    break;
-                }
-                textArr.push(text);
-                currentLength += text.length + 1;
+                textArr.push(text); // Собираем ВСЁ выделенное, без ограничений
             }
         }
         textToPass = textArr.join('\n');
     } 
     // =======================================================
-    // ПРИОРИТЕТ 2: ОТ ТОЧКИ ФОКУСА (Active / TTS) ИЛИ ЭКРАНА -> ВНИЗ до 1900 симв
+    // ПРИОРИТЕТ 2: ОТ ТОЧКИ ФОКУСА (Active / TTS) ИЛИ ЭКРАНА -> ВНИЗ (С ЛИМИТОМ)
     // =======================================================
     else {
         let startNode = activeWord && !isWordInsideAB ? activeWord : ttsActive;
@@ -556,13 +551,24 @@ document.addEventListener('click', function(e) {
                      
     const baseUrl = isRuPath ? '/ru/memo/' : '/memo/';
     
+    // =======================================================
+    // ГИБРИДНАЯ ЛОГИКА ОТПРАВКИ (URL vs LocalStorage)
+    // =======================================================
     if (textToPass) {
-        window.open(`${baseUrl}?text=${encodeURIComponent(textToPass)}`, '_blank');
+        if (textToPass.length <= URL_MAX_LENGTH) {
+            // Текст короткий — передаем через URL для удобства шаринга
+            localStorage.removeItem('currentMemoText'); // Очищаем хранилище на всякий случай
+            window.open(`${baseUrl}?text=${encodeURIComponent(textToPass)}`, '_blank');
+        } else {
+            // Текст длинный — прячем в localStorage, чтобы не сломать браузер
+            localStorage.setItem('currentMemoText', textToPass);
+            window.open(baseUrl, '_blank');
+        }
     } else {
+        localStorage.removeItem('currentMemoText');
         window.open(baseUrl, '_blank');
     }
 });
-
 
 // ==========================================================================
 // ГЕНЕРАЦИЯ ДОПОЛНИТЕЛЬНЫХ ССЫЛОК (DPR, BJT, Voice, SC, BB, TBW, Th.ru, Th.su)

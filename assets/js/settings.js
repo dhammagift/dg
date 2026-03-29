@@ -2277,14 +2277,33 @@ window.setupCloudListeners = function(uid) {
         localFavs.forEach(f => favMap.set(f.slug, f)); 
 
         snapshot.docChanges().forEach((change) => {
-            const cloudFav = change.doc.data();
+            let cloudFav = change.doc.data();
+            
             if (change.type === "added" || change.type === "modified") {
+                // Если из Облака прилетел длинный текст (с другого устройства)
+                if (cloudFav.fullText && cloudFav.search) {
+                    const params = new URLSearchParams(cloudFav.search);
+                    const savedId = params.get('saved_id');
+                    if (savedId) {
+                        // Распаковываем текст в локальную память устройства
+                        localStorage.setItem(savedId, cloudFav.fullText);
+                    }
+                    // Удаляем текст из объекта, чтобы он не раздувал кэш dg_favorites
+                    delete cloudFav.fullText;
+                }
                 favMap.set(cloudFav.slug, cloudFav);
             }
             if (change.type === "removed") {
+                // Синхронно очищаем локальную память на других устройствах при удалении
+                if (cloudFav.search && cloudFav.search.includes('saved_id=')) {
+                    const params = new URLSearchParams(cloudFav.search);
+                    const savedId = params.get('saved_id');
+                    if (savedId) localStorage.removeItem(savedId);
+                }
                 favMap.delete(cloudFav.slug);
             }
         });
+
 
         const finalFavs = Array.from(favMap.values()).sort((a, b) => b.timestamp - a.timestamp);
         localStorage.setItem('dg_favorites', JSON.stringify(finalFavs));
@@ -2400,14 +2419,27 @@ window.syncFavoriteItemToCloud = async function(favData, isDeleted = false) {
         if (isDeleted) {
             await docRef.delete();
         } else {
+            let cloudData = { ...favData };
+            
+            // АТОМАРНОСТЬ: Если есть сохраненный длинный текст, прикрепляем его к документу
+            if (cloudData.search && cloudData.search.includes('saved_id=')) {
+                const params = new URLSearchParams(cloudData.search);
+                const savedId = params.get('saved_id');
+                if (savedId) {
+                    const localText = localStorage.getItem(savedId);
+                    if (localText) cloudData.fullText = localText; // Текст летит вместе с Избранным
+                }
+            }
+
             await docRef.set({ 
-                ...favData, 
+                ...cloudData, 
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
             }, { merge: true });
         }
         refreshSyncTimeUI();
     } catch (e) { console.error("Fav Sync Error:", e); }
 };
+
 
 window.syncHistoryItemToCloud = async function(key, url, timestamp, isDeleted = false) {
     if (!db || !getUid()) return;

@@ -441,6 +441,7 @@ function resetGlobalSessionTimer() {
                 let memoSlug, memoTitle;
 
                 if (currentText) {
+                    // Если есть текст, сохраняем как текстовую заметку
                     memoSlug = "memo_" + currentText.substring(0, 50).replace(/\s+/g, '_'); 
                     memoTitle = "📝 " + currentText.substring(0, 35) + (currentText.length > 35 ? "..." : "");
                 } else {
@@ -466,20 +467,7 @@ function resetGlobalSessionTimer() {
                 }
 
                 const params = new URLSearchParams();
-                
-                if (currentText) {
-                    // Если текст очень длинный, сохраняем его локально (напрямую)
-                    if (currentText.length > 1900) {
-                        // Создаем уникальный ID на основе текста, чтобы не плодить дубликаты
-                        const hash = Math.abs(currentText.split('').reduce((a,b) => (((a << 5) - a) + b.charCodeAt(0))|0, 0));
-                        const storageId = "dg_memodata_" + hash;
-                        localStorage.setItem(storageId, currentText);
-                        params.set('saved_id', storageId); // В URL пойдет только короткий ID
-                    } else {
-                        params.set('text', currentText);
-                    }
-                }
-
+                if (currentText) params.set('text', currentText);
                 params.set('delay', document.getElementById("ttsDelay").value || "0");
                 params.set('end', document.getElementById("ttsEndDelay").value || "0");
                 params.set('trn', document.getElementById("ttsIsTranslation").checked ? "1" : "0");
@@ -539,41 +527,15 @@ if (favBtn) {
             if (shareBtn) {
                 shareBtn.addEventListener('click', (e) => {
                     e.preventDefault();
-                    const currentText = textInput.value.trim();
+                    const data = getMemoData();
                     
-                    if (!currentText) {
+                    if (!data) {
                         alert(window.memoLang === 'ru' ? 'Сначала введите текст!' : 'Please enter text first!');
                         return;
                     }
 
-                    let textToShare = currentText;
-
-                    // Предлагаем обрезать длинный текст для ссылки
-                    if (textToShare.length > 1900) {
-                        const msg = window.memoLang === 'ru' 
-                            ? 'Текст слишком длинный для создания ссылки (лимит 1900 символов).\nХотите сократить его, чтобы поделиться?' 
-                            : 'The text is too long for a link (limit 1900 characters).\nTruncate it to share?';
-                        
-                        if (confirm(msg)) {
-                            textToShare = textToShare.substring(0, 1900);
-                        } else {
-                            return; // Пользователь отказался обрезать
-                        }
-                    }
-
-                    // Генерируем URL специально для шаринга (без saved_id)
-                    const params = new URLSearchParams();
-                    params.set('text', textToShare);
-                    params.set('delay', document.getElementById("ttsDelay").value || "0");
-                    params.set('end', document.getElementById("ttsEndDelay").value || "0");
-                    params.set('trn', document.getElementById("ttsIsTranslation").checked ? "1" : "0");
-                    params.set('loop', document.getElementById("ttsIsLoop").checked ? "1" : "0");
-                    params.set('lc', document.getElementById("ttsLoopCount").value || "∞");
-                    params.set('snd', document.getElementById("ttsSound").value || "none");
-                    params.set('sep', document.getElementById("ttsDelimiter").value || "");
-
                     let origin = window.location.origin;
-                    const fullUrl = origin + window.location.pathname + "?" + params.toString();
+                    const fullUrl = origin + data.path + data.search;
 
                     navigator.clipboard.writeText(fullUrl).then(() => {
                         if (typeof showBubbleNotification === 'function') {
@@ -966,9 +928,8 @@ window.startMemoVisualTimer = function(durationMs, textPrefix) {
                 обновитьКнопкиВвода();
                 
                 const url = new URL(window.location.href);
-                if (url.searchParams.has('text') || url.searchParams.has('saved_id')) {
+                if (url.searchParams.has('text')) {
                     url.searchParams.delete('text');
-                    url.searchParams.delete('saved_id');
                     window.history.replaceState({}, document.title, url.toString());
                 }
             }
@@ -1040,19 +1001,10 @@ window.addEventListener('load', обновитьКнопкиВвода);
             }
  
             const urlParams = new URLSearchParams(window.location.search);
-            let textParam = urlParams.get('text');
-            const savedIdParam = urlParams.get('saved_id');
-
-            // Подхватываем напрямую сохраненный длинный текст
-            if (savedIdParam) {
-                const storedText = localStorage.getItem(savedIdParam);
-                if (storedText) {
-                    textParam = storedText;
-                }
-            }
+            const textParam = urlParams.get('text');
             
             // Проверяем, является ли ссылка пресетом медитации (есть настройки таймера, но нет текста)
-            const isMeditationPreset = !textParam && !savedIdParam && (urlParams.has('delay') || urlParams.has('end') || urlParams.has('snd'));
+            const isMeditationPreset = !urlParams.has('text') && (urlParams.has('delay') || urlParams.has('end') || urlParams.has('snd'));
             
             if (textParam) {
                 // Загрузка обычного текста
@@ -1659,9 +1611,9 @@ window.addEventListener('load', () => {
     setTimeout(updatePageTitle, 150);
 });
 
+
+
     </script>
-
-
     <script src="/assets/js/jquery-3.7.0.min.js" defer></script>
     <script src="/assets/js/jquery-ui.min.js" defer></script>
     <script src="/assets/js/bootstrap.bundle.5.3.1.min.js"></script>

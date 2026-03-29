@@ -347,6 +347,20 @@ const ScrollManager = {
         const slug = this.normalizeSlug(urlParams.get('q'));
         if (!slug) return;
 
+        // --- ИСПРАВЛЕНИЕ: Жесткая мертвая зона наверху страницы ---
+        // Если мы в самом начале страницы, это не прогресс. 
+        // Удаляем запись, чтобы не показывать плашку на первом абзаце.
+        if (window.scrollY < 200) {
+            try {
+                let progressData = JSON.parse(localStorage.getItem('dg_suttaProgress') || '{}');
+                if (progressData[slug]) {
+                    delete progressData[slug];
+                    localStorage.setItem('dg_suttaProgress', JSON.stringify(progressData));
+                }
+            } catch (e) {}
+            return; // Прерываем выполнение, сохранять тут нечего
+        }
+
         const suttaContainer = document.getElementById('sutta');
         if (!suttaContainer) return;
 
@@ -393,6 +407,7 @@ const ScrollManager = {
             localStorage.setItem('dg_suttaProgress', JSON.stringify(progressData));
         }
     },
+
 
     findFallbackElement(baseId) {
         if (!baseId) return null;
