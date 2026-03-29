@@ -259,7 +259,7 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
     </div>
 
     <script>
-     
+    
   // Функция для загрузки и рендера пресетов
 async function loadPresets() {
     const container = document.getElementById('preset-list-container');
@@ -1579,6 +1579,37 @@ function stopMemoTTS(fullReset = true) {
 
         // Наблюдаем за DOM. Скрипт сработает только тогда, когда плеер реально появится или изменится
         playerObserver.observe(document.body, { childList: true, subtree: true });
+        
+// === ДИНАМИЧЕСКИЙ ЗАГОЛОВОК СТРАНИЦЫ (TITLE) ===
+function updatePageTitle() {
+    const textInput = document.getElementById("inputText");
+    if (!textInput) return;
+
+    const text = textInput.value.trim();
+    const defaultTitle = window.memoLang === 'ru' ? 'Память и Медитация' : 'Memorize & Meditate';
+
+    if (text) {
+        const words = text.split(/\s+/);
+        // Берем первые 4 слова
+        const titleWords = words.slice(0, 4).join(' '); 
+        document.title = titleWords + (words.length > 4 ? '...' : '');
+    } else {
+        document.title = defaultTitle;
+    }
+}
+
+// Вешаем слушатель на ввод текста
+document.addEventListener("DOMContentLoaded", () => {
+    const textInput = document.getElementById("inputText");
+    if (textInput) {
+        textInput.addEventListener('input', updatePageTitle);
+    }
+});
+
+// Обновляем заголовок после того, как отработают скрипты загрузки текста из кэша или URL
+window.addEventListener('load', () => {
+    setTimeout(updatePageTitle, 150);
+});
 
 
 
