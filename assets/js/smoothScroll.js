@@ -1,3 +1,5 @@
+// === Файл: /assets/js/smoothScroll.js ===
+
 const ScrollManager = {
     config: {
         eyeLevel: 120, // Линия глаз для сохранения прогресса
@@ -5,29 +7,61 @@ const ScrollManager = {
     },
 
     scrollSaveTimeout: null,
+    isWaitingForToast: false,
+    hasScrolledDeep: false,
 
     init() {
         this.setupScrollToTop();
         
-        // Автосохранение прогресса (debounced)
+        // Автосохранение прогресса
         window.addEventListener('scroll', () => {
+            // Если функция полностью отключена пользователем - выходим
+            if (localStorage.getItem('dg_progressEnabled') === 'false') return;
+
+            if (document.visibilityState !== 'visible') return; 
+            if (window.isRestoringProgress) return; 
+
+            // 1. ЗАЩИТА: Если висит плашка, игнорируем мелкие скроллы.
+            if (this.isWaitingForToast) {
+                if (window.scrollY > 600) {
+                    this.hideProgressNotification();
+                } else {
+                    return; 
+                }
+            }
+
+            // 2. ОПТИМИЗАЦИЯ БАЗЫ: Мертвая зона наверху
+            if (window.scrollY < 100 && !this.hasScrolledDeep) return;
+            if (window.scrollY >= 100) this.hasScrolledDeep = true;
+
             clearTimeout(this.scrollSaveTimeout);
             this.scrollSaveTimeout = setTimeout(() => this.saveReadingProgress(), 1000); 
         }, { passive: true });
 
-        // Ловим готовность DOM и запускаем умный скролл
-        document.addEventListener('DOMContentLoaded', () => {
-            this.handleInitialScroll();
+        // Умная отправка в облако
+        document.addEventListener('visibilitychange', () => {
+            if (localStorage.getItem('dg_progressEnabled') === 'false') return;
+
+            if (document.visibilityState === 'hidden') {
+                const urlParams = new URLSearchParams(window.location.search);
+                const slug = this.normalizeSlug(urlParams.get('q'));
+                
+                if (slug && typeof syncProgressItemToCloud === 'function' && this.hasScrolledDeep) {
+                    this.saveReadingProgress(); 
+                    syncProgressItemToCloud(slug);
+                }
+            }
         });
 
-        // Слушаем переходы по якорям
+        document.addEventListener('DOMContentLoaded', (e) => this.handleInitialScroll(e));
+        window.addEventListener('suttaLoaded', (e) => this.handleInitialScroll(e));
+        
         window.addEventListener('hashchange', () => {
             if (window.isRestoringProgress) return;
             this.scrollToHash();
         });
     },
 
-    // Вспомогательная функция для нормализации ключа (как в settings.js)
     normalizeSlug(slug) {
         if (!slug) return '';
         const s = String(slug).trim();
@@ -35,7 +69,6 @@ const ScrollManager = {
         return s.toLowerCase();
     },
 
-    // 1. УМНОЕ ОЖИДАНИЕ АСИНХРОННОГО ЭЛЕМЕНТА
     waitForElement(id) {
         return new Promise((resolve) => {
             let el = this.findFallbackElement(id);
@@ -50,15 +83,10 @@ const ScrollManager = {
             });
 
             observer.observe(document.body, { childList: true, subtree: true });
-
-            setTimeout(() => {
-                observer.disconnect();
-                resolve(null);
-            }, this.config.maxWait);
+            setTimeout(() => { observer.disconnect(); resolve(null); }, this.config.maxWait);
         });
     },
 
-    // 1.5 УМНОЕ ОЖИДАНИЕ ТЕКСТА (Для параметра ?s=...)
     waitForText(searchText) {
         return new Promise((resolve) => {
             const tryFindText = () => {
@@ -69,21 +97,13 @@ const ScrollManager = {
                     const regex = new RegExp(searchText, 'gi');
                     const textNodes = document.evaluate(
                         ".//text()[normalize-space(parent::*) != '']",
-                        suttaArea,
-                        null,
-                        XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE,
-                        null
+                        suttaArea, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null
                     );
-
                     for (let i = 0; i < textNodes.snapshotLength; i++) {
                         const currentNode = textNodes.snapshotItem(i);
-                        if (regex.test(currentNode.nodeValue)) {
-                            return currentNode.parentNode;
-                        }
+                        if (regex.test(currentNode.nodeValue)) return currentNode.parentNode;
                     }
-                } catch (e) {
-                    console.error("Invalid regex pattern from search param", e);
-                }
+                } catch (e) {}
                 return null;
             };
 
@@ -92,29 +112,33 @@ const ScrollManager = {
 
             const observer = new MutationObserver((mutations, obs) => {
                 el = tryFindText();
-                if (el) {
-                    obs.disconnect();
-                    resolve(el);
-                }
+                if (el) { obs.disconnect(); resolve(el); }
             });
 
             observer.observe(document.body, { childList: true, subtree: true });
-
-            setTimeout(() => {
-                observer.disconnect();
-                resolve(null);
-            }, this.config.maxWait);
+            setTimeout(() => { observer.disconnect(); resolve(null); }, this.config.maxWait);
         });
     },
 
-    // 2. ОПРЕДЕЛЕНИЕ КУДА ПРЫГАТЬ ПРИ СТАРТЕ
-    async handleInitialScroll() {
+    async handleInitialScroll(event) {
+        // Если пользователь отключил прогресс полностью
+        if (localStorage.getItem('dg_progressEnabled') === 'false') {
+            window.isRestoringProgress = false;
+            this.scrollToHash();
+            return;
+        }
+
         let anchorId = null;
         let offset = this.config.eyeLevel;
+        let progressToOffer = null; 
+        
+        this.hasScrolledDeep = false; 
+        this.hideProgressNotification(); 
+
         const urlParams = new URLSearchParams(window.location.search);
         const hasHash = !!window.location.hash;
 
-        // ПРИОРИТЕТ 1: Одноразовый прыжок из настроек (Apply)
+        // ПРИОРИТЕТ 1: Одноразовый прыжок из настроек
         const rawSettingsData = localStorage.getItem('exactScrollAnchor');
         if (rawSettingsData) {
             try {
@@ -125,7 +149,7 @@ const ScrollManager = {
             } catch(e) {}
         }
 
-        // ПРИОРИТЕТ 2: Поиск текста по параметру ?s=...
+        // ПРИОРИТЕТ 2: Поиск текста по ?s=...
         const finder = urlParams.get("s");
         const query = urlParams.get("q");
         
@@ -137,17 +161,36 @@ const ScrollManager = {
             }
         }
 
-        // ПРИОРИТЕТ 3: Автосохраненный прогресс (Избранное / История)
-        // Теперь срабатывает ВСЕГДА, если в URL нет конкретного #якоря
+        // ПРИОРИТЕТ 3: Прогресс (Two-Key System)
         if (!anchorId && !hasHash) {
             const slug = this.normalizeSlug(urlParams.get('q'));
             if (slug) {
                 try {
-                    const progressData = JSON.parse(localStorage.getItem('suttaProgress') || '{}');
-                    if (progressData[slug]) {
-                        anchorId = progressData[slug].id;
-                        offset = progressData[slug].offset || this.config.eyeLevel;
-                        window.isRestoringProgress = true; 
+                    const localDataRaw = JSON.parse(localStorage.getItem('dg_suttaProgress') || '{}');
+                    const cloudDataRaw = JSON.parse(localStorage.getItem('dg_cloudProgress') || '{}');
+                    
+                    const localData = localDataRaw[slug];
+                    const cloudData = cloudDataRaw[slug];
+
+                    let bestData = null;
+
+                    if (localData && cloudData) {
+                        bestData = cloudData.time > localData.time ? cloudData : localData;
+                    } else {
+                        bestData = localData || cloudData;
+                    }
+
+                    if (bestData) {
+                        const isSearchInputLoad = event && event.type === 'suttaLoaded';
+                        const forceAutoJump = localStorage.getItem('dg_autoJumpProgress') === 'true';
+                        
+                        if (!isSearchInputLoad || forceAutoJump) {
+                            anchorId = bestData.id;
+                            offset = bestData.offset || this.config.eyeLevel;
+                            window.isRestoringProgress = true; 
+                        } else {
+                            progressToOffer = bestData; 
+                        }
                     }
                 } catch(e) {}
             }
@@ -155,15 +198,97 @@ const ScrollManager = {
 
         if (anchorId) {
             const el = await this.waitForElement(anchorId);
-            if (el) this.executeScroll(el, offset, true); 
+            if (el) {
+                this.executeScroll(el, offset, true); 
+                this.hasScrolledDeep = true; 
+            } else {
+                window.isRestoringProgress = false;
+            }
         } else {
-            // ПРИОРИТЕТ 4: Обычный хеш в URL
-            this.scrollToHash();
+            window.isRestoringProgress = false;
+            this.scrollToHash(); 
+
+            if (progressToOffer) {
+                this.showProgressNotification(progressToOffer);
+            }
         }
     },
 
-    // 3. СКРОЛЛ К ЯКОРЮ
-    async scrollToHash() {
+    hideProgressNotification() {
+        const existing = document.getElementById('progress-toast');
+        if (existing) {
+            existing.style.opacity = '0';
+            existing.style.transform = 'translate(-50%, 15px)';
+            setTimeout(() => existing.remove(), 300);
+        }
+        this.isWaitingForToast = false;
+    },
+
+    // НОВОЕ: Плашка с явной кнопкой и принудительно видимым чекбоксом
+    showProgressNotification(data) {
+        this.hideProgressNotification(); 
+        this.isWaitingForToast = true;
+
+        const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/');
+        const textBtn = isRu ? "Продолжить чтение" : "Continue reading";
+        const textCheckbox = isRu ? "Больше не спрашивать" : "Don't ask again";
+
+        const toast = document.createElement('div');
+        toast.id = 'progress-toast';
+        toast.className = 'dg-bottom-toast'; 
+        
+        toast.innerHTML = `
+            <div id="progress-toast-main" class="dg-toast-main">
+                <button id="btn-jump-progress" class="btn btn-sm btn-secondary rounded-pill">${textBtn}</button>
+                <button id="close-progress-toast" class="dg-toast-close" title="(Esc)">&times;</button>
+            </div>
+            <label class="dg-toast-cb-label">
+                <input type="checkbox" id="toast-dont-ask-cb" style="display: inline-block !important;">
+                ${textCheckbox}
+            </label>
+        `;
+
+        document.body.appendChild(toast);
+
+        toast.addEventListener('click', async (e) => {
+            const cb = document.getElementById('toast-dont-ask-cb');
+            const isChecked = cb && cb.checked;
+
+            // 1. КЛИК ЗАКРЫТЬ (Крестик)
+            if (e.target.id === 'close-progress-toast') {
+                if (isChecked) {
+                    localStorage.setItem('dg_progressEnabled', 'false');
+                }
+                this.hideProgressNotification();
+                return;
+            }
+            
+            // 2. КЛИК ПО ЧЕКБОКСУ (только ставит галочку)
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL' || e.target.closest('.dg-toast-cb-label')) {
+                return; 
+            }
+            
+            // 3. КЛИК ПЕРЕЙТИ (Новая явная кнопка)
+            if (e.target.closest('#btn-jump-progress')) {
+                if (isChecked) {
+                    localStorage.setItem('dg_autoJumpProgress', 'true');
+                }
+                this.hideProgressNotification();
+                
+                window.isRestoringProgress = true;
+                const el = await this.waitForElement(data.id);
+                if (el) {
+                    this.executeScroll(el, data.offset || this.config.eyeLevel, false);
+                    this.highlightById(data.id);
+                    this.hasScrolledDeep = true; 
+                } else {
+                    window.isRestoringProgress = false;
+                }
+            }
+        });
+    },
+
+    scrollToHash() {
         const hash = window.location.hash;
         if (!hash) return;
         
@@ -174,21 +299,24 @@ const ScrollManager = {
 
         if (cleanId.includes(',')) {
             const ids = cleanId.split(','); 
-            const firstElement = await this.waitForElement(ids[0]);
-            if (firstElement) {
-                this.executeScroll(firstElement, window.innerHeight * 0.20, isInstant);
-                ids.forEach(id => this.highlightById(id)); 
-            }
+            this.waitForElement(ids[0]).then(el => {
+                if (el) {
+                    this.executeScroll(el, window.innerHeight * 0.20, isInstant);
+                    ids.forEach(id => this.highlightById(id)); 
+                    this.hasScrolledDeep = true;
+                }
+            });
         } else {
-            const element = await this.waitForElement(cleanId);
-            if (element) {
-                this.executeScroll(element, window.innerHeight * 0.20, isInstant);
-                this.highlightAllById(cleanId);
-            }
+            this.waitForElement(cleanId).then(el => {
+                if (el) {
+                    this.executeScroll(el, window.innerHeight * 0.20, isInstant);
+                    this.highlightAllById(cleanId);
+                    this.hasScrolledDeep = true;
+                }
+            });
         }
     },
 
-    // 4. НЕПОСРЕДСТВЕННЫЙ МЕХАНИЗМ СКРОЛЛА
     executeScroll(element, offsetData, isInstant) {
         const absoluteY = window.pageYOffset + element.getBoundingClientRect().top;
         const targetY = absoluteY - offsetData;
@@ -204,16 +332,17 @@ const ScrollManager = {
                 const correctedY = window.pageYOffset + element.getBoundingClientRect().top - offsetData;
                 window.scrollTo(0, correctedY);
                 html.style.scrollBehavior = prevBehavior;
-                
-                setTimeout(() => window.isRestoringProgress = false, 100);
+                setTimeout(() => window.isRestoringProgress = false, 150);
             });
         } else {
             window.scrollTo({ top: targetY, behavior: 'smooth' });
+            setTimeout(() => window.isRestoringProgress = false, 800);
         }
     },
 
-    // 5. СОХРАНЕНИЕ ПРОГРЕССА
     saveReadingProgress() {
+        if (localStorage.getItem('dg_progressEnabled') === 'false') return;
+
         const urlParams = new URLSearchParams(window.location.search);
         const slug = this.normalizeSlug(urlParams.get('q'));
         if (!slug) return;
@@ -242,7 +371,7 @@ const ScrollManager = {
         if (bestElement) {
             let progressData = {};
             try {
-                progressData = JSON.parse(localStorage.getItem('suttaProgress') || '{}');
+                progressData = JSON.parse(localStorage.getItem('dg_suttaProgress') || '{}');
             } catch (e) {}
 
             progressData[slug] = {
@@ -252,7 +381,7 @@ const ScrollManager = {
             };
 
             const keys = Object.keys(progressData);
-            if (keys.length > 30) { // Увеличил лимит до 30 сутт
+            if (keys.length > 30) {
                 keys.sort((a, b) => progressData[b].time - progressData[a].time);
                 const newProgressData = {};
                 for (let i = 0; i < 30; i++) {
@@ -261,11 +390,10 @@ const ScrollManager = {
                 progressData = newProgressData;
             }
 
-            localStorage.setItem('suttaProgress', JSON.stringify(progressData));
+            localStorage.setItem('dg_suttaProgress', JSON.stringify(progressData));
         }
     },
 
-    // 6. ПОИСК ЭЛЕМЕНТА
     findFallbackElement(baseId) {
         if (!baseId) return null;
         const idStr = String(baseId);
@@ -285,7 +413,6 @@ const ScrollManager = {
         return null;
     },
 
-    // 7. АНИМАЦИИ
     highlightAllById(elementId) {
         const element = this.findFallbackElement(elementId);
         if (!element) return;

@@ -463,7 +463,7 @@ if (translator === "o") {
           translatorByline + 
           (!isWarningClosed ? warning : '') + 
           `<div id="bottom-links-container" style="min-height: 24px;"></div>`;
-
+window.dispatchEvent(new Event('suttaLoaded'));
 if (typeof window.setupVariantVisibility === 'function') {
           window.setupVariantVisibility();
       }

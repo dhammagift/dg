@@ -265,7 +265,8 @@ async function buildSutta(slug) {
           translatorByline + 
           (!isWarningClosed ? warning : '') + 
           `<div id="bottom-links-container" class="min-h-24"></div>`;
-            
+     
+            window.dispatchEvent(new Event('suttaLoaded'));
       if (typeof window.setupVariantVisibility === 'function') {
           window.setupVariantVisibility();
       }

@@ -2123,6 +2123,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 })();
 
+
 // ==========================================
 // УМНАЯ ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ FIREBASE (Local-First Architecture)
 // ==========================================
@@ -2135,7 +2136,6 @@ let googleProvider = null;
 let unsubSettings = null;
 let unsubFavs = null;
 let unsubHist = null;
-let unsubProgress = null; // <-- ДОБАВЛЕНО: Для прогресса чтения
 
 function getUid() {
     const user = auth ? auth.currentUser : null;
@@ -2245,7 +2245,6 @@ window.setupCloudListeners = function(uid) {
     if (unsubSettings) unsubSettings();
     if (unsubFavs) unsubFavs();
     if (unsubHist) unsubHist();
-    if (unsubProgress) unsubProgress(); // <-- Очищаем старый слушатель прогресса
 
     const userRef = db.collection("users").doc(uid);
 
@@ -2332,32 +2331,6 @@ window.setupCloudListeners = function(uid) {
             window.refreshQuickModalData();
         }
     });
-
-    // <-- ДОБАВЛЕНО: Слушатель Прогресса чтения (Two-Key System)
-    unsubProgress = userRef.collection("progress").onSnapshot((snapshot) => {
-        if (snapshot.metadata.hasPendingWrites) return;
-
-        let cloudProgressData = JSON.parse(localStorage.getItem('dg_cloudProgress')) || {};
-        let hasChanges = false;
-
-        snapshot.docChanges().forEach((change) => {
-            const cloudProg = change.doc.data();
-            const slug = cloudProg.slug || change.doc.id;
-
-            if (change.type === "added" || change.type === "modified") {
-                cloudProgressData[slug] = cloudProg;
-                hasChanges = true;
-            }
-            if (change.type === "removed") {
-                delete cloudProgressData[slug];
-                hasChanges = true;
-            }
-        });
-
-        if (hasChanges) {
-            localStorage.setItem('dg_cloudProgress', JSON.stringify(cloudProgressData));
-        }
-    });
 };
 
 // === АТОМАРНЫЕ ЗАПИСИ ===
@@ -2429,28 +2402,6 @@ window.syncHistoryItemToCloud = async function(key, url, timestamp, isDeleted = 
     } catch (e) { console.error("History Sync Error:", e); }
 };
 
-// <-- ДОБАВЛЕНО: Функция отправки Прогресса чтения
-window.syncProgressItemToCloud = async function(slug) {
-    if (!db || !getUid() || !slug) return;
-    
-    const localProgress = JSON.parse(localStorage.getItem('dg_suttaProgress')) || {};
-    const progressData = localProgress[slug];
-    
-    if (!progressData) return;
-
-    const uid = getUid();
-    const docId = sanitizeId(slug);
-    const docRef = db.collection("users").doc(uid).collection("progress").doc(docId);
-
-    try {
-        await docRef.set({ 
-            ...progressData,
-            slug: slug,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-    } catch (e) { console.error("Progress Sync Error:", e); }
-};
-
 window.clearCloudHistory = async function() {
     if (!db || !getUid()) return;
     const uid = getUid();
@@ -2472,21 +2423,10 @@ window.forceSyncNow = async function() {
     document.querySelectorAll('#btn-sync-now img').forEach(icon => icon.classList.add('custom-spin'));
 
     try {
-        // 1. Настройки
         if (window.dg_settingsChanged) {
             await syncSettingsToCloud();
             window.dg_settingsChanged = false; 
         }
-
-        // 2. ДОБАВЛЕНО: Прогресс текущей страницы (чтобы кнопка "Синхронизировать" сразу кидала текущий скролл)
-        const urlParams = new URLSearchParams(window.location.search);
-        const qParam = urlParams.get('q');
-        if (qParam) {
-            let currentSlug = String(qParam).trim().toLowerCase();
-            if (String(qParam).trim().startsWith('memo_')) currentSlug = String(qParam).trim();
-            await window.syncProgressItemToCloud(currentSlug);
-        }
-
         await new Promise(res => setTimeout(res, 800));
     } catch (error) { 
         console.error("Sync error:", error); 
@@ -2526,16 +2466,12 @@ window.syncLogout = async function() {
     if (unsubSettings) unsubSettings();
     if (unsubFavs) unsubFavs();
     if (unsubHist) unsubHist();
-    if (unsubProgress) unsubProgress(); // <-- Добавлена очистка
 
     if (auth && auth.currentUser) await auth.signOut();
     localStorage.removeItem('syncPhraseId');
     localStorage.removeItem('syncPhraseRaw');
     localStorage.removeItem('lastSyncTime');
     localStorage.removeItem('dg_cloud_session'); // Удаляем флаг сессии
-    
-    // Также можно локально очистить кэш облачного прогресса при логауте
-    localStorage.removeItem('dg_cloudProgress');
     
     if (typeof renderLoginPageUI === 'function') renderLoginPageUI(null, null);
     if (typeof updateGlobalSyncButtons === 'function') updateGlobalSyncButtons(null, null);
@@ -2580,7 +2516,7 @@ window.initSettingsObserver = function() {
 
     const originalSetItem = localStorage.setItem;
     
-    // Список того, что МЫ ИГНОРИРУЕМ (мусор). 'dg_' уже покрывает 'dg_cloudProgress' и 'dg_suttaProgress'
+    // Список того, что МЫ ИГНОРИРУЕМ (мусор)
     const ignoreList = ['DataTables_', 'localSearchHistory', 'lastSyncTime', 'syncPhrase', 'dg_'];
 
     localStorage.setItem = function(key, value) {
