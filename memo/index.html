@@ -9,6 +9,7 @@
     <link href="/assets/css/extrastyles.css" rel="stylesheet" />
     <link href="/memo/memo.css" rel="stylesheet" />
         <link rel="stylesheet" href="/read/css/voice.css">
+    <script src="/assets/js/dark-mode-switch/dark-mode-switch.js"></script>
 
 </head>
 <body>
@@ -34,7 +35,11 @@
                 <a alt="Onclick popup dictionary" title="Onclick popup dictionary (Alt+A)" class="mx-1 common-size-icon4 toggle-dict-btn text-decoration-none text-black">
                   <img src="/assets/svg/comment.svg" class="dictIcon">
                 </a>
-    
+   
+ <!--   <div id="theme-button" class="mx-0  text-decoration-none text-black">
+      <img src="/assets/svg/circle-half-stroke.svg" title="Switch theme (Alt+T)" alt="Switch theme" onclick="switchIcon(this)" class="common-size-icon3 changesvg gray-icon">
+    </div>    -->
+
                 <div class="ms-1 form-check form-switch">
                     <input type="checkbox" class="form-check-input" id="darkSwitch">
                 </div>
@@ -110,11 +115,13 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
                           <path d="M6 3h7a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1zm0 4h7a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1zm0 4h7a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1z"/>
                         </svg>
                     </button>
+ 
+ 
                     
                     <button class="btn btn-secondary icon" id="toggle-memo-favorite" title="Добавить в избранное">
-                        <svg id="star-outline" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 576 512">
-                            <path d="M287.9 0c9.2 0 17.6 5.2 21.6 13.5l68.6 141.3 153.2 22.6c9 1.3 16.5 7.6 19.3 16.3s.5 18.1-5.9 24.5L433.6 328.4l26.2 155.6c1.5 9-2.2 18.1-9.6 23.5s-17.3 6-25.3 1.7l-137-73.2L151 509.1c-8 4.3-18 3.7-25.3-1.7s-11.2-14.5-9.6-23.5l26.2-155.6L31.1 218.2c-6.5-6.4-8.7-15.9-5.9-24.5s10.3-14.9 19.3-16.3l153.2-22.6 68.6-141.3C270.3 5.2 278.7 0 287.9 0zm0 79L235.4 187.2c-3.5 7.1-10.2 12.1-18.1 13.3L99 217.9 184.9 303c5.5 5.5 8.1 13.3 6.8 21L171.4 443.7l105.2-56.2c7.1-3.8 15.6-3.8 22.6 0l105.2 56.2-20.3-119.7c-1.3-7.7 1.2-15.5 6.8-21l85.9-85.1-118.3-17.4c-7.9-1.2-14.6-6.1-18.1-13.3L287.9 79z"/>
-                        </svg>
+         <svg id="star-outline" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 448 512">
+        <path d="M64 32C28.7 32 0 60.7 0 96v320c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64V160L352 32H64zm16 64h224v96H80V96zm256 304H112v-96h224v96z"/>
+    </svg>
                         <svg id="star-solid" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#f39c12" viewBox="0 0 576 512" style="display: none;">
                             <path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/>
                         </svg>
@@ -258,6 +265,9 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
     </div>
 
     <script>
+ window.activeMemoSavedSlug = null; // Якорь для отслеживания редактируемого документа
+
+ 
     
   // Функция для загрузки и рендера пресетов
 async function loadPresets() {
@@ -501,35 +511,122 @@ function resetGlobalSessionTimer() {
 if (favBtn) {
     function updateMemoIcon() {
         const data = getMemoData();
-        // Используем глобальную проверку из settings.js
-        if (data && typeof isFavorite === 'function') {
-            const saved = isFavorite(data.slug);
-            iconOutline.style.display = saved ? 'none' : 'inline-block';
-            iconSolid.style.display = saved ? 'inline-block' : 'none';
+        if (!data) return;
+
+        const favs = JSON.parse(localStorage.getItem('dg_favorites')) || [];
+        
+        let existing = favs.find(f => f.slug === data.slug);
+        
+        // Если по текущему slug записи нет, но есть якорь редактируемого документа — ищем по якорю
+        if (!existing && window.activeMemoSavedSlug) {
+            existing = favs.find(f => f.slug === window.activeMemoSavedSlug);
+        } else if (existing && !window.activeMemoSavedSlug) {
+            // Если открыли страницу с параметрами, привязываем якорь к существующей записи
+            window.activeMemoSavedSlug = existing.slug;
+        }
+
+        // Запись полностью сохранена, если совпадают и параметры, и сам slug (текст не менялся)
+        const isFullySaved = existing && existing.slug === data.slug && existing.search === data.search;
+
+        if (isFullySaved) {
+            iconOutline.style.display = 'none';
+            iconSolid.style.display = 'inline-block';
+            favBtn.title = window.memoLang === 'ru' ? 'Удалить из избранного' : 'Remove from favorites';
+            window.activeMemoSavedSlug = data.slug; // Подтверждаем якорь
+        } else {
+            iconOutline.style.display = 'inline-block';
+            iconSolid.style.display = 'none';
+            favBtn.title = window.memoLang === 'ru' ? 'Сохранить' : 'Save';
         }
     }
 
-    // СЛУШАЕМ СИГНАЛ ОБ ОБНОВЛЕНИИ
+    // Слушатели обновлений
     window.addEventListener('favoritesUpdated', updateMemoIcon);
-    
-    // Синхронизация, если открыто несколько вкладок
     window.addEventListener('storage', (e) => {
         if (e.key === 'dg_favorites') updateMemoIcon();
     });
 
     setTimeout(updateMemoIcon, 100);
     textInput.addEventListener('input', updateMemoIcon);
+    const settingsPanel = document.getElementById('ttsSettings');
+    if (settingsPanel) {
+        settingsPanel.addEventListener('input', updateMemoIcon);
+        settingsPanel.addEventListener('change', updateMemoIcon);
+    }
 
     favBtn.addEventListener('click', (e) => {
         e.preventDefault();
         const positionData = getMemoData();
         
-        if (positionData && typeof toggleFavoriteGlobal === 'function') {
-            // Просто вызываем глобальную функцию. 
-            // Она сама покажет бабл и через событие 'favoritesUpdated' зажжет звезду.
-            toggleFavoriteGlobal(positionData);
-        } else if (!positionData) {
+        if (!positionData) {
             alert(window.memoLang === 'ru' ? 'Сначала введите текст!' : 'Please enter text first!');
+            return;
+        }
+
+        let favs = JSON.parse(localStorage.getItem('dg_favorites')) || [];
+        
+        const existingIndex = favs.findIndex(f => f.slug === positionData.slug);
+        let oldSlugIndex = -1;
+
+        // Если сгенерировался новый ID, ищем индекс оригинала по якорю
+        if (existingIndex === -1 && window.activeMemoSavedSlug) {
+            oldSlugIndex = favs.findIndex(f => f.slug === window.activeMemoSavedSlug);
+        }
+
+        const targetIndex = existingIndex !== -1 ? existingIndex : oldSlugIndex;
+
+        if (targetIndex !== -1) {
+            const existing = favs[targetIndex];
+            
+            if (existing.slug === positionData.slug && existing.search === positionData.search) {
+                // 1. Полное совпадение (Звезда) -> Стандартное удаление
+                if (typeof toggleFavoriteGlobal === 'function') {
+                    toggleFavoriteGlobal(positionData);
+                    window.activeMemoSavedSlug = null; // Отвязываем якорь
+                }
+            } else {
+                // 2. ФИНТ: Текст или настройки изменились (Дискета) -> Тихая перезапись
+                const oldSlug = existing.slug;
+                
+                // Очистка старого "длинного текста" из памяти браузера (чтобы не было утечки памяти)
+                if (existing.search) {
+                    const oldParams = new URLSearchParams(existing.search);
+                    const newParams = new URLSearchParams(positionData.search);
+                    const oldSavedId = oldParams.get('saved_id');
+                    const newSavedId = newParams.get('saved_id');
+                    if (oldSavedId && oldSavedId !== newSavedId) {
+                        localStorage.removeItem(oldSavedId);
+                    }
+                }
+
+                positionData.timestamp = Date.now();
+                favs.splice(targetIndex, 1); // Удаляем старую запись
+                favs.unshift(positionData);  // Ставим обновленную на первое место
+                localStorage.setItem('dg_favorites', JSON.stringify(favs));
+                
+                // Облачная синхронизация
+                if (typeof syncFavoriteItemToCloud === 'function') {
+                    // Если slug поменялся, обязательно удаляем старый из облака!
+                    if (oldSlug !== positionData.slug) {
+                        syncFavoriteItemToCloud({slug: oldSlug}, true); 
+                    }
+                    syncFavoriteItemToCloud(positionData, false);
+                }
+                
+                // Только бабл об успешном сохранении
+                if (typeof showBubbleNotification === 'function') {
+                    showBubbleNotification(window.memoLang === 'ru' ? 'Сохранено в избранное' : 'Saved to favorites');
+                }
+                
+                window.activeMemoSavedSlug = positionData.slug; // Обновляем якорь
+                window.dispatchEvent(new CustomEvent('favoritesUpdated'));
+            }
+        } else {
+            // 3. Совершенно новая запись (ничего в базе нет)
+            if (typeof toggleFavoriteGlobal === 'function') {
+                toggleFavoriteGlobal(positionData);
+                window.activeMemoSavedSlug = positionData.slug; // Цепляем якорь к новому документу
+            }
         }
     });
 }
@@ -955,7 +1052,9 @@ window.startMemoVisualTimer = function(durationMs, textPrefix) {
         function очистить() {
             const msg = window.memoLang === 'ru' ? 'Это удалит текст. Уверены?' : 'This will erase the text. Sure?';
             if (confirm(msg)) {
+                window.activeMemoSavedSlug = null; // <--- ДОБАВИТЬ ЭТУ СТРОКУ
                 document.getElementById("inputText").value = "";
+
                 document.getElementById("результат").innerText = "";
                 document.getElementById("result_header").style.display = 'none';
                 localStorage.removeItem("currentMemoText");
@@ -1660,7 +1759,8 @@ window.addEventListener('load', () => {
 
     </script>
 
-    <script src="/assets/js/dark-mode-switch/dark-mode-switch.js"></script>
+<script defer src="/assets/js/themeswitch.js"></script>
+
     <script src="/assets/js/settings.js" defer></script>
     <script src="/assets/js/autopali.js" defer></script>
     <script src="/assets/js/bootstrap.bundle.5.3.1.min.js" defer></script>
