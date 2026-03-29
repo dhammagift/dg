@@ -191,9 +191,27 @@ const scriptCache = new Map();
 const requestIdleCallback = window.requestIdleCallback ||
     function(cb) { return setTimeout(() => { cb({ didTimeout: false }); }, 0); };
 
+// Функция-обещание загрузки стилей
+function loadDictCSS() {
+    return new Promise((resolve) => {
+        if (document.getElementById('palilookup-css-lazy')) {
+            resolve();
+            return;
+        }
+        const link = document.createElement('link');
+        link.id = 'palilookup-css-lazy';
+        link.rel = 'stylesheet';
+        link.href = '/assets/css/paliLookup.css';
+        link.onload = resolve; // Идем дальше только когда CSS готов!
+        link.onerror = resolve; // Если ошибка сети, все равно идем дальше
+        document.head.appendChild(link);
+    });
+}
+
+
 async function handleWordLookup(word, event) {
     if (!dictionaryVisible) return;
-
+await loadDictCSS();
     const currentTheme = getEffectiveTheme();
     
     if (savedDict.includes("full")) {
@@ -416,11 +434,6 @@ async function handleWordLookup(word, event) {
 let dbLoadPromise = null;
 
 function lazyLoadStandaloneScripts(lang = 'en') {
-  
- // Подгружаем стили словаря, как только начал работать этот скрипт
-if (!document.getElementById('palilookup-css-lazy')) {
-    document.head.insertAdjacentHTML('beforeend', '<link id="palilookup-css-lazy" rel="stylesheet" href="/assets/css/paliLookup.css">');
-}
 
     if (dbLoadPromise) return dbLoadPromise;
 

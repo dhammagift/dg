@@ -2050,17 +2050,16 @@ function getPlayerHtml() {
     `;
 }
 
+
 function getOrBuildPlayer() {
     const playerId = 'voice-player-container';
     let playerContainer = document.getElementById(playerId);
 
-    if (!playerContainer) {
-        // === УМНАЯ ЗАГРУЗКА CSS ПРЯМО ПРИ СБОРКЕ ПЛЕЕРА ===
         if (!document.getElementById('voice-css-lazy')) {
-            document.head.insertAdjacentHTML('beforeend', '<link id="voice-css-lazy" rel="stylesheet" href="/assets/css/voice.css">');
+            document.head.insertAdjacentHTML('beforeend', '<link id="voice-css-lazy" rel="stylesheet" href="/read/css/voice.css">');
         }
-        // ==================================================
 
+    if (!playerContainer) {
         playerContainer = document.createElement('div');
         playerContainer.id = playerId;
         playerContainer.className = 'voice-dropdown'; 
