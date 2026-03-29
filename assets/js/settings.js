@@ -69,6 +69,47 @@
 })();
 
 
+// === УМНАЯ ПРЕДЗАГРУЗКА СЛОВАРЯ ИЗ КЭША (ДЛЯ ВСЕХ СТРАНИЦ) ===
+async function checkDictCacheFromSettings() {
+    const currentDict = localStorage.getItem('selectedDict');
+    const isStandalone = !currentDict || currentDict === 'standalone' || currentDict === 'standaloneru';
+    
+    if (!isStandalone) return;
+
+    const testFile = '/assets/js/standalone-dpd/dpd_i2h.js'; 
+    
+    try {
+        // Спрашиваем у браузера: есть ли базы в кэше?
+        const response = await fetch(testFile, { cache: 'only-if-cached', mode: 'same-origin' });
+        
+        if (response.ok) {
+            const isScriptPresent = !!document.querySelector('script[src*="paliLookup.js"]');
+            
+            // !!! ГЛАВНОЕ ИСПРАВЛЕНИЕ !!!
+            // Выключаем перехватчик клика с плашкой, так как мы берем загрузку на себя
+            window.isDictScriptLoaded = true; 
+            
+            // Заранее тихо подгружаем скрипт словаря (если его еще нет)
+            if (!isScriptPresent) {
+                const dictScript = document.createElement('script');
+                dictScript.src = '/assets/js/paliLookup.js';
+                document.head.appendChild(dictScript);
+            }
+        }
+    } catch (e) {
+        // Кэш пуст. Ничего не делаем, отработает стандартная плашка по первому клику.
+    }
+}
+
+// Запускаем проверку кэша надежно на любой странице (и в Ридере, и в Мемо)
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    checkDictCacheFromSettings();
+} else {
+    window.addEventListener('DOMContentLoaded', checkDictCacheFromSettings);
+}
+
+
+
 // === ЗАГРУЗКА TTS СТРОГО ПО КЛИКУ / ХОТКЕЮ / АВТОПЛЕЮ ===
 (function() {
     window.isVoiceScriptLoaded = false;
