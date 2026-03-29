@@ -99,8 +99,6 @@ include 'scripts/search-handler.php';
 -->
 
 <!--  Core theme CSS (includes Bootstrap)-->
-<link href="/assets/css/paliLookup.css" rel="stylesheet" />
-<link rel="stylesheet" href="/assets/css/jquery-ui.min.css">
 <!-- -->
 <link href="/assets/css/styles.css" rel="stylesheet" />
 <link href="/assets/css/extrastyles.css" rel="stylesheet" />

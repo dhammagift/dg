@@ -416,6 +416,12 @@ async function handleWordLookup(word, event) {
 let dbLoadPromise = null;
 
 function lazyLoadStandaloneScripts(lang = 'en') {
+  
+ // Подгружаем стили словаря, как только начал работать этот скрипт
+if (!document.getElementById('palilookup-css-lazy')) {
+    document.head.insertAdjacentHTML('beforeend', '<link id="palilookup-css-lazy" rel="stylesheet" href="/assets/css/paliLookup.css">');
+}
+
     if (dbLoadPromise) return dbLoadPromise;
 
     const commonScripts = [
@@ -1069,3 +1075,4 @@ function cleanWord(word) {
         .trim()
         .toLowerCase();
 }
+

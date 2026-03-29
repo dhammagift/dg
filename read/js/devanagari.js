@@ -160,7 +160,7 @@ async function buildSutta(slug) {
 
       const warning = `
         <div style="max-width: 600px; margin: 0 auto; text-align: center;" class="warning-container">
-          <p class='pli-lang' lang='pi' style='color:green;'>बहुस्सुतो होति सुतधरो सुतसन्निचयो... 
+          <p id="0.0" class='pli-lang' lang='pi' style='color:green;'>बहुस्सुतो होति सुतधरो सुतसन्निचयो... 
       <a class='text-decoration-none' target='' href='${rvUrl}'>&nbsp;</a>
                  ${canShowClose && !isWarningClosed ? `<span class="close-warning">×</span>` : ''} 
           </p>

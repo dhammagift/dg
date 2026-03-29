@@ -222,7 +222,7 @@ async function buildSutta(slug) {
 
       const warning = `
         <div style="max-width: 550px; margin: 0 auto; text-align: center;" class="warning-container">
-          <p class='pli-lang' lang='pi' style='color:green;'>
+          <p id="0.0" class='pli-lang' lang='pi' style='color:green;'>
             Bahussuto hoti sutadharo sutasannicayo...
                  ${canShowClose && !isWarningClosed ? `<span class="close-warning">×</span>` : ''}
           </p>
