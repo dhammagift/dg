@@ -1527,6 +1527,25 @@ body.dark .dg-toast-close:hover { color: #fff; }
 }
 
 
+/* --- УНИФИЦИРОВАННЫЕ ИКОНКИ ВЕРХНЕЙ ПАНЕЛИ --- */
+.top-nav-icon-link {
+    cursor: pointer;
+    transition: opacity 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.top-nav-icon-link:hover {
+    opacity: 1;
+}
+
+.top-nav-icon {
+    width: 22px;
+    height: 22px;
+}
+
 
 
 /* =========================================
@@ -1688,3 +1707,4 @@ body.dark .hist-icon img { filter: invert(0.7); opacity: 1; }
 /* =========================================
 end   QUICK MODAL STYLES (Оптимизировано) end Css for settings.js 
    ========================================= */
+
