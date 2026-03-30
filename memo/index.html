@@ -1214,7 +1214,25 @@ window.addEventListener('load', обновитьКнопкиВвода);
             if (savedSound) document.getElementById('ttsSound').value = savedSound;
 
             toggleLoopInputVisibility();
+
+            // === AUTOPLAY LOGIC FOR MEMO ===
+            if (urlParams.has('autoplay') || localStorage.getItem('ttsMode') === 'true') {
+                setTimeout(() => {
+                    const text = document.getElementById("inputText").value.trim();
+                    const delaySec = parseFloat(document.getElementById("ttsDelay").value) || 0;
+                    const endSec = parseFloat(document.getElementById("ttsEndDelay").value) || 0;
+                    
+                    // Start only if there is text to read OR it's configured as a meditation timer
+                    if (text !== "" || delaySec > 0 || endSec > 0) {
+                        if (!window.isMemoPlaying) {
+                            startMemoTTS();
+                        }
+                    }
+                }, 1000); 
+            }
+            // ===============================
         });
+
 
 
         function toggleLoopInputVisibility() {
