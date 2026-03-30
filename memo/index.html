@@ -36,11 +36,7 @@
                   <img src="/assets/svg/comment.svg" class="dictIcon">
                 </a>
    
- <!--   <div id="theme-button" class="mx-0  text-decoration-none text-black">
-      <img src="/assets/svg/circle-half-stroke.svg" title="Switch theme (Alt+T)" alt="Switch theme" onclick="switchIcon(this)" class="common-size-icon3 changesvg gray-icon">
-    </div>    -->
-
-                <div class="ms-1 form-check form-switch">
+ <div class="ms-1 form-check form-switch">
                     <input type="checkbox" class="form-check-input" id="darkSwitch">
                 </div>
                 
@@ -80,7 +76,7 @@
         </svg>
     </div>
      
-    <textarea id="inputText" class="form-control mb-3 inputdiv" rows="10" placeholder="Paste text that you want to memorize or ponder on. 
+    <textarea id="inputText" class="form-control mb-3 inputdiv" rows="10" style="resize: vertical;" placeholder="Paste text that you want to memorize or ponder on. 
 
 Or use this page as a meditation time without entering any text">atthi imasmiṁ kāye kesā lomā nakhā dantā 
 taco maṁsaṁ nhāru aṭṭhi aṭṭhimiñjaṁ 
@@ -195,7 +191,7 @@ pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā 
                                     <input type="text" id="ttsLoopCount" value="∞" class="form-control form-control-sm text-center px-1" style="width: 36px; height: 22px; font-size: 12px;" title="Repetitions">
                                     
                                     <div class="form-check mb-0">
-                                        <input class="form-check-input" type="checkbox" id="editModeToggle">
+                                        <input class="form-check-input" type="checkbox" id="editModeToggle" checked>
                                         <label class="form-check-label" for="editModeToggle" id="edit_mode_label" style="font-size: 13px;" title="Places the cursor at the end of the current line on stop">Auto-cursor</label>
                                     </div>
                                 </div>
@@ -1106,7 +1102,10 @@ function обновитьКнопкиВвода() {
 document.addEventListener("DOMContentLoaded", () => {
     const textInput = document.getElementById("inputText");
     if (textInput) {
-        textInput.addEventListener('input', обновитьКнопкиВвода);
+        // Оставляем только обновление кнопок и заголовка, без остановки плеера
+        textInput.addEventListener('input', () => {
+            if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
+        });
     }
 });
 window.addEventListener('load', обновитьКнопкиВвода);
@@ -1133,7 +1132,8 @@ window.addEventListener('load', обновитьКнопкиВвода);
             const editToggle = document.getElementById('editModeToggle');
             if (editToggle) {
                 const savedEditMode = localStorage.getItem('memo_edit_mode');
-                editToggle.checked = savedEditMode === null ? true : (savedEditMode === 'true');
+                // Изменено на дефолт = false
+                editToggle.checked = savedEditMode !== 'false';
                 editToggle.addEventListener('change', (e) => localStorage.setItem('memo_edit_mode', e.target.checked));
             }
  
@@ -1259,8 +1259,6 @@ window.addEventListener('load', обновитьКнопкиВвода);
             }
             localStorage.setItem('memo_tts_loop_count', e.target.value);
         });
-        
-        document.getElementById('inputText').addEventListener('input', () => stopMemoTTS(true));
 
         window.mockPaliJson = {};
         const originalFetch = window.fetch;
@@ -1419,8 +1417,30 @@ function startMemoTTS(isRestart = false) {
     // === ТОЧНЫЙ АВТО-КУРСОР: ПОИСК СЕГМЕНТА ===
     let cursorIndex = 0;
     const ta = document.getElementById("inputText");
-    window.memoPendingCursorIndex = 0;
+    const editToggle = document.getElementById('editModeToggle');
     
+    if (editToggle && editToggle.checked && !isRestart && ta) {
+        const cursorStart = ta.selectionStart;
+        const textBeforeCursor = ta.value.substring(0, cursorStart);
+        
+        let beforeSegments = [textBeforeCursor];
+        if (rawDelim) {
+            for (let char of rawDelim) {
+                let newSegments = [];
+                for (let seg of beforeSegments) {
+                    newSegments.push(...seg.split(char));
+                }
+                beforeSegments = newSegments;
+            }
+        }
+        
+        const nonEmptyBefore = beforeSegments.filter(s => s.trim().length > 0);
+        cursorIndex = Math.max(0, nonEmptyBefore.length - 1);
+        window.memoPendingCursorIndex = cursorIndex;
+    } else {
+        window.memoPendingCursorIndex = 0;
+    }
+
     if (!window.memoCursorListenerAdded) {
         document.addEventListener('tts-playback-started', () => {
             if (window.memoPendingCursorIndex !== undefined && window.memoPendingCursorIndex !== -1 && window.ttsAPI) {
@@ -1502,7 +1522,10 @@ function stopMemoTTS(fullReset = true) {
             const editToggle = document.getElementById('editModeToggle');
             const ta = document.getElementById("inputText");
             
-            if (editToggle && editToggle.checked && window.ttsAPI && ta) {
+            // Исключение: если текстареа сейчас в фокусе, курсор не трогаем
+            const isFocused = (document.activeElement === ta);
+
+            if (editToggle && editToggle.checked && window.ttsAPI && ta && !isFocused) {
                 const state = window.ttsAPI.getState();
                 const spans = document.getElementById("tts-virtual-container")?.children;
                 
