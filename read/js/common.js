@@ -422,9 +422,9 @@ document.addEventListener('click', (e) => {
 });
 
 
-// ==========================================
-// ГЛОБАЛЬНЫЙ ПЕРЕХВАТЧИК ДЛЯ ССЫЛКИ MEMO (УМНЫЙ ЗАХВАТ ПО ВИДИМОСТИ)
-// ==========================================
+// ==========================================================================
+// ГЛОБАЛЬНЫЙ ПЕРЕХВАТЧИК ДЛЯ ССЫЛКИ MEMO (УМНЫЙ ЗАХВАТ ПО ФОКУСУ)
+// ==========================================================================
 document.addEventListener('click', function(e) {
     const memoLink = e.target.closest('.memo-button');
     if (!memoLink) return;
@@ -445,34 +445,30 @@ document.addEventListener('click', function(e) {
     // ПРИОРИТЕТ 1: ЦИКЛ А-Б (Только его диапазон) - БЕЗ ЛИМИТА
     // =======================================================
     if (highlighted.length > 0 && (!activeWord || isWordInsideAB)) {
-        // Проверяем, скрыт ли Пали визуально
         let isPaliHidden = suttaContainer.classList ? suttaContainer.classList.contains('hide-pali') : false;
         
-        // Отдаем приоритет Пали, если он видим и есть в выделении
         let targetClass = !isPaliHidden && highlighted.some(el => el.classList.contains('pli-lang')) 
                           ? 'pli-lang' 
                           : (highlighted.some(el => el.classList.contains('rus-lang')) ? 'rus-lang' : 'eng-lang');
 
-        // Оставляем только нужный язык (или общие блоки без языковых классов)
         let abElements = highlighted.filter(el => el.classList.contains(targetClass) || !el.className.includes('-lang'));
         
         let textArr = [];
         for (let el of abElements) {
             let text = (el.innerText || el.textContent).trim();
             if (text) {
-                textArr.push(text); // Собираем ВСЁ выделенное, без ограничений
+                textArr.push(text);
             }
         }
         textToPass = textArr.join('\n');
     } 
     // =======================================================
-    // ПРИОРИТЕТ 2: ОТ ТОЧКИ ФОКУСА (Active / TTS) ИЛИ ЭКРАНА -> ВНИЗ (С ЛИМИТОМ)
+    // ПРИОРИТЕТ 2: ОТ ТОЧКИ ФОКУСА (Active / TTS) -> ВНИЗ (С ЛИМИТОМ)
     // =======================================================
-    else {
+    else if (activeWord || ttsActive) {
         let startNode = activeWord && !isWordInsideAB ? activeWord : ttsActive;
         let targetSelector = '';
 
-        // 2.1. Определяем язык по стартовой ноде (если кликнули в слово / плеер читает строку)
         if (startNode) {
             if (startNode.classList.contains('pli-lang')) targetSelector = '.pli-lang';
             else if (startNode.classList.contains('rus-lang')) targetSelector = '.rus-lang';
@@ -480,31 +476,23 @@ document.addEventListener('click', function(e) {
             else if (startNode.classList.contains('tha-lang')) targetSelector = '.tha-lang';
         }
         
-        // 2.2. Если ничего не активно, определяем по ВИДИМОСТИ на экране (Пали по умолчанию)
+        // Если не смогли определить класс (или текст вне стандартной разметки), ставим дефолт
         if (!targetSelector) {
-            const isSutta = suttaContainer.id === 'sutta';
-            if (!isSutta || !suttaContainer.classList.contains('hide-pali')) targetSelector = '.pli-lang';
-            else if (!suttaContainer.classList.contains('hide-russian')) targetSelector = '.rus-lang';
-            else if (!suttaContainer.classList.contains('hide-english')) targetSelector = '.eng-lang';
-            else targetSelector = '.tha-lang';
+            targetSelector = '.pli-lang';
         }
 
-        // Собираем элементы только ОДНОГО выбранного языка
         let allValidElements = Array.from(suttaContainer.querySelectorAll(targetSelector));
         
-        // Фолбэк для обычных статей без -lang классов
         if (allValidElements.length === 0) {
             allValidElements = Array.from(suttaContainer.querySelectorAll('p, h1, h2, h3, h4, li, blockquote'));
         }
 
-        // Отсекаем невидимое и элементы интерфейса
         allValidElements = allValidElements.filter(el => 
             el.offsetParent !== null && !el.closest('.tts-ignore, nav, footer, .input-group')
         );
 
         let startIndex = -1;
 
-        // Если есть активная нода — находим ее индекс в массиве
         if (startNode) {
             const segmentId = startNode.id || startNode.closest('[id]')?.id;
             if (segmentId) {
@@ -513,14 +501,6 @@ document.addEventListener('click', function(e) {
             if (startIndex === -1) {
                 startIndex = allValidElements.findIndex(el => el === startNode || el.contains(startNode));
             }
-        }
-
-        // Если ничего не активно — ищем первый абзац, который виден прямо сейчас от верха экрана (0px)
-        if (startIndex === -1) {
-            startIndex = allValidElements.findIndex(el => {
-                const rect = el.getBoundingClientRect();
-                return rect.bottom > 0; // Строго от верхнего края экрана, без отступов
-            });
         }
 
         // Если нашли точку старта — пылесосим текст вниз до лимита
@@ -556,19 +536,19 @@ document.addEventListener('click', function(e) {
     // =======================================================
     if (textToPass) {
         if (textToPass.length <= URL_MAX_LENGTH) {
-            // Текст короткий — передаем через URL для удобства шаринга
-            localStorage.removeItem('currentMemoText'); // Очищаем хранилище на всякий случай
+            localStorage.removeItem('currentMemoText'); 
             window.open(`${baseUrl}?text=${encodeURIComponent(textToPass)}`, '_blank');
         } else {
-            // Текст длинный — прячем в localStorage, чтобы не сломать браузер
             localStorage.setItem('currentMemoText', textToPass);
             window.open(baseUrl, '_blank');
         }
     } else {
+        // ЕСЛИ НИЧЕГО НЕ ВЫДЕЛИЛОСЬ — ПРОСТО ОТКРЫВАЕМ ПУСТОЙ МЕМО
         localStorage.removeItem('currentMemoText');
         window.open(baseUrl, '_blank');
     }
 });
+
 
 // ==========================================================================
 // ГЕНЕРАЦИЯ ДОПОЛНИТЕЛЬНЫХ ССЫЛОК (DPR, BJT, Voice, SC, BB, TBW, Th.ru, Th.su)
