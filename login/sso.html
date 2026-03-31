@@ -5,10 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Отладка Синхронизации | Dhamma.gift</title>
     <style>
-        /* Базовая компактность: шрифт меньше, padding меньше */
+        /* Базовая компактность */
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: #f4f5f7; color: #333; margin: 0; padding: 10px; font-size: 13px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        /* Заголовок-карточка: всё в один ряд */
         .card { background: #fff; padding: 10px 15px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); margin-bottom: 8px; flex-shrink: 0; }
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .header-title { font-size: 16px; margin: 0; color: #2c3e50; font-weight: bold; }
@@ -17,7 +16,6 @@
         .status-google { background: #e8f0fe; color: #1a73e8; }
         .status-phrase { background: #e6f4ea; color: #1e8e3e; }
 
-        /* Кнопки: меньше */
         button { padding: 6px 10px; margin: 2px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: opacity 0.2s; white-space: nowrap; }
         button:hover { opacity: 0.9; }
         .btn-google { background: #4285F4; color: white; }
@@ -25,12 +23,36 @@
         .btn-sync { background: #FBBC05; color: #333; }
         .btn-danger { background: #EA4335; color: white; }
         .btn-dark { background: #34495e; color: white; }
+        .btn-mini { padding: 2px 5px; font-size: 10px; margin-left: 5px; }
 
-        /* Статистика: компактно, в один ряд */
-        .stats-row { display: flex; gap: 15px; border-top: 1px solid #e9ecef; padding-top: 8px; color: #6c757d; font-size: 12px; align-items: center;}
-        .data-value { font-size: 14px; font-weight: bold; color: #333; margin-left: 4px; }
+        .stats-row { display: flex; gap: 15px; border-top: 1px solid #e9ecef; padding-top: 8px; color: #6c757d; font-size: 11px; align-items: center; flex-wrap: wrap;}
+        .data-value { font-size: 12px; font-weight: bold; color: #333; margin-left: 4px; }
 
-        /* Сырые данные: теперь занимает всё пространство с внутренним скроллом */
+        /* Новый блок управления ключами */
+        .keys-manager { 
+            background: #fff; 
+            margin-bottom: 8px; 
+            padding: 8px; 
+            border-radius: 8px; 
+            max-height: 120px; 
+            overflow-y: auto; 
+            border: 1px solid #ddd;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .key-tag { 
+            background: #f0f0f0; 
+            padding: 2px 8px; 
+            border-radius: 4px; 
+            display: flex; 
+            align-items: center; 
+            font-size: 11px; 
+            border: 1px solid #ccc;
+        }
+        .key-tag:hover { background: #e0e0e0; }
+        .delete-key { color: #EA4335; cursor: pointer; margin-left: 6px; font-weight: bold; font-size: 14px; }
+
         #raw-container { flex-grow: 1; display: flex; flex-direction: column; border-radius: 8px; overflow: hidden; }
         pre { background: #2d2d2d; color: #a9b7c6; padding: 10px; margin: 0; overflow: auto; font-size: 12px; flex-grow: 1; font-family: Consolas, Monaco, 'Courier New', monospace; line-height: 1.4; tab-size: 2; -moz-tab-size: 2;}
     </style>
@@ -61,17 +83,20 @@
         <div style="flex-grow:1; text-align:right;">
             <button class="btn-dark" onclick="copyLocalStorage()">📋 JSON</button>
             <button class="btn-sync" onclick="forceSyncNow()">🔄 Синхр.</button>
-            <button class="btn-danger" onclick="clearFullLocalStorage()">🗑 Полная очистка</button>
+            <button class="btn-danger" onclick="clearFullLocalStorage()">🗑 Очистить всё</button>
         </div>
     </div>
 </div>
+
+<div class="keys-manager" id="keys-list">
+    </div>
 
 <div id="raw-container">
     <pre id="raw-data-view">Загрузка данных...</pre>
 </div>
 
 <script>
-// Настройки Firebase
+// Настройки Firebase (без изменений)
 const firebaseConfig = {
     apiKey: "AIzaSyDwatpN1h2w0g1HvQn1yyHUWgR5ONy5Di8",
     authDomain: "dg-sync-data.firebaseapp.com",
@@ -86,42 +111,34 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-// Получение ID пользователя
 function getUid() {
     const user = auth.currentUser;
     return user ? user.uid : localStorage.getItem('syncPhraseId');
 }
 
-// Запись времени синхронизации
 function setSyncTime() {
     localStorage.setItem('lastSyncTime', Date.now());
     updateDebuggerUI();
 }
 
-// Вход через Google
 async function loginWithGoogle() {
-    try { 
-        await auth.signInWithPopup(googleProvider); 
-    } catch (error) { alert("Ошибка Google: " + error.message); }
+    try { await auth.signInWithPopup(googleProvider); } 
+    catch (error) { alert("Ошибка Google: " + error.message); }
 }
 
-// Вход по фразе
 function loginWithPhrase() {
     const phrase = prompt("Введите секретную фразу:");
     if (phrase && phrase.trim().length >= 6) {
         const rawPhrase = phrase.trim();
         const hashedId = "phrase_" + rawPhrase.toLowerCase().replace(/\s+/g, '-');
-        
         localStorage.setItem('syncPhraseId', hashedId);
         localStorage.setItem('syncPhraseRaw', rawPhrase);
-        
-        syncFromCloud(hashedId); // Сразу тянем данные
+        syncFromCloud(hashedId);
     } else if (phrase) {
         alert("Фраза должна быть не короче 6 символов.");
     }
 }
 
-// Выход
 async function logout() {
     if (auth.currentUser) await auth.signOut();
     localStorage.removeItem('syncPhraseId');
@@ -130,19 +147,14 @@ async function logout() {
     updateDebuggerUI();
 }
 
-// Принудительная синхронизация
 async function forceSyncNow() {
     const uid = getUid();
-    if (!uid) {
-        alert("Сначала авторизуйтесь!");
-        return;
-    }
+    if (!uid) { alert("Сначала авторизуйтесь!"); return; }
     
-    // Эмулируем логику отправки настроек
     const settingsToSave = {};
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (!key.startsWith('dg_') && key !== 'localSearchHistory' && key !== 'lastSyncTime' && key !== 'syncPhraseId' && key !== 'syncPhraseRaw') {
+        if (!['dg_favorites', 'localSearchHistory', 'lastSyncTime', 'syncPhraseId', 'syncPhraseRaw'].includes(key) && !key.startsWith('dg_')) {
             settingsToSave[key] = localStorage.getItem(key);
         }
     }
@@ -155,10 +167,10 @@ async function forceSyncNow() {
             }, { merge: true });
         }
         await syncFromCloud(uid);
+        alert("Синхронизация завершена");
     } catch (e) { console.error("Sync error:", e); }
 }
 
-// Скачивание данных из облака
 async function syncFromCloud(uid) {
     if (!uid) return;
     try {
@@ -169,35 +181,36 @@ async function syncFromCloud(uid) {
                 localStorage.setItem(key, cloudSettings[key]);
             }
         }
-        setSyncTime(); // Фиксируем время
+        setSyncTime();
     } catch (e) { console.error("Restore error:", e); }
 }
 
-// Автоматический подхват статуса при загрузке
 auth.onAuthStateChanged(async (user) => {
-    if (user) {
-        await syncFromCloud(user.uid);
-    }
+    if (user) await syncFromCloud(user.uid);
     updateDebuggerUI();
 });
 
-// Кнопка очистки
 function clearFullLocalStorage() {
-    if (confirm("ВНИМАНИЕ!\nЭто полностью удалит все локальные настройки, историю словаря и избранное на этом устройстве.\n\nПродолжить?")) {
+    if (confirm("Удалить ВСЕ данные?")) {
         localStorage.clear();
         sessionStorage.clear();
         updateDebuggerUI();
-        alert("Очищено.");
     }
 }
 
-// Кнопка копирования
-function copyLocalStorage() {
-    const data = document.getElementById('raw-data-view').innerText;
-    navigator.clipboard.writeText(data).then(() => alert("JSON скопирован в буфер!"));
+// ФУНКЦИЯ УДАЛЕНИЯ КОНКРЕТНОГО КЛЮЧА
+function deleteSpecificKey(key) {
+    if (confirm(`Удалить ключ "${key}"?`)) {
+        localStorage.removeItem(key);
+        updateDebuggerUI();
+    }
 }
 
-// Отрисовка интерфейса (вызывается каждую секунду)
+function copyLocalStorage() {
+    const data = document.getElementById('raw-data-view').innerText;
+    navigator.clipboard.writeText(data).then(() => alert("JSON скопирован!"));
+}
+
 function updateDebuggerUI() {
     const user = auth.currentUser;
     const phraseId = localStorage.getItem('syncPhraseId');
@@ -207,65 +220,71 @@ function updateDebuggerUI() {
     const btnPhrase = document.getElementById('btn-login-phrase');
     const btnLogout = document.getElementById('btn-logout');
 
+    // Auth UI
     if (user) {
         badge.className = 'status-badge status-google';
-        badge.innerText = '👤 Google: ' + user.email;
-        btnGoogle.style.display = 'none';
-        btnPhrase.style.display = 'none';
-        btnLogout.style.display = 'inline-block';
+        badge.innerText = '👤 ' + user.email;
+        btnGoogle.style.display = 'none'; btnPhrase.style.display = 'none'; btnLogout.style.display = 'inline-block';
     } else if (phraseId) {
         badge.className = 'status-badge status-phrase';
-        badge.innerText = '🔑 Фраза: ' + phraseId;
-        btnGoogle.style.display = 'none';
-        btnPhrase.style.display = 'none';
-        btnLogout.style.display = 'inline-block';
+        badge.innerText = '🔑 ' + phraseId.replace('phrase_', '');
+        btnGoogle.style.display = 'none'; btnPhrase.style.display = 'none'; btnLogout.style.display = 'inline-block';
     } else {
         badge.className = 'status-badge';
-        badge.innerText = 'Локально (Не в сети)';
-        btnGoogle.style.display = 'inline-block';
-        btnPhrase.style.display = 'inline-block';
-        btnLogout.style.display = 'none';
+        badge.innerText = 'Локально';
+        btnGoogle.style.display = 'inline-block'; btnPhrase.style.display = 'inline-block'; btnLogout.style.display = 'none';
     }
 
+    // Sync Time
     const syncTime = localStorage.getItem('lastSyncTime');
     const syncText = document.getElementById('val-last-sync');
     if (syncTime) {
         const d = new Date(parseInt(syncTime));
-        syncText.innerText = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + ' ' + d.toLocaleDateString();
-    } else {
-        syncText.innerText = 'Никогда';
-    }
+        syncText.innerText = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    } else { syncText.innerText = '---'; }
 
+    // Stats
     try {
         const favs = JSON.parse(localStorage.getItem('dg_favorites') || '[]');
         document.getElementById('val-fav-count').innerText = favs.length;
-    } catch(e) { document.getElementById('val-fav-count').innerText = 'Ошибка'; }
+    } catch(e) { document.getElementById('val-fav-count').innerText = '?'; }
 
     try {
         const hist = JSON.parse(localStorage.getItem('localSearchHistory') || '[]');
         document.getElementById('val-hist-count').innerText = hist.length;
-    } catch(e) { document.getElementById('val-hist-count').innerText = 'Ошибка'; }
+    } catch(e) { document.getElementById('val-hist-count').innerText = '?'; }
 
     document.getElementById('val-total-keys').innerText = localStorage.length;
 
-    // Сборка полного красивого JSON без схлопывания
+    // ОБНОВЛЕНИЕ СПИСКА КЛЮЧЕЙ ДЛЯ УДАЛЕНИЯ
+    const keysListContainer = document.getElementById('keys-list');
+    keysListContainer.innerHTML = '';
+    
     const viewData = {};
+    const keys = [];
     for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        let val = localStorage.getItem(key);
-        // Пытаемся распарсить строковые массивы/объекты для красивого отступа
-        try { 
-            if (val.startsWith('[') || val.startsWith('{')) {
-                val = JSON.parse(val); 
-            }
-        } catch(e) {}
-        viewData[key] = val;
+        keys.push(localStorage.key(i));
     }
-    // Используем tab-size для более компактного отступа (см. CSS)
+    keys.sort(); // Сортируем для удобства
+
+    keys.forEach(key => {
+        // Создаем тег ключа
+        const tag = document.createElement('div');
+        tag.className = 'key-tag';
+        tag.innerHTML = `${key} <span class="delete-key" onclick="deleteSpecificKey('${key}')">×</span>`;
+        keysListContainer.appendChild(tag);
+
+        // Готовим данные для JSON View
+        let val = localStorage.getItem(key);
+        try { if (val.startsWith('[') || val.startsWith('{')) val = JSON.parse(val); } catch(e) {}
+        viewData[key] = val;
+    });
+
     document.getElementById('raw-data-view').innerText = JSON.stringify(viewData, null, '\t');
 }
 
-setInterval(updateDebuggerUI, 1000);
+// Интервал обновления чуть реже для экономии ресурсов
+setInterval(updateDebuggerUI, 2000);
 updateDebuggerUI();
 </script>
 </body>
