@@ -81,6 +81,10 @@ async function buildSutta(slug) {
   Promise.all([rootResponse, rootDevResponse, htmlResponse, varResponse]).then(responses => {
       const [paliData, paliDevanagariData, htmlData, varData] = responses;
 
+    // Проверка на отсутствие сутты
+    if (!htmlData || Object.keys(htmlData).length === 0) {
+        throw new Error("Text not found - triggering catch block");
+    }
       // Объединяем Гатхи, используя Devanagari как transData
       const segments = (typeof window.mergeGathas === 'function') ? 
           window.mergeGathas(htmlData, paliData, paliDevanagariData, varData) : Object.keys(htmlData);

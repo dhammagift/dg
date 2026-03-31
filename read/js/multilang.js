@@ -166,6 +166,11 @@ async function buildSutta(slug) {
   Promise.all([rootResponse, translationResponse, engtranslationResponse, htmlResponse, varResponse]).then(responses => {
       const [paliData, transData, engTransData, htmlData, varData] = responses;
 
+    // Проверка на отсутствие сутты
+    if (!htmlData || Object.keys(htmlData).length === 0) {
+        throw new Error("Text not found - triggering catch block");
+    }
+
       // Объединяем Гатхи с помощью новой функции из common.js (с поддержкой engTransData)
       const segments = (typeof window.mergeGathas === 'function') ? 
           window.mergeGathas(htmlData, paliData, transData, varData, engTransData) : Object.keys(htmlData);

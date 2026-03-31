@@ -111,6 +111,11 @@ async function buildSutta(slug) {
   Promise.all([rootResponse, htmlResponse, varResponse]).then(responses => {
       const [paliData, htmlData, varData] = responses;
 
+    // Проверка на отсутствие сутты
+    if (!htmlData || Object.keys(htmlData).length === 0) {
+        throw new Error("Text not found - triggering catch block");
+    }
+
       // Объединяем Гатхи, передаем null вместо переводов
       const segments = (typeof window.mergeGathas === 'function') ? 
           window.mergeGathas(htmlData, paliData, null, varData) : Object.keys(htmlData);
