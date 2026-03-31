@@ -350,7 +350,7 @@ const ScrollManager = {
         // --- ИСПРАВЛЕНИЕ: Жесткая мертвая зона наверху страницы ---
         // Если мы в самом начале страницы, это не прогресс. 
         // Удаляем запись, чтобы не показывать плашку на первом абзаце.
-        if (window.scrollY < 200) {
+        if (window.scrollY < 300) {
             try {
                 let progressData = JSON.parse(localStorage.getItem('dg_suttaProgress') || '{}');
                 if (progressData[slug]) {
