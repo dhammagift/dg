@@ -2388,6 +2388,7 @@ window.syncSettingsToCloud = async function() {
     const ignorePrefixes = ['DataTables_', 'dg_', 'syncPhrase'];
     const ignoreExact = ['localSearchHistory', 'lastSyncTime'];
 
+    // 1. Собираем живые ключи
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         const isIgnoredPrefix = ignorePrefixes.some(prefix => key.startsWith(prefix));
@@ -2398,6 +2399,16 @@ window.syncSettingsToCloud = async function() {
         }
     }
 
+    // 2. Добавляем команды на удаление мертвых ключей
+    if (window.dg_deletedKeys && window.dg_deletedKeys.size > 0) {
+        window.dg_deletedKeys.forEach(key => {
+            // Двойная проверка: просим Firebase удалить ключ, только если его нет локально
+            if (!settingsToSave.hasOwnProperty(key)) {
+                settingsToSave[key] = firebase.firestore.FieldValue.delete();
+            }
+        });
+    }
+
     if (Object.keys(settingsToSave).length === 0) return;
 
     try {
@@ -2405,9 +2416,14 @@ window.syncSettingsToCloud = async function() {
             settings: settingsToSave,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
+        
+        // 3. Очищаем очередь удалений после успешной синхронизации
+        if (window.dg_deletedKeys) window.dg_deletedKeys.clear();
+        
         refreshSyncTimeUI();
     } catch (e) { console.error("Settings Sync Error:", e); }
 };
+
 
 window.syncFavoriteItemToCloud = async function(favData, isDeleted = false) {
     if (!db || !getUid()) return;
@@ -2604,6 +2620,7 @@ window.updateGlobalSyncButtons = function(user, phraseId) {
 // ==========================================
 window.dg_settingsChanged = false; 
 window.dg_ignoreNextStorageEvent = false;
+window.dg_deletedKeys = new Set(); // <-- Очередь ключей на удаление из облака
 let isObserverInitialized = false;
 
 window.initSettingsObserver = function() {
@@ -2611,27 +2628,48 @@ window.initSettingsObserver = function() {
     isObserverInitialized = true;
 
     const originalSetItem = localStorage.setItem;
+    const originalRemoveItem = localStorage.removeItem; // <-- Перехватчик
+    const originalClear = localStorage.clear;           // <-- Перехватчик
     
-    // Список того, что МЫ ИГНОРИРУЕМ (мусор). 'dg_' уже покрывает 'dg_cloudProgress' и 'dg_suttaProgress'
     const ignoreList = ['DataTables_', 'localSearchHistory', 'lastSyncTime', 'syncPhrase', 'dg_'];
 
     localStorage.setItem = function(key, value) {
-        // Пропускаем запись, если это наша собственная синхронизация из Облака
         if (window.dg_ignoreNextStorageEvent) {
             originalSetItem.apply(this, arguments);
             window.dg_ignoreNextStorageEvent = false; 
             return;
         }
 
-        // 1. Проверяем, не мусор ли это?
         const isImportant = !ignoreList.some(prefix => key.startsWith(prefix));
         
-        // 2. Если изменилось что-то важное — ставим пометку
         if (isImportant && localStorage.getItem(key) !== String(value)) {
             window.dg_settingsChanged = true;
+            window.dg_deletedKeys.delete(key); // Если ключ снова задали, убираем из очереди на удаление
         }
         
         originalSetItem.apply(this, arguments);
     };
-};
 
+    // --- УМНЫЙ ПЕРЕХВАТ УДАЛЕНИЯ ---
+    localStorage.removeItem = function(key) {
+        const isImportant = !ignoreList.some(prefix => key.startsWith(prefix));
+        if (isImportant && localStorage.getItem(key) !== null) {
+            window.dg_settingsChanged = true;
+            window.dg_deletedKeys.add(key); // Запоминаем, что ключ нужно "убить" в облаке
+        }
+        originalRemoveItem.apply(this, arguments);
+    };
+
+    // --- УМНЫЙ ПЕРЕХВАТ ПОЛНОГО СБРОСА ---
+    localStorage.clear = function() {
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            const isImportant = !ignoreList.some(prefix => key.startsWith(prefix));
+            if (isImportant) {
+                window.dg_deletedKeys.add(key); // Отправляем ВСЕ настройки на удаление
+            }
+        }
+        window.dg_settingsChanged = true;
+        originalClear.apply(this, arguments);
+    };
+};
