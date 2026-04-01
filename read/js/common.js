@@ -1043,3 +1043,22 @@ window.getInstructionHTML = function(lang) {
 </div>
   </div></div>`;
 };
+
+
+// Логика сдвига кнопки TTS при появлении кнопки ScrollToTop
+window.addEventListener('scroll', function() {
+    const scrollBtn = document.getElementById('scrollToTopBtn');
+    const ttsBtn = document.querySelector('.dynamic-tts-btn');
+    
+    if (!ttsBtn || !scrollBtn) return;
+
+    // Проверяем видимость стрелки "Вверх"
+    // Обычно она появляется, когда у неё opacity > 0 или display != none
+    const isScrollBtnVisible = window.getComputedStyle(scrollBtn).opacity > 0;
+
+    if (isScrollBtnVisible) {
+        ttsBtn.classList.add('shifted');
+    } else {
+        ttsBtn.classList.remove('shifted');
+    }
+});
