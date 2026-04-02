@@ -364,19 +364,44 @@ function getOrCreateGlobalTimer() {
 function startGlobalSessionTimer() {
     const timerEl = getOrCreateGlobalTimer();
     timerEl.style.display = 'block';
+    
     if (!window.globalSessionInterval) {
         window.globalSessionInterval = setInterval(() => {
-            window.globalSessionSeconds++;
-            let m = Math.floor(window.globalSessionSeconds / 60).toString().padStart(2, '0');
-            let s = (window.globalSessionSeconds % 60).toString().padStart(2, '0');
-            
-            // Маленький таймер слева
-            let el = document.getElementById('global-session-timer');
-            if (el) el.innerText = `${m}:${s}`;
-            
-            // Большой таймер по центру
-            let bigEl = document.getElementById('large-global-timer');
-            if (bigEl) bigEl.innerText = `${m}:${s}`;
+            let isActuallyPlaying = false;
+            const text = document.getElementById("inputText").value.trim();
+
+            if (!text) {
+                // 1. Режим таймера (без текста). Там нет плеера, опираемся на наш флаг
+                isActuallyPlaying = window.isMemoPlaying;
+            } else {
+                // 2. Режим заучивания (с текстом). Запрашиваем реальное состояние у ttsAPI
+                if (window.ttsAPI) {
+                    const state = window.ttsAPI.getState();
+                    // Таймер тикает, только если плеер активен и НЕ поставлен на паузу юзером
+                    if (state && state.speaking && !state.paused) {
+                        isActuallyPlaying = true;
+                    }
+                }
+                // А также таймер должен идти, если мы ждем между большими циклами (Loop)
+                if (window.isLoopingPause) {
+                    isActuallyPlaying = true;
+                }
+            }
+
+            // Увеличиваем время ТОЛЬКО если система реально в активном состоянии
+            if (isActuallyPlaying) {
+                window.globalSessionSeconds++;
+                let m = Math.floor(window.globalSessionSeconds / 60).toString().padStart(2, '0');
+                let s = (window.globalSessionSeconds % 60).toString().padStart(2, '0');
+                
+                // Маленький таймер слева
+                let el = document.getElementById('global-session-timer');
+                if (el) el.innerText = `${m}:${s}`;
+                
+                // Большой таймер по центру
+                let bigEl = document.getElementById('large-global-timer');
+                if (bigEl) bigEl.innerText = `${m}:${s}`;
+            }
         }, 1000);
     }
 }
@@ -1707,24 +1732,16 @@ function stopMemoTTS(fullReset = true) {
                     e.preventDefault();
                     e.stopPropagation();
                     startMemoTTS();
-                } else {
-                    // Если интервал таймера запущен — ставим на паузу, если нет — запускаем
-                    if (window.globalSessionInterval) {
-                        pauseGlobalSessionTimer();
-                    } else {
-                        startGlobalSessionTimer();
-                    }
                 }
+                // Логику ручной паузы таймера отсюда удалили!
+                // Теперь setInterval сам читает состояние плеера ttsState.paused
             }
             
-if (closeMainBtn) {
-    stopMemoTTS(true); // <--- Меняем false на true для полного сброса контейнера
-    resetGlobalSessionTimer(); 
-}
-
-
+            if (closeMainBtn) {
+                stopMemoTTS(true); 
+                resetGlobalSessionTimer(); 
+            }
         }, { capture: true }); 
-
 
         window.resetTTSSettings = function() {
             const msg = window.memoLang === 'ru' ? 'Сбросить настройки TTS по умолчанию?' : 'Reset TTS settings to default?';
