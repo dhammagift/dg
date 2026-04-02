@@ -268,34 +268,37 @@ function buildQuickModalDOM() {
   const histContainer = quickModal.querySelector('#quick-history-container');
   
     favContainer.addEventListener('click', (e) => {
-      if (e.target.classList.contains('remove-fav-btn')) {
-          const slug = e.target.dataset.slug;
-          if (confirm(isRu ? "Удалить из избранного?" : "Remove from favorites?")) {
-              let favData = JSON.parse(localStorage.getItem('dg_favorites')) || [];
-              
-              // === НОВОЕ: Ищем и стираем длинный текст из кэша перед удалением ссылки ===
-              const itemToDelete = favData.find(f => f.slug === slug);
-              if (itemToDelete && itemToDelete.search) {
-                  const params = new URLSearchParams(itemToDelete.search);
-                  const savedId = params.get('saved_id');
-                  if (savedId) {
-                      localStorage.removeItem(savedId); // Освобождаем память!
-                  }
-              }
-              // =========================================================================
+        // --- СУЩЕСТВУЮЩАЯ ЛОГИКА УДАЛЕНИЯ ---
+        if (e.target.classList.contains('remove-fav-btn')) {
+            // ... (твой текущий код удаления) ...
+        }
 
-              favData = favData.filter(f => f.slug !== slug);
-              localStorage.setItem('dg_favorites', JSON.stringify(favData));
-              
-              // Атомарная отправка
-              if (typeof syncFavoriteItemToCloud === 'function') {
-                  syncFavoriteItemToCloud({slug: slug}, true);
-              }
-              
-              window.refreshQuickModalData();
-          }
-      }
-  });
+        // --- НОВАЯ ЛОГИКА ПЕРЕИМЕНОВАНИЯ ---
+        if (e.target.classList.contains('rename-fav-btn')) {
+            const slug = e.target.dataset.slug;
+            let favData = JSON.parse(localStorage.getItem('dg_favorites')) || [];
+            const itemIndex = favData.findIndex(f => f.slug === slug);
+            
+            if (itemIndex !== -1) {
+                const currentTitle = favData[itemIndex].title || favData[itemIndex].slug;
+                const newTitle = prompt(isRu ? "Введите новое название закладки:" : "Enter new bookmark name:", currentTitle);
+                
+                // Проверяем, что пользователь не нажал Отмена и не ввел пустую строку
+                if (newTitle !== null && newTitle.trim() !== "") {
+                    favData[itemIndex].title = newTitle.trim();
+                    localStorage.setItem('dg_favorites', JSON.stringify(favData));
+                    
+                    // Атомарно отправляем обновленный элемент в Облако
+                    if (typeof syncFavoriteItemToCloud === 'function') {
+                        syncFavoriteItemToCloud(favData[itemIndex], false);
+                    }
+                    
+                    // Мгновенно обновляем список
+                    window.refreshQuickModalData();
+                }
+            }
+        }
+    });
 
   histContainer.addEventListener('click', (e) => {
       // 1. Избранное из истории
@@ -422,13 +425,18 @@ function renderQuickLists(isRu, queryBase) {
       let dataToRender = [...favData];
       if (favAlphaSort) dataToRender.sort((a, b) => (a.title || a.slug || '').localeCompare(b.title || b.slug || '', undefined, { numeric: true }));
 
+
       let favHtml = '<ul class="compact-list">';
       dataToRender.forEach(fav => {
         let url = (fav.path && fav.search) ? `${fav.path}${fav.search}` : `${queryBase}${fav.slug}`;
         if (fav.id && fav.id !== fav.slug) url += `#${fav.id}`;
         const dateStr = fav.timestamp ? new Date(fav.timestamp).toLocaleDateString() : "";
+        
+        // Добавили кнопку rename-fav-btn (карандаш) перед кнопкой удаления
         favHtml += `<li><span class="fav-star-icon">★</span><a href="${url}">${fav.title || fav.slug}</a>
-        <span class="item-date">${dateStr}</span><span class="action-btn remove-fav-btn" data-slug="${fav.slug}">×</span></li>`;
+        <span class="item-date">${dateStr}</span>
+        <span class="action-btn rename-fav-btn" data-slug="${fav.slug}" title="${isRu ? 'Переименовать' : 'Rename'}">✎</span>
+        <span class="action-btn remove-fav-btn" data-slug="${fav.slug}">×</span></li>`;
       });
       favHtml += '</ul>';
       favContainer.innerHTML = favHtml;
