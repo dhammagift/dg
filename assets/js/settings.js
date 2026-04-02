@@ -1241,8 +1241,7 @@ function applySavedDict(dict) {
   }
 
 if (resetButton) {
-  resetButton.addEventListener('click', function () {
-    // Определяем язык только для того, чтобы показать диалог на нужном языке
+  resetButton.addEventListener('click', async function () {
     const path = window.location.pathname;
     const language =
       localStorage.getItem('siteLanguage') ||
@@ -1259,32 +1258,80 @@ if (resetButton) {
       }
     };
 
-    // Показываем подтверждение
     if (!confirm(messages[language].confirm)) return;
 
     const notificationText = messages[language].success;
 
-    // Проверяем, существует ли внешняя функция очистки
     if (typeof clearFdgPopupParams === 'function') {
       clearFdgPopupParams();
     }
 
-    // Тотальная очистка ВСЕГО хранилища
+    const keysToKeep = [
+        'localSearchHistory', 
+        'dg_favorites', 
+        'syncPhraseId', 
+        'syncPhraseRaw', 
+        'dg_cloud_session', 
+        'lastSyncTime', 
+        'dg_suttaProgress', 
+        'dg_cloudProgress'
+    ];
+
+    try {
+        const favs = JSON.parse(localStorage.getItem('dg_favorites')) || [];
+        favs.forEach(fav => {
+            if (fav.search && fav.search.includes('saved_id=')) {
+                const params = new URLSearchParams(fav.search);
+                const savedId = params.get('saved_id');
+                if (savedId) keysToKeep.push(savedId);
+            }
+        });
+    } catch (e) {}
+
+    const savedData = {};
+    keysToKeep.forEach(key => {
+        const val = localStorage.getItem(key);
+        if (val !== null) savedData[key] = val;
+    });
+
+    // Отключаем локальный перехватчик изменений, чтобы он не мешал
+    window.dg_ignoreNextStorageEvent = true;
+
     localStorage.clear();
     sessionStorage.clear();
 
-    // Минимально необходимые параметры для работы интерфейса после перезагрузки
+    Object.keys(savedData).forEach(key => {
+        localStorage.setItem(key, savedData[key]);
+    });
+
     localStorage.setItem('variantVisibility', 'hidden');
 
-    // Удаляем параметр 'script' из URL
     const url = new URL(window.location.href);
     url.searchParams.delete('script');
 
-    // Показ уведомления
     if (typeof showBubbleNotification === 'function') {
       showBubbleNotification(notificationText);
     } else {
-      alert(notificationText); // fallback
+      alert(notificationText);
+    }
+
+    // --- ЖЕСТКОЕ УДАЛЕНИЕ НАСТРОЕК ИЗ БАЗЫ FIREBASE ---
+    // Напрямую стираем весь узел settings в документе пользователя
+    if (window.firebase && typeof db !== 'undefined' && db && typeof getUid === 'function') {
+        const uid = getUid();
+        if (uid) {
+            try {
+                await Promise.race([
+                    db.collection("users").doc(uid).set({
+                        settings: firebase.firestore.FieldValue.delete(),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true }),
+                    new Promise(resolve => setTimeout(resolve, 800)) // Таймаут для оффлайна
+                ]);
+            } catch (e) {
+                console.warn("Ошибка при стирании настроек в облаке", e);
+            }
+        }
     }
 
     // Перезагрузка страницы
@@ -1294,9 +1341,10 @@ if (resetButton) {
       } else {
         window.location.reload();
       }
-    }, 1000);
+    }, 50); 
   });
 }
+
 
 // Получаем все радиокнопки
 var readerRadios = document.querySelectorAll('input[name="reader"]');
