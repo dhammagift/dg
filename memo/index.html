@@ -40,11 +40,11 @@
                 </a>
    
 
- <a href="/memorize/?q=sn56.11" title="Sutta and Vinaya search" rel="noreferrer" class="ms-4 me-1 text-decoration-none text-muted">sn56.11</a>
-                <a href="/assets/texts/dn2.9.html" title="Sutta and Vinaya search" rel="noreferrer" class="me-1 text-decoration-none text-muted">dn22</a>
-                <a href="/memorize/?q=sn12.2" title="Sutta and Vinaya search" rel="noreferrer" class="me-1 text-decoration-none text-muted">sn12.2</a>
+ <a href="/memorize/?q=sn56.11" title="Sutta and Vinaya search" rel="noreferrer" class="ms-4 me-2 text-decoration-none text-muted">sn56.11</a>
+                <a href="/assets/texts/dn2.9.html" title="Sutta and Vinaya search" rel="noreferrer" class="me-2 text-decoration-none text-muted">dn22</a>
+                <a href="/memorize/?q=sn12.2" title="Sutta and Vinaya search" rel="noreferrer" class="me-2 text-decoration-none text-muted">sn12.2</a>
                 
-                <div class="ms-4 me-1 d-inline-flex align-items-center lang-switcher" id="lang-switcher">
+                <div class="ms-4 me- d-inline-flex align-items-center lang-switcher" id="lang-switcher">
                 </div>
 
 
@@ -1102,12 +1102,20 @@ function обновитьКнопкиВвода() {
 document.addEventListener("DOMContentLoaded", () => {
     const textInput = document.getElementById("inputText");
     if (textInput) {
-        // Оставляем только обновление кнопок и заголовка, без остановки плеера
         textInput.addEventListener('input', () => {
             if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
+            
+            // Если текст изменился и мы не в процессе воспроизведения,
+            // принудительно сносим старый кэш, чтобы плеер пересобрал его при следующем Play
+            if (!window.isMemoPlaying) {
+                const container = document.getElementById("tts-virtual-container");
+                if (container) container.innerHTML = '';
+            }
         });
     }
 });
+
+
 window.addEventListener('load', обновитьКнопкиВвода);
 
         function копироватьРезультат() {
@@ -1703,10 +1711,12 @@ function stopMemoTTS(fullReset = true) {
                 }
             }
             
-            if (closeMainBtn) {
-                stopMemoTTS(false); 
-                resetGlobalSessionTimer(); // Сбрасываем таймер если плеер был полностью закрыт крестиком
-            }
+if (closeMainBtn) {
+    stopMemoTTS(true); // <--- Меняем false на true для полного сброса контейнера
+    resetGlobalSessionTimer(); 
+}
+
+
         }, { capture: true }); 
 
 

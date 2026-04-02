@@ -49,34 +49,34 @@ function showPali() {
 
 function toggleThePali() {
 
-  if (localStorage.paliToggle) {
-    if (localStorage.paliToggle === "pli-eng") {
+  if (localStorage.paliToggleSearch) {
+    if (localStorage.paliToggleSearch === "pli-eng") {
       showPaliEnglish();
-    } else if (localStorage.paliToggle === "pli") {
+    } else if (localStorage.paliToggleSearch === "pli") {
       showPali();
-    } else if (localStorage.paliToggle === "eng") {
+    } else if (localStorage.paliToggleSearch === "eng") {
       showEnglish();
     }
   } else {
-    localStorage.paliToggle = "pli-eng";
+    localStorage.paliToggleSearch = "pli-eng";
   }
 
   languageButton.addEventListener("click", () => {
     if (language === "pli-eng") {
 	  showPali();     
 	  language = "pli";
-     localStorage.paliToggle = "pli";   
-     localStorage.paliToggleRu = "pli";
+     localStorage.paliToggleSearch = "pli";   
+     localStorage.paliToggleRuSearch = "pli";
     } else if (language === "pli") {
      showEnglish();
       language = "eng";
-      localStorage.paliToggle = "eng";
-      localStorage.paliToggleRu = "rus";
+      localStorage.paliToggleSearch = "eng";
+      localStorage.paliToggleRuSearch = "rus";
     } else if (language === "eng") {
      showPaliEnglish(); 
       language = "pli-eng";
-localStorage.paliToggle = "pli-eng";
-localStorage.paliToggleRu = "pli-rus";
+localStorage.paliToggleSearch = "pli-eng";
+localStorage.paliToggleRuSearch = "pli-rus";
     }
   });
 
