@@ -1162,6 +1162,9 @@ window.addEventListener('load', обновитьКнопкиВвода);
             
             if (textParam) {
                 // Загрузка обычного текста
+                const ta = document.getElementById("inputText");
+                ta.value = textParam;
+                ta.setSelectionRange(0, 0); // <--- ДОБАВИТЬ СЮДА (сброс курсора в начало)
                 document.getElementById("inputText").value = textParam;
                 localStorage.setItem("currentMemoText", textParam); 
                 document.getElementById("результат").innerText = "";
@@ -1180,6 +1183,9 @@ window.addEventListener('load', обновитьКнопкиВвода);
                 const результат = localStorage.getItem("результат");
                 if (currentMemoText) {
                     document.getElementById("inputText").value = currentMemoText;
+                    const ta = document.getElementById("inputText");
+                ta.value = textParam;
+                ta.setSelectionRange(0, 0); // <--- ДОБАВИТЬ СЮДА (сброс курсора в начало)
                     if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
                 }
                 if (результат && результат.trim() !== "") {
