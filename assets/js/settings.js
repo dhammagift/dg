@@ -2187,24 +2187,49 @@ let unsubProgress = null;
 let unsubSessionList = null; 
 let unsubMySession = null;   
 
-// АНОНИМНЫЙ ПАРСЕР УСТРОЙСТВА
+// АНОНИМНЫЙ ПАРСЕР УСТРОЙСТВА (С ПОЛНЫМ «ПАСПОРТОМ»)
 window.getAnonymousDeviceName = function() {
     const ua = navigator.userAgent;
-    let os = "Unknown Device";
+    let os = "Device";
     let browser = "Web";
+    let model = "";
 
-    if (ua.indexOf("Win") !== -1) os = "Windows";
-    if (ua.indexOf("Mac") !== -1) os = "MacOS";
-    if (ua.indexOf("Linux") !== -1) os = "Linux";
-    if (ua.indexOf("Android") !== -1) os = "Android";
-    if (ua.indexOf("like Mac") !== -1 || ua.indexOf("iPhone") !== -1 || ua.indexOf("iPad") !== -1) os = "iOS";
+    // 1. Определение ОС и конкретной модели
+    if (ua.indexOf("Win") !== -1) {
+        os = "Windows";
+    } else if (ua.indexOf("Mac") !== -1 && ua.indexOf("iPhone") === -1 && ua.indexOf("iPad") === -1) {
+        os = "MacOS";
+    } else if (ua.indexOf("Linux") !== -1 && ua.indexOf("Android") === -1) {
+        os = "Linux";
+    } else if (ua.indexOf("Android") !== -1) {
+        os = "Android";
+        // Извлекаем модель из User-Agent
+        const androidMatch = ua.match(/Android\s[^;]+;\s([^;)]+)/);
+        if (androidMatch && androidMatch[1]) {
+            model = androidMatch[1].split(' Build/')[0].trim();
+            // Маппинг брендов для чистоты отображения
+            if (ua.indexOf("Samsung") !== -1 && !model.includes("Samsung")) model = "Samsung " + model;
+            if (ua.indexOf("Xiaomi") !== -1 && !model.includes("Xiaomi")) model = "Xiaomi " + model;
+            if (ua.indexOf("Redmi") !== -1 && !model.includes("Redmi")) model = "Redmi " + model;
+            if (ua.indexOf("Pixel") !== -1 && !model.includes("Pixel")) model = "Google Pixel " + model;
+        }
+    } else if (ua.indexOf("iPhone") !== -1) {
+        os = "iOS";
+        model = "iPhone";
+    } else if (ua.indexOf("iPad") !== -1) {
+        os = "iOS";
+        model = "iPad";
+    }
 
-    if (ua.indexOf("Chrome") !== -1) browser = "Chrome";
-    else if (ua.indexOf("Safari") !== -1) browser = "Safari";
-    else if (ua.indexOf("Firefox") !== -1) browser = "Firefox";
-    else if (ua.indexOf("Edge") !== -1) browser = "Edge";
+    // 2. Определение браузера
+    if (ua.indexOf("Edg/") !== -1) browser = "Edge";
+    else if (ua.indexOf("Chrome/") !== -1) browser = "Chrome";
+    else if (ua.indexOf("Firefox/") !== -1) browser = "Firefox";
+    else if (ua.indexOf("Safari/") !== -1) browser = "Safari";
 
-    return `${os} • ${browser}`;
+    // 3. Сборка полного имени (ОС + модель в скобках)
+    const displayName = model ? `${os} (${model})` : os;
+    return `${displayName} • ${browser}`;
 };
 
 // УДАЛЕНИЕ ЧУЖОЙ СЕССИИ (Кнопка Крестик)
