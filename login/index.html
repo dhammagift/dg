@@ -192,6 +192,12 @@
                         </button>
                     </div>
                 </div>
+
+                <div class="status-card border mb-3">
+                    <div id="sync-sessions-label" class="opacity-75 mb-2" style="font-size: 0.85rem; font-weight: 600;">Устройства (Сессии)</div>
+                    <div id="sync-sessions-list" class="d-flex flex-column gap-2">
+                        </div>
+                </div>
                 
                 <div class="d-flex justify-content-between pt-2 px-1 align-items-center">
                     <a class="logout-link opacity-75" onclick="syncLogout()">
@@ -230,7 +236,7 @@
 
     <script src="/assets/js/jquery-3.7.0.min.js"></script>
     <script src="/assets/js/bootstrap.bundle.5.3.1.min.js"></script>
-<script defer src="/assets/js/themeswitch.js"></script>
+    <script defer src="/assets/js/themeswitch.js"></script>
     <script src="/assets/js/settings.js"></script>
 
     <script>
@@ -442,7 +448,7 @@
             });
         }
 
-        // ОТРИСОВКА ИНТЕРФЕЙСА
+        // ОТРИСОВКА ИНТЕРФЕЙСА С ОТОБРАЖЕНИЕМ СЕССИЙ
         window.renderLoginPageUI = function(user, phraseId) {
             const el = (id) => document.getElementById(id);
             if (!el('sync-logged-out')) return;
@@ -465,7 +471,8 @@
                 loginPhrase: "Анонимный вход",
                 statusLabelGoogle: "Google аккаунт:", statusLabelPhrase: "Ваша фраза:",
                 syncLabel: "Синхронизировано:", lblSync: "Синхр.",
-                logout: "Выйти", delete: "Удалить данные"
+                logout: "Выйти", delete: "Удалить данные",
+                sessionsLabel: "Активные устройства:"
             } : {
                 title: "Cloud Sync", desc: "History, favorites, and settings.",
                 google: "Sign in with Google", or: "or", phraseLabel: "Secret Passphrase",
@@ -473,7 +480,8 @@
                 loginPhrase: "Anonymous Login",
                 statusLabelGoogle: "Google Account:", statusLabelPhrase: "Your Phrase:",
                 syncLabel: "Last synced:", lblSync: "Sync",
-                logout: "Logout", delete: "Delete Cloud Data"
+                logout: "Logout", delete: "Delete Cloud Data",
+                sessionsLabel: "Active Devices:"
             };
 
             el('sync-page-title').textContent = t.title;
@@ -485,6 +493,7 @@
             el('lbl-sync').textContent = t.lblSync;
             el('lbl-logout').textContent = t.logout;
             el('lbl-delete').textContent = t.delete;
+            if (el('sync-sessions-label')) el('sync-sessions-label').textContent = t.sessionsLabel;
 
             if (user || phraseId) {
                 el('sync-logged-out').style.display = 'none';
@@ -507,6 +516,48 @@
                                 <i class="fa-solid text-muted fa-eye"></i>
                             </button>
                         </div>`;
+                }
+
+                // --- ЛОГИКА АКТИВНЫХ СЕССИЙ (ТОЛЬКО ДЛЯ ЭТОЙ СТРАНИЦЫ) ---
+                const listEl = document.getElementById('sync-sessions-list');
+                if (listEl && window.firebase && window.db) {
+                    const uid = user ? user.uid : phraseId;
+                    const localSessionId = localStorage.getItem('dg_session_id');
+                    
+                    if (window.unsubSessionList) window.unsubSessionList(); // Отписываемся от старого слушателя
+                    window.unsubSessionList = window.db.collection("users").doc(uid).collection("sessions")
+                        .orderBy("lastActive", "desc").onSnapshot((snap) => {
+                            listEl.innerHTML = ''; // Очищаем список перед перерисовкой
+                            
+                            snap.docs.forEach(doc => {
+                                const data = doc.data();
+                                const sid = doc.id;
+                                const isCurrent = sid === localSessionId;
+                                
+                                const dateRaw = data.lastActive ? data.lastActive.toDate() : new Date();
+                                const dateStr = dateRaw.toLocaleString(isRu ? 'ru-RU' : 'en-US', { 
+                                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                                });
+
+                                const currentBadgeText = isRu ? 'Текущее' : 'Current';
+                                const terminateHint = isRu ? 'Завершить сессию удаленно' : 'Terminate session';
+
+                                const div = document.createElement('div');
+                                div.className = "d-flex justify-content-between align-items-center p-2 rounded";
+                                div.style.background = "rgba(128, 128, 128, 0.05)";
+                                
+                                div.innerHTML = `
+                                    <div style="line-height: 1.2;">
+                                        <div style="font-size: 0.85rem; font-weight: 500; color: var(--bs-body-color);">
+                                            ${data.deviceName} ${isCurrent ? `<span class="badge bg-success ms-2 opacity-75" style="font-size: 0.65rem;">${currentBadgeText}</span>` : ''}
+                                        </div>
+                                        <div class="text-muted mt-1" style="font-size: 0.75rem;">${dateStr}</div>
+                                    </div>
+                                    ${!isCurrent ? `<button class="btn btn-sm btn-outline-danger py-0 px-2 opacity-75" style="border:none;" onclick="terminateRemoteSession('${sid}')" title="${terminateHint}"><i class="fa-solid fa-power-off"></i></button>` : ''}
+                                `;
+                                listEl.appendChild(div);
+                            });
+                        });
                 }
 
                 // --- ЛОГИКА ПЕРВОЙ СИНХРОНИЗАЦИИ ---
@@ -533,6 +584,12 @@
                 }
 
             } else {
+                // Если мы разлогинены, отключаем прослушивание чужих сессий
+                if (window.unsubSessionList) {
+                    window.unsubSessionList();
+                    window.unsubSessionList = null;
+                }
+                
                 el('sync-last-time').textContent = getFormattedTime();
                 el('sync-logged-out').style.display = 'block';
                 el('sync-logged-in').style.display = 'none';

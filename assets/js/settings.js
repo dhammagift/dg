@@ -2427,8 +2427,77 @@ window.setupCloudListeners = function(uid) {
     });
 };
 
-// === АТОМАРНЫЕ ЗАПИСИ ===
+// === БЛОКПОСТ: ПРОВЕРКА СЕССИИ ===
+// Возвращает true, если устройство активно, и false, если оно заблокировано
+window.verifySessionActive = async function() {
+    const uid = getUid();
+    const localSessionId = localStorage.getItem('dg_session_id');
+    
+    // Если мы анонимы (не входили) — разрешаем локальную работу, облака нет
+    if (!uid || !localSessionId || !db) return true;
+
+    try {
+        // Спрашиваем у базы: "Моя сессия еще жива?"
+        const sessionRef = db.collection("users").doc(uid).collection("sessions").doc(localSessionId);
+        const doc = await sessionRef.get();
+        
+        if (doc.exists) {
+            return true; // Пропуск действителен, продолжаем
+        } else {
+            // Пропуск аннулирован! (Устройство удалили с другого телефона)
+            triggerSelfDestruct();
+            return false; // Блокируем отправку/получение
+        }
+    } catch (e) {
+        // Если нет интернета (оффлайн), проверка выдаст ошибку.
+        // Разрешаем работу, Firebase просто закэширует данные до появления сети.
+        return true; 
+    }
+};
+
+// === ПРОТОКОЛ САМОУНИЧТОЖЕНИЯ ===
+window.triggerSelfDestruct = async function() {
+    console.warn("Протокол самоуничтожения: сессия была аннулирована удаленно.");
+    
+    // 1. Отрубаем все связи с Firebase (перестаем слушать облако)
+    if (typeof unsubSettings !== 'undefined' && unsubSettings) unsubSettings();
+    if (typeof unsubFavs !== 'undefined' && unsubFavs) unsubFavs();
+    if (typeof unsubHist !== 'undefined' && unsubHist) unsubHist();
+    if (typeof unsubProgress !== 'undefined' && unsubProgress) unsubProgress(); 
+    if (window.unsubSessionList) window.unsubSessionList();
+    if (typeof unsubMySession !== 'undefined' && unsubMySession) unsubMySession();
+
+    // 2. Выходим из аккаунта
+    if (typeof auth !== 'undefined' && auth && auth.currentUser) await auth.signOut();
+
+    // 3. ТОТАЛЬНАЯ ЗАЧИСТКА (очищаем весь localStorage)
+    // Сохраним только язык и тему, чтобы сайт визуально не сломался после перезагрузки
+    const savedLang = localStorage.getItem('siteLanguage');
+    const savedTheme = localStorage.getItem('theme');
+    
+    localStorage.clear(); // Сносим ВСЁ: историю, избранное, ключи
+    
+    if (savedLang) localStorage.setItem('siteLanguage', savedLang);
+    if (savedTheme) localStorage.setItem('theme', savedTheme);
+
+    // 4. Показываем уведомление
+    if (typeof showBubbleNotification === 'function') {
+        const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
+        showBubbleNotification(isRu ? "Сессия удалена. Данные очищены." : "Session terminated. Data wiped.", 5000);
+    }
+
+    // 5. Перезагружаем страницу, чтобы обнулить память браузера
+    setTimeout(() => {
+        window.location.reload();
+    }, 1500);
+};
+
+// === АТОМАРНЫЕ ЗАПИСИ В ОБЛАКО ===
+
 window.syncSettingsToCloud = async function() {
+    // ПРОПУСКНОЙ ПУНКТ:
+    if (!(await verifySessionActive())) return;
+
     if (!db || !getUid()) return;
     const uid = getUid();
     const settingsToSave = {};
@@ -2469,12 +2538,15 @@ window.syncSettingsToCloud = async function() {
         // 3. Очищаем очередь удалений после успешной синхронизации
         if (window.dg_deletedKeys) window.dg_deletedKeys.clear();
         
-        refreshSyncTimeUI();
+        if (typeof refreshSyncTimeUI === 'function') refreshSyncTimeUI();
     } catch (e) { console.error("Settings Sync Error:", e); }
 };
 
 
 window.syncFavoriteItemToCloud = async function(favData, isDeleted = false) {
+    // ПРОПУСКНОЙ ПУНКТ:
+    if (!(await verifySessionActive())) return;
+
     if (!db || !getUid()) return;
     const uid = getUid();
     const docId = sanitizeId(favData.slug);
@@ -2501,12 +2573,15 @@ window.syncFavoriteItemToCloud = async function(favData, isDeleted = false) {
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
             }, { merge: true });
         }
-        refreshSyncTimeUI();
+        if (typeof refreshSyncTimeUI === 'function') refreshSyncTimeUI();
     } catch (e) { console.error("Fav Sync Error:", e); }
 };
 
 
 window.syncHistoryItemToCloud = async function(key, url, timestamp, isDeleted = false) {
+    // ПРОПУСКНОЙ ПУНКТ:
+    if (!(await verifySessionActive())) return;
+
     if (!db || !getUid()) return;
     const uid = getUid();
     const baseKey = /\d/.test(key) ? key.split(/\s+/)[0] : key;
@@ -2522,12 +2597,15 @@ window.syncHistoryItemToCloud = async function(key, url, timestamp, isDeleted = 
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             }, { merge: true });
         }
-        refreshSyncTimeUI();
+        if (typeof refreshSyncTimeUI === 'function') refreshSyncTimeUI();
     } catch (e) { console.error("History Sync Error:", e); }
 };
 
 // Функция отправки Прогресса чтения
 window.syncProgressItemToCloud = async function(slug) {
+    // ПРОПУСКНОЙ ПУНКТ:
+    if (!(await verifySessionActive())) return;
+
     if (!db || !getUid() || !slug) return;
     
     const localProgress = JSON.parse(localStorage.getItem('dg_suttaProgress')) || {};
@@ -2547,6 +2625,7 @@ window.syncProgressItemToCloud = async function(slug) {
         }, { merge: true });
     } catch (e) { console.error("Progress Sync Error:", e); }
 };
+
 
 window.clearCloudHistory = async function() {
     if (!db || !getUid()) return;
@@ -2680,8 +2759,7 @@ window.initSettingsObserver = function() {
     const originalRemoveItem = localStorage.removeItem; // <-- Перехватчик
     const originalClear = localStorage.clear;           // <-- Перехватчик
     
-    // ДОБАВЛЕНО: 'firestore_' и 'firebase_'
-    const ignoreList = ['DataTables_', 'localSearchHistory', 'lastSyncTime', 'syncPhrase', 'dg_', 'firestore_', 'firebase_'];
+    const ignoreList = ['DataTables_', 'localSearchHistory', 'lastSyncTime', 'syncPhrase', 'dg_'];
 
     localStorage.setItem = function(key, value) {
         if (window.dg_ignoreNextStorageEvent) {
