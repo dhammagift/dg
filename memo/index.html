@@ -481,24 +481,43 @@ function resetGlobalSessionTimer() {
                     memoTitle = "📝 " + currentText.substring(0, 35) + (currentText.length > 35 ? "..." : "");
                 } else {
                     // Если текста нет, сохраняем как таймер медитации
-                    const endDelaySec = parseFloat(document.getElementById("ttsEndDelay").value) || 0;
                     const delaySec = parseFloat(document.getElementById("ttsDelay").value) || 0;
-                    const totalSec = endDelaySec > 0 ? endDelaySec : delaySec;
-                    
+                    const endDelaySec = parseFloat(document.getElementById("ttsEndDelay").value) || 0;
                     const sound = document.getElementById("ttsSound").value;
                     const lc = document.getElementById("ttsLoopCount").value || "∞";
                     memoSlug = `memo_timer_d${delaySec}_e${endDelaySec}_s${sound}_lc${lc}`;
                     
                     let timeStr = "";
-                    if (totalSec >= 60) {
-                        const m = Math.floor(totalSec / 60);
-                        const s = totalSec % 60;
+                    if (delaySec >= 60) {
+                        const m = Math.floor(delaySec / 60);
+                        const s = delaySec % 60;
                         timeStr = m + (window.memoLang === 'ru' ? ' мин' : ' min');
                         if (s > 0) timeStr += " " + s + (window.memoLang === 'ru' ? ' сек' : ' sec');
                     } else {
-                        timeStr = totalSec + (window.memoLang === 'ru' ? ' сек' : ' sec');
+                        timeStr = delaySec + (window.memoLang === 'ru' ? ' сек' : ' sec');
                     }
-                    memoTitle = "🧘 " + timeStr;
+
+                    // Если есть пауза в конце, добавляем инфу о ней в скобках
+                    if (endDelaySec > 0) {
+                        let pauseStr = "";
+                        if (endDelaySec >= 60) {
+                            const pm = Math.floor(endDelaySec / 60);
+                            const ps = endDelaySec % 60;
+                            pauseStr = pm + (window.memoLang === 'ru' ? ' мин' : ' min');
+                            if (ps > 0) pauseStr += " " + ps + (window.memoLang === 'ru' ? ' сек' : ' sec');
+                        } else {
+                            pauseStr = endDelaySec + (window.memoLang === 'ru' ? ' сек' : ' sec');
+                        }
+                        
+                        // Если основной интервал 0, просто называем это "Отдых", иначе берем в скобки
+                        if (delaySec > 0) {
+                            timeStr += (window.memoLang === 'ru' ? ' (отдых ' : ' (rest ') + pauseStr + ')';
+                        } else {
+                            timeStr = pauseStr;
+                        }
+                    }
+
+                    memoTitle = "🧘 " + (delaySec > 0 || endDelaySec > 0 ? timeStr : "Таймер");
                 }
 
                 const params = new URLSearchParams();
@@ -533,7 +552,6 @@ function resetGlobalSessionTimer() {
                     timestamp: Date.now()
                 };
             }
-
 
 if (favBtn) {
     function updateMemoIcon() {
@@ -1372,22 +1390,17 @@ window.addEventListener('load', function() {
             return originalFetch.apply(this, arguments);
         };
 
-
 function runMeditationCycle() {
     if (!window.isMemoPlaying) return; 
 
-    // Используем существующий в voice.js механизм тишины
     if (window.ttsAPI && window.ttsAPI.keepSilenceAlive) {
         window.ttsAPI.keepSilenceAlive(true);
     }
     
-    // >>> ИСПРАВЛЕНИЕ: Обновляем шторку ПОСЛЕ запуска фонового аудио <<<
     if ('mediaSession' in navigator) {
         setTimeout(() => {
-            // Передаем 'memo_custom', чтобы сработал наш перехватчик
-            // Он сам увидит, что текста нет, и поставит albumart-samadhi.png
             navigator.mediaSession.metadata = new MediaMetadata({ title: 'memo_custom' });
-        }, 50); // Небольшая задержка гарантирует, что аудио успело стартовать
+        }, 50);
     }
 
     const soundChoice = document.getElementById('ttsSound').value;
@@ -1395,36 +1408,62 @@ function runMeditationCycle() {
     const loopInput = document.getElementById('ttsLoopCount').value;
     let targetLoops = loopInput === '∞' ? Infinity : parseInt(loopInput) || Infinity;
 
-    const endDelaySec = parseFloat(document.getElementById("ttsEndDelay").value) || 0;
     const delaySec = parseFloat(document.getElementById("ttsDelay").value) || 0;
-    const totalPause = (endDelaySec > 0 ? endDelaySec : delaySec) * 1000; 
+    const endDelaySec = parseFloat(document.getElementById("ttsEndDelay").value) || 0;
+    
+    // Основное время медитации
+    const mainPauseMs = delaySec * 1000; 
+    // Время отдыха ПОСЛЕ гонга (имеет смысл в основном для циклов)
+    const restPauseMs = endDelaySec * 1000;
 
-    if (totalPause <= 0) {
+    if (mainPauseMs <= 0 && restPauseMs <= 0) {
         alert(window.memoLang === 'ru' ? 'Установите время таймера' : 'Set timer duration');
         stopMemoTTS(true);
         return;
     }
 
+    // Если Интервал = 0, но есть Пауза, используем Паузу как основное время (для защиты от дурака)
+    const activeTimeMs = mainPauseMs > 0 ? mainPauseMs : restPauseMs;
     const lCycle = window.memoLang === 'ru' ? 'Медитация' : 'Meditation';
-    window.startMemoVisualTimer(totalPause, lCycle);
+    
+    // Запускаем визуальный таймер до гонга
+    window.startMemoVisualTimer(activeTimeMs, lCycle);
 
     window.memoRestartTimeout = setTimeout(() => {
         if (!window.isMemoPlaying) return;
         
+        // ЗВУЧИТ ГОНГ (Конец основной сессии)
         if (soundChoice !== 'none') {
-            // Воспроизведение звука гонга/тика
             new Audio(`/assets/sounds/${soundChoice}`).play().catch(e => console.warn(e));
         }
 
         window.memoLoopsPlayed++;
 
+        // Если это цикл и лимит еще не исчерпан
         if (isLoop && window.memoLoopsPlayed < targetLoops) {
-            runMeditationCycle();
+            
+            // Если есть пауза после гонга, ждем её перед новым циклом
+            if (restPauseMs > 0 && mainPauseMs > 0) {
+                const lRest = window.memoLang === 'ru' ? 'Отдых' : 'Rest';
+                window.startMemoVisualTimer(restPauseMs, lRest);
+                
+                // Внутренний таймаут на время отдыха
+                window.memoLoopTimeout = setTimeout(() => {
+                    if (!window.isMemoPlaying) return;
+                    runMeditationCycle(); // Начинаем новый цикл
+                }, restPauseMs);
+            } else {
+                // Если паузы нет, сразу начинаем новый цикл
+                runMeditationCycle();
+            }
+            
         } else {
+            // Если циклы закончились или выключены
             stopMemoTTS(true);
         }
-    }, totalPause);
+    }, activeTimeMs);
 }
+
 
 function startMemoTTS(isRestart = false) {
     добавитьПробелыВКонцеСтрок();
