@@ -658,7 +658,6 @@ if (favBtn) {
     });
 }
 
-
             if (shareBtn) {
                 shareBtn.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -686,7 +685,8 @@ if (favBtn) {
 
                     // Генерируем URL специально для шаринга (без saved_id)
                     const params = new URLSearchParams();
-                    params.set('text', textToShare);
+                    
+                    // Настройки кодируем стандартным способом
                     params.set('delay', document.getElementById("ttsDelay").value || "0");
                     params.set('end', document.getElementById("ttsEndDelay").value || "0");
                     params.set('trn', document.getElementById("ttsIsTranslation").checked ? "1" : "0");
@@ -695,8 +695,23 @@ if (favBtn) {
                     params.set('snd', document.getElementById("ttsSound").value || "none");
                     params.set('sep', document.getElementById("ttsDelimiter").value || "");
 
+                    // Текст обрабатываем вручную: оставляем кириллицу и пали как есть, 
+                    // прячем только пробелы, переносы и системные символы (&, =, #, ?), чтобы ссылка была кликабельной
+                    let safeText = textToShare
+                        .replace(/%/g, '%25')
+                        .replace(/&/g, '%26')
+                        .replace(/=/g, '%3D')
+                        .replace(/\+/g, '%2B')
+                        .replace(/#/g, '%23')
+                        .replace(/\?/g, '%3F')
+                        .replace(/ /g, '%20')
+                        .replace(/\n/g, '%0A')
+                        .replace(/\r/g, '%0D');
+
                     let origin = window.location.origin;
-                    const fullUrl = origin + window.location.pathname + "?" + params.toString();
+                    
+                    // Склеиваем красивый текст и закодированные настройки
+                    const fullUrl = origin + window.location.pathname + "?text=" + safeText + "&" + params.toString();
 
                     navigator.clipboard.writeText(fullUrl).then(() => {
                         if (typeof showBubbleNotification === 'function') {
@@ -707,6 +722,8 @@ if (favBtn) {
                     }).catch(err => console.error('Ошибка копирования: ', err));
                 });
             }
+
+            
         });
 
         if (window.MediaMetadata) {
@@ -1541,7 +1558,11 @@ function startMemoTTS(isRestart = false) {
     window.TTS_SEGMENT_DELAY = delaySec * 1000;
     window.isLoopingPause = false;
 
-    const isTranslation = document.getElementById("ttsIsTranslation").checked;
+    // Галочка обязательна только для латиницы (отличить English от Pali).
+    // Если алфавит кириллица или тайский — это 100% перевод, игнорируем галочку.
+    const isTranslationCheckbox = document.getElementById("ttsIsTranslation").checked;
+    const isTranslation = isTranslationCheckbox || detectedLang === 'ru' || detectedLang === 'th';
+
     const container = document.getElementById("tts-virtual-container");
     
     if (!container.innerHTML) {
@@ -1585,7 +1606,35 @@ function startMemoTTS(isRestart = false) {
         window.detectTranslationLang = function() {
             return window.memoDetectedTrnLang;
         };
-    }
+
+        // --- ЖЕСТКИЙ ПЕРЕХВАТ КОНТЕКСТА ДЛЯ GOOGLE TTS ---
+        // Игнорируем URL и отдаем настройки строго по языку текста
+        window.getContextInfo = function() {
+            if (window.memoDetectedTrnLang === 'ru') {
+                return {
+                    type: 'ru',
+                    storageKey: 'tts_google_trn_ru',
+                    defaultConfig: { languageCode: 'ru-RU', name: 'ru-RU-Standard-D' },
+                    isIndianContext: false
+                };
+            } else if (window.memoDetectedTrnLang === 'th') {
+                return {
+                    type: 'th',
+                    storageKey: 'tts_google_trn_th',
+                    defaultConfig: { languageCode: 'th-TH', name: 'th-TH-Standard-A' },
+                    isIndianContext: false
+                };
+            }
+            return {
+                type: 'en',
+                storageKey: 'tts_google_trn_en',
+                defaultConfig: { languageCode: 'en-US', name: 'en-US-Standard-D' },
+                isIndianContext: false
+            };
+        };
+        // --------------------------------------------------
+
+    } // Конец условия if (!container.innerHTML)
 
     const targetMode = isTranslation ? 'trn' : 'pi';
     localStorage.setItem('tts_preferred_mode', targetMode);

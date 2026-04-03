@@ -381,8 +381,8 @@ img[data-size="large"] {
 .popup-action-btn:hover {
     background: rgba(45, 62, 80, 0.9);
 }
-.popup-open-btn { right: 45px; }
-.popup-dict-btn { right: 80px; }
+.popup-open-btn { right: 80px; }
+.popup-dict-btn { right: 45px; }
 
 /* Фрейм со словарем */
 .popup-iframe {
