@@ -1200,10 +1200,10 @@ window.addEventListener('load', обновитьКнопкиВвода);
 window.addEventListener('load', function() {
     const editToggle = document.getElementById('editModeToggle');
     if (editToggle) {
-        const savedEditMode = localStorage.getItem('memo_edit_mode');
+        const savedEditMode = localStorage.getItem('memo_auto_cursor');
         // Изменено на дефолт = false
         editToggle.checked = savedEditMode !== 'false';
-        editToggle.addEventListener('change', (e) => localStorage.setItem('memo_edit_mode', e.target.checked));
+        editToggle.addEventListener('change', (e) => localStorage.setItem('memo_auto_cursor', e.target.checked));
     }
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -1255,33 +1255,33 @@ window.addEventListener('load', function() {
         }
     }
 
-    if (urlParams.has('delay')) localStorage.setItem('memo_tts_delay', urlParams.get('delay'));
-    if (urlParams.has('end'))   localStorage.setItem('memo_tts_end_delay', urlParams.get('end'));
-    if (urlParams.has('trn'))   localStorage.setItem('memo_is_translation', urlParams.get('trn') === '1');
-    if (urlParams.has('loop'))  localStorage.setItem('memo_tts_loop', urlParams.get('loop') === '1');
-    if (urlParams.has('lc'))    localStorage.setItem('memo_tts_loop_count', urlParams.get('lc'));
+    if (urlParams.has('delay')) localStorage.setItem('dg_memo_tts_delay', urlParams.get('delay'));
+    if (urlParams.has('end'))   localStorage.setItem('dg_memo_tts_end_delay', urlParams.get('end'));
+    if (urlParams.has('trn'))   localStorage.setItem('dg_memo_is_translation', urlParams.get('trn') === '1');
+    if (urlParams.has('loop'))  localStorage.setItem('dg_memo_tts_loop', urlParams.get('loop') === '1');
+    if (urlParams.has('lc'))    localStorage.setItem('dg_memo_tts_loop_count', urlParams.get('lc'));
     if (urlParams.has('snd'))   localStorage.setItem('memo_tts_sound', urlParams.get('snd'));
     if (urlParams.has('sep'))   {
-        localStorage.setItem('memo_tts_delimiter', urlParams.get('sep'));
+        localStorage.setItem('dg_memo_tts_delimiter', urlParams.get('sep'));
     }
 
-    const isTrn = localStorage.getItem('memo_is_translation') === 'true';
+    const isTrn = localStorage.getItem('dg_memo_is_translation') === 'true';
     document.getElementById('ttsIsTranslation').checked = isTrn;
 
-    const savedDelim = localStorage.getItem('memo_tts_delimiter');
+    const savedDelim = localStorage.getItem('dg_memo_tts_delimiter');
     if (savedDelim !== null) document.getElementById('ttsDelimiter').value = savedDelim;
 
-    const savedDelay = localStorage.getItem('memo_tts_delay');
+    const savedDelay = localStorage.getItem('dg_memo_tts_delay');
     if (savedDelay !== null) document.getElementById('ttsDelay').value = savedDelay;
 
-    const savedEndDelay = localStorage.getItem('memo_tts_end_delay');
+    const savedEndDelay = localStorage.getItem('dg_memo_tts_end_delay');
     if (savedEndDelay !== null) document.getElementById('ttsEndDelay').value = savedEndDelay;
 
-    const savedLoop = localStorage.getItem('memo_tts_loop');
+    const savedLoop = localStorage.getItem('dg_memo_tts_loop');
     const isLoop = savedLoop === null ? true : savedLoop === 'true';
     document.getElementById('ttsIsLoop').checked = isLoop;
 
-    const savedLoopCount = localStorage.getItem('memo_tts_loop_count');
+    const savedLoopCount = localStorage.getItem('dg_memo_tts_loop_count');
     if (savedLoopCount) document.getElementById('ttsLoopCount').value = savedLoopCount;
     document.getElementById('ttsLoopCount').type = document.getElementById('ttsLoopCount').value === '∞' ? 'text' : 'number';
 
@@ -1323,28 +1323,28 @@ window.addEventListener('load', function() {
         }
 
         document.getElementById('ttsIsTranslation').addEventListener('change', (e) => {
-            localStorage.setItem('memo_is_translation', e.target.checked);
+            localStorage.setItem('dg_memo_is_translation', e.target.checked);
             stopMemoTTS(true);
         });
         document.getElementById('ttsDelimiter').addEventListener('input', (e) => {
-            localStorage.setItem('memo_tts_delimiter', e.target.value);
+            localStorage.setItem('dg_memo_tts_delimiter', e.target.value);
             stopMemoTTS(true);
         });
         document.getElementById('ttsSound').addEventListener('change', (e) => localStorage.setItem('memo_tts_sound', e.target.value));
         
         document.getElementById('ttsDelay').addEventListener('input', (e) => {
             const val = parseFloat(e.target.value) || 0;
-            localStorage.setItem('memo_tts_delay', val);
+            localStorage.setItem('dg_memo_tts_delay', val);
             window.TTS_SEGMENT_DELAY = val * 1000;
         });
 
         document.getElementById('ttsEndDelay').addEventListener('input', (e) => {
             const val = parseFloat(e.target.value) || 0;
-            localStorage.setItem('memo_tts_end_delay', val);
+            localStorage.setItem('dg_memo_tts_end_delay', val);
         });
 
         document.getElementById('ttsIsLoop').addEventListener('change', (e) => {
-            localStorage.setItem('memo_tts_loop', e.target.checked);
+            localStorage.setItem('dg_memo_tts_loop', e.target.checked);
             toggleLoopInputVisibility();
         });
 
@@ -1356,7 +1356,7 @@ window.addEventListener('load', function() {
             if (e.target.value === '0' || e.target.value.trim() === '') {
                 e.target.type = 'text'; e.target.value = '∞';
             }
-            localStorage.setItem('memo_tts_loop_count', e.target.value);
+            localStorage.setItem('dg_memo_tts_loop_count', e.target.value);
         });
 
         window.mockPaliJson = {};
@@ -1716,8 +1716,8 @@ function stopMemoTTS(fullReset = true) {
                 }
                 document.body.style.paddingBottom = '0px';
 
-                localStorage.removeItem('tts_last_slug');
-                localStorage.removeItem('tts_last_index');
+                localStorage.removeItem('dg_tts_last_slug');
+                localStorage.removeItem('dg_tts_last_index');
             }
 
             if (window.memoCountdownInterval) {
@@ -1834,13 +1834,13 @@ window.resetTTSSettings = function() {
         toggleLoopInputVisibility();
         
         // Очищаем localStorage от настроек
-        localStorage.removeItem('memo_tts_delimiter');
-        localStorage.removeItem('memo_tts_delay');
+        localStorage.removeItem('dg_memo_tts_delimiter');
+        localStorage.removeItem('dg_memo_tts_delay');
         localStorage.removeItem('memo_tts_sound');
-        localStorage.removeItem('memo_tts_end_delay');
-        localStorage.setItem('memo_is_translation', 'false'); 
-        localStorage.removeItem('memo_tts_loop');
-        localStorage.removeItem('memo_tts_loop_count');
+        localStorage.removeItem('dg_memo_tts_end_delay');
+        localStorage.setItem('dg_memo_is_translation', 'false'); 
+        localStorage.removeItem('dg_memo_tts_loop');
+        localStorage.removeItem('dg_memo_tts_loop_count');
         
         window.TTS_SEGMENT_DELAY = 2000;
 

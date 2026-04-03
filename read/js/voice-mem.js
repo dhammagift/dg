@@ -44,7 +44,7 @@
         return window.location.pathname.replace(/[^a-zA-Z0-9]/g, '_');
     };
 
-    const MEMORY_KEY = 'tts_ab_memory';
+    const MEMORY_KEY = 'dg_tts_ab_memory';
     const MAX_SAVED_TEXTS = 28;
 
     // --- Инициализация и UI ---
@@ -731,7 +731,7 @@ for (let i = state.playlist.length - 1; i >= 0; i--) {
     }
 
     let _segmentTimerId = null;
-    let _internalDelayValue = (parseFloat(localStorage.getItem('tts_segment_delay')) || 0) * 1000;
+    let _internalDelayValue = (parseFloat(localStorage.getItem('dg_tts_segment_delay')) || 0) * 1000;
 
     Object.defineProperty(window, 'TTS_SEGMENT_DELAY', {
         get: function() {

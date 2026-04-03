@@ -40,8 +40,8 @@ const makeJsonUrl = (slug) => {
 // --- Глобальное состояние и Константы ---
 let wakeLock = null; 
 
-const SCROLL_STORAGE_KEY = 'tts_auto_scroll'; 
-const SEGMENT_DELAY_KEY = 'tts_segment_delay';
+const SCROLL_STORAGE_KEY = 'dg_tts_auto_scroll'; 
+const SEGMENT_DELAY_KEY = 'dg_tts_segment_delay';
 const MODE_STORAGE_KEY = 'tts_preferred_mode';
 const NATIVE_PALI_KEY  = 'tts_native_pali_enabled'; 
 const NATIVE_TRN_KEY = 'tts_native_trn_enabled'; 
@@ -49,9 +49,9 @@ const NATIVE_TRN_KEY = 'tts_native_trn_enabled';
 const RATE_PALI_KEY = 'tts_rate_pali'; 
 const RATE_TRN_KEY = 'tts_rate_trn';
 
-const LAST_SLUG_KEY = 'tts_last_slug';   
-const LAST_INDEX_KEY = 'tts_last_index'; 
-const PALI_ALERT_KEY = 'tts_pali_alert_shown';
+const LAST_SLUG_KEY = 'dg_tts_last_slug';   
+const LAST_INDEX_KEY = 'dg_tts_last_index'; 
+const PALI_ALERT_KEY = 'dg_tts_pali_alert_shown';
 
 // --- Google TTS Config ---
 const GOOGLE_KEY_STORAGE = 'tts_google_key';
@@ -1972,7 +1972,7 @@ function getPlayerHtml() {
                   <label class="tts-delay-label" title="Пауза между фразами (секунды)">
                             <img src="/assets/svg/hourglass-regular-full.svg" width="14" height="14" alt="timer" style=" vertical-align: text-bottom;">
                     Delay
-<span id="tts-segment-delay-input" class="tts-editable-span" contenteditable="true" inputmode="decimal" spellcheck="false">${localStorage.getItem('tts_segment_delay') || 0}</span>
+<span id="tts-segment-delay-input" class="tts-editable-span" contenteditable="true" inputmode="decimal" spellcheck="false">${localStorage.getItem('dg_tts_segment_delay') || 0}</span>
 
 
                       sec
