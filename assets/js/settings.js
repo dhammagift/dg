@@ -2183,7 +2183,38 @@ let googleProvider = null;
 let unsubSettings = null;
 let unsubFavs = null;
 let unsubHist = null;
-let unsubProgress = null; // <-- Для прогресса чтения
+let unsubProgress = null; 
+let unsubSessionList = null; 
+let unsubMySession = null;   
+
+// АНОНИМНЫЙ ПАРСЕР УСТРОЙСТВА
+window.getAnonymousDeviceName = function() {
+    const ua = navigator.userAgent;
+    let os = "Unknown Device";
+    let browser = "Web";
+
+    if (ua.indexOf("Win") !== -1) os = "Windows";
+    if (ua.indexOf("Mac") !== -1) os = "MacOS";
+    if (ua.indexOf("Linux") !== -1) os = "Linux";
+    if (ua.indexOf("Android") !== -1) os = "Android";
+    if (ua.indexOf("like Mac") !== -1 || ua.indexOf("iPhone") !== -1 || ua.indexOf("iPad") !== -1) os = "iOS";
+
+    if (ua.indexOf("Chrome") !== -1) browser = "Chrome";
+    else if (ua.indexOf("Safari") !== -1) browser = "Safari";
+    else if (ua.indexOf("Firefox") !== -1) browser = "Firefox";
+    else if (ua.indexOf("Edge") !== -1) browser = "Edge";
+
+    return `${os} • ${browser}`;
+};
+
+// УДАЛЕНИЕ ЧУЖОЙ СЕССИИ (Кнопка Крестик)
+window.terminateRemoteSession = async function(sessionId) {
+    const uid = getUid();
+    if (!uid || !db) return;
+    try {
+        await db.collection("users").doc(uid).collection("sessions").doc(sessionId).delete();
+    } catch (e) { console.error("Error terminating session", e); }
+};
 
 function getUid() {
     const user = auth ? auth.currentUser : null;
@@ -2328,21 +2359,17 @@ window.setupCloudListeners = function(uid) {
             let cloudFav = change.doc.data();
             
             if (change.type === "added" || change.type === "modified") {
-                // Если из Облака прилетел длинный текст (с другого устройства)
                 if (cloudFav.fullText && cloudFav.search) {
                     const params = new URLSearchParams(cloudFav.search);
                     const savedId = params.get('saved_id');
                     if (savedId) {
-                        // Распаковываем текст в локальную память устройства
                         localStorage.setItem(savedId, cloudFav.fullText);
                     }
-                    // Удаляем текст из объекта, чтобы он не раздувал кэш dg_favorites
                     delete cloudFav.fullText;
                 }
                 favMap.set(cloudFav.slug, cloudFav);
             }
             if (change.type === "removed") {
-                // Синхронно очищаем локальную память на других устройствах при удалении
                 if (cloudFav.search && cloudFav.search.includes('saved_id=')) {
                     const params = new URLSearchParams(cloudFav.search);
                     const savedId = params.get('saved_id');
@@ -2351,7 +2378,6 @@ window.setupCloudListeners = function(uid) {
                 favMap.delete(cloudFav.slug);
             }
         });
-
 
         const finalFavs = Array.from(favMap.values()).sort((a, b) => b.timestamp - a.timestamp);
         localStorage.setItem('dg_favorites', JSON.stringify(finalFavs));
@@ -2400,7 +2426,7 @@ window.setupCloudListeners = function(uid) {
         }
     });
 
-    // Слушатель Прогресса чтения (Two-Key System)
+    // Слушатель Прогресса чтения
     unsubProgress = userRef.collection("progress").onSnapshot((snapshot) => {
         if (snapshot.metadata.hasPendingWrites) return;
 
@@ -2425,32 +2451,57 @@ window.setupCloudListeners = function(uid) {
             localStorage.setItem('dg_cloudProgress', JSON.stringify(cloudProgressData));
         }
     });
+
+    // === ЛОГИКА СЕССИЙ (УСТРОЙСТВ) ===
+    
+    // 1. Создаем/Обновляем текущую сессию
+    let localSessionId = localStorage.getItem('dg_session_id');
+    if (!localSessionId) {
+        localSessionId = 'sess_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+        localStorage.setItem('dg_session_id', localSessionId);
+    }
+
+    const mySessionRef = userRef.collection("sessions").doc(localSessionId);
+    
+    // Пишем анонимные данные в базу при входе/перезагрузке
+    mySessionRef.set({
+        deviceName: window.getAnonymousDeviceName(),
+        lastActive: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    // 2. Слушаем СВОЮ сессию. Если её удалили, мы должны уйти.
+    if (typeof unsubMySession !== 'undefined' && unsubMySession) unsubMySession();
+    unsubMySession = mySessionRef.onSnapshot((doc) => {
+        if (doc.metadata.hasPendingWrites) return;
+        
+        if (!doc.exists && localStorage.getItem('dg_cloud_session') === 'true') {
+            if (typeof showBubbleNotification === 'function') {
+                const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
+                showBubbleNotification(isRu ? "Сессия завершена удаленно" : "Session terminated remotely", 5000);
+            }
+            if (typeof triggerSelfDestruct === 'function') triggerSelfDestruct(); 
+        }
+    });
 };
 
 // === БЛОКПОСТ: ПРОВЕРКА СЕССИИ ===
-// Возвращает true, если устройство активно, и false, если оно заблокировано
 window.verifySessionActive = async function() {
     const uid = getUid();
     const localSessionId = localStorage.getItem('dg_session_id');
     
-    // Если мы анонимы (не входили) — разрешаем локальную работу, облака нет
     if (!uid || !localSessionId || !db) return true;
 
     try {
-        // Спрашиваем у базы: "Моя сессия еще жива?"
         const sessionRef = db.collection("users").doc(uid).collection("sessions").doc(localSessionId);
         const doc = await sessionRef.get();
         
         if (doc.exists) {
-            return true; // Пропуск действителен, продолжаем
+            return true; 
         } else {
-            // Пропуск аннулирован! (Устройство удалили с другого телефона)
-            triggerSelfDestruct();
-            return false; // Блокируем отправку/получение
+            if (typeof triggerSelfDestruct === 'function') triggerSelfDestruct();
+            return false; 
         }
     } catch (e) {
-        // Если нет интернета (оффлайн), проверка выдаст ошибку.
-        // Разрешаем работу, Firebase просто закэширует данные до появления сети.
         return true; 
     }
 };
@@ -2459,7 +2510,6 @@ window.verifySessionActive = async function() {
 window.triggerSelfDestruct = async function() {
     console.warn("Протокол самоуничтожения: сессия была аннулирована удаленно.");
     
-    // 1. Отрубаем все связи с Firebase (перестаем слушать облако)
     if (typeof unsubSettings !== 'undefined' && unsubSettings) unsubSettings();
     if (typeof unsubFavs !== 'undefined' && unsubFavs) unsubFavs();
     if (typeof unsubHist !== 'undefined' && unsubHist) unsubHist();
@@ -2467,26 +2517,21 @@ window.triggerSelfDestruct = async function() {
     if (window.unsubSessionList) window.unsubSessionList();
     if (typeof unsubMySession !== 'undefined' && unsubMySession) unsubMySession();
 
-    // 2. Выходим из аккаунта
     if (typeof auth !== 'undefined' && auth && auth.currentUser) await auth.signOut();
 
-    // 3. ТОТАЛЬНАЯ ЗАЧИСТКА (очищаем весь localStorage)
-    // Сохраним только язык и тему, чтобы сайт визуально не сломался после перезагрузки
     const savedLang = localStorage.getItem('siteLanguage');
     const savedTheme = localStorage.getItem('theme');
     
-    localStorage.clear(); // Сносим ВСЁ: историю, избранное, ключи
+    localStorage.clear(); 
     
     if (savedLang) localStorage.setItem('siteLanguage', savedLang);
     if (savedTheme) localStorage.setItem('theme', savedTheme);
 
-    // 4. Показываем уведомление
     if (typeof showBubbleNotification === 'function') {
         const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
         showBubbleNotification(isRu ? "Сессия удалена. Данные очищены." : "Session terminated. Data wiped.", 5000);
     }
 
-    // 5. Перезагружаем страницу, чтобы обнулить память браузера
     setTimeout(() => {
         window.location.reload();
     }, 1500);
@@ -2701,21 +2746,38 @@ window.syncEnablePhrase = async function(rawPhrase, hashedId) {
 };
 
 window.syncLogout = async function() {
-    if (unsubSettings) unsubSettings();
-    if (unsubFavs) unsubFavs();
-    if (unsubHist) unsubHist();
-    if (unsubProgress) unsubProgress(); 
+    // 1. Отключаем все слушатели
+    if (typeof unsubSettings !== 'undefined' && unsubSettings) unsubSettings();
+    if (typeof unsubFavs !== 'undefined' && unsubFavs) unsubFavs();
+    if (typeof unsubHist !== 'undefined' && unsubHist) unsubHist();
+    if (typeof unsubProgress !== 'undefined' && unsubProgress) unsubProgress(); 
+    if (window.unsubSessionList) window.unsubSessionList();
+    if (typeof unsubMySession !== 'undefined' && unsubMySession) unsubMySession();
 
-    if (auth && auth.currentUser) await auth.signOut();
+    const uid = getUid();
+    const localSessionId = localStorage.getItem('dg_session_id');
+
+    // 2. УДАЛЯЕМ СЕССИЮ ИЗ БАЗЫ при штатном выходе (чтобы не оставлять мусор)
+    if (uid && db && localSessionId) {
+        try { 
+            await db.collection("users").doc(uid).collection("sessions").doc(localSessionId).delete(); 
+        } catch (e) {}
+    }
+
+    // 3. Выходим из аккаунта и чистим ключи
+    if (typeof auth !== 'undefined' && auth && auth.currentUser) await auth.signOut();
     localStorage.removeItem('syncPhraseId');
     localStorage.removeItem('syncPhraseRaw');
     localStorage.removeItem('lastSyncTime');
     localStorage.removeItem('dg_cloud_session'); 
-    localStorage.removeItem('dg_cloudProgress'); // Очищаем кэш облачного прогресса
+    localStorage.removeItem('dg_cloudProgress');
+    localStorage.removeItem('dg_session_id'); // <-- Удаляем локальный ID сессии
     
+    // 4. Обновляем интерфейс
     if (typeof renderLoginPageUI === 'function') renderLoginPageUI(null, null);
     if (typeof updateGlobalSyncButtons === 'function') updateGlobalSyncButtons(null, null);
 };
+
 
 window.syncDeleteData = async function() {
     const uid = getUid();
