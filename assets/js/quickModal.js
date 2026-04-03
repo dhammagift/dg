@@ -267,38 +267,57 @@ function buildQuickModalDOM() {
   const favContainer = quickModal.querySelector('#quick-favorites-container');
   const histContainer = quickModal.querySelector('#quick-history-container');
   
-    favContainer.addEventListener('click', (e) => {
-        // --- СУЩЕСТВУЮЩАЯ ЛОГИКА УДАЛЕНИЯ ---
-        if (e.target.classList.contains('remove-fav-btn')) {
-            // ... (твой текущий код удаления) ...
-        }
+  favContainer.addEventListener('click', (e) => {
+      // --- ЛОГИКА УДАЛЕНИЯ ---
+      if (e.target.classList.contains('remove-fav-btn')) {
+          const slug = e.target.dataset.slug;
+          let favData = JSON.parse(localStorage.getItem('dg_favorites')) || [];
+          const itemIndex = favData.findIndex(f => f.slug === slug);
+          
+          if (itemIndex !== -1) {
+              const currentTitle = favData[itemIndex].title || favData[itemIndex].slug;
+              const confirmMsg = isRu 
+                  ? `Удалить "${currentTitle}" из избранного?` 
+                  : `Delete bookmark "${currentTitle}"?`;
+              
+              if (confirm(confirmMsg)) {
+                  const deletedItem = favData[itemIndex];
+                  favData.splice(itemIndex, 1); // Удаляем элемент из массива
+                  localStorage.setItem('dg_favorites', JSON.stringify(favData));
+                  
+                  // Отправляем команду на удаление в облако (isDeleted = true)
+                  if (typeof syncFavoriteItemToCloud === 'function') {
+                      syncFavoriteItemToCloud(deletedItem, true);
+                  }
+                  
+                  window.refreshQuickModalData(); // Обновляем UI
+              }
+          }
+      }
 
-        // --- НОВАЯ ЛОГИКА ПЕРЕИМЕНОВАНИЯ ---
-        if (e.target.classList.contains('rename-fav-btn')) {
-            const slug = e.target.dataset.slug;
-            let favData = JSON.parse(localStorage.getItem('dg_favorites')) || [];
-            const itemIndex = favData.findIndex(f => f.slug === slug);
-            
-            if (itemIndex !== -1) {
-                const currentTitle = favData[itemIndex].title || favData[itemIndex].slug;
-                const newTitle = prompt(isRu ? "Введите новое название закладки:" : "Enter new bookmark name:", currentTitle);
-                
-                // Проверяем, что пользователь не нажал Отмена и не ввел пустую строку
-                if (newTitle !== null && newTitle.trim() !== "") {
-                    favData[itemIndex].title = newTitle.trim();
-                    localStorage.setItem('dg_favorites', JSON.stringify(favData));
-                    
-                    // Атомарно отправляем обновленный элемент в Облако
-                    if (typeof syncFavoriteItemToCloud === 'function') {
-                        syncFavoriteItemToCloud(favData[itemIndex], false);
-                    }
-                    
-                    // Мгновенно обновляем список
-                    window.refreshQuickModalData();
-                }
-            }
-        }
-    });
+      // --- ЛОГИКА ПЕРЕИМЕНОВАНИЯ ---
+      if (e.target.classList.contains('rename-fav-btn')) {
+          const slug = e.target.dataset.slug;
+          let favData = JSON.parse(localStorage.getItem('dg_favorites')) || [];
+          const itemIndex = favData.findIndex(f => f.slug === slug);
+          
+          if (itemIndex !== -1) {
+              const currentTitle = favData[itemIndex].title || favData[itemIndex].slug;
+              const newTitle = prompt(isRu ? "Введите новое название закладки:" : "Enter new bookmark name:", currentTitle);
+              
+              if (newTitle !== null && newTitle.trim() !== "") {
+                  favData[itemIndex].title = newTitle.trim();
+                  localStorage.setItem('dg_favorites', JSON.stringify(favData));
+                  
+                  if (typeof syncFavoriteItemToCloud === 'function') {
+                      syncFavoriteItemToCloud(favData[itemIndex], false);
+                  }
+                  
+                  window.refreshQuickModalData();
+              }
+          }
+      }
+  });
 
   histContainer.addEventListener('click', (e) => {
       // 1. Избранное из истории

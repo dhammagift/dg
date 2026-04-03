@@ -360,17 +360,23 @@ function getOrCreateGlobalTimer() {
     return timerEl;
 }
 
-
 function startGlobalSessionTimer() {
     const timerEl = getOrCreateGlobalTimer();
-    timerEl.style.display = 'block';
+    
+    // Скрываем маленький таймер, если текста нет (режим медитации)
+    const text = document.getElementById("inputText").value.trim();
+    if (!text) {
+        timerEl.style.display = 'none';
+    } else {
+        timerEl.style.display = 'block';
+    }
     
     if (!window.globalSessionInterval) {
         window.globalSessionInterval = setInterval(() => {
             let isActuallyPlaying = false;
-            const text = document.getElementById("inputText").value.trim();
+            const currentText = document.getElementById("inputText").value.trim();
 
-            if (!text) {
+            if (!currentText) {
                 // 1. Режим таймера (без текста). Там нет плеера, опираемся на наш флаг
                 isActuallyPlaying = window.isMemoPlaying;
             } else {
@@ -1070,29 +1076,33 @@ window.startMemoVisualTimer = function(durationMs, textPrefix) {
             localStorage.setItem("результат", результат);
         }
 
-        function очистить() {
-            const msg = window.memoLang === 'ru' ? 'Это удалит текст. Уверены?' : 'This will erase the text. Sure?';
-            if (confirm(msg)) {
-                window.activeMemoSavedSlug = null; // <--- ДОБАВИТЬ ЭТУ СТРОКУ
-                document.getElementById("inputText").value = "";
+function очистить() {
+    const msg = window.memoLang === 'ru' ? 'Это удалит текст. Уверены?' : 'This will erase the text. Sure?';
+    if (confirm(msg)) {
+        window.activeMemoSavedSlug = null; 
+        document.getElementById("inputText").value = "";
 
-                document.getElementById("результат").innerText = "";
-                document.getElementById("result_header").style.display = 'none';
-                localStorage.removeItem("currentMemoText");
-                localStorage.removeItem("результат");
-                
-                // Прячем кнопки копирования и очистки, так как текста больше нет
-                обновитьКнопкиВвода();
-                
-                const url = new URL(window.location.href);
-                if (url.searchParams.has('text') || url.searchParams.has('saved_id')) {
-                    url.searchParams.delete('text');
-                    url.searchParams.delete('saved_id');
-                    window.history.replaceState({}, document.title, url.toString());
-                }
-            }
+        document.getElementById("результат").innerText = "";
+        document.getElementById("result_header").style.display = 'none';
+        localStorage.removeItem("currentMemoText");
+        localStorage.removeItem("результат");
+        
+        // Если звук не сохранен жестко, ставим гонг для режима медитации
+        if (!localStorage.getItem('memo_tts_sound')) {
+            document.getElementById('ttsSound').value = 'gong.mp3';
         }
-
+        
+        // Прячем кнопки копирования и очистки, так как текста больше нет
+        обновитьКнопкиВвода();
+        
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('text') || url.searchParams.has('saved_id')) {
+            url.searchParams.delete('text');
+            url.searchParams.delete('saved_id');
+            window.history.replaceState({}, document.title, url.toString());
+        }
+    }
+}
 
 // Функция копирования текста из textarea
 function копироватьПолеВвода() {
@@ -1130,6 +1140,15 @@ document.addEventListener("DOMContentLoaded", () => {
         textInput.addEventListener('input', () => {
             if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
             
+            // Переключаем гонг/тик на лету, если нет сохраненного выбора
+            if (!localStorage.getItem('memo_tts_sound')) {
+                if (!textInput.value.trim()) {
+                    document.getElementById('ttsSound').value = 'gong.mp3';
+                } else {
+                    document.getElementById('ttsSound').value = 'tick.mp3';
+                }
+            }
+            
             // Если текст изменился и мы не в процессе воспроизведения,
             // принудительно сносим старый кэш, чтобы плеер пересобрал его при следующем Play
             if (!window.isMemoPlaying) {
@@ -1161,117 +1180,123 @@ window.addEventListener('load', обновитьКнопкиВвода);
             }
         }
 
-        window.addEventListener('load', function() {
-            const editToggle = document.getElementById('editModeToggle');
-            if (editToggle) {
-                const savedEditMode = localStorage.getItem('memo_edit_mode');
-                // Изменено на дефолт = false
-                editToggle.checked = savedEditMode !== 'false';
-                editToggle.addEventListener('change', (e) => localStorage.setItem('memo_edit_mode', e.target.checked));
-            }
- 
-            const urlParams = new URLSearchParams(window.location.search);
-            let textParam = urlParams.get('text');
-            const savedIdParam = urlParams.get('saved_id');
+window.addEventListener('load', function() {
+    const editToggle = document.getElementById('editModeToggle');
+    if (editToggle) {
+        const savedEditMode = localStorage.getItem('memo_edit_mode');
+        // Изменено на дефолт = false
+        editToggle.checked = savedEditMode !== 'false';
+        editToggle.addEventListener('change', (e) => localStorage.setItem('memo_edit_mode', e.target.checked));
+    }
 
-            // Подхватываем напрямую сохраненный длинный текст
-            if (savedIdParam) {
-                const storedText = localStorage.getItem(savedIdParam);
-                if (storedText) {
-                    textParam = storedText;
-                }
-            }
+    const urlParams = new URLSearchParams(window.location.search);
+    let textParam = urlParams.get('text');
+    const savedIdParam = urlParams.get('saved_id');
+
+    // Подхватываем напрямую сохраненный длинный текст
+    if (savedIdParam) {
+        const storedText = localStorage.getItem(savedIdParam);
+        if (storedText) {
+            textParam = storedText;
+        }
+    }
+    
+    // Проверяем, является ли ссылка пресетом медитации (есть настройки таймера, но нет текста)
+    const isMeditationPreset = !textParam && !savedIdParam && (urlParams.has('delay') || urlParams.has('end') || urlParams.has('snd'));
+    
+    if (textParam) {
+        // Загрузка обычного текста
+        const ta = document.getElementById("inputText");
+        ta.value = textParam;
+        ta.setSelectionRange(0, 0); // <--- ДОБАВИТЬ СЮДА (сброс курсора в начало)
+        document.getElementById("inputText").value = textParam;
+        localStorage.setItem("currentMemoText", textParam); 
+        document.getElementById("результат").innerText = "";
+        document.getElementById("result_header").style.display = 'none';
+        if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
+    } else if (isMeditationPreset) {
+        // Загрузка таймера медитации - принудительно очищаем поле и кэш
+        document.getElementById("inputText").value = "";
+        localStorage.removeItem("currentMemoText");
+        document.getElementById("результат").innerText = "";
+        document.getElementById("result_header").style.display = 'none';
+        if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
+    } else {
+        // Обычная загрузка страницы без параметров - достаем из кэша
+        const currentMemoText = localStorage.getItem("currentMemoText");
+        const результат = localStorage.getItem("результат");
+        if (currentMemoText) {
+            document.getElementById("inputText").value = currentMemoText;
+            const ta = document.getElementById("inputText");
+            ta.value = textParam;
+            ta.setSelectionRange(0, 0); // <--- ДОБАВИТЬ СЮДА (сброс курсора в начало)
+            if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
+        }
+        if (результат && результат.trim() !== "") {
+            document.getElementById("результат").innerText = результат;
+            document.getElementById("result_header").style.display = 'none';
+        }
+    }
+
+    if (urlParams.has('delay')) localStorage.setItem('memo_tts_delay', urlParams.get('delay'));
+    if (urlParams.has('end'))   localStorage.setItem('memo_tts_end_delay', urlParams.get('end'));
+    if (urlParams.has('trn'))   localStorage.setItem('memo_is_translation', urlParams.get('trn') === '1');
+    if (urlParams.has('loop'))  localStorage.setItem('memo_tts_loop', urlParams.get('loop') === '1');
+    if (urlParams.has('lc'))    localStorage.setItem('memo_tts_loop_count', urlParams.get('lc'));
+    if (urlParams.has('snd'))   localStorage.setItem('memo_tts_sound', urlParams.get('snd'));
+    if (urlParams.has('sep'))   {
+        localStorage.setItem('memo_tts_delimiter', urlParams.get('sep'));
+    }
+
+    const isTrn = localStorage.getItem('memo_is_translation') === 'true';
+    document.getElementById('ttsIsTranslation').checked = isTrn;
+
+    const savedDelim = localStorage.getItem('memo_tts_delimiter');
+    if (savedDelim !== null) document.getElementById('ttsDelimiter').value = savedDelim;
+
+    const savedDelay = localStorage.getItem('memo_tts_delay');
+    if (savedDelay !== null) document.getElementById('ttsDelay').value = savedDelay;
+
+    const savedEndDelay = localStorage.getItem('memo_tts_end_delay');
+    if (savedEndDelay !== null) document.getElementById('ttsEndDelay').value = savedEndDelay;
+
+    const savedLoop = localStorage.getItem('memo_tts_loop');
+    const isLoop = savedLoop === null ? true : savedLoop === 'true';
+    document.getElementById('ttsIsLoop').checked = isLoop;
+
+    const savedLoopCount = localStorage.getItem('memo_tts_loop_count');
+    if (savedLoopCount) document.getElementById('ttsLoopCount').value = savedLoopCount;
+    document.getElementById('ttsLoopCount').type = document.getElementById('ttsLoopCount').value === '∞' ? 'text' : 'number';
+
+    const savedSound = localStorage.getItem('memo_tts_sound');
+    if (savedSound) {
+        document.getElementById('ttsSound').value = savedSound;
+    } else {
+        // Если текста нет (или загружен пресет медитации), ставим гонг по умолчанию
+        if (!document.getElementById("inputText").value.trim() || isMeditationPreset) {
+            document.getElementById('ttsSound').value = 'gong.mp3';
+        }
+    }
+
+    toggleLoopInputVisibility();
+
+    // === AUTOPLAY LOGIC FOR MEMO ===
+    if (urlParams.has('autoplay') || localStorage.getItem('ttsMode') === 'true') {
+        setTimeout(() => {
+            const text = document.getElementById("inputText").value.trim();
+            const delaySec = parseFloat(document.getElementById("ttsDelay").value) || 0;
+            const endSec = parseFloat(document.getElementById("ttsEndDelay").value) || 0;
             
-            // Проверяем, является ли ссылка пресетом медитации (есть настройки таймера, но нет текста)
-            const isMeditationPreset = !textParam && !savedIdParam && (urlParams.has('delay') || urlParams.has('end') || urlParams.has('snd'));
-            
-            if (textParam) {
-                // Загрузка обычного текста
-                const ta = document.getElementById("inputText");
-                ta.value = textParam;
-                ta.setSelectionRange(0, 0); // <--- ДОБАВИТЬ СЮДА (сброс курсора в начало)
-                document.getElementById("inputText").value = textParam;
-                localStorage.setItem("currentMemoText", textParam); 
-                document.getElementById("результат").innerText = "";
-                document.getElementById("result_header").style.display = 'none';
-                if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
-            } else if (isMeditationPreset) {
-                // Загрузка таймера медитации - принудительно очищаем поле и кэш
-                document.getElementById("inputText").value = "";
-                localStorage.removeItem("currentMemoText");
-                document.getElementById("результат").innerText = "";
-                document.getElementById("result_header").style.display = 'none';
-                if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
-            } else {
-                // Обычная загрузка страницы без параметров - достаем из кэша
-                const currentMemoText = localStorage.getItem("currentMemoText");
-                const результат = localStorage.getItem("результат");
-                if (currentMemoText) {
-                    document.getElementById("inputText").value = currentMemoText;
-                    const ta = document.getElementById("inputText");
-                ta.value = textParam;
-                ta.setSelectionRange(0, 0); // <--- ДОБАВИТЬ СЮДА (сброс курсора в начало)
-                    if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
-                }
-                if (результат && результат.trim() !== "") {
-                    document.getElementById("результат").innerText = результат;
-                    document.getElementById("result_header").style.display = 'none';
+            // Start only if there is text to read OR it's configured as a meditation timer
+            if (text !== "" || delaySec > 0 || endSec > 0) {
+                if (!window.isMemoPlaying) {
+                    startMemoTTS();
                 }
             }
-
-            if (urlParams.has('delay')) localStorage.setItem('memo_tts_delay', urlParams.get('delay'));
-            if (urlParams.has('end'))   localStorage.setItem('memo_tts_end_delay', urlParams.get('end'));
-            if (urlParams.has('trn'))   localStorage.setItem('memo_is_translation', urlParams.get('trn') === '1');
-            if (urlParams.has('loop'))  localStorage.setItem('memo_tts_loop', urlParams.get('loop') === '1');
-            if (urlParams.has('lc'))    localStorage.setItem('memo_tts_loop_count', urlParams.get('lc'));
-            if (urlParams.has('snd'))   localStorage.setItem('memo_tts_sound', urlParams.get('snd'));
-            if (urlParams.has('sep'))   {
-                localStorage.setItem('memo_tts_delimiter', urlParams.get('sep'));
-            }
-
-            const isTrn = localStorage.getItem('memo_is_translation') === 'true';
-            document.getElementById('ttsIsTranslation').checked = isTrn;
-
-            const savedDelim = localStorage.getItem('memo_tts_delimiter');
-            if (savedDelim !== null) document.getElementById('ttsDelimiter').value = savedDelim;
-
-            const savedDelay = localStorage.getItem('memo_tts_delay');
-            if (savedDelay !== null) document.getElementById('ttsDelay').value = savedDelay;
-
-            const savedEndDelay = localStorage.getItem('memo_tts_end_delay');
-            if (savedEndDelay !== null) document.getElementById('ttsEndDelay').value = savedEndDelay;
-
-            const savedLoop = localStorage.getItem('memo_tts_loop');
-            const isLoop = savedLoop === null ? true : savedLoop === 'true';
-            document.getElementById('ttsIsLoop').checked = isLoop;
-
-            const savedLoopCount = localStorage.getItem('memo_tts_loop_count');
-            if (savedLoopCount) document.getElementById('ttsLoopCount').value = savedLoopCount;
-            document.getElementById('ttsLoopCount').type = document.getElementById('ttsLoopCount').value === '∞' ? 'text' : 'number';
-
-            const savedSound = localStorage.getItem('memo_tts_sound');
-            if (savedSound) document.getElementById('ttsSound').value = savedSound;
-
-            toggleLoopInputVisibility();
-
-            // === AUTOPLAY LOGIC FOR MEMO ===
-            if (urlParams.has('autoplay') || localStorage.getItem('ttsMode') === 'true') {
-                setTimeout(() => {
-                    const text = document.getElementById("inputText").value.trim();
-                    const delaySec = parseFloat(document.getElementById("ttsDelay").value) || 0;
-                    const endSec = parseFloat(document.getElementById("ttsEndDelay").value) || 0;
-                    
-                    // Start only if there is text to read OR it's configured as a meditation timer
-                    if (text !== "" || delaySec > 0 || endSec > 0) {
-                        if (!window.isMemoPlaying) {
-                            startMemoTTS();
-                        }
-                    }
-                }, 1000); 
-            }
-            // ===============================
-        });
-
+        }, 1000); 
+    }
+    // ===============================
+});
 
 
         function toggleLoopInputVisibility() {
@@ -1743,34 +1768,57 @@ function stopMemoTTS(fullReset = true) {
             }
         }, { capture: true }); 
 
-        window.resetTTSSettings = function() {
-            const msg = window.memoLang === 'ru' ? 'Сбросить настройки TTS по умолчанию?' : 'Reset TTS settings to default?';
-            if (confirm(msg)) {
-                document.getElementById('ttsDelimiter').value = '.,:;?!—…|\\n';
-                document.getElementById('ttsDelay').value = '2';
-                document.getElementById('ttsSound').value = 'tick.mp3';
-                document.getElementById('ttsEndDelay').value = '10';
-                document.getElementById('ttsIsTranslation').checked = false;
-                document.getElementById('ttsIsLoop').checked = true;
-                
-                const loopInput = document.getElementById('ttsLoopCount');
-                loopInput.type = 'text';
-                loopInput.value = '∞';
-                
-                toggleLoopInputVisibility();
-                
-                localStorage.removeItem('memo_tts_delimiter');
-                localStorage.removeItem('memo_tts_delay');
-                localStorage.removeItem('memo_tts_sound');
-                localStorage.removeItem('memo_tts_end_delay');
-                localStorage.setItem('memo_is_translation', 'false'); 
-                localStorage.removeItem('memo_tts_loop');
-                localStorage.removeItem('memo_tts_loop_count');
-                
-                window.TTS_SEGMENT_DELAY = 2000;
-                stopMemoTTS(true);
-            }
-        };
+window.resetTTSSettings = function() {
+    const msg = window.memoLang === 'ru' ? 'Сбросить настройки и текст по умолчанию?' : 'Reset settings and text to default?';
+    if (confirm(msg)) {
+        document.getElementById('ttsDelimiter').value = '.,:;?!—…|\\n';
+        document.getElementById('ttsDelay').value = '2';
+        document.getElementById('ttsSound').value = 'tick.mp3';
+        document.getElementById('ttsEndDelay').value = '10';
+        document.getElementById('ttsIsTranslation').checked = false;
+        document.getElementById('ttsIsLoop').checked = true;
+        
+        const loopInput = document.getElementById('ttsLoopCount');
+        loopInput.type = 'text';
+        loopInput.value = '∞';
+        
+        toggleLoopInputVisibility();
+        
+        // Очищаем localStorage от настроек
+        localStorage.removeItem('memo_tts_delimiter');
+        localStorage.removeItem('memo_tts_delay');
+        localStorage.removeItem('memo_tts_sound');
+        localStorage.removeItem('memo_tts_end_delay');
+        localStorage.setItem('memo_is_translation', 'false'); 
+        localStorage.removeItem('memo_tts_loop');
+        localStorage.removeItem('memo_tts_loop_count');
+        
+        window.TTS_SEGMENT_DELAY = 2000;
+
+        // Восстанавливаем дефолтный текст
+        const defaultText = "atthi imasmiṁ kāye kesā lomā nakhā dantā \ntaco maṁsaṁ nhāru aṭṭhi aṭṭhimiñjaṁ \nvakkaṁ hadayaṁ yakanaṁ kilomakaṁ pihakaṁ papphāsaṁ antaṁ antaguṇaṁ udariyaṁ karīsaṁ \npittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā lasikā muttanti |";
+        document.getElementById("inputText").value = defaultText;
+        localStorage.removeItem("currentMemoText");
+        
+        // Скрываем блок результатов
+        document.getElementById("результат").innerText = "";
+        document.getElementById("result_header").style.display = 'none';
+        localStorage.removeItem("результат");
+        
+        // Обновляем UI
+        if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
+        window.activeMemoSavedSlug = null;
+        
+        // Очищаем адресную строку от параметров (например, ?delay=0&snd=gong)
+        const url = new URL(window.location.href);
+        if (url.searchParams.toString()) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        stopMemoTTS(true);
+    }
+};
+
 
         // Инъекция таймеров в плеер через MutationObserver (оптимизированный подход)
         const playerObserver = new MutationObserver((mutations) => {
