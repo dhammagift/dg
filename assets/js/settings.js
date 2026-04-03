@@ -2433,7 +2433,8 @@ window.syncSettingsToCloud = async function() {
     const uid = getUid();
     const settingsToSave = {};
 
-    const ignorePrefixes = ['DataTables_', 'dg_', 'syncPhrase'];
+    // ДОБАВЛЕНО: 'firestore_' и 'firebase_'
+    const ignorePrefixes = ['DataTables_', 'dg_', 'syncPhrase', 'firestore_', 'firebase_'];
     const ignoreExact = ['localSearchHistory', 'lastSyncTime'];
 
     // 1. Собираем живые ключи
@@ -2679,7 +2680,8 @@ window.initSettingsObserver = function() {
     const originalRemoveItem = localStorage.removeItem; // <-- Перехватчик
     const originalClear = localStorage.clear;           // <-- Перехватчик
     
-    const ignoreList = ['DataTables_', 'localSearchHistory', 'lastSyncTime', 'syncPhrase', 'dg_'];
+    // ДОБАВЛЕНО: 'firestore_' и 'firebase_'
+    const ignoreList = ['DataTables_', 'localSearchHistory', 'lastSyncTime', 'syncPhrase', 'dg_', 'firestore_', 'firebase_'];
 
     localStorage.setItem = function(key, value) {
         if (window.dg_ignoreNextStorageEvent) {
