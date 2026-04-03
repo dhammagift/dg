@@ -7,6 +7,7 @@ const urlsToCache = [
     '/assets/img/icon-192x192.png',
     '/assets/img/icon-512x512.png',
     '/read/index.html',
+    '/memo/',
     '/r/index.html',
     '/pm.php',
     '/bipm.php',
@@ -44,6 +45,7 @@ const urlsToCache = [
 '/assets/js/uihelp.js',
 '/assets/js/variantsButton.js',
 '/read/js/extra.js',
+'/read/js/voice.js',
 '/read/js/loadAssets.js',
 '/read/js/urlForLbl.js'
 ];
@@ -63,11 +65,35 @@ self.addEventListener('install', (event) => {
     );
 });
 
+/*
 self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(event.request)
             .then((response) => {
                 return response || fetch(event.request);
+            })
+    );
+});
+
+*/
+
+self.addEventListener('fetch', (event) => {
+    event.respondWith(
+        // Шаг 1: Ищем в кэше, игнорируя "хвосты" вроде ?source=pwa
+        caches.match(event.request, { ignoreSearch: true })
+            .then((response) => {
+                if (response) {
+                    return response; // Нашли в кэше — отдаем
+                }
+                
+                // Шаг 2: Если в кэше нет, идем в сеть. 
+                return fetch(event.request).catch(() => {
+                    // Шаг 3: Если сеть упала (оффлайн) и мы запрашивали HTML-страницу (navigate)
+                    if (event.request.mode === 'navigate') {
+                        // Выдаем главную страницу как спасательный круг
+                        return caches.match('/index.php');
+                    }
+                });
             })
     );
 });

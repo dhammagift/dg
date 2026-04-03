@@ -1,0 +1,126 @@
+RewriteEngine On
+#RewriteRule ^(.*)$ https://dhamma.gift/$1 [L,R=301]
+
+# /pwa_share → /?p=-kn&q=...
+#RewriteCond %{REQUEST_URI} ^/pwa_share$
+#RewriteCond %{QUERY_STRING} (^|&)q=([^&]+)(&|$)
+#RewriteRule ^pwa_share$ /?p=-kn&q=%2 [L,R=302]
+
+# /ru/pwa_share → /ru/?p=-kn&q=...
+#RewriteCond %{REQUEST_URI} ^/(.*)/pwa_share$
+#RewriteCond %{QUERY_STRING} (^|&)q=([^&]+)(&|$)
+#RewriteRule ^(.*)/pwa_share$ /%1/?p=-kn&q=%2 [L,R=302]
+
+
+# Переадресация с /sc/ на /read/
+
+#RewriteCond %{REQUEST_URI} !^/ru/read.php
+RewriteRule ^sc/(.*)$ /read/$1 [R=301,L,QSA]
+#RewriteRule ^sc(.*)$ /read/$1 [R=301,L,QSA]
+RewriteRule ^ru/sc/(.*)$ /r/$1 [R=301,L,QSA]
+RewriteRule ^ru/read/(.*)$ /r/$1 [R=301,L,QSA]
+RewriteRule ^th/sc/(.*)$ /th/read/$1 [R=301,L,QSA]
+
+# Правило для запросов без /ru/
+RewriteCond %{REQUEST_URI} !^/ru/
+RewriteRule ^(mn\d+|dn\d+|dhp\d+|iti\d+|ja\d+|pj\d+|ss\d+|ay\d+|np\d+|pc\d+|pd\d+|sk\d+|kd\d+|pvr\d+)$ /read/?q=$1 [R=301,L,QSA]
+RewriteRule ^(an\d+\.\d+|sn\d+\.\d+|ud\d+\.\d+|snp\d+\.\d+|thig\d+\.\d+|thag\d+\.\d+|pvr\d+\.\d+)$ /read/?q=$1 [R=301,L,QSA]
+RewriteRule ^(an\d+\.\d+-\d+|sn\d+\.\d+-\d+|dhp\d+\.\d+-\d+)$ /read/?q=$1 [R=301,L,QSA]
+RewriteRule ^(as\d+|bi-pj\d+|bi-ss\d+|bi-ay\d+|bi-np\d+|bi-pc\d+|bi-pd\d+|bi-sk\d+|bi-as\d+)$ /?q=$1 [R=301,L,QSA]
+
+# Обрабатываем запросы с /ru/
+RewriteCond %{REQUEST_URI} ^/ru/
+RewriteRule ^ru/(mn\d+|dn\d+|dhp\d+|iti\d+|ja\d+|pj\d+|ss\d+|ay\d+|np\d+|pc\d+|pd\d+|sk\d+|kd\d+|pvr\d+)$ /r/?q=$1 [R=301,L,QSA]
+RewriteRule ^ru/(an\d+\.\d+|sn\d+\.\d+|ud\d+\.\d+|snp\d+\.\d+|thig\d+\.\d+|thag\d+\.\d+|pvr\d+\.\d+)$ /r/?q=$1 [R=301,L,QSA]
+RewriteRule ^ru/(an\d+\.\d+-\d+|sn\d+\.\d+-\d+|dhp\d+\.\d+-\d+)$ /r/?q=$1 [R=301,L,QSA]
+RewriteRule ^ru/(as\d+|bi-pj\d+|bi-ss\d+|bi-ay\d+|bi-np\d+|bi-pc\d+|bi-pd\d+|bi-sk\d+|bi-as\d+)$ /ru/?q=$1 [R=301,L,QSA]
+
+#for read.php переходы по оглавлению 
+RewriteCond %{REQUEST_URI} !^/ru/
+RewriteRule ^(mn|dn|sn|an|dhp|iti|ud|snp|thig|thag|kn|bupm|bipm|pj|ss|ay|np|pc|pd|sk|as|bi-pj|bi-ss|bi-ay|bi-np|bi-pc|bi-pd|bi-sk|bi-as)$ /read.php?q=$1 [R=301,L,QSA]
+RewriteRule ^(an|sn|ud|snp|thig|thag)(\d+)$ /read.php?q=$1$2 [R=301,L,QSA]
+
+#for read.php переходы по оглавлению с /ru/
+RewriteCond %{REQUEST_URI} ^/ru/
+RewriteRule ^ru/(mn|dn|sn|an|dhp|iti|ud|snp|thig|thag|kn|bupm|bipm|pj|ss|ay|np|pc|pd|sk|as|bi-pj|bi-ss|bi-ay|bi-np|bi-pc|bi-pd|bi-sk|bi-as)$ /ru/read.php?q=$1 [R=301,L,QSA]
+RewriteRule ^ru/(an|sn|ud|snp|thig|thag)(\d+)$ /ru/read.php?q=$1$2 [R=301,L,QSA]
+
+
+# Правило для запросов pm без /ru/
+RewriteCond %{REQUEST_URI} !^/ru/
+RewriteRule ^(pm)$ /$1.php?expand=true [R=301,L,QSA]
+
+# Обрабатываем запросы pm с /ru/
+RewriteCond %{REQUEST_URI} ^/ru/
+RewriteRule ^ru/(pm)$ /ru/$1.php?expand=true [R=301,L,QSA]
+
+
+Redirect 301 /ru.php /ru/
+RewriteCond %{HTTP:Accept-Language} ^ru_RU [NC]
+RewriteRule ^/$ /ru/ [L,R=302]
+
+# language starts with FR
+RewriteCond %{HTTP:Accept-Language} ^ru [NC]
+RewriteRule ^/$ /ru/ [L,R=302]
+
+# else redirect to the English version
+RewriteRule ^/$ / [L,R=302]
+
+
+<IfModule mod_headers.c>
+
+    # Остальные html/json — кэшируем (1 день)
+    <FilesMatch "\.(html|json)$">
+        Header set Cache-Control "public, max-age=86400"
+    </FilesMatch>
+    
+# Изображения — кэшировать на полгода (6 месяцев), с immutable
+    <FilesMatch "\.(jpg|jpeg|png|gif|svg)$">
+        Header set Cache-Control "public, max-age=15552000, immutable"
+    </FilesMatch>
+
+    # Шрифты — оставим как есть, тоже можно кэшировать на год, если хочешь
+    <FilesMatch "\.(woff2?)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+
+    # CSS — умеренно долго (1 месяц)
+    <FilesMatch "\.(css)$">
+        Header set Cache-Control "public, max-age=604800"
+    </FilesMatch>
+
+    # JS — 1 неделя
+    <FilesMatch "\.(js)$">
+        Header set Cache-Control "public, max-age=864000"
+    </FilesMatch>
+
+</IfModule>
+
+# Включить генерацию ETag
+<IfModule mod_file_cache.c>
+    FileETag MTime Size
+</IfModule>
+
+
+# GZIP compression for text files: HTML, CSS, JS, Text, XML, fonts
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/plain
+  AddOutputFilterByType DEFLATE text/html
+  AddOutputFilterByType DEFLATE text/css
+  AddOutputFilterByType DEFLATE text/javascript
+  AddOutputFilterByType DEFLATE application/javascript
+  AddOutputFilterByType DEFLATE application/json
+  AddOutputFilterByType DEFLATE application/xml
+  AddOutputFilterByType DEFLATE application/xhtml+xml
+  AddOutputFilterByType DEFLATE image/svg+xml
+  AddOutputFilterByType DEFLATE font/ttf
+  AddOutputFilterByType DEFLATE font/woff
+  AddOutputFilterByType DEFLATE font/woff2
+</IfModule>
+
+
+
+RewriteCond %{HTTP_USER_AGENT} (AhrefsBot|SemrushBot|PetalBot|DataForSeoBot|MegaIndex.ru|Barkrowler|SeekportBot|SemrushBot|Barkrowler) [NC]
+RewriteRule .* - [F]
+
+

@@ -1,58 +1,29 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Скрываем страницу перед загрузкой
-    document.body.style.visibility = 'hidden';
-    document.body.style.opacity = '0';
-    document.body.style.transition = 'opacity 0.3s ease';
-
-    // Проверка готовности стилей и скриптов
-    function isPageReady() {
-        const stylesReady = Array.from(document.styleSheets).every(sheet => {
-            return !sheet.href || sheet.cssRules;
-        });
-
-        const scriptsReady = Array.from(document.scripts).every(script => {
-            return !script.src || script.readyState === 'loaded' || script.readyState === 'complete';
-        });
-
-        return stylesReady && scriptsReady;
-    }
-
-    // Показ страницы с однократным фокусом
-    function showPage() {
-        document.body.style.visibility = 'visible';
-        document.body.style.opacity = '1';
-        
-        // Установка фокуса с гарантированным срабатыванием
+(function() {
+    // Функция показа страницы и установки фокуса
+    function revealPageAndFocus() {
+        // requestAnimationFrame гарантирует, что браузер готов к отрисовке следующего кадра
         requestAnimationFrame(() => {
+            if (document.body) {
+                document.body.style.visibility = 'visible';
+                document.body.style.opacity = '1';
+            }
+
+            // Установка фокуса на инпут (без прыжков страницы)
             const searchInput = document.getElementById('paliauto');
-            if (searchInput) {
-                // Проверяем, не находится ли уже в фокусе (чтобы избежать лишних действий)
-                if (document.activeElement !== searchInput) {
-                    searchInput.focus({
-                        preventScroll: true // Предотвращаем нежелательную прокрутку
-                    });
-                }
+            if (searchInput && document.activeElement !== searchInput) {
+                searchInput.focus({ preventScroll: true });
             }
         });
     }
 
-    // Триггеры для показа страницы:
-    const readyCheckInterval = setInterval(() => {
-        if (isPageReady()) {
-            clearInterval(readyCheckInterval);
-            showPage();
-        }
-    }, 100);
-
-    // Резервные триггеры:
-    window.addEventListener('load', () => {
-        clearInterval(readyCheckInterval);
-        showPage();
-    });
-
-    // Максимальное время ожидания (fallback)
-    setTimeout(() => {
-        clearInterval(readyCheckInterval);
-        showPage();
-    }, 3000);
-});
+    // Проверяем, может быть DOM уже загрузился
+    if (document.readyState === 'interactive' || document.readyState === 'complete') {
+        revealPageAndFocus();
+    } else {
+        // Ждем парсинга HTML. К этому моменту CSS из <head> уже применен браузером
+        document.addEventListener('DOMContentLoaded', revealPageAndFocus);
+        
+        // Резервный триггер на случай зависания каких-то скриптов
+        window.addEventListener('load', revealPageAndFocus);
+    }
+})();

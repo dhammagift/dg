@@ -1,4 +1,312 @@
 
+
+// === ЗАГРУЗКА СЛОВАРЯ СТРОГО ПО КЛИКУ (ДЛЯ ВСЕХ) ===
+(function() {
+    window.isDictScriptLoaded = false;
+    let isDictInitializing = false;
+
+    const clickHandler = function(e) {
+        // Если словарь выключен кнопкой, не вмешиваемся
+        if (typeof dictionaryVisible !== 'undefined' && !dictionaryVisible) return;
+
+        const isPaliWord = e.target.closest('.pli-lang, [lang="pi"]');
+        const isDictBtn = e.target.closest('.toggle-dict-btn');
+        const isMultiSelectBtn = e.target.closest('#toggle-multiselect');
+
+        if (isPaliWord || isDictBtn || isMultiSelectBtn) {
+            // Если скрипт уже загружен, пусть работает сам
+            if (window.isDictScriptLoaded) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (isDictInitializing) return;
+            isDictInitializing = true;
+
+            // 1. Создаем НАСТОЯЩИЙ визуальный лоадер
+            let loadingEl = document.getElementById('main-dict-loader');
+            if (!loadingEl) {
+                loadingEl = document.createElement('div');
+                loadingEl.id = 'main-dict-loader';
+                loadingEl.className = 'dict-loading-indicator';
+                const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/');
+                loadingEl.textContent = isRu ? 'Инициализация словаря...' : 'Initializing dictionary...';
+                document.body.appendChild(loadingEl);
+                setTimeout(() => loadingEl.classList.add('show'), 10);
+            }
+
+            // 2. Сохраняем точные координаты клика
+            const clickX = e.clientX;
+            const clickY = e.clientY;
+            const target = e.target;
+
+            // 3. Скачиваем ядро словаря
+            const script = document.createElement('script');
+            script.src = "/assets/js/paliLookup.js";
+            
+            script.onload = () => {
+                window.isDictScriptLoaded = true;
+                
+                // Убираем стартовый лоадер
+                if (loadingEl) {
+                    loadingEl.classList.remove('show');
+                    setTimeout(() => loadingEl.remove(), 300);
+                }
+
+                // Имитируем клик с правильными координатами, чтобы словарь открылся
+                const clickEvent = new MouseEvent('click', {
+                    view: window, bubbles: true, cancelable: true, clientX: clickX, clientY: clickY
+                });
+                target.dispatchEvent(clickEvent);
+                isDictInitializing = false;
+            };
+            
+            document.head.appendChild(script);
+        }
+    };
+
+    document.addEventListener('click', clickHandler, true);
+})();
+
+
+// === ЗАГРУЗКА TTS СТРОГО ПО КЛИКУ / ХОТКЕЮ / АВТОПЛЕЮ ===
+(function() {
+    window.isVoiceScriptLoaded = false;
+    let isVoiceInitializing = false;
+
+    window.loadVoiceScripts = function(callback) {
+        if (window.isVoiceScriptLoaded) {
+            if (callback) callback();
+            return;
+        }
+        if (isVoiceInitializing) return;
+        isVoiceInitializing = true;
+
+        // 1. Показываем визуальный лоадер
+        let loadingEl = document.getElementById('voice-loader');
+        if (!loadingEl) {
+            loadingEl = document.createElement('div');
+            loadingEl.id = 'voice-loader';
+            loadingEl.className = 'dict-loading-indicator';
+            const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/');
+            loadingEl.textContent = isRu ? 'Инициализация аудио...' : 'Initializing audio...';
+            document.body.appendChild(loadingEl);
+            setTimeout(() => loadingEl.classList.add('show'), 10);
+        }
+
+        // 2. Сначала грузим voice.js
+        const scriptVoice = document.createElement('script');
+        scriptVoice.src = "/read/js/voice.js";
+        
+        scriptVoice.onload = () => {
+            // ---> ИСПРАВЛЕНИЕ: Блокируем загрузку A-B цикла для приложения Memo <---
+            // У Memo своя логика задержек и интерфейса, voice-mem.js там вызывает конфликты
+    const path = window.location.pathname;
+
+if (path.includes('/memo/') && !path.includes('/memorize/')) {
+                window.isVoiceScriptLoaded = true;
+                isVoiceInitializing = false;
+                
+                if (loadingEl) {
+                    loadingEl.classList.remove('show');
+                    setTimeout(() => loadingEl.remove(), 300);
+                }
+                if (callback) callback();
+                return; // Прерываем цепочку, не загружая voice-mem.js
+            }
+
+            // 3. Затем voice-mem.js (он зависит от window.ttsAPI из voice.js)
+            const scriptMem = document.createElement('script');
+            scriptMem.src = "/read/js/voice-mem.js";
+            
+            scriptMem.onload = () => {
+                window.isVoiceScriptLoaded = true;
+                isVoiceInitializing = false;
+                
+                if (loadingEl) {
+                    loadingEl.classList.remove('show');
+                    setTimeout(() => loadingEl.remove(), 300);
+                }
+                if (callback) callback();
+            };
+            
+            scriptMem.onerror = () => {
+                console.error("Failed to load voice-mem.js");
+                window.isVoiceScriptLoaded = true; // Считаем, что ядро всё равно загружено
+                isVoiceInitializing = false;
+                if (loadingEl) loadingEl.remove();
+                if (callback) callback();
+            };
+            
+            document.head.appendChild(scriptMem);
+        };
+        
+        scriptVoice.onerror = () => {
+            console.error("Failed to load voice.js");
+            isVoiceInitializing = false;
+            if (loadingEl) loadingEl.remove();
+        };
+        
+        document.head.appendChild(scriptVoice);
+    };
+
+
+    // Перехват кликов
+    const voiceClickHandler = function(e) {
+        const isVoiceLink = e.target.closest('.voice-link');
+        const isDynamicBtn = e.target.closest('.dynamic-tts-btn');
+
+        if (isVoiceLink || isDynamicBtn) {
+            if (window.isVoiceScriptLoaded) return; // Пусть работает логика voice.js
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            const clickX = e.clientX;
+            const clickY = e.clientY;
+            const target = e.target;
+
+            window.loadVoiceScripts(() => {
+                // Имитируем клик после загрузки скриптов
+                const clickEvent = new MouseEvent('click', {
+                    view: window, bubbles: true, cancelable: true, clientX: clickX, clientY: clickY
+                });
+                target.dispatchEvent(clickEvent);
+            });
+        }
+    };
+
+    document.addEventListener('click', voiceClickHandler, true);
+
+    // Проверка автоплея (чтобы загрузить сразу без клика)
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('autoplay') || localStorage.getItem('ttsMode') === 'true') {
+            window.loadVoiceScripts();
+        }
+    });
+})();
+
+// === ПЕРЕХВАТ КЛИКОВ ПО HISTORY.PHP ===
+document.addEventListener('click', function(e) {
+    const historyLink = e.target.closest('a[href*="history.php"]');
+    if (historyLink) {
+        if (historyLink.classList.contains('quick-all-history-link')) return; 
+        const historyData = localStorage.getItem("localSearchHistory");
+        if (historyData) {
+            try {
+                const historyArray = JSON.parse(historyData);
+                if (Array.isArray(historyArray) && historyArray.length > 0) {
+                    e.preventDefault();
+                    if (typeof window.toggleQuickModal === 'function') window.toggleQuickModal();
+                }
+            } catch (err) { console.error("History intercept error:", err); }
+        }
+    }
+});
+
+// Глобальные уведомления с настраиваемым таймером
+window.showBubbleNotification = function(text, duration = 2500) {
+    let bubble = document.getElementById('bubbleNotification') || document.querySelector('.bubble-notification');
+
+    if (!bubble) {
+        bubble = document.createElement('div');
+        bubble.id = 'bubbleNotification';
+        bubble.className = 'bubble-notification';
+        document.body.appendChild(bubble);
+    }
+
+    bubble.textContent = text;
+    bubble.classList.add('show');
+
+    if (window.bubbleNotificationTimer) clearTimeout(window.bubbleNotificationTimer);
+
+    window.bubbleNotificationTimer = setTimeout(() => {
+        bubble.classList.remove('show');
+    }, duration);
+};
+
+// === UI ВЫДЕЛЕНИЯ ТЕКСТА И КНОПКА PLAY (Работает до загрузки voice.js) ===
+window.removeAllHighlights = function() {
+    document.querySelectorAll(".active-word").forEach(el => el.classList.remove("active-word"));
+    const oldBtn = document.querySelector('.dynamic-tts-btn');
+    if (oldBtn) oldBtn.remove();
+};
+
+window.addTtsButton = function(containerElement, specificElement) {
+    // Безопасная проверка видимости плеера (до загрузки voice.js ttsState не существует)
+    const player = document.getElementById('voice-player-container');
+    const isPlayerVisible = player && player.classList.contains('active');
+    const isSpeakingOrPaused = typeof ttsState !== 'undefined' && (ttsState.speaking || ttsState.paused);
+
+    if (isPlayerVisible && isSpeakingOrPaused) return;
+
+    const oldBtn = document.querySelector('.dynamic-tts-btn');
+    if (oldBtn) oldBtn.remove();
+
+    const btnContainer = document.createElement('div');
+    btnContainer.className = 'dynamic-tts-btn'; 
+    btnContainer.innerHTML = `<img src="/assets/svg/play.svg" alt="Play">`;
+
+    const scrollBtn = document.getElementById('scrollToTopBtn');
+    if (scrollBtn && window.getComputedStyle(scrollBtn).opacity > 0) {
+        btnContainer.classList.add('shifted');
+    }
+
+    document.body.appendChild(btnContainer);
+};
+
+window.activateSegmentForTTS = function(element) {
+    if (!element) return;
+    
+    let targetElement = element;
+    if (!targetElement.matches(".pli-lang, .rus-lang, .eng-lang, .tha-lang")) {
+        const childLang = targetElement.querySelector(".pli-lang, .rus-lang, .eng-lang, .tha-lang");
+        if (childLang) {
+            targetElement = childLang;
+        } else {
+            return;
+        }
+    }
+
+    window.removeAllHighlights();
+    targetElement.classList.add("active-word");
+    
+    const rowContainer = targetElement.closest("[id]") || targetElement;
+    window.addTtsButton(rowContainer, targetElement);
+};
+
+document.addEventListener("click", function (e) {
+    // Игнорируем клики по самому плееру, кнопкам настроек или кнопке Play
+    if (e.target.closest('.tts-ignore') || e.target.closest('.dynamic-tts-btn')) return;
+    
+    const clickedSegment = e.target.closest(".pli-lang, .rus-lang, .eng-lang, .tha-lang");
+
+    if (clickedSegment) {
+        // Если кликнули по уже выделенному слову - снимаем выделение
+        if (clickedSegment.classList.contains("active-word")) {
+            window.removeAllHighlights();
+            return;
+        }
+        window.activateSegmentForTTS(clickedSegment);
+        return;
+    }
+
+    // Если клик был мимо текста и мимо плеера - снимаем выделение
+    if (
+        !e.target.closest(".voice-player") &&
+        !e.target.closest(".tts-mode-select") &&
+        !e.target.closest(".tts-rate-select") &&
+        !e.target.closest("#tts-scroll-toggle") && 
+        !e.target.closest(".dynamic-tts-btn")
+    ) {
+        window.removeAllHighlights();
+    }
+});
+// ========================================================================
+
+
+
 function checkStorage(key) {
     if (localStorage.getItem(key) !== null) {
         alert(`Запись "${key}" есть в localStorage! Значение: ${localStorage.getItem(key)}`);
@@ -55,35 +363,9 @@ function checkStorage(key) {
   }
 })();
 
-const MAX_HISTORY = 84;
+const MAX_HISTORY = 8400;
 let textinfoCache = null; // Кеш для данных сутт
 
-async function addToSearchHistory() {
-    try {
-        const url = new URL(window.location.href);
-        const qParam = url.searchParams.get("q");
-        if (!qParam) return;
-
-        let key = processSearchQuery(qParam);
-
-        // Основное сохранение (оригинальный ключ)
-        await saveToHistory(key, url);
-
-        // Попытка улучшить ключ (асинхронно)
-        if (/\d/.test(key) && !key.includes(' ')) {
-            try {
-                const enhancedKey = await tryEnhanceKey(key);
-                if (enhancedKey !== key) {
-                    await saveToHistory(enhancedKey, url);
-                }
-            } catch (e) {
-                console.debug("Не удалось добавить название:", e);
-            }
-        }
-    } catch (e) {
-        console.error("Ошибка сохранения истории:", e);
-    }
-}
 
 function processSearchQuery(query) {
     return query.toLowerCase()
@@ -154,37 +436,113 @@ function parseTextInfo(text) {
     }
 }
 
+// === ЦЕНТРАЛИЗОВАННОЕ ФОРМАТИРОВАНИЕ КЛЮЧЕЙ ===
+function formatSlug(str) {
+    if (!str) return '';
+    const trimmed = String(str).trim();
+
+    // 1. МЕМО (цитаты): оставляем как есть, сохраняем оригинальный регистр
+    if (trimmed.startsWith('memo_')) {
+        return trimmed;
+    }
+
+    // Находим позицию самого первого пробела
+    const firstSpaceIndex = trimmed.indexOf(' ');
+
+    // 2. ПОИСК ИЛИ СУТТА БЕЗ ПРОБЕЛОВ (например, "kacchapa" или "MN16")
+    if (firstSpaceIndex === -1) {
+        return trimmed.toLowerCase();
+    }
+
+    // 3. ПОИСК ИЛИ СУТТА С ПРОБЕЛАМИ (например, "MN16 Mahāsīhanāda Sutta")
+    // Первое слово (id/запрос) с маленькой, остальное (title) как есть
+    const slug = trimmed.slice(0, firstSpaceIndex).toLowerCase(); 
+    const title = trimmed.slice(firstSpaceIndex); 
+
+    return slug + title;
+}
+
+
+async function addToSearchHistory() {
+    try {
+        const url = new URL(window.location.href);
+        const qParam = url.searchParams.get("q");
+        if (!qParam) return;
+
+        let key = processSearchQuery(qParam);
+
+        // 1. Быстрое локальное сохранение (функция вернет ключ, возможно уже улучшенный из истории)
+        const savedKey = await saveToHistory(key, url);
+
+        // 2. Попытка улучшить ключ через базу textinfo (асинхронно)
+        // Запускаем ТОЛЬКО если это сутта (есть цифры) и НЕТ пробела (т.е. названия еще нет)
+        if (/\d/.test(savedKey) && !savedKey.includes(' ')) {
+            try {
+                const enhancedKey = await tryEnhanceKey(savedKey);
+                // Сохраняем повторно, только если база реально дала новое длинное имя
+                if (enhancedKey && enhancedKey !== savedKey) {
+                    await saveToHistory(enhancedKey, url);
+                }
+            } catch (e) {
+                console.debug("Не удалось добавить название:", e);
+            }
+        }
+    } catch (e) {
+        console.error("Ошибка сохранения истории:", e);
+    }
+}
+
 async function saveToHistory(key, url) {
+    key = formatSlug(key); 
     const value = url.pathname + url.search + url.hash;
     const timestamp = new Date().toISOString();
-    
+  
     let history = JSON.parse(localStorage.getItem("localSearchHistory")) || [];
     
-    // Определяем базовый ключ для сравнения
-    const baseKey = /\d/.test(key) ? key.split(/\s+/)[0] : key;
+    const firstWord = key.split(/\s+/)[0];
+    const isSutta = /\d/.test(firstWord);
+    const rootKey = isSutta ? firstWord : key;
+
+    let bestKey = key; 
     
-    // Удаляем все старые записи с таким же базовым ключом
     history = history.filter(([k]) => {
-        if (k === key) return false; // Точное совпадение
-        if (!/\d/.test(key)) return true; // Для не-сутт оставляем другие
+        if (k === key) return false; 
         
-        const kBase = k.split(/\s+/)[0];
-        return kBase !== baseKey;
+        if (isSutta) {
+            const kRoot = k.split(/\s+/)[0];
+            if (kRoot === rootKey) {
+                if (k.length > bestKey.length) {
+                    bestKey = k;
+                }
+                return false; 
+            }
+        }
+        return true;
     });
     
-    // Добавляем новую запись в начало
-    history.unshift([key, value, timestamp]);
+    history.unshift([bestKey, value, timestamp]);
+    localStorage.setItem("localSearchHistory", JSON.stringify(history.slice(0, MAX_HISTORY)));
     
-    // Ограничиваем историю
-    localStorage.setItem("localSearchHistory", 
-        JSON.stringify(history.slice(0, MAX_HISTORY)));
+    // --- ИЗМЕНЕНО: Атомарная отправка истории ---
+    if (typeof syncHistoryItemToCloud === 'function') {
+        syncHistoryItemToCloud(bestKey, value, timestamp);
+    }
+
+    if (typeof window.refreshQuickModalData === 'function' && window.quickModalIsOpen) {
+        window.refreshQuickModalData();
+    }
+
+    return bestKey; 
 }
+
+
 //установка фокуса в инпуте по нажатию / 
 document.addEventListener('keydown', function(event) {
     // Проверяем именно символ / (код 191 или Slash)
     if (event.key === '/' || event.code === 'Slash') {
-        // Проверяем, активно ли модальное окно
-        const isModalActive = quickModalIsOpen && document.getElementById('quickSearchInput');
+        // Проверяем, активно ли модальное окно через глобальный window (защита от ReferenceError)
+        const isModalActive = window.quickModalIsOpen && document.getElementById('quickSearchInput');
+
         
         // Если модальное окно активно, устанавливаем фокус в его поле ввода
         if (isModalActive) {
@@ -390,44 +748,22 @@ function shouldIgnoreKeyEvent() {
 window.addEventListener("keydown", (event) => {
     if (event.key === 'Escape' || event.code === 'Escape') {
 
-// --- B. Подсказка о голосах (Voice Hint) ---
-      const voiceHint = document.getElementById('active-voice-hint');
-      if (voiceHint) {
-        const closeHintBtn = document.getElementById('closeVoiceHintBtn');
-        if (closeHintBtn) closeHintBtn.click();
-        event.preventDefault();
-        return;
-      }
-
-      // --- C. TTS Плеер и Выделения ---
-      const dropdown = document.querySelector('.voice-dropdown');
-      const isDropdownActive = dropdown && dropdown.classList.contains('active');
-      const isHighlightActive = document.querySelector('.active-word');
-
-      // Если что-то играет, открыто меню или выделен текст
-      if (ttsState.speaking || ttsState.paused || isDropdownActive || isHighlightActive) {
-        event.preventDefault();
+        // ==========================================
+        // ПРИОРИТЕТ 1: ПОДСКАЗКИ (Hints)
+        // ==========================================
         
-        stopPlayback();        // Остановить звук, сбросить state
-        removeAllHighlights(); // Убрать желтое выделение и мини-кнопку
-        
-        // Закрываем само меню плеера визуально
-        if (dropdown) dropdown.classList.remove('active');
-        return;
-      }
-	  
-    // --- 0. Close PWA banner ---
-    const pwaBanner = document.getElementById('pwa-banner');
-    if (pwaBanner && pwaBanner.offsetParent !== null) { // проверка, что видим
-        const closePwaBtn = document.getElementById('closePwaBanner');
-        if (closePwaBtn) {
-            closePwaBtn.click();
-            event.preventDefault();
-            return;
+        // --- 1.1. Voice Hint ---
+        const voiceHint = document.getElementById('active-voice-hint');
+        if (voiceHint) {
+            const closeHintBtn = document.getElementById('closeVoiceHintBtn');
+            if (closeHintBtn) {
+                closeHintBtn.click();
+                event.preventDefault();
+                return;
+            }
         }
-    }
 
-      // --- 1. Close the hint popup ---
+        // --- 1.2. General Hint Popup ---
         const hintElement = document.querySelector('.hint');
         if (hintElement && hintElement.offsetParent !== null) { // проверка, что видимо
             const closeHintButton = document.getElementById('closeHintBtn');
@@ -437,25 +773,25 @@ window.addEventListener("keydown", (event) => {
                 return;
             }
         }
-        
-        // --- 1. Close the fdgPopup from openFdg.js ---
-        // We look for the fdg-popup element and check if it's visible.
+
+        // ==========================================
+        // ПРИОРИТЕТ 2: СЛОВАРИ (Dictionaries)
+        // ==========================================
+
+        // --- 2.1. FDG Popup ---
         const fdgPopupElement = document.querySelector('.fdg-popup');
         if (fdgPopupElement && fdgPopupElement.style.display === 'block') {
-            // If the popup is open, we simulate a click on its close button.
             const fdgCloseButton = fdgPopupElement.querySelector('.fdg-close-btn');
             if (fdgCloseButton) {
                 fdgCloseButton.click();
-                event.preventDefault(); // Prevent any other action.
-                return; // Stop further execution.
+                event.preventDefault();
+                return;
             }
         }
 
-        // --- 2. Close the main dictionary popup from paliLookup.js ---
-        // We look for the main lookup popup element and check its visibility.
+        // --- 2.2. Pali Lookup Popup (Главный словарь) ---
         const paliLookupPopupElement = document.querySelector('.popup');
         if (paliLookupPopupElement && paliLookupPopupElement.style.display === 'block') {
-            // If the popup is open, we simulate a click on its close button.
             const paliLookupCloseButton = paliLookupPopupElement.querySelector('.close-btn');
             if (paliLookupCloseButton) {
                 paliLookupCloseButton.click();
@@ -464,32 +800,77 @@ window.addEventListener("keydown", (event) => {
             }
         }
 
-        // --- 3. Close the Quick Modal (Cattāri Ariyasaccāni) ---
-        // We check if the quick modal is open by looking for its overlay.
-        const quickOverlayElement = document.querySelector('.quick-overlay-element');
-        if (quickOverlayElement && quickOverlayElement.style.opacity === '1') {
-            // If the modal is open, we call its close function.
-            // This assumes toggleQuickModal handles closing if it's already open.
-             if (typeof toggleQuickModal === 'function') {
-                toggleQuickModal(); // This will close it if it's open.
+        // ==========================================
+        // ПРИОРИТЕТ 3: МОДАЛЬНЫЕ ОКНА (Modals & Banners)
+        // ==========================================
+
+        // --- 3.1. Quick Modal (Cattāri Ariyasaccāni) ---
+        if (window.quickModalIsOpen) {
+            if (typeof window.toggleQuickModal === 'function') {
+                window.toggleQuickModal(); 
                 event.preventDefault();
                 return;
             }
         }
 
+        // --- 3.2. PWA Banner ---
+        const pwaBanner = document.getElementById('pwa-banner');
+        if (pwaBanner && pwaBanner.offsetParent !== null) { 
+            const closePwaBtn = document.getElementById('closePwaBanner');
+            if (closePwaBtn) {
+                closePwaBtn.click();
+                event.preventDefault();
+                return;
+            }
+        }
 
+        // --- 3.3. Основные модальные окна (Settings, Help и т.д.) ---
         const closeBtnElements = document.querySelectorAll('.btn-close');
         if (closeBtnElements.length > 0) {
+            let modalClosed = false;
             closeBtnElements.forEach(button => {
                 if (button.offsetParent !== null) {
                     button.click();
+                    modalClosed = true;
                 }
             });
+            // Возвращаемся, только если действительно закрыли видимое окно
+            if (modalClosed) {
+                event.preventDefault();
+                return; 
+            }
+        }
+
+        // ==========================================
+        // ПРИОРИТЕТ 4: TTS И ВЫДЕЛЕНИЯ (Active Word)
+        // ==========================================
+        
+        const dropdown = document.querySelector('.voice-dropdown');
+        const isDropdownActive = dropdown && dropdown.classList.contains('active');
+        const isHighlightActive = document.querySelector('.active-word');
+
+        // Безопасная проверка, чтобы не уронить скрипт до загрузки voice.js
+        const isTtsActive = typeof ttsState !== 'undefined' && (ttsState.speaking || ttsState.paused);
+
+        // Если что-то играет, открыто меню или выделен текст
+        if (isTtsActive || isDropdownActive || isHighlightActive) {
             event.preventDefault();
-            return; 
+            
+            if (typeof stopPlayback === 'function') {
+                stopPlayback();        // Остановить звук, сбросить state
+            }
+            if (typeof removeAllHighlights === 'function') {
+                removeAllHighlights(); // Убрать желтое выделение и мини-кнопку
+            }
+            
+            // Закрываем меню плеера визуально
+            if (dropdown) dropdown.classList.remove('active');
+            return;
         }
     }
- }, true);
+}, true);
+
+
 
     // Добавляем обработчик сочетания клавиш Alt + Space (физическая клавиша)
 document.addEventListener("keydown", (event) => {
@@ -531,6 +912,51 @@ document.addEventListener("keydown", (event) => {
       }
     }
   }
+
+    // === УНИВЕРСАЛЬНОЕ ДОБАВЛЕНИЕ В ИЗБРАННОЕ (Alt+Shift+P или Alt+F) ===
+    if ((event.altKey && event.code === "KeyF" && !event.shiftKey)) { // Alt+F без шифта
+        
+        // Игнорируем, если фокус в поле ввода (чтобы не мешать печатать)
+        const activeTag = document.activeElement.tagName;
+        if (['INPUT', 'TEXTAREA'].includes(activeTag) || document.activeElement.isContentEditable) {
+            return;
+        }
+
+        event.preventDefault();
+
+        // 1. Попытка для Memo (эмулируем клик по кнопке в memo)
+        const memoFavBtn = document.getElementById('toggle-memo-favorite');
+        if (memoFavBtn) {
+            memoFavBtn.click();
+            return;
+        }
+
+        // 2. Попытка для Читалки (эмулируем клик по скрытой/видимой кнопке в read.php)
+        const readerFavBtn = document.getElementById('toggle-favorite');
+        if (readerFavBtn) {
+            readerFavBtn.click(); 
+            return;
+        }
+
+        // 3. Фолбэк: Страница поиска (если кнопок нет, сохраняем поисковый запрос)
+        const urlParams = new URLSearchParams(window.location.search);
+        const q = urlParams.get('q');
+
+        if (q && typeof toggleFavoriteGlobal === 'function') {
+            const searchData = {
+                slug: q,
+                id: q,
+                title: "" + q, // Лупа покажет, что это поисковый запрос 🔎
+                path: window.location.pathname,
+                search: window.location.search,
+                timestamp: Date.now()
+            };
+            
+            toggleFavoriteGlobal(searchData);
+        }
+    }
+
+
 
 //open Dict.Dhamma.Gift New Window
   if (event.altKey && event.code === "KeyN") {
@@ -577,45 +1003,48 @@ document.addEventListener("keydown", (event) => {
     helpButton.click();
   }
 
-// Alt + R — Voice / TTS (если доступно)
 // --- Обработчик горячих клавиш (Alt + R) ---
-    // Проверяем комбинацию Alt + R
-    if (event.altKey && event.code === "KeyR") {
-      
-      // 1. Пропускаем, если фокус в поле ввода
-      const activeTag = document.activeElement.tagName;
-      if (['INPUT', 'TEXTAREA'].includes(activeTag) || document.activeElement.isContentEditable) {
+if (event.altKey && event.code === "KeyR") {
+    // 1. Пропускаем, если фокус в поле ввода
+    const activeTag = document.activeElement.tagName;
+    if (['INPUT', 'TEXTAREA'].includes(activeTag) || document.activeElement.isContentEditable) {
         return;
-      }
+    }
 
-      event.preventDefault();
+    event.preventDefault();
 
-      // 2. Сценарий: Плеер уже активен (играет или на паузе)
-      // Мы просто нажимаем программно на кнопку Play/Pause основного плеера.
-      // Это сработает как Play -> Pause или Pause -> Resume.
-      if (ttsState.speaking) {
-         const mainPlayBtn = document.querySelector('.play-main-button');
-         if (mainPlayBtn) {
-             mainPlayBtn.click();
-         }
-         return;
-      }
+    // Если скрипты еще не загружены — грузим и запускаем
+    if (!window.isVoiceScriptLoaded) {
+        window.loadVoiceScripts(() => {
+            const voiceLink = document.querySelector('.voice-link');
+            if (voiceLink) voiceLink.click();
+        });
+        return;
+    }
 
-      // 3. Сценарий: Плеер выключен, но выбран конкретный сегмент
-      // Ищем миникнопку и запускаем её
-      const miniPlayBtn = document.querySelector('.dynamic-tts-btn');
-      if (miniPlayBtn) {
+    // 2. Сценарий: Плеер уже активен
+    if (typeof ttsState !== 'undefined' && ttsState.speaking) {
+        const mainPlayBtn = document.querySelector('.play-main-button');
+        if (mainPlayBtn) {
+            mainPlayBtn.click();
+        }
+        return;
+    }
+
+    // 3. Сценарий: Выбран конкретный сегмент (мини-кнопка)
+    const miniPlayBtn = document.querySelector('.dynamic-tts-btn');
+    if (miniPlayBtn) {
         miniPlayBtn.click();
         return;
-      }
-
-      // 4. Сценарий: Плеер выключен, ничего не выбрано
-      // Запускаем через главную ссылку (откроет плеер и начнет сначала)
-      const voiceLink = document.querySelector('.voice-link');
-      if (voiceLink) {
-        voiceLink.click();
-      }
     }
+
+    // 4. Сценарий: Запуск по умолчанию
+    const voiceLink = document.querySelector('.voice-link');
+    if (voiceLink) {
+        voiceLink.click();
+    }
+}
+
 
 
     if (event.altKey && event.code === "KeyS") {
@@ -766,28 +1195,26 @@ if (savedScript) {
 localStorage.setItem('selectedScript', 'ISOPali');
 }
 
-
-
 if (applyButton) {
   applyButton.addEventListener('click', function() {
-    // Сохраняем все выбранные настройки
     localStorage.setItem('selectedScript', scriptSelect.value);
     localStorage.setItem('selectedDict', dictSelect.value);
     
-    // Сохраняем состояние чекбокса removePunct (если он есть на странице)
     const removePunctCheckbox = document.querySelector('.setting-checkbox[data-key="removePunct"]');
     if (removePunctCheckbox) {
       localStorage.setItem('removePunct', removePunctCheckbox.checked);
     }
     
     localStorage.setItem("firstVisitShowSettingsClosed", "true");
+    saveExactScrollPosition(); 
     
-saveExactScrollPosition(); 
-  
-    // Перезагружаем страницу для применения всех изменений
+    // --- ИЗМЕНЕНО: Атомарная отправка настроек ---
+    if (typeof syncSettingsToCloud === 'function') syncSettingsToCloud();  
+    
     location.reload();
   });
 }
+
 
   // Функция для применения сохраненного значения
 function applySavedDict(dict) {
@@ -814,8 +1241,7 @@ function applySavedDict(dict) {
   }
 
 if (resetButton) {
-  resetButton.addEventListener('click', function () {
-    // Определяем язык только для того, чтобы показать диалог на нужном языке
+  resetButton.addEventListener('click', async function () {
     const path = window.location.pathname;
     const language =
       localStorage.getItem('siteLanguage') ||
@@ -832,32 +1258,80 @@ if (resetButton) {
       }
     };
 
-    // Показываем подтверждение
     if (!confirm(messages[language].confirm)) return;
 
     const notificationText = messages[language].success;
 
-    // Проверяем, существует ли внешняя функция очистки
     if (typeof clearFdgPopupParams === 'function') {
       clearFdgPopupParams();
     }
 
-    // Тотальная очистка ВСЕГО хранилища
+    const keysToKeep = [
+        'localSearchHistory', 
+        'dg_favorites', 
+        'syncPhraseId', 
+        'syncPhraseRaw', 
+        'dg_cloud_session', 
+        'lastSyncTime', 
+        'dg_suttaProgress', 
+        'dg_cloudProgress'
+    ];
+
+    try {
+        const favs = JSON.parse(localStorage.getItem('dg_favorites')) || [];
+        favs.forEach(fav => {
+            if (fav.search && fav.search.includes('saved_id=')) {
+                const params = new URLSearchParams(fav.search);
+                const savedId = params.get('saved_id');
+                if (savedId) keysToKeep.push(savedId);
+            }
+        });
+    } catch (e) {}
+
+    const savedData = {};
+    keysToKeep.forEach(key => {
+        const val = localStorage.getItem(key);
+        if (val !== null) savedData[key] = val;
+    });
+
+    // Отключаем локальный перехватчик изменений, чтобы он не мешал
+    window.dg_ignoreNextStorageEvent = true;
+
     localStorage.clear();
     sessionStorage.clear();
 
-    // Минимально необходимые параметры для работы интерфейса после перезагрузки
+    Object.keys(savedData).forEach(key => {
+        localStorage.setItem(key, savedData[key]);
+    });
+
     localStorage.setItem('variantVisibility', 'hidden');
 
-    // Удаляем параметр 'script' из URL
     const url = new URL(window.location.href);
     url.searchParams.delete('script');
 
-    // Показ уведомления
     if (typeof showBubbleNotification === 'function') {
       showBubbleNotification(notificationText);
     } else {
-      alert(notificationText); // fallback
+      alert(notificationText);
+    }
+
+    // --- ЖЕСТКОЕ УДАЛЕНИЕ НАСТРОЕК ИЗ БАЗЫ FIREBASE ---
+    // Напрямую стираем весь узел settings в документе пользователя
+    if (window.firebase && typeof db !== 'undefined' && db && typeof getUid === 'function') {
+        const uid = getUid();
+        if (uid) {
+            try {
+                await Promise.race([
+                    db.collection("users").doc(uid).set({
+                        settings: firebase.firestore.FieldValue.delete(),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true }),
+                    new Promise(resolve => setTimeout(resolve, 800)) // Таймаут для оффлайна
+                ]);
+            } catch (e) {
+                console.warn("Ошибка при стирании настроек в облаке", e);
+            }
+        }
     }
 
     // Перезагрузка страницы
@@ -867,9 +1341,10 @@ if (resetButton) {
       } else {
         window.location.reload();
       }
-    }, 1000);
+    }, 50); 
   });
 }
+
 
 // Получаем все радиокнопки
 var readerRadios = document.querySelectorAll('input[name="reader"]');
@@ -1261,320 +1736,6 @@ document.addEventListener("keydown", function (event) {
   }
 });
 
-let quickModalIsOpen = false;
-let quickOverlay = null;
-let quickModal = null;
-
-function createQuickModal() {
-  let currentUrl = window.location.href;
-  let urlWithoutParams = currentUrl.split('?')[0];
-  let queryBase = urlWithoutParams.endsWith("/ru/") || urlWithoutParams.endsWith("/r/") 
-    ? "/r/?q=" 
-    : "/read/?q=";
-  
-  const isDark = document.body.classList.contains("dark");
-  const bgColor = isDark ? "#1a252f" : "#ffffff";
-  const textColor = isDark ? "#ffffff" : "#212529";
-  const linkColorPrimary = "#859900";
-  const linkColorSuccess = "#2aa198";
-  const linkColorWarning = "#cb4b16";
-  const linkColorDanger = "#dc322f";
-  const formAction = window.location.pathname.match(/\/(ru|r)\//) ? '/ru/' : '/';
-
-  // Оверлей
-  quickOverlay = document.createElement("div");
-  quickOverlay.className = "quick-overlay-element";
-  quickOverlay.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 9999;
-    background-color: rgba(0, 0, 0, 0.7);
-    opacity: 0;
-    transition: opacity 0.4s ease;
-  `;
-
-  // Модалка
-  quickModal = document.createElement("div");
-  quickModal.className = "quick-modal-container";
-  quickModal.style.cssText = `
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.95);
-    z-index: 10000;
-    opacity: 0;
-    transition: opacity 0.4s ease, transform 0.4s ease;
-    width: 95%;
-    max-width: 600px;
-    max-height: 90vh;
-    overflow-y: auto;
-  `;
-
-  // Стили для мобильных устройств
-  const styleTag = document.createElement("style");
-  styleTag.textContent = `
-    @media (max-width: 500px) {
-      .quick-modal-container {
-        top: 0 !important;
-        left: 0 !important;
-        transform: none !important;
-        width: 100% !important;
-        height: 100% !important;
-        max-width: none !important;
-        max-height: none !important;
-        border-radius: 0 !important;
-      }
-      .quick-modal-content-wrapper {
-        width: 100% !important;
-        height: 100% !important;
-        border-radius: 0 !important;
-        padding: 1rem !important;
-        overflow-y: auto; /* Добавлено для скролла внутри контента */
-      }
-      .quick-links-container {
-        flex-direction: column !important;
-        gap: 0.5rem !important;
-      }
-      .quick-links-column {
-        flex: 1 1 100% !important;
-        min-width: 100% !important;
-      }
-    }
-  `;
-  document.head.appendChild(styleTag);
-
-  quickModal.innerHTML = `
-    <div class="quick-modal-content-wrapper" style="
-      background-color: ${bgColor};
-      color: ${textColor};
-      padding: 1.5rem;
-      max-width: 600px;
-      width: 100%;
-      border-radius: 1rem;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-      font-family: sans-serif;
-      position: relative;
-    ">
-      <button id="quickCloseModalBtn" class="quick-close-button" style="
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        background-color: #9e1c19;
-        color: #fff;
-        border: none;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        font-size: 1.1rem;
-        font-weight: bold;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        z-index: 10;
-      " title="(Esc)">×</button>
-
-      <h5 class="quick-modal-title" style="
-        text-align:center;
-        margin-bottom: 1.2rem;
-        color: #93a1a1;
-        font-size: 1.2rem;
-        font-weight: 600;
-      ">Cattāri Ariyasaccāni</h5>
-
-      <form id="quickSearchForm" action="${formAction}" method="GET" style="display: flex; gap: 8px; margin-bottom: 1.5rem; position: relative;">
-          <input type="search" name="q" id="quickSearchInput" placeholder="e.g. Kāyagatā or sn56.11" autocomplete="off" style="
-              flex-grow: 1;
-              border: 1px solid ${isDark ? '#444' : '#ccc'};
-              background-color: ${isDark ? '#2c3a47' : '#f8f9fa'};
-              color: ${textColor};
-              padding: 10px 14px;
-              border-radius: 20px;
-              font-size: 0.95rem;
-              outline: none;
-              transition: border-color 0.2s;
-          ">
-          <button type="submit" id="quickSearchBtn" style="
-              background-color: #025242;
-              color: white;
-              border: none;
-              width: 40px;
-              height: 40px;
-              border-radius: 50%;
-              cursor: pointer;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              transition: background-color 0.2s;
-              flex-shrink: 0;
-          ">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          </button>
-      </form>
-      <div class="quick-links-container" style="display: flex; gap: 1.2rem; flex-wrap: wrap; justify-content: space-between;">
-      <div class="quick-links-column" style="flex: 1 1 45%; min-width: 200px;">
-        <p><strong>1st priority:</strong></p>
-        <ul style="padding-left: 1rem; font-size: 0.9rem;">
-          <li><a href="${queryBase}sn56.11" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">SN 56.11</a></li>
-          <li><a href="${queryBase}dn22" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">DN 22</a></li>
-          <li><a href="${queryBase}sn12.2" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">SN 12.2</a></li>
-        </ul>
-      </div>
-
-      <div class="quick-links-column" style="flex: 1 1 45%; min-width: 200px;">
-        <p><strong>Clarify 5 khandha:</strong></p>
-        <ul style="padding-left: 1rem; font-size: 0.9rem;">
-          <li><a href="${queryBase}sn22.56" target="_blank" style="color: ${linkColorSuccess}; text-decoration: none;">SN 22.56</a></li>
-          <li><a href="${queryBase}sn22.79" target="_blank" style="color: ${linkColorSuccess}; text-decoration: none;">SN 22.79</a></li>
-          <li><a href="${queryBase}sn22.85" target="_blank" style="color: ${linkColorSuccess}; text-decoration: none;">SN 22.85</a></li>
-          <li><a href="${queryBase}sn22" target="_blank" style="color: ${linkColorSuccess}; text-decoration: none;">SN 22</a></li>       
-        </ul>
-      </div>
-
-      <div class="quick-links-column" style="flex: 1 1 45%; min-width: 200px;">
-        <p><strong>Clarify 6 ajjhattāyatana:</strong></p>
-        <ul style="padding-left: 1rem; font-size: 0.9rem;">
-          <li><a href="${queryBase}sn35.228" target="_blank" style="color: ${linkColorWarning}; text-decoration: none;">SN 35.228</a></li>
-          <li><a href="${queryBase}sn35.229" target="_blank" style="color: ${linkColorWarning}; text-decoration: none;">SN 35.229</a></li>
-          <li><a href="${queryBase}sn35.236" target="_blank" style="color: ${linkColorWarning}; text-decoration: none;">SN 35.236</a></li>
-          <li><a href="${queryBase}sn35.238" target="_blank" style="color: ${linkColorWarning}; text-decoration: none;">SN 35.238</a></li>
-          <li><a href="${queryBase}sn35" target="_blank" style="color: ${linkColorWarning}; text-decoration: none;">SN 35</a></li>
-        </ul>
-      </div>
-
-      <div class="quick-links-column" style="flex: 1 1 45%; min-width: 200px;">
-        <p><strong>Clarify 4-6-X Dhātu:</strong></p>
-        <ul style="padding-left: 1rem; font-size: 0.9rem;">
-          <li><a href="${queryBase}mn28" target="_blank" style="color: ${linkColorDanger}; text-decoration: none;">MN 28</a></li>
-          <li><a href="${queryBase}mn115" target="_blank" style="color: ${linkColorDanger}; text-decoration: none;">MN 115</a></li>
-          <li><a href="${queryBase}mn140" target="_blank" style="color: ${linkColorDanger}; text-decoration: none;">MN 140</a></li>
-          <li><a href="${queryBase}sn14" target="_blank" style="color: ${linkColorDanger}; text-decoration: none;">SN 14</a></li>
-        </ul>
-      </div>
-
-      <div class="quick-links-column" style="flex: 1 1 45%; min-width: 200px;">
-        <p><strong>Dukkaṁ so abhinandati:</strong></p>
-        <ul style="padding-left: 1rem; font-size: 0.9rem;">
-          <li><a href="${queryBase}sn14.35" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">SN 14.35</a></li>
-          <li><a href="${queryBase}sn22.29" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">SN 22.29</a></li>
-          <li><a href="${queryBase}sn35.19" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">SN 35.19</a></li>
-          <li><a href="${queryBase}sn35.20" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">SN 35.20</a></li>
-        </ul>
-      </div>
-
-      <div class="quick-links-column" style="flex: 1 1 45%; min-width: 200px;">
-        <p><strong>Extra</strong></p>
-        <ul style="padding-left: 1rem; font-size: 0.9rem;">
-          <li><a href="${queryBase}an3.70" target="_blank" style="color: ${linkColorDanger}; text-decoration: none;">AN 3.70</a></li>
-          <li><a href="${queryBase}an6.63" target="_blank" style="color: ${linkColorDanger}; text-decoration: none;">AN 6.63</a></li>
-          <li><a href="${queryBase}an8.9" target="_blank" style="color: ${linkColorDanger}; text-decoration: none;">AN 8.9</a></li>
-          <li><a href="${queryBase}an10.46" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">AN 10.46</a></li>
-          <li><a href="${queryBase}an10.176" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">AN 10.176</a></li>
-          <li><a href="${queryBase}snp3.2" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">Snp 3.2</a></li>
-          <li><a href="${queryBase}iti61" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">Iti 61</a></li>
-          <li><a href="${queryBase}an4.199" target="_blank" style="color: ${linkColorPrimary}; text-decoration: none;">an4.199</a></li>
-        </ul>
-      </div>
-    </div>
-  </div>
-`;
-
-  document.body.appendChild(quickOverlay);
-  document.body.appendChild(quickModal);
-
-  // Плавное появление
-  requestAnimationFrame(() => {
-    quickOverlay.style.opacity = "1";
-    quickModal.style.opacity = "1";
-    quickModal.style.transform = "translate(-50%, -50%) scale(1)";
-    document.getElementById('quickSearchInput').focus(); // Auto-focus the new input
-  });
-
-  // Закрытие
-  const closeQuickModal = () => {
-    quickOverlay?.style && (quickOverlay.style.opacity = "0");
-    quickModal?.style && (quickModal.style.opacity = "0");
-    quickModal?.style && (quickModal.style.transform = "translate(-50%, -50%) scale(0.95)");
-
-    setTimeout(() => {
-      quickOverlay?.remove();
-      quickModal?.remove();
-      quickOverlay = null;
-      quickModal = null;
-      quickModalIsOpen = false;
-    }, 300);
-  };
-
-  quickOverlay.addEventListener("click", (e) => e.target === quickOverlay && closeQuickModal());
-  quickModal.querySelector("#quickCloseModalBtn").addEventListener("click", closeQuickModal);
-
-  // ADDED: Event listener for the new search form
-  const quickSearchForm = document.getElementById('quickSearchForm');
-  const quickSearchInput = document.getElementById('quickSearchInput');
-  
-  quickSearchForm.addEventListener('submit', function(e) {
-    if (!quickSearchInput.value.trim()) {
-        e.preventDefault(); // Prevent submitting an empty form
-        quickSearchInput.style.borderColor = '#dc322f';
-    }
-    // Form submission proceeds as normal if input is not empty
-  });
-
-  quickSearchInput.addEventListener('focus', () => {
-      quickSearchInput.style.borderColor = '#859900';
-  });
-  quickSearchInput.addEventListener('blur', () => {
-      quickSearchInput.style.borderColor = isDark ? '#444' : '#ccc';
-  });
-
-  // Удаляем старый скрипт, если он был добавлен ранее, чтобы избежать дублирования
-  const existingScript = document.getElementById('autopali-modal-script');
-  if (existingScript) {
-    existingScript.remove();
-  }
-
-  // Создаем и добавляем новый тег script для модального окна
-  const script = document.createElement('script');
-  script.id = 'autopali-modal-script'; // Даем ID для возможности его удаления
-  script.src = '/assets/js/autopali_modal.js?v=' + new Date().getTime(); // Добавляем параметр для обхода кэша
-  document.body.appendChild(script);
-
-}
-
-function toggleQuickModal() {
-  if (quickModalIsOpen) {
-    const closeEvent = new Event('click');
-    quickOverlay.dispatchEvent(closeEvent);
-  } else {
-    createQuickModal();
-    quickModalIsOpen = true;
-  }
-}
-
-
-// === Auto-open Quick Modal via URL Parameters ===
-document.addEventListener("DOMContentLoaded", () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    // Проверяем параметры ?modal=quick или ?action=quick
-    if (urlParams.get('sacca') === 'true' || urlParams.get('action') === 'true') {
-        
-        // Небольшая задержка, чтобы DOM успел полностью отрисоваться
-        setTimeout(() => {
-            if (typeof toggleQuickModal === 'function') {
-                // Если окно еще не открыто — открываем
-                if (!quickModalIsOpen) {
-                    toggleQuickModal();
-                }
-            }
-        }, 300); // 300мс достаточно для инициализации стилей
-    }
-});
 
 
 /*
@@ -1871,3 +2032,694 @@ document.addEventListener('submit', function(e) {
         }
     }
 });
+
+
+
+// ==========================================
+// ГЛОБАЛЬНОЕ ИЗБРАННОЕ (FAVORITES API)
+// ==========================================
+const FAV_STORAGE_KEY = 'dg_favorites';
+
+function getFavorites() {
+    try { return JSON.parse(localStorage.getItem(FAV_STORAGE_KEY)) || []; } 
+    catch (e) { return []; }
+}
+
+function isFavorite(slug) {
+    // Прогоняем запрос через единые правила перед проверкой
+    if (typeof formatSlug === 'function') {
+        slug = formatSlug(slug);
+    }
+    const favs = getFavorites();
+    return favs.some(fav => fav.slug === slug);
+}
+
+
+function toggleFavoriteGlobal(itemData) {
+    if (!itemData || !itemData.slug) return false;
+
+    itemData.slug = formatSlug(itemData.slug);
+    if (itemData.id) itemData.id = formatSlug(itemData.id);
+
+    const currentPath = window.location.pathname;
+    const isRu = currentPath.includes('/ru/') || currentPath.includes('/r/') || currentPath.includes('/ml/');
+    
+    const textRemoved = isRu ? "Удалено из избранного" : "Removed from favorites";
+    const textSaved = isRu ? "Сохранено в избранное" : "Saved to favorites";
+
+    let favs = getFavorites();
+    const existingIndex = favs.findIndex(fav => fav.slug === itemData.slug);
+    let isAdded = false;
+
+    if (existingIndex !== -1) {
+        favs.splice(existingIndex, 1); 
+        if (typeof showBubbleNotification === 'function') showBubbleNotification(textRemoved);
+    } else {
+        itemData.timestamp = Date.now();
+        favs.unshift(itemData); 
+        isAdded = true;
+        if (typeof showBubbleNotification === 'function') showBubbleNotification(textSaved);
+    }
+
+    localStorage.setItem(FAV_STORAGE_KEY, JSON.stringify(favs));
+    
+    // --- ИЗМЕНЕНО: Атомарная отправка избранного ---
+    if (typeof syncFavoriteItemToCloud === 'function') {
+        syncFavoriteItemToCloud(itemData, !isAdded); // Передаем флаг удаления
+    }
+
+    if (typeof window.refreshQuickModalData === 'function' && window.quickModalIsOpen) {
+        window.refreshQuickModalData();
+    }
+    
+    window.dispatchEvent(new CustomEvent('favoritesUpdated', { 
+        detail: { slug: itemData.slug, isAdded: isAdded } 
+    }));
+
+    return isAdded;
+}
+
+// АВТО-СОХРАНЕНИЕ В ИСТОРИЮ ПРИ ОТКРЫТИИ ССЫЛКИ
+document.addEventListener("DOMContentLoaded", () => {
+    if (typeof addToSearchHistory === 'function') addToSearchHistory();
+});
+
+// === ЛЕНИВАЯ ЗАГРУЗКА QUICK MODAL (СТРОГО ПО КЛИКУ / ХОТКЕЮ) ===
+(function() {
+    window.isQuickModalScriptLoaded = false;
+    let isQuickModalInitializing = false;
+
+    // Создаем функцию-прокси (заглушку)
+    window.toggleQuickModal = function() {
+        // Если скрипт уже загружен, выходим (хотя заглушка перезапишется)
+        if (window.isQuickModalScriptLoaded) return;
+
+        if (isQuickModalInitializing) return;
+        isQuickModalInitializing = true;
+
+        // 1. Показываем визуальный лоадер (берем стили от словаря)
+        let loadingEl = document.getElementById('quick-modal-loader');
+        if (!loadingEl) {
+            loadingEl = document.createElement('div');
+            loadingEl.id = 'quick-modal-loader';
+            loadingEl.className = 'dict-loading-indicator';
+            const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/');
+            loadingEl.textContent = isRu ? 'Загрузка меню...' : 'Loading menu...';
+            document.body.appendChild(loadingEl);
+            setTimeout(() => loadingEl.classList.add('show'), 10);
+        }
+
+        // 2. Скачиваем скрипт модального окна
+        const script = document.createElement('script');
+        script.src = "/assets/js/quickModal.js"; // Проверьте правильность пути!
+        
+        script.onload = () => {
+            window.isQuickModalScriptLoaded = true;
+            isQuickModalInitializing = false;
+            
+            // Убираем лоадер
+            if (loadingEl) {
+                loadingEl.classList.remove('show');
+                setTimeout(() => loadingEl.remove(), 300);
+            }
+
+            // Вызываем РЕАЛЬНУЮ функцию, которая только что перезаписала эту заглушку
+            if (typeof window.toggleQuickModal === 'function') {
+                window.toggleQuickModal();
+            }
+        };
+        
+        script.onerror = () => {
+            isQuickModalInitializing = false;
+            console.error("Ошибка загрузки quickModal.js");
+            if (loadingEl) loadingEl.remove();
+        };
+        
+        document.head.appendChild(script);
+    };
+
+    // Авто-открытие через URL параметры (вызовет заглушку и загрузит скрипт)
+    document.addEventListener("DOMContentLoaded", () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('sacca') === 'true' || urlParams.get('action') === 'true') {
+            setTimeout(() => {
+                if (typeof window.toggleQuickModal === 'function') {
+                    window.toggleQuickModal();
+                }
+            }, 300);
+        }
+    });
+})();
+
+// ==========================================
+// УМНАЯ ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ FIREBASE (Local-First Architecture)
+// ==========================================
+
+let db = null;
+let auth = null;
+let googleProvider = null;
+
+// Переменные для отписки от слушателей Firebase
+let unsubSettings = null;
+let unsubFavs = null;
+let unsubHist = null;
+let unsubProgress = null; // <-- Для прогресса чтения
+
+function getUid() {
+    const user = auth ? auth.currentUser : null;
+    return user ? user.uid : localStorage.getItem('syncPhraseId');
+}
+
+function sanitizeId(str) {
+    return encodeURIComponent(str).replace(/\./g, '%2E');
+}
+
+function loadFirebaseScripts() {
+    return new Promise((resolve) => {
+        if (window.firebase) { resolve(); return; }
+        const scripts = [
+            "https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js",
+            "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js",
+            "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"
+        ];
+        let loadedCount = 0;
+        scripts.forEach(src => {
+            const script = document.createElement('script');
+            script.src = src; script.async = true; 
+            script.onload = () => {
+                loadedCount++;
+                if (loadedCount === scripts.length) resolve();
+            };
+            document.head.appendChild(script);
+        });
+    });
+}
+
+// Делаем функцию глобальной, чтобы ее можно было вызвать при логине
+window.initFirebase = async function() {
+    try {
+        await loadFirebaseScripts();
+        if (firebase.apps.length) return;
+
+        const response = await fetch('/config/sync-config.json?update=' + Date.now());
+        if (!response.ok) throw new Error('Config not found');
+        
+        const firebaseConfig = await response.json();
+        firebase.initializeApp(firebaseConfig);
+        
+        db = firebase.firestore();
+
+        // 1. ВКЛЮЧАЕМ OFFLINE PERSISTENCE (Кэширование базы в браузере)
+        try {
+            await db.enablePersistence({
+                synchronizeTabs: true
+            });
+        } catch (err) {
+            if (err.code === 'failed-precondition') {
+                console.warn('Firebase: Открыто несколько вкладок, кэширование активно в главной.');
+            } else if (err.code === 'unimplemented') {
+                console.warn('Firebase: Браузер не поддерживает offline-режим.');
+            }
+        }
+
+        auth = firebase.auth();
+        googleProvider = new firebase.auth.GoogleAuthProvider();
+
+        auth.onAuthStateChanged((user) => {
+            const phraseId = localStorage.getItem('syncPhraseId'); 
+            const phraseRaw = localStorage.getItem('syncPhraseRaw'); 
+            const uid = user ? user.uid : phraseId;
+            
+            // Запоминаем факт сессии для будущих перезагрузок страницы
+            if (user) {
+                localStorage.setItem('dg_cloud_session', 'true');
+            }
+
+            if (uid) {
+                // 2. ПОДКЛЮЧАЕМ РЕАКТИВНЫЕ СЛУШАТЕЛИ
+                setupCloudListeners(uid);
+                // 3. ВКЛЮЧАЕМ НАБЛЮДАТЕЛЯ ЗА НАСТРОЙКАМИ ТОЛЬКО ТЕПЕРЬ
+                if (typeof initSettingsObserver === 'function') initSettingsObserver();
+            }
+
+            if (typeof updateGlobalSyncButtons === 'function') updateGlobalSyncButtons(user, phraseId);
+            if (typeof renderLoginPageUI === 'function') renderLoginPageUI(user, phraseRaw);
+        });
+        
+    } catch (error) { console.error("Firebase Init Error:", error); }
+};
+
+// --- ОТЛОЖЕННЫЙ ЗАПУСК FIREBASE ---
+// Инициализируем только если есть активная сессия (Google) или фраза
+const hasPhrase = localStorage.getItem('syncPhraseId');
+const hasCloudSession = localStorage.getItem('dg_cloud_session') === 'true';
+if (hasPhrase || hasCloudSession) {
+    window.initFirebase();
+}
+// ----------------------------------
+
+function refreshSyncTimeUI() {
+    localStorage.setItem('lastSyncTime', Date.now());
+    if (typeof renderLoginPageUI === 'function') {
+        const user = auth ? auth.currentUser : null;
+        renderLoginPageUI(user, localStorage.getItem('syncPhraseRaw'));
+    }
+}
+
+// === РЕАКТИВНЫЕ СЛУШАТЕЛИ (onSnapshot) ===
+window.setupCloudListeners = function(uid) {
+    if (!db || !uid) return;
+
+    if (unsubSettings) unsubSettings();
+    if (unsubFavs) unsubFavs();
+    if (unsubHist) unsubHist();
+    if (unsubProgress) unsubProgress(); 
+
+    const userRef = db.collection("users").doc(uid);
+
+    // Слушатель Настроек
+    unsubSettings = userRef.onSnapshot((doc) => {
+        if (doc.metadata.hasPendingWrites) return; 
+
+        if (doc.exists && doc.data().settings) {
+            const cloudSettings = doc.data().settings;
+            let uiNeedsRefresh = false;
+
+            for (const k in cloudSettings) {
+                if (localStorage.getItem(k) !== cloudSettings[k]) {
+                    window.dg_ignoreNextStorageEvent = true; 
+                    localStorage.setItem(k, cloudSettings[k]);
+                    uiNeedsRefresh = true;
+                }
+            }
+            if (uiNeedsRefresh) window.dg_settingsChanged = false; 
+        }
+    });
+
+    // Слушатель Избранного
+    unsubFavs = userRef.collection("favorites").onSnapshot((snapshot) => {
+        if (snapshot.metadata.hasPendingWrites) return;
+
+        let localFavs = JSON.parse(localStorage.getItem('dg_favorites')) || [];
+        let favMap = new Map();
+        localFavs.forEach(f => favMap.set(f.slug, f)); 
+
+        snapshot.docChanges().forEach((change) => {
+            let cloudFav = change.doc.data();
+            
+            if (change.type === "added" || change.type === "modified") {
+                // Если из Облака прилетел длинный текст (с другого устройства)
+                if (cloudFav.fullText && cloudFav.search) {
+                    const params = new URLSearchParams(cloudFav.search);
+                    const savedId = params.get('saved_id');
+                    if (savedId) {
+                        // Распаковываем текст в локальную память устройства
+                        localStorage.setItem(savedId, cloudFav.fullText);
+                    }
+                    // Удаляем текст из объекта, чтобы он не раздувал кэш dg_favorites
+                    delete cloudFav.fullText;
+                }
+                favMap.set(cloudFav.slug, cloudFav);
+            }
+            if (change.type === "removed") {
+                // Синхронно очищаем локальную память на других устройствах при удалении
+                if (cloudFav.search && cloudFav.search.includes('saved_id=')) {
+                    const params = new URLSearchParams(cloudFav.search);
+                    const savedId = params.get('saved_id');
+                    if (savedId) localStorage.removeItem(savedId);
+                }
+                favMap.delete(cloudFav.slug);
+            }
+        });
+
+
+        const finalFavs = Array.from(favMap.values()).sort((a, b) => b.timestamp - a.timestamp);
+        localStorage.setItem('dg_favorites', JSON.stringify(finalFavs));
+
+        if (typeof window.refreshQuickModalData === 'function' && window.quickModalIsOpen) {
+            window.refreshQuickModalData();
+        }
+    });
+
+    // Слушатель Истории
+    unsubHist = userRef.collection("history").onSnapshot((snapshot) => {
+        if (snapshot.metadata.hasPendingWrites) return;
+
+        let localHist = JSON.parse(localStorage.getItem('localSearchHistory')) || [];
+        let histMap = new Map();
+
+        localHist.forEach(h => {
+            const baseKey = /\d/.test(h[0]) ? h[0].split(/\s+/)[0] : h[0];
+            histMap.set(baseKey, { key: h[0], url: h[1], timestamp: new Date(h[2]).getTime() });
+        });
+
+        snapshot.docChanges().forEach((change) => {
+            const cloudHist = change.doc.data();
+            const baseKey = /\d/.test(cloudHist.key) ? cloudHist.key.split(/\s+/)[0] : cloudHist.key;
+
+            if (change.type === "added" || change.type === "modified") {
+                const cloudTime = cloudHist.updatedAt && cloudHist.updatedAt.toDate 
+                    ? cloudHist.updatedAt.toDate().getTime() 
+                    : (new Date(cloudHist.timestamp).getTime() || Date.now());
+                histMap.set(baseKey, { ...cloudHist, timestamp: cloudTime });
+            }
+            if (change.type === "removed") {
+                histMap.delete(baseKey);
+            }
+        });
+
+        const finalHist = Array.from(histMap.values())
+            .sort((a, b) => b.timestamp - a.timestamp)
+            .map(h => [h.key, h.url, new Date(h.timestamp).toISOString()])
+            .slice(0, 8400);
+
+        localStorage.setItem('localSearchHistory', JSON.stringify(finalHist));
+
+        if (typeof window.refreshQuickModalData === 'function' && window.quickModalIsOpen) {
+            window.refreshQuickModalData();
+        }
+    });
+
+    // Слушатель Прогресса чтения (Two-Key System)
+    unsubProgress = userRef.collection("progress").onSnapshot((snapshot) => {
+        if (snapshot.metadata.hasPendingWrites) return;
+
+        let cloudProgressData = JSON.parse(localStorage.getItem('dg_cloudProgress')) || {};
+        let hasChanges = false;
+
+        snapshot.docChanges().forEach((change) => {
+            const cloudProg = change.doc.data();
+            const slug = cloudProg.slug || change.doc.id;
+
+            if (change.type === "added" || change.type === "modified") {
+                cloudProgressData[slug] = cloudProg;
+                hasChanges = true;
+            }
+            if (change.type === "removed") {
+                delete cloudProgressData[slug];
+                hasChanges = true;
+            }
+        });
+
+        if (hasChanges) {
+            localStorage.setItem('dg_cloudProgress', JSON.stringify(cloudProgressData));
+        }
+    });
+};
+
+// === АТОМАРНЫЕ ЗАПИСИ ===
+window.syncSettingsToCloud = async function() {
+    if (!db || !getUid()) return;
+    const uid = getUid();
+    const settingsToSave = {};
+
+    // ДОБАВЛЕНО: 'firestore_' и 'firebase_'
+    const ignorePrefixes = ['DataTables_', 'dg_', 'syncPhrase', 'firestore_', 'firebase_'];
+    const ignoreExact = ['localSearchHistory', 'lastSyncTime'];
+
+    // 1. Собираем живые ключи
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        const isIgnoredPrefix = ignorePrefixes.some(prefix => key.startsWith(prefix));
+        const isIgnoredExact = ignoreExact.includes(key);
+
+        if (!isIgnoredPrefix && !isIgnoredExact) {
+            settingsToSave[key] = localStorage.getItem(key);
+        }
+    }
+
+    // 2. Добавляем команды на удаление мертвых ключей
+    if (window.dg_deletedKeys && window.dg_deletedKeys.size > 0) {
+        window.dg_deletedKeys.forEach(key => {
+            // Двойная проверка: просим Firebase удалить ключ, только если его нет локально
+            if (!settingsToSave.hasOwnProperty(key)) {
+                settingsToSave[key] = firebase.firestore.FieldValue.delete();
+            }
+        });
+    }
+
+    if (Object.keys(settingsToSave).length === 0) return;
+
+    try {
+        await db.collection("users").doc(uid).set({
+            settings: settingsToSave,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        
+        // 3. Очищаем очередь удалений после успешной синхронизации
+        if (window.dg_deletedKeys) window.dg_deletedKeys.clear();
+        
+        refreshSyncTimeUI();
+    } catch (e) { console.error("Settings Sync Error:", e); }
+};
+
+
+window.syncFavoriteItemToCloud = async function(favData, isDeleted = false) {
+    if (!db || !getUid()) return;
+    const uid = getUid();
+    const docId = sanitizeId(favData.slug);
+    const docRef = db.collection("users").doc(uid).collection("favorites").doc(docId);
+
+    try {
+        if (isDeleted) {
+            await docRef.delete();
+        } else {
+            let cloudData = { ...favData };
+            
+            // АТОМАРНОСТЬ: Если есть сохраненный длинный текст, прикрепляем его к документу
+            if (cloudData.search && cloudData.search.includes('saved_id=')) {
+                const params = new URLSearchParams(cloudData.search);
+                const savedId = params.get('saved_id');
+                if (savedId) {
+                    const localText = localStorage.getItem(savedId);
+                    if (localText) cloudData.fullText = localText; // Текст летит вместе с Избранным
+                }
+            }
+
+            await docRef.set({ 
+                ...cloudData, 
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
+            }, { merge: true });
+        }
+        refreshSyncTimeUI();
+    } catch (e) { console.error("Fav Sync Error:", e); }
+};
+
+
+window.syncHistoryItemToCloud = async function(key, url, timestamp, isDeleted = false) {
+    if (!db || !getUid()) return;
+    const uid = getUid();
+    const baseKey = /\d/.test(key) ? key.split(/\s+/)[0] : key;
+    const docId = sanitizeId(baseKey);
+    const docRef = db.collection("users").doc(uid).collection("history").doc(docId);
+
+    try {
+        if (isDeleted) {
+            await docRef.delete();
+        } else {
+            await docRef.set({ 
+                key, url, timestamp,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        }
+        refreshSyncTimeUI();
+    } catch (e) { console.error("History Sync Error:", e); }
+};
+
+// Функция отправки Прогресса чтения
+window.syncProgressItemToCloud = async function(slug) {
+    if (!db || !getUid() || !slug) return;
+    
+    const localProgress = JSON.parse(localStorage.getItem('dg_suttaProgress')) || {};
+    const progressData = localProgress[slug];
+    
+    if (!progressData) return;
+
+    const uid = getUid();
+    const docId = sanitizeId(slug);
+    const docRef = db.collection("users").doc(uid).collection("progress").doc(docId);
+
+    try {
+        await docRef.set({ 
+            ...progressData,
+            slug: slug,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+    } catch (e) { console.error("Progress Sync Error:", e); }
+};
+
+window.clearCloudHistory = async function() {
+    if (!db || !getUid()) return;
+    const uid = getUid();
+    try {
+        const snap = await db.collection("users").doc(uid).collection("history").get();
+        const batch = db.batch();
+        snap.docs.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+        refreshSyncTimeUI();
+    } catch (e) { console.error("Error clearing history:", e); }
+};
+
+// === УТИЛИТЫ И АВТОРИЗАЦИЯ ===
+window.forceSyncNow = async function() {
+    const uid = getUid();
+    if (!uid || !db) return; 
+
+    document.querySelectorAll('.fa-rotate').forEach(icon => icon.classList.add('fa-spin'));
+    document.querySelectorAll('#btn-sync-now img').forEach(icon => icon.classList.add('custom-spin'));
+
+    try {
+        // 1. Настройки
+        if (window.dg_settingsChanged) {
+            await syncSettingsToCloud();
+            window.dg_settingsChanged = false; 
+        }
+
+        // 2. Прогресс текущей страницы
+        const urlParams = new URLSearchParams(window.location.search);
+        const qParam = urlParams.get('q');
+        if (qParam) {
+            let currentSlug = String(qParam).trim().toLowerCase();
+            if (String(qParam).trim().startsWith('memo_')) currentSlug = String(qParam).trim();
+            if (typeof window.syncProgressItemToCloud === 'function') {
+                await window.syncProgressItemToCloud(currentSlug);
+            }
+        }
+
+        await new Promise(res => setTimeout(res, 800));
+    } catch (error) { 
+        console.error("Sync error:", error); 
+    } finally {
+        document.querySelectorAll('.fa-rotate').forEach(icon => icon.classList.remove('fa-spin'));
+        document.querySelectorAll('#btn-sync-now img').forEach(icon => icon.classList.remove('custom-spin'));
+    }
+};
+
+window.syncLoginGoogle = async function() {
+    if (!window.firebase) await window.initFirebase(); // Подгружаем на лету, если еще нет
+    if (!auth) return;
+    try { 
+        await auth.signInWithPopup(googleProvider);
+        localStorage.setItem('dg_cloud_session', 'true'); // Ставим флаг сессии
+    } 
+    catch (error) { console.error("Login Error:", error); }
+};
+
+window.syncEnablePhrase = async function(rawPhrase, hashedId) {
+    localStorage.setItem('syncPhraseRaw', rawPhrase);
+    localStorage.setItem('syncPhraseId', hashedId);
+    localStorage.setItem('dg_cloud_session', 'true'); // Флаг тоже полезен
+    
+    if (!window.firebase) {
+        await window.initFirebase(); // Загрузит скрипты и сам подхватит фразу из localStorage
+    } else {
+        setupCloudListeners(hashedId);
+        if (typeof initSettingsObserver === 'function') initSettingsObserver();
+    }
+    
+    if (typeof updateGlobalSyncButtons === 'function') updateGlobalSyncButtons(null, hashedId);
+    if (typeof renderLoginPageUI === 'function') renderLoginPageUI(null, rawPhrase);
+};
+
+window.syncLogout = async function() {
+    if (unsubSettings) unsubSettings();
+    if (unsubFavs) unsubFavs();
+    if (unsubHist) unsubHist();
+    if (unsubProgress) unsubProgress(); 
+
+    if (auth && auth.currentUser) await auth.signOut();
+    localStorage.removeItem('syncPhraseId');
+    localStorage.removeItem('syncPhraseRaw');
+    localStorage.removeItem('lastSyncTime');
+    localStorage.removeItem('dg_cloud_session'); 
+    localStorage.removeItem('dg_cloudProgress'); // Очищаем кэш облачного прогресса
+    
+    if (typeof renderLoginPageUI === 'function') renderLoginPageUI(null, null);
+    if (typeof updateGlobalSyncButtons === 'function') updateGlobalSyncButtons(null, null);
+};
+
+window.syncDeleteData = async function() {
+    const uid = getUid();
+    if (uid && db) {
+        try {
+            await db.collection("users").doc(uid).delete();
+            await clearCloudHistory(); 
+            const user = auth ? auth.currentUser : null;
+            if (user) await user.delete();
+        } catch (error) { console.error("Delete Error:", error); }
+    }
+    syncLogout(); 
+};
+
+window.updateGlobalSyncButtons = function(user, phraseId) {
+    const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
+    const promoBtn = document.getElementById('global-btn-login-promo');
+    const syncBtn = document.getElementById('global-btn-sync-now');
+    
+    if (promoBtn && syncBtn) {
+        promoBtn.innerHTML = isRu ? '<i class="fa-solid fa-cloud"></i> Включить облако' : '<i class="fa-solid fa-cloud"></i> Enable Sync';
+        syncBtn.innerHTML = isRu ? '<i class="fa-solid fa-rotate"></i> Синхронизировать' : '<i class="fa-solid fa-rotate"></i> Sync Data';
+        promoBtn.style.display = (user || phraseId) ? 'none' : 'inline-block';
+        syncBtn.style.display = (user || phraseId) ? 'inline-block' : 'none';
+    }
+};
+
+// ==========================================
+// БЕЗОПАСНЫЙ НАБЛЮДАТЕЛЬ ЗА НАСТРОЙКАМИ (ОТЛОЖЕННЫЙ ЗАПУСК)
+// ==========================================
+window.dg_settingsChanged = false; 
+window.dg_ignoreNextStorageEvent = false;
+window.dg_deletedKeys = new Set(); // <-- Очередь ключей на удаление из облака
+let isObserverInitialized = false;
+
+window.initSettingsObserver = function() {
+    if (isObserverInitialized) return;
+    isObserverInitialized = true;
+
+    const originalSetItem = localStorage.setItem;
+    const originalRemoveItem = localStorage.removeItem; // <-- Перехватчик
+    const originalClear = localStorage.clear;           // <-- Перехватчик
+    
+    // ДОБАВЛЕНО: 'firestore_' и 'firebase_'
+    const ignoreList = ['DataTables_', 'localSearchHistory', 'lastSyncTime', 'syncPhrase', 'dg_', 'firestore_', 'firebase_'];
+
+    localStorage.setItem = function(key, value) {
+        if (window.dg_ignoreNextStorageEvent) {
+            originalSetItem.apply(this, arguments);
+            window.dg_ignoreNextStorageEvent = false; 
+            return;
+        }
+
+        const isImportant = !ignoreList.some(prefix => key.startsWith(prefix));
+        
+        if (isImportant && localStorage.getItem(key) !== String(value)) {
+            window.dg_settingsChanged = true;
+            window.dg_deletedKeys.delete(key); // Если ключ снова задали, убираем из очереди на удаление
+        }
+        
+        originalSetItem.apply(this, arguments);
+    };
+
+    // --- УМНЫЙ ПЕРЕХВАТ УДАЛЕНИЯ ---
+    localStorage.removeItem = function(key) {
+        const isImportant = !ignoreList.some(prefix => key.startsWith(prefix));
+        if (isImportant && localStorage.getItem(key) !== null) {
+            window.dg_settingsChanged = true;
+            window.dg_deletedKeys.add(key); // Запоминаем, что ключ нужно "убить" в облаке
+        }
+        originalRemoveItem.apply(this, arguments);
+    };
+
+    // --- УМНЫЙ ПЕРЕХВАТ ПОЛНОГО СБРОСА ---
+    localStorage.clear = function() {
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            const isImportant = !ignoreList.some(prefix => key.startsWith(prefix));
+            if (isImportant) {
+                window.dg_deletedKeys.add(key); // Отправляем ВСЕ настройки на удаление
+            }
+        }
+        window.dg_settingsChanged = true;
+        originalClear.apply(this, arguments);
+    };
+};

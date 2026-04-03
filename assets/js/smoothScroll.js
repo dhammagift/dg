@@ -1,452 +1,538 @@
+// === Файл: /assets/js/smoothScroll.js ===
 
-/**
- * Умный поиск элемента по ID.
- * Если точный ID не найден (например, 9.12 слился с 9.11), ищет предыдущий.
- */
-function findFallbackElement(baseId) {
-    // 1. ЖЕЛЕЗНАЯ ЗАЩИТА: Если ID пустой или некорректный, тихо выходим
-    if (!baseId) return null;
+const ScrollManager = {
+    config: {
+        eyeLevel: 120, // Линия глаз для сохранения прогресса
+        maxWait: 8000, // Ждем загрузки AJAX до 8 секунд
+    },
 
-    // 2. Превращаем в строку (защита от краша при вызове .match)
-    const idStr = String(baseId);
+    scrollSaveTimeout: null,
+    isWaitingForToast: false,
+    hasScrolledDeep: false,
 
-    // 3. Сначала ищем точное совпадение
-    let el = document.getElementById(idStr);
-    if (el) return el;
-
-    // 4. Если не нашли, отрезаем цифры с конца
-    const match = idStr.match(/(.*?)(\d+)$/);
-    if (!match) return null;
-
-    let prefix = match[1];
-    let num = parseInt(match[2], 10);
-
-    // 5. Проверяем предыдущий ID (шаг назад)
-    if (num - 1 >= 0) {
-        return document.getElementById(prefix + (num - 1));
-    }
-    
-    return null;
-}
-
-
-/**
- * Подсвечивает элемент по его ID.
- * Сначала активирует TTS, затем запускает анимацию.
- * Использует безопасный метод наложения (Overlay), чтобы не ломать структуру DOM.
- * @param {string} elementId - ID элемента для подсветки
- */
-function highlightAllById(elementId) {
-    const element = findFallbackElement(elementId);
-    if (!element) {
-        console.log(`[Highlight] Элемент с ID "${elementId}" (или его сосед) не найден.`);
-        return;
-    }
-
-    // --- 1. СНАЧАЛА ВКЛЮЧАЕМ TTS (UX ПРИОРИТЕТ) ---
-    // Это сразу добавит класс .active-word и покажет кнопку Play
-    if (typeof window.activateSegmentForTTS === 'function') {
-        // Если это контейнер строки, пытаемся найти внутри языковой блок, 
-        // чтобы кнопка Play встала красиво.
-        if (element.matches('.pli-lang, .rus-lang, .eng-lang')) {
-             window.activateSegmentForTTS(element);
-        } else {
-            const childLang = element.querySelector('.pli-lang, .rus-lang, .eng-lang');
-            window.activateSegmentForTTS(childLang || element);
-        }
-    } else {
-        element.classList.add('active-word');
-    }
-
-    // --- 2. ЗАПУСКАЕМ АНИМАЦИЮ (МИГАНИЕ) ПОВЕРХ ---
-    
-    // Сохраняем позиционирование, чтобы absolute overlay работал корректно
-    const originalPosition = element.style.position;
-    if (getComputedStyle(element).position === 'static') {
-        element.style.position = 'relative';
-    }
-
-    // Создаем слой-накладку (Overlay)
-    const overlay = document.createElement('div');
-    overlay.style.position = 'absolute';
-    overlay.style.top = '0';
-    overlay.style.left = '0';
-    overlay.style.width = '100%';
-    overlay.style.height = '100%';
-    overlay.style.pointerEvents = 'none'; // Пропускаем клики сквозь подсветку
-    overlay.style.zIndex = '10'; // Поверх текста
-    overlay.style.borderRadius = getComputedStyle(element).borderRadius; // Копируем скругление
-    overlay.style.transition = 'background-color 0.45s ease-in-out';
-    overlay.style.backgroundColor = 'transparent';
-
-    // Добавляем накладку внутрь элемента
-    element.appendChild(overlay);
-
-    let blinkCount = 0;
-    const maxBlinks = 3; 
-    const intervalDuration = 450;
-
-    // Запускаем цикл мигания на Overlay
-    const blinkInterval = setInterval(() => {
-        // Мигаем бирюзовым
-        overlay.style.backgroundColor = blinkCount % 2 === 0 
-            ? 'rgba(26, 188, 156, 0.25)' // Бирюзовый, полупрозрачный
-            : 'transparent';
+    init() {
+        this.setupScrollToTop();
         
-        blinkCount++;
+        // Автосохранение прогресса
+        window.addEventListener('scroll', () => {
+            // Если функция полностью отключена пользователем - выходим
+            if (localStorage.getItem('dg_progressEnabled') === 'false') return;
 
-        // Остановка
-        if (blinkCount >= maxBlinks * 2) { 
-            clearInterval(blinkInterval);
-            
-            // Даем доиграть последнюю анимацию затухания
-            setTimeout(() => {
-                // Удаляем накладку
-                if (overlay.parentNode === element) {
-                    element.removeChild(overlay);
-                }
-                
-                // Восстанавливаем original position (если меняли)
-                if (!originalPosition) {
-                    element.style.removeProperty('position');
+            if (document.visibilityState !== 'visible') return; 
+            if (window.isRestoringProgress) return; 
+
+            // 1. ЗАЩИТА: Если висит плашка, игнорируем мелкие скроллы.
+            if (this.isWaitingForToast) {
+                if (window.scrollY > 600) {
+                    this.hideProgressNotification();
                 } else {
-                    element.style.position = originalPosition;
+                    return; 
                 }
-            }, intervalDuration);
-        }
-    }, intervalDuration);
-}
-
-// Функция для выделения элемента по ID (упрощенная)
-function highlightById(elementId) {
-    const element = findFallbackElement(elementId);
-    if (!element) return;
-
-    // --- 1. СНАЧАЛА TTS ---
-    if (typeof window.activateSegmentForTTS === 'function') {
-        window.activateSegmentForTTS(element);
-    } else {
-        element.classList.add('active-word');
-    }
-
-    // --- 2. ЗАТЕМ АНИМАЦИЯ (Box Shadow) ---
-    const originalTransition = element.style.transition;
-    const originalBoxShadow = element.style.boxShadow;
-    const originalBorderRadius = element.style.borderRadius;
-
-    // Настройки анимации
-    element.style.borderRadius = '6px';
-    element.style.transition = 'box-shadow 0.3s ease-in-out';
-    
-    let blinkCount = 0;
-    const maxBlinks = 3; 
-    let isWide = false;
-
-    const blinkInterval = setInterval(function() {
-        // Пульсация рамкой
-        element.style.boxShadow = isWide ? '0 0 0 2px grey' : '0 0 0 5px rgba(128,128,128, 0.5)';
-        isWide = !isWide;
-        blinkCount++;
-
-        if (blinkCount >= maxBlinks * 2) {
-            clearInterval(blinkInterval);
-            
-            setTimeout(() => {
-                // Чистим стили анимации
-                element.style.removeProperty('box-shadow');
-                element.style.removeProperty('transition');
-                element.style.removeProperty('border-radius');
-                
-                // Если были старые стили - вернем их
-                if (originalBoxShadow) element.style.boxShadow = originalBoxShadow;
-                if (originalTransition) element.style.transition = originalTransition;
-                if (originalBorderRadius) element.style.borderRadius = originalBorderRadius;
-            }, 300);
-        }
-    }, 400);
-}
-
-function highlightMultipleById(ids) {
-    ids.forEach(highlightById);
-}
-
-// Умный скролл при загрузке/изменении хеша
-function intelligentScrollToHash() {
-    // НОВОЕ: Отменяем скролл по хешу, если восстанавливается прогресс чтения
-    if (window.isRestoringProgress) return; 
-
-    const hash = window.location.hash;
-    if (!hash) return; 
-
-    const hashContent = hash.substring(1);
-    
-    // Проверяем параметр из URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const isInstant = urlParams.get('scroll') === 'instant' || hashContent.includes('scroll=instant');
-
-    // Очищаем ID от параметров
-    const cleanId = hashContent.split('&')[0].split('?')[0];
-
-    // Функция для жесткого (мгновенного) прыжка, обходящая CSS
-    function executeScroll(y) {
-        if (isInstant) {
-            const html = document.documentElement;
-            const prevBehavior = html.style.scrollBehavior;
-            
-            // Жестко отключаем плавность в CSS
-            html.style.scrollBehavior = 'auto'; 
-            
-            // Делаем мгновенный прыжок
-            window.scrollTo({ top: y, behavior: 'auto' });
-            
-            // Возвращаем настройки CSS как было (через requestAnimationFrame, чтобы браузер успел отрисовать прыжок)
-            requestAnimationFrame(() => {
-                html.style.scrollBehavior = prevBehavior;
-            });
-        } else {
-            // Обычный плавный скролл
-            window.scrollTo({ top: y, behavior: 'smooth' });
-        }
-    }
-
-    // Сценарий 1: Список ID (запятая)
-    if (cleanId.includes(',')) {
-        const ids = cleanId.split(','); 
-        highlightMultipleById(ids); 
-        
-        const firstElement = findFallbackElement(ids[0]);
-        if (firstElement) {
-            const yOffset = -window.innerHeight * 0.20; 
-            const y = firstElement.getBoundingClientRect().top + window.pageYOffset + yOffset;
-            executeScroll(y);
-        }
-
-    // Сценарий 2: Одиночный ID
-    } else {
-        const elementId = cleanId;
-        
-        const checkInterval = 250; 
-        const totalWaitTime = 10000; 
-        let timeElapsed = 0;
-        
-        const pollingInterval = setInterval(() => {
-            const element = findFallbackElement(elementId);
-
-            // 1. Элемент найден
-            if (element) {
-                clearInterval(pollingInterval); 
-                
-                const yOffset = -window.innerHeight * 0.20; 
-                const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                
-                // Вызываем нашу бронебойную функцию скролла
-                executeScroll(y);
-                
-                highlightAllById(elementId); 
-                return;
             }
 
-            // 2. Ждем дальше
-            timeElapsed += checkInterval;
-            
-            // 3. Тайм-аут
-            if (timeElapsed >= totalWaitTime) {
-                console.log(`[Scroll] Элемент #${elementId} не найден за ${totalWaitTime / 1000} секунд.`);
-                clearInterval(pollingInterval); 
+            // 2. ОПТИМИЗАЦИЯ БАЗЫ: Мертвая зона наверху
+            if (window.scrollY < 100 && !this.hasScrolledDeep) return;
+            if (window.scrollY >= 100) this.hasScrolledDeep = true;
+
+            clearTimeout(this.scrollSaveTimeout);
+            this.scrollSaveTimeout = setTimeout(() => this.saveReadingProgress(), 1000); 
+        }, { passive: true });
+
+        // Умная отправка в облако
+        document.addEventListener('visibilitychange', () => {
+            if (localStorage.getItem('dg_progressEnabled') === 'false') return;
+
+            if (document.visibilityState === 'hidden') {
+                const urlParams = new URLSearchParams(window.location.search);
+                const slug = this.normalizeSlug(urlParams.get('q'));
+                
+                if (slug && typeof syncProgressItemToCloud === 'function' && this.hasScrolledDeep) {
+                    this.saveReadingProgress(); 
+                    syncProgressItemToCloud(slug);
+                }
             }
-        }, checkInterval);
-    }
-}
-
-
-// Запуски
-if (!localStorage.getItem('exactScrollAnchor')) {
-    window.addEventListener('DOMContentLoaded', intelligentScrollToHash);
-    window.addEventListener('hashchange', intelligentScrollToHash);
-}
-
-// Кнопка "Наверх"
-document.addEventListener('DOMContentLoaded', function() {
-    var scrollToTopBtn = document.createElement('button');
-    scrollToTopBtn.id = 'scrollToTopBtn';
-    scrollToTopBtn.className = 'btn btn-secondary rounded-pill hide-button';
-    scrollToTopBtn.style.display = 'none';
-
-    var img = document.createElement('img');
-    img.id = 'arrowImg';
-    img.alt = 'To top';
-    img.src = '/assets/svg/arrow-up-dark.svg';
-    scrollToTopBtn.appendChild(img);
-    
-    document.body.appendChild(scrollToTopBtn);
-
-    function checkScrollPosition() {
-        if (window.scrollY > 600) {
-            scrollToTopBtn.style.display = 'block';
-        } else {
-            scrollToTopBtn.style.display = 'none';
-        }
-    }
-
-    checkScrollPosition();
-    window.addEventListener('scroll', checkScrollPosition);
-
-    scrollToTopBtn.addEventListener('click', function(event) {
-        event.preventDefault();
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
         });
-    });
-});
 
-// === АВТОСОХРАНЕНИЕ ПРОГРЕССА ЧТЕНИЯ (DEBOUNCE) ===
-let scrollSaveTimeout;
-const MAX_HISTORY_ITEMS = 20; // Лимит: храним позицию для последних 20 сутт
+        document.addEventListener('DOMContentLoaded', (e) => this.handleInitialScroll(e));
+        window.addEventListener('suttaLoaded', (e) => this.handleInitialScroll(e));
+        
+        window.addEventListener('hashchange', () => {
+            if (window.isRestoringProgress) return;
+            this.scrollToHash();
+        });
+    },
 
-function saveReadingProgress() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const slug = urlParams.get('q');
-    if (!slug) return;
+    normalizeSlug(slug) {
+        if (!slug) return '';
+        const s = String(slug).trim();
+        if (s.startsWith('memo_')) return s;
+        return s.toLowerCase();
+    },
 
-    const suttaContainer = document.getElementById('sutta');
-    if (!suttaContainer) return;
+    waitForElement(id) {
+        return new Promise((resolve) => {
+            let el = this.findFallbackElement(id);
+            if (el) return resolve(el);
 
-    const elements = suttaContainer.querySelectorAll('[id]');
-    if (elements.length === 0) return;
-
-    const eyeLevel = 120; // Точка фокуса от верха экрана
-    let bestElement = null;
-    let minDistance = Infinity;
-
-    for (const el of elements) {
-        const rect = el.getBoundingClientRect();
-        const distance = Math.abs(rect.top - eyeLevel);
-
-        if (distance < minDistance) {
-            minDistance = distance;
-            bestElement = el;
-        }
-    }
-
-    if (bestElement) {
-        let progressData = {};
-        try {
-            const stored = localStorage.getItem('suttaProgress');
-            if (stored) progressData = JSON.parse(stored);
-        } catch (e) {
-            progressData = {};
-        }
-
-        progressData[slug] = {
-            id: bestElement.id,
-            offset: bestElement.getBoundingClientRect().top,
-            time: Date.now()
-        };
-
-        const keys = Object.keys(progressData);
-        if (keys.length > MAX_HISTORY_ITEMS) {
-            keys.sort((a, b) => progressData[b].time - progressData[a].time);
-            const newProgressData = {};
-            for (let i = 0; i < MAX_HISTORY_ITEMS; i++) {
-                newProgressData[keys[i]] = progressData[keys[i]];
-            }
-            progressData = newProgressData;
-        }
-
-        localStorage.setItem('suttaProgress', JSON.stringify(progressData));
-    }
-}
-
-// Слушаем скролл с задержкой 1 сек
-window.addEventListener('scroll', () => {
-    clearTimeout(scrollSaveTimeout);
-    scrollSaveTimeout = setTimeout(saveReadingProgress, 1000); 
-}, { passive: true });
-
-/**
- * Восстанавливает точную визуальную позицию текста.
- */
-(function restoreExactPositionJump() {
-    if ('scrollRestoration' in history) {
-        history.scrollRestoration = 'manual';
-    }
-
-    const html = document.documentElement;
-    const prevScrollBehavior = html.style.scrollBehavior;
-    html.style.scrollBehavior = 'auto';
-
-    let anchor = null;
-
-    // 1. Приоритет 1: Точный якорь от настроек (одноразовый)
-    const rawSettingsData = localStorage.getItem('exactScrollAnchor');
-    if (rawSettingsData) {
-        try {
-            anchor = JSON.parse(rawSettingsData);
-            localStorage.removeItem('exactScrollAnchor'); 
-        } catch(e) {}
-    }
-
-    // 2. Узнаем, как именно загрузилась страница (новая ссылка или перезагрузка/назад)
-    let isReloadOrHistory = false;
-    if (window.performance) {
-        const navEntries = performance.getEntriesByType("navigation");
-        if (navEntries.length > 0) {
-            isReloadOrHistory = (navEntries[0].type === 'reload' || navEntries[0].type === 'back_forward');
-        } else if (performance.navigation) { // Фолбэк для старых браузеров/iOS
-            isReloadOrHistory = (performance.navigation.type === 1 || performance.navigation.type === 2);
-        }
-    }
-
-    // 3. Приоритет 2: Автосохраненный прогресс
-    const hasHash = !!window.location.hash;
-
-    if (!anchor && (!hasHash || isReloadOrHistory)) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const slug = urlParams.get('q');
-        if (slug) {
-            try {
-                const progressData = JSON.parse(localStorage.getItem('suttaProgress') || '{}');
-                if (progressData[slug]) {
-                    anchor = progressData[slug];
-                    window.isRestoringProgress = true; // Отключаем intelligentScrollToHash
+            const observer = new MutationObserver((mutations, obs) => {
+                el = this.findFallbackElement(id);
+                if (el) {
+                    obs.disconnect();
+                    resolve(el);
                 }
+            });
+
+            observer.observe(document.body, { childList: true, subtree: true });
+            setTimeout(() => { observer.disconnect(); resolve(null); }, this.config.maxWait);
+        });
+    },
+
+    waitForText(searchText) {
+        return new Promise((resolve) => {
+            const tryFindText = () => {
+                const suttaArea = document.getElementById('sutta');
+                if (!suttaArea) return null;
+
+                try {
+                    const regex = new RegExp(searchText, 'gi');
+                    const textNodes = document.evaluate(
+                        ".//text()[normalize-space(parent::*) != '']",
+                        suttaArea, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null
+                    );
+                    for (let i = 0; i < textNodes.snapshotLength; i++) {
+                        const currentNode = textNodes.snapshotItem(i);
+                        if (regex.test(currentNode.nodeValue)) return currentNode.parentNode;
+                    }
+                } catch (e) {}
+                return null;
+            };
+
+            let el = tryFindText();
+            if (el) return resolve(el);
+
+            const observer = new MutationObserver((mutations, obs) => {
+                el = tryFindText();
+                if (el) { obs.disconnect(); resolve(el); }
+            });
+
+            observer.observe(document.body, { childList: true, subtree: true });
+            setTimeout(() => { observer.disconnect(); resolve(null); }, this.config.maxWait);
+        });
+    },
+
+    async handleInitialScroll(event) {
+        // Если пользователь отключил прогресс полностью
+        if (localStorage.getItem('dg_progressEnabled') === 'false') {
+            window.isRestoringProgress = false;
+            this.scrollToHash();
+            return;
+        }
+
+        let anchorId = null;
+        let offset = this.config.eyeLevel;
+        let progressToOffer = null; 
+        
+        this.hasScrolledDeep = false; 
+        this.hideProgressNotification(); 
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasHash = !!window.location.hash;
+
+        // ПРИОРИТЕТ 1: Одноразовый прыжок из настроек
+        const rawSettingsData = localStorage.getItem('exactScrollAnchor');
+        if (rawSettingsData) {
+            try {
+                const anchor = JSON.parse(rawSettingsData);
+                anchorId = anchor.id;
+                offset = anchor.offset;
+                localStorage.removeItem('exactScrollAnchor');
             } catch(e) {}
         }
-    }
 
-    // Если ничего не нашли, выходим
-    if (!anchor || !anchor.id) {
-        html.style.scrollBehavior = prevScrollBehavior;
-        return;
-    }
+        // ПРИОРИТЕТ 2: Поиск текста по ?s=...
+        const finder = urlParams.get("s");
+        const query = urlParams.get("q");
+        
+        if (!anchorId && !hasHash && finder && finder.trim() !== "" && query) {
+            const textElement = await this.waitForText(finder);
+            if (textElement) {
+                textElement.scrollIntoView({ behavior: "smooth", block: "start" });
+                return; 
+            }
+        }
 
-    const maxWait = 7000;
-    const checkInterval = 50;
-    let elapsed = 0;
+        // ПРИОРИТЕТ 3: Прогресс (Two-Key System)
+        if (!anchorId && !hasHash) {
+            const slug = this.normalizeSlug(urlParams.get('q'));
+            if (slug) {
+                try {
+                    const localDataRaw = JSON.parse(localStorage.getItem('dg_suttaProgress') || '{}');
+                    const cloudDataRaw = JSON.parse(localStorage.getItem('dg_cloudProgress') || '{}');
+                    
+                    const localData = localDataRaw[slug];
+                    const cloudData = cloudDataRaw[slug];
 
-    const intervalId = setInterval(() => {
-        const element = findFallbackElement(anchor.id);
+                    let bestData = null;
 
-        if (element) {
-            clearInterval(intervalId);
+                    if (localData && cloudData) {
+                        bestData = cloudData.time > localData.time ? cloudData : localData;
+                    } else {
+                        bestData = localData || cloudData;
+                    }
 
-            const absoluteY = window.pageYOffset + element.getBoundingClientRect().top;
-            const targetY = absoluteY - anchor.offset;
+                    if (bestData) {
+                        const isSearchInputLoad = event && event.type === 'suttaLoaded';
+                        const forceAutoJump = localStorage.getItem('dg_autoJumpProgress') === 'true';
+                        
+                        if (!isSearchInputLoad || forceAutoJump) {
+                            anchorId = bestData.id;
+                            offset = bestData.offset || this.config.eyeLevel;
+                            window.isRestoringProgress = true; 
+                        } else {
+                            progressToOffer = bestData; 
+                        }
+                    }
+                } catch(e) {}
+            }
+        }
 
-            window.scrollTo(0, targetY);
+        if (anchorId) {
+            const el = await this.waitForElement(anchorId);
+            if (el) {
+                this.executeScroll(el, offset, true); 
+                this.hasScrolledDeep = true; 
+            } else {
+                window.isRestoringProgress = false;
+            }
+        } else {
+            window.isRestoringProgress = false;
+            this.scrollToHash(); 
 
-            requestAnimationFrame(() => {
-                const correctedY = window.pageYOffset + element.getBoundingClientRect().top - anchor.offset;
-                window.scrollTo(0, correctedY);
-                html.style.scrollBehavior = prevScrollBehavior;
+            if (progressToOffer) {
+                this.showProgressNotification(progressToOffer);
+            }
+        }
+    },
+
+    hideProgressNotification() {
+        const existing = document.getElementById('progress-toast');
+        if (existing) {
+            existing.style.opacity = '0';
+            existing.style.transform = 'translate(-50%, 15px)';
+            setTimeout(() => existing.remove(), 300);
+        }
+        this.isWaitingForToast = false;
+    },
+
+    // НОВОЕ: Плашка с явной кнопкой и принудительно видимым чекбоксом
+    showProgressNotification(data) {
+        this.hideProgressNotification(); 
+        this.isWaitingForToast = true;
+
+        const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/');
+        const textBtn = isRu ? "Продолжить чтение" : "Continue reading";
+        const textCheckbox = isRu ? "Больше не спрашивать" : "Don't ask again";
+
+        const toast = document.createElement('div');
+        toast.id = 'progress-toast';
+        toast.className = 'dg-bottom-toast'; 
+        
+        toast.innerHTML = `
+            <div id="progress-toast-main" class="dg-toast-main">
+                <button id="btn-jump-progress" class="btn btn-sm btn-secondary rounded-pill">${textBtn}</button>
+                <button id="close-progress-toast" class="dg-toast-close" title="(Esc)">&times;</button>
+            </div>
+            <label class="dg-toast-cb-label">
+                <input type="checkbox" id="toast-dont-ask-cb" style="display: inline-block !important;">
+                ${textCheckbox}
+            </label>
+        `;
+
+        document.body.appendChild(toast);
+
+        toast.addEventListener('click', async (e) => {
+            const cb = document.getElementById('toast-dont-ask-cb');
+            const isChecked = cb && cb.checked;
+
+            // 1. КЛИК ЗАКРЫТЬ (Крестик)
+            if (e.target.id === 'close-progress-toast') {
+                if (isChecked) {
+                    localStorage.setItem('dg_progressEnabled', 'false');
+                }
+                this.hideProgressNotification();
+                return;
+            }
+            
+            // 2. КЛИК ПО ЧЕКБОКСУ (только ставит галочку)
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL' || e.target.closest('.dg-toast-cb-label')) {
+                return; 
+            }
+            
+            // 3. КЛИК ПЕРЕЙТИ (Новая явная кнопка)
+            if (e.target.closest('#btn-jump-progress')) {
+                if (isChecked) {
+                    localStorage.setItem('dg_autoJumpProgress', 'true');
+                }
+                this.hideProgressNotification();
+                
+                window.isRestoringProgress = true;
+                const el = await this.waitForElement(data.id);
+                if (el) {
+                    this.executeScroll(el, data.offset || this.config.eyeLevel, false);
+                    this.highlightById(data.id);
+                    this.hasScrolledDeep = true; 
+                } else {
+                    window.isRestoringProgress = false;
+                }
+            }
+        });
+    },
+
+    scrollToHash() {
+        const hash = window.location.hash;
+        if (!hash) return;
+        
+        const hashContent = hash.substring(1);
+        const urlParams = new URLSearchParams(window.location.search);
+        const isInstant = urlParams.get('scroll') === 'instant' || hashContent.includes('scroll=instant');
+        const cleanId = hashContent.split('&')[0].split('?')[0];
+
+        if (cleanId.includes(',')) {
+            const ids = cleanId.split(','); 
+            this.waitForElement(ids[0]).then(el => {
+                if (el) {
+                    this.executeScroll(el, window.innerHeight * 0.20, isInstant);
+                    ids.forEach(id => this.highlightById(id)); 
+                    this.hasScrolledDeep = true;
+                }
+            });
+        } else {
+            this.waitForElement(cleanId).then(el => {
+                if (el) {
+                    this.executeScroll(el, window.innerHeight * 0.20, isInstant);
+                    this.highlightAllById(cleanId);
+                    this.hasScrolledDeep = true;
+                }
             });
         }
+    },
 
-        elapsed += checkInterval;
-        if (elapsed >= maxWait) {
-            clearInterval(intervalId);
-            html.style.scrollBehavior = prevScrollBehavior;
+    executeScroll(element, offsetData, isInstant) {
+        const absoluteY = window.pageYOffset + element.getBoundingClientRect().top;
+        const targetY = absoluteY - offsetData;
+
+        if (isInstant || window.isRestoringProgress) {
+            const html = document.documentElement;
+            const prevBehavior = getComputedStyle(html).scrollBehavior;
+            html.style.scrollBehavior = 'auto'; 
+            
+            window.scrollTo({ top: targetY, behavior: 'auto' });
+            
+            requestAnimationFrame(() => {
+                const correctedY = window.pageYOffset + element.getBoundingClientRect().top - offsetData;
+                window.scrollTo(0, correctedY);
+                html.style.scrollBehavior = prevBehavior;
+                setTimeout(() => window.isRestoringProgress = false, 150);
+            });
+        } else {
+            window.scrollTo({ top: targetY, behavior: 'smooth' });
+            setTimeout(() => window.isRestoringProgress = false, 800);
         }
-    }, checkInterval);
-})();
+    },
+
+    saveReadingProgress() {
+        if (localStorage.getItem('dg_progressEnabled') === 'false') return;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const slug = this.normalizeSlug(urlParams.get('q'));
+        if (!slug) return;
+
+        // --- ИСПРАВЛЕНИЕ: Жесткая мертвая зона наверху страницы ---
+        // Если мы в самом начале страницы, это не прогресс. 
+        // Удаляем запись, чтобы не показывать плашку на первом абзаце.
+        if (window.scrollY < 300) {
+            try {
+                let progressData = JSON.parse(localStorage.getItem('dg_suttaProgress') || '{}');
+                if (progressData[slug]) {
+                    delete progressData[slug];
+                    localStorage.setItem('dg_suttaProgress', JSON.stringify(progressData));
+                }
+            } catch (e) {}
+            return; // Прерываем выполнение, сохранять тут нечего
+        }
+
+        const suttaContainer = document.getElementById('sutta');
+        if (!suttaContainer) return;
+
+        const elements = suttaContainer.querySelectorAll('[id]');
+        if (elements.length === 0) return;
+
+        let bestElement = null;
+        let minDistance = Infinity;
+
+        for (const el of elements) {
+            const rectTop = el.getBoundingClientRect().top;
+            const distance = Math.abs(rectTop - this.config.eyeLevel);
+
+            if (distance < minDistance) {
+                minDistance = distance;
+                bestElement = el;
+            } else if (rectTop > this.config.eyeLevel) {
+                break;
+            }
+        }
+
+        if (bestElement) {
+            let progressData = {};
+            try {
+                progressData = JSON.parse(localStorage.getItem('dg_suttaProgress') || '{}');
+            } catch (e) {}
+
+            progressData[slug] = {
+                id: bestElement.id,
+                offset: bestElement.getBoundingClientRect().top,
+                time: Date.now()
+            };
+
+            const keys = Object.keys(progressData);
+            if (keys.length > 30) {
+                keys.sort((a, b) => progressData[b].time - progressData[a].time);
+                const newProgressData = {};
+                for (let i = 0; i < 30; i++) {
+                    newProgressData[keys[i]] = progressData[keys[i]];
+                }
+                progressData = newProgressData;
+            }
+
+            localStorage.setItem('dg_suttaProgress', JSON.stringify(progressData));
+        }
+    },
+
+
+    findFallbackElement(baseId) {
+        if (!baseId) return null;
+        const idStr = String(baseId);
+        
+        let el = document.getElementById(idStr);
+        if (el) return el;
+        
+        const match = idStr.match(/(.*?)(\d+)$/);
+        if (!match) return null;
+        
+        let prefix = match[1];
+        let num = parseInt(match[2], 10);
+        
+        if (num - 1 >= 0) {
+            return document.getElementById(prefix + (num - 1));
+        }
+        return null;
+    },
+
+    highlightAllById(elementId) {
+        const element = this.findFallbackElement(elementId);
+        if (!element) return;
+
+        if (typeof window.activateSegmentForTTS === 'function') {
+            if (element.matches('.pli-lang, .rus-lang, .eng-lang')) {
+                 window.activateSegmentForTTS(element);
+            } else {
+                const childLang = element.querySelector('.pli-lang, .rus-lang, .eng-lang');
+                window.activateSegmentForTTS(childLang || element);
+            }
+        } else {
+            element.classList.add('active-word');
+        }
+
+        const originalPosition = element.style.position;
+        if (getComputedStyle(element).position === 'static') {
+            element.style.position = 'relative';
+        }
+
+        const overlay = document.createElement('div');
+        overlay.style.position = 'absolute';
+        overlay.style.top = '0'; overlay.style.left = '0';
+        overlay.style.width = '100%'; overlay.style.height = '100%';
+        overlay.style.pointerEvents = 'none'; overlay.style.zIndex = '10';
+        overlay.style.borderRadius = getComputedStyle(element).borderRadius;
+        overlay.style.transition = 'background-color 0.45s ease-in-out';
+        overlay.style.backgroundColor = 'transparent';
+        element.appendChild(overlay);
+
+        let blinkCount = 0;
+        const blinkInterval = setInterval(() => {
+            overlay.style.backgroundColor = blinkCount % 2 === 0 ? 'rgba(26, 188, 156, 0.25)' : 'transparent';
+            blinkCount++;
+            if (blinkCount >= 6) { 
+                clearInterval(blinkInterval);
+                setTimeout(() => {
+                    if (overlay.parentNode === element) element.removeChild(overlay);
+                    if (!originalPosition) element.style.removeProperty('position');
+                    else element.style.position = originalPosition;
+                }, 450);
+            }
+        }, 450);
+    },
+
+    highlightById(elementId) {
+        const element = this.findFallbackElement(elementId);
+        if (!element) return;
+
+        if (typeof window.activateSegmentForTTS === 'function') {
+            window.activateSegmentForTTS(element);
+        } else {
+            element.classList.add('active-word');
+        }
+
+        const originalTransition = element.style.transition;
+        const originalBoxShadow = element.style.boxShadow;
+        const originalBorderRadius = element.style.borderRadius;
+        element.style.borderRadius = '6px';
+        element.style.transition = 'box-shadow 0.3s ease-in-out';
+        
+        let blinkCount = 0;
+        let isWide = false;
+        
+        const blinkInterval = setInterval(function() {
+            element.style.boxShadow = isWide ? '0 0 0 2px grey' : '0 0 0 5px rgba(128,128,128, 0.5)';
+            isWide = !isWide;
+            blinkCount++;
+            if (blinkCount >= 6) {
+                clearInterval(blinkInterval);
+                setTimeout(() => {
+                    element.style.removeProperty('box-shadow');
+                    element.style.removeProperty('transition');
+                    element.style.removeProperty('border-radius');
+                    if (originalBoxShadow) element.style.boxShadow = originalBoxShadow;
+                    if (originalTransition) element.style.transition = originalTransition;
+                    if (originalBorderRadius) element.style.borderRadius = originalBorderRadius;
+                }, 300);
+            }
+        }, 400);
+    },
+
+    setupScrollToTop() {
+        const scrollToTopBtn = document.createElement('button');
+        scrollToTopBtn.id = 'scrollToTopBtn';
+        scrollToTopBtn.className = 'btn btn-secondary rounded-pill hide-button';
+        scrollToTopBtn.style.display = 'none';
+
+        const img = document.createElement('img');
+        img.id = 'arrowImg';
+        img.alt = 'To top';
+        img.src = '/assets/svg/arrow-up-dark.svg';
+        scrollToTopBtn.appendChild(img);
+        
+        document.body.appendChild(scrollToTopBtn);
+
+        window.addEventListener('scroll', () => {
+            scrollToTopBtn.style.display = window.scrollY > 600 ? 'block' : 'none';
+        }, { passive: true });
+
+        scrollToTopBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+};
+
+ScrollManager.init();

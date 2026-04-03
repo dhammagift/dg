@@ -1,3 +1,5 @@
+// === Файл: /assets/js/autopali.js ===
+
 function uniCoder(textInput) {
     if (!textInput || textInput === "") return textInput;
     return textInput
@@ -14,220 +16,271 @@ function uniCoder(textInput) {
         .replace(/\.h/g, "ḥ");
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    let paliauto = document.getElementById("paliauto");
+let suttaWordsCache = null;
 
-    if (paliauto) {
-        paliauto.addEventListener("input", function () {
-            let textInput = paliauto.value;
-            let convertedText = uniCoder(textInput);
-            paliauto.value = convertedText;
-        });
+const ruToEn = {
+    'а': 'f', 'в': 'd', 'е': 't', 'к': 'r', 'м': 'v',
+    'н': 'y', 'о': 'j', 'п': 'g', 'р': 'h', 'с': 'c',
+    'т': 'n', 'у': 'e', 'х': '[', 'ъ': ']', 'ы': 's',
+    'ь': 'm', 'э': "'", 'ё': '`', 'я': 'z', 'ж': ';',
+    'з': 'p', 'и': 'b', 'й': 'q', 'л': 'k', 'д': 'l',
+    'г': 'u', 'ф': 'a', 'ц': 'w', 'ч': 'x', 'ш': 'i',
+    'щ': 'o', 'б': ',', 'ю': '.', ' ': ' '
+};
 
-        // Добавляем обработчик клика по пустому инпуту
-        paliauto.addEventListener("click", function() {
-            if (paliauto.value === "") {
-                // Триггерим событие поиска с пустым запросом
-                $(paliauto).autocomplete("search", "");
-            }
-        });
+// --- УТИЛИТЫ ДЛЯ УМНОЙ ЗАГРУЗКИ ---
+window._dgLoadPromises = window._dgLoadPromises || {};
+
+function _loadStyle(href) {
+    if (!document.querySelector(`link[href="${href}"]`)) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        document.head.appendChild(link);
     }
- 
-    $.ajax({
-        url: "/assets/texts/sutta_words.txt",
-        dataType: "text",
-        success: function(data) {
-            var accentMap = {
-                "ā": "a",
-                "ī": "i",
-                "ū": "u",
-                "ḍ": "d",
-                "ḷ": "l",
-                "ṃ": "ṁ",
-                "ṁ": "n",
-                "ṁ": "m",
-                "ṅ": "n",
-                "ṇ": "n",
-                "ṭ": "t",
-                "ñ": "n",
-                "ññ": "n",
-                "ss": "s",
-                "aa": "a",
-                "ii": "i",
-                "uu": "u",
-                "dd": "d",
-                "kk": "k",
-                "ḍḍ": "d",
-                "ḷḷ": "l",
-                "ṇṇ": "n",
-                "ṭṭ": "t",
-                "cc": "c",
-                "pp": "p",
-                "cch": "c",
-                "ch": "c",
-                "kh": "k",
-                "ph": "p",
-                "th": "t",
-                "ṭh": "t"
-            };
-
-            var normalize = function(term) {
-                var ret = "";
-                term = term.toLowerCase(); 
-                for (var i = 0; i < term.length; i++) {
-                    ret += accentMap[term.charAt(i)] || term.charAt(i);
-                }
-                return ret;
-            };
-
-            var allWords = data.split('\n');
-
-            $("#paliauto").autocomplete({
-                position: {
-                    my: "left bottom",
-                    at: "left top",
-                    collision: "flip"
-                },
-                minLength: 0,
-                multiple: /[\s\*]/,
-                source: function(request, response) {
-					
-					
-					function normalizeTerm(term) {
-    // Словарь замены русских букв на английские (неправильная раскладка)
-    const ruToEn = {
-        'а': 'f', 'в': 'd', 'е': 't', 'к': 'r', 'м': 'v',
-        'н': 'y', 'о': 'j', 'п': 'g', 'р': 'h', 'с': 'c',
-        'т': 'n', 'у': 'e', 'х': '[', 'ъ': ']', 'ы': 's',
-        'ь': 'm', 'э': "'", 'ё': '`', 'я': 'z', 'ж': ';',
-        'з': 'p', 'и': 'b', 'й': 'q', 'л': 'k', 'д': 'l',
-        'г': 'u', 'ф': 'a', 'ц': 'w', 'ч': 'x', 'ш': 'i',
-        'щ': 'o', 'б': ',', 'ю': '.', ' ': ' '
-    };
-
-
-// Список разделов: pj|ss|ay|np|pc|pd|sk|as|pm
-return term.trim()
-    .replace(/[а-яё]/g, char => ruToEn[char] || char)
-    .replace(/,/g, ".")
-    
-    // Заменяем пробел на дефис только для связок bu/bi + код раздела
-    .replace(/\b(bu|bi)\s+(pj|ss|ay|np|pc|pd|sk|as|pm)\b/gi, "$1-$2")
-
-    // Форматирование сутт (an 3 70 -> an3.70)
-    .replace(/([a-zA-Z]+)\s+(\d+)\s+(\d+)/g, "$1$2.$3")
-    .replace(/([a-zA-Z]+)(\d+)\s+(\d+)/g, "$1$2.$3")
-    .replace(/([a-zA-Z]+)\s+(\d+)\.(\d+)/g, "$1$2.$3")
-    .replace(/([a-zA-Z]+)\s+(\d+)/g, "$1$2");
 }
 
-var normalizedTerm = normalizeTerm(request.term);
-                    
-                    var terms = normalizedTerm.split(/[\|\s\*]/);
-                    var lastTerm = terms.pop().trim();
-                    var minLengthForSearch = 3;
-
-                    // Если терм пустой — показываем всю историю
-                    if (!lastTerm) {
-                        var history = JSON.parse(localStorage.getItem("localSearchHistory")) || [];
-                        var historyKeys = history.map(([key]) => key);
-                        response(historyKeys);
-                        return;
-                    }
-
-                    // Получаем историю для подсказок, даже если терм короткий
-                    var history = JSON.parse(localStorage.getItem("localSearchHistory")) || [];
-                    var historyKeys = history.map(([key]) => key);
-
-                    // Фильтруем историю по введённому началу строки
-                    var filteredHistory = historyKeys.filter(key => 
-                        key.toLowerCase().startsWith(lastTerm.toLowerCase())
-                    );
-
-                    // Если длина запроса меньше минимальной — показываем только фильтрованную историю
-                    if (lastTerm.length < minLengthForSearch) {
-                        response(filteredHistory);
-                        return;
-                    }
-
-                    var normalizedTerm = normalize(lastTerm);
-                    var re = $.ui.autocomplete.escapeRegex(normalizedTerm);
-                    var modifiedRe = re.replace(/([a-zA-Z])/g, "$1{1,2}");
-                    var matchbeginonly = new RegExp("^" + modifiedRe, "i");
-                    var matchall = new RegExp(modifiedRe, "i");
-
-                    var listBeginOnly = $.grep(allWords, function(value) {
-                        value = value.label || value.value || value;
-                        var normalizedValue = normalize(value);
-                        return matchbeginonly.test(normalizedValue);
-                    });
-
-                    var listAll = $.grep(allWords, function(value) {
-                        value = value.label || value.value || value;
-                        var normalizedValue = normalize(value);
-                        return matchall.test(normalizedValue);
-                    });
-
-                    listAll = listAll.filter(function(el) {
-                        return !listBeginOnly.includes(el);
-                    });
-
-                    var maxRecord = 1000;
-                    var resultList = listBeginOnly.concat(listAll).slice(0, maxRecord);
-
-                    response(resultList);
-                },
-                focus: function(event, ui) {
-                    return false;
-                },
-                select: function(event, ui) {
-                    var terms = this.value.split(/([\|\s\*])/);
-                    terms.pop();
-                    
-                    var selectedValue = ui.item.value;
-                    if (/\s+\d+$/.test(selectedValue)) {
-                        selectedValue = selectedValue.split(/\s+/)[0];
-                    }
-                    
-                    if (/\d+\s+/.test(selectedValue)) {
-                        selectedValue = selectedValue.split(/\s+/)[0];
-                    }
-                    
-                    if (/b[ui]pm|b[ui]-pm|pm/.test(selectedValue)) {
-                        selectedValue = selectedValue.split(/\s+/)[0];
-                    }
-                    
-if (/\d/.test(selectedValue)) {
-    this.value = selectedValue.split(/\s+/)[0]; // Берём только первую часть (sn35.236)
+function _loadScript(src) {
+    // Если скрипт уже грузится, возвращаем существующий Promise (защита от двойной загрузки)
+    if (window._dgLoadPromises[src]) return window._dgLoadPromises[src];
     
-    $("#searchbtn").click(); 
-    return false;
-} else {
-    terms.push(selectedValue);
+    window._dgLoadPromises[src] = new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) {
+            resolve();
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+    
+    return window._dgLoadPromises[src];
 }
+// -----------------------------------
 
-                    for (var i = 1; i < terms.length; i += 2) {
-                        if (terms[i] === "*") {
-                            terms[i] = "*";
-                        } else if (terms[i] === "|") {
-                            terms[i] = "|";
-                        } else {
-                            terms[i] = " ";
-                        }
-                    }
+window.initPaliAutocomplete = function(selector) {
+    let inputEl = document.querySelector(selector);
+    if (!inputEl) return;
 
-                    this.value = terms.join("");
-                    
-                    // Сохраняем в историю
-                   // var history = JSON.parse(localStorage.getItem("localSearchHistory")) || [];
-                   // history.unshift([selectedValue]);
-                   // localStorage.setItem("localSearchHistory", JSON.stringify(history));
-                    
-                    return false;
-                }
-            }).autocomplete("widget").addClass("fixed-height");
+    if (inputEl.dataset.autopaliBound === "true") return;
+    inputEl.dataset.autopaliBound = "true";
+
+    // 1. Мгновенно вешаем конвертер Юникода. Он легкий и должен работать сразу, 
+    // даже пока грузятся тяжелые скрипты
+    inputEl.addEventListener("input", function () {
+        let textInput = inputEl.value;
+        let convertedText = uniCoder(textInput);
+        if (inputEl.value !== convertedText) {
+            inputEl.value = convertedText;
         }
     });
-});
 
+    // 2. Логика отложенной загрузки
+    let isLoaded = false;
+    let isLoading = false;
 
+    const lazyLoadAndInit = async (e) => {
+        if (isLoaded) return;
+        
+        // Запоминаем, был ли это клик по пустому полю (чтобы показать историю)
+        const triggerEmptySearch = (e.type === 'click' && inputEl.value === '');
+
+        if (isLoading) return;
+        isLoading = true;
+
+        try {
+            // Подгружаем стили
+            _loadStyle('/assets/css/jquery-ui.min.css');
+
+            // Фикс z-index для модальных окон
+            if (!document.getElementById('autopali-zindex-fix')) {
+                let style = document.createElement('style');
+                style.id = 'autopali-zindex-fix';
+                style.textContent = '.ui-autocomplete { z-index: 10005 !important; }';
+                document.head.appendChild(style);
+            }
+
+            // Подгружаем jQuery и jQuery UI строго последовательно
+            if (typeof jQuery === 'undefined') {
+                await _loadScript('/assets/js/jquery-3.7.0.min.js');
+            }
+            if (typeof jQuery === 'undefined' || typeof jQuery.ui === 'undefined') {
+                await _loadScript('/assets/js/jquery-ui.min.js');
+            }
+
+            // Загружаем словарь через нативный fetch
+            if (!suttaWordsCache) {
+                const response = await fetch("/assets/texts/sutta_words.txt");
+                if (!response.ok) throw new Error("Ошибка загрузки словаря");
+                const text = await response.text();
+                suttaWordsCache = text.split('\n');
+            }
+
+            // Инициализируем автокомплит
+            bindAutocomplete(selector, suttaWordsCache);
+            isLoaded = true;
+
+            // Вешаем обработчик для будущих кликов по пустому полю (когда скрипт уже загружен)
+            inputEl.addEventListener("click", function() {
+                if (inputEl.value === "" && $(inputEl).hasClass('ui-autocomplete-input')) {
+                    $(inputEl).autocomplete("search", "");
+                }
+            });
+
+            // Восстанавливаем действие пользователя, которое инициировало загрузку
+            if (triggerEmptySearch) {
+                $(inputEl).autocomplete("search", "");
+            } else if (inputEl.value !== "") {
+                $(inputEl).autocomplete("search", inputEl.value);
+            }
+
+        } catch (error) {
+            console.error("Ошибка ленивой загрузки Autopali:", error);
+        } finally {
+            isLoading = false;
+        }
+    };
+
+    // Слушаем взаимодействия для старта загрузки
+    inputEl.addEventListener("focus", lazyLoadAndInit);
+    inputEl.addEventListener("input", lazyLoadAndInit);
+    inputEl.addEventListener("click", lazyLoadAndInit);
+};
+
+function bindAutocomplete(selector, allWords) {
+    var accentMap = {
+        "ā": "a", "ī": "i", "ū": "u", 
+        "ḍ": "d", "ḷ": "l", 
+        "ṃ": "m", "ṁ": "m", 
+        "ṅ": "n", "ṇ": "n", "ṭ": "t", "ñ": "n"
+    };
+
+    var normalize = function(term) {
+        var ret = "";
+        term = term.toLowerCase(); 
+        for (var i = 0; i < term.length; i++) {
+            ret += accentMap[term.charAt(i)] || term.charAt(i);
+        }
+        return ret;
+    };
+
+    $(selector).autocomplete({
+        position: {
+            my: "left bottom",
+            at: "left top",
+            collision: "flip"
+        },
+        minLength: 0,
+        multiple: /[\s\*]/,
+        source: function(request, response) {
+            
+            function normalizeTerm(term) {
+                return term.trim()
+                    .replace(/[а-яё]/g, char => ruToEn[char] || char)
+                    .replace(/,/g, ".")
+                    .replace(/\b(bu|bi)\s+(pj|ss|ay|np|pc|pd|sk|as|pm)\b/gi, "$1-$2")
+                    .replace(/([a-zA-Z]+)\s+(\d+)\s+(\d+)/g, "$1$2.$3")
+                    .replace(/([a-zA-Z]+)(\d+)\s+(\d+)/g, "$1$2.$3")
+                    .replace(/([a-zA-Z]+)\s+(\d+)\.(\d+)/g, "$1$2.$3")
+                    .replace(/([a-zA-Z]+)\s+(\d+)/g, "$1$2");
+            }
+
+            var normalizedTerm = normalizeTerm(request.term);
+            var terms = normalizedTerm.split(/[\|\s\*]/);
+            var lastTerm = terms.pop().trim();
+            var minLengthForSearch = 3;
+
+            var history = JSON.parse(localStorage.getItem("localSearchHistory")) || [];
+            var historyKeys = history.map(item => Array.isArray(item) ? item[0] : item);
+
+            if (!lastTerm) {
+                response(historyKeys);
+                return;
+            }
+
+            var filteredHistory = historyKeys.filter(key => 
+                key && key.toLowerCase().startsWith(lastTerm.toLowerCase())
+            );
+
+            if (lastTerm.length < minLengthForSearch) {
+                response(filteredHistory);
+                return;
+            }
+
+            var normLastTerm = normalize(lastTerm);
+            var re = $.ui.autocomplete.escapeRegex(normLastTerm);
+            
+            var modifiedRe = re.replace(/([a-zA-Z])/g, "$1{1,2}");
+            modifiedRe = modifiedRe.replace(/m|n/g, "[mn]");
+
+            var matchbeginonly = new RegExp("^" + modifiedRe, "i");
+            var matchall = new RegExp(modifiedRe, "i");
+
+            var listBeginOnly = $.grep(allWords, function(value) {
+                value = value.label || value.value || value;
+                return matchbeginonly.test(normalize(value));
+            });
+
+            var listAll = $.grep(allWords, function(value) {
+                value = value.label || value.value || value;
+                return matchall.test(normalize(value));
+            });
+
+            listAll = listAll.filter(function(el) {
+                return !listBeginOnly.includes(el);
+            });
+
+            var maxRecord = 1000;
+            var resultList = listBeginOnly.concat(listAll).slice(0, maxRecord);
+
+            response(resultList);
+        },
+        focus: function() { return false; },
+        select: function(event, ui) {
+            var terms = this.value.split(/([\|\s\*])/);
+            terms.pop();
+            
+            var selectedValue = ui.item.value;
+            if (/\s+\d+$/.test(selectedValue)) selectedValue = selectedValue.split(/\s+/)[0];
+            if (/\d+\s+/.test(selectedValue)) selectedValue = selectedValue.split(/\s+/)[0];
+            if (/b[ui]pm|b[ui]-pm|pm/.test(selectedValue)) selectedValue = selectedValue.split(/\s+/)[0];
+            
+            if (/\d/.test(selectedValue)) {
+                this.value = selectedValue.split(/\s+/)[0]; 
+                
+                const form = this.closest('form');
+                if (form) {
+                    const submitBtn = form.querySelector('[type="submit"]');
+                    if (submitBtn) submitBtn.click();
+                    else form.submit();
+                }
+                return false;
+            } else {
+                terms.push(selectedValue);
+            }
+
+            for (var i = 1; i < terms.length; i += 2) {
+                if (terms[i] === "*") terms[i] = "*";
+                else if (terms[i] === "|") terms[i] = "|";
+                else terms[i] = " ";
+            }
+
+            this.value = terms.join("");
+            return false;
+        }
+    }).autocomplete("widget").addClass("fixed-height");
+}
+
+function setupMainInput() {
+    if (document.getElementById("paliauto")) {
+        initPaliAutocomplete("#paliauto");
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupMainInput);
+} else {
+    setupMainInput();
+}

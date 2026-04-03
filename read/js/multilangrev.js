@@ -11,8 +11,7 @@ const form = document.getElementById("form");
 const citation = document.getElementById("paliauto");
 const pathLang = "ru";
 
-citation.focus();
-let language = "pli-rus";
+let language = "pli-2nd";
 
 homeButton.addEventListener("click", () => {
   document.location.search = "";
@@ -135,7 +134,7 @@ const anchorURL = new URL(currentURL).hash; // Убираем символ "#"
 
 if (slug.includes("mn"))  {
  var trnpath = rustrnpath; 
- let language = "pli-rus";
+ let language = "pli-2nd";
 // scLink += ifRus; 
   console.log(trnpath);
 } else if (slug.includes("sn")) { 
@@ -378,222 +377,97 @@ if (translator === "o") {
      </p>
      </div>`;
      
-      const scButton = `<a href="https://suttacentral.net/${slug}/en/${translator}">Читать на SC</a>`;
-      
-      $.ajax({
-      url: "/read/php/extralinks.php?fromjs=" +slug
-    }).done(function(data) {
-      const linksArray = data.split(",");
+      // === 1. МГНОВЕННЫЙ ВЫВОД ТЕКСТА НА ЭКРАН ===
+      const origUrl = window.location.href;
+      let dUrl = origUrl.replace("/rev/", "/d");
+      let frUrl = origUrl.replace("/rev/", "/frev/");
 
-// --- DPR START: ---
-function getDprUrl(slug) {
-    // Проверяем, загружен ли массив данных из файла linksdprmapping.js
-    // (В вашем файле переменная называется dprLinksData)
-    if (typeof dprLinksData === 'undefined') {
-        return null;
-    }
+      // Специфичная "магия" этого файла:
+      const rvfr = `<a class='text-decoration-none' target='' href='${frUrl}'>&nbsp;</a>`;
+      const scrollLink = `<a class='text-decoration-none' target='' href='javascript:void(0);' onclick='window.scrollTo(0, document.body.scrollHeight)'>&nbsp;</a>`;
 
-    // Очищаем slug от параметров (все, что после &) и приводим к нижнему регистру
-    let cleanSlug = slug.split('&')[0].toLowerCase();
+      var lineBreak = "\n\n";
+      let revhtml = html.split(lineBreak).reverse().join(lineBreak);
 
-    // Ищем совпадение: item[0] - это slug (например, dn1), item[1] - это код локации
-    let dprItem = dprLinksData.find(item => item[0] === cleanSlug);
+      const SHOW_CLOSE_AFTER = 10;
+      let viewCount = parseInt(localStorage.getItem('warningViewCount')) || 0;
+      viewCount++;
+      localStorage.setItem('warningViewCount', viewCount);
+      const canShowClose = viewCount >= SHOW_CLOSE_AFTER;
+      const isWarningClosed = localStorage.getItem('warningClosed');
 
-    if (dprItem && dprItem[1]) {
-        // Базовый URL для онлайн версии DPR.
-        // Если вы используете локальную версию или другое зеркало, измените эту строку.
-        const dprBaseUrl = "https://www.digitalpalireader.online/_dprhtml/index.html?loc=";
-        
-        return dprBaseUrl + dprItem[1];
-    }
-    
-    return null;
-}
+      // Предупреждение на английском со скрытыми ссылками
+      const warning = `
+        <div style="max-width: 550px; margin: 0 auto; text-align: center;" class="warning-container">
+          <p class='warning'>
+            <strong>Note:</strong>${rvfr}Translations, dictionaries and commentaries were not made by the Blessed One.<a style='cursor: pointer;' class='text-decoration-none' target='' href='${dUrl}'>&nbsp;</a>Cross-check with Pali in 4 main nikayas.${scrollLink}
+                 ${canShowClose && !isWarningClosed ? `<span class="close-warning">×</span>` : ''} 
+          </p>
+        </div>
+      `;
 
-// Если нужно сохранить проверку на Vinaya (как было в старом коде), раскомментируйте условие ниже.
-// if (typeof texttype === 'undefined' || texttype !== "vinaya") {
+      // Выводим текст СРАЗУ (используем revhtml!)
+      suttaArea.innerHTML = 
+          `<div id="top-links-container" style="min-height: 24px;"></div><br>` + 
+          (!isWarningClosed ? warning : '') + 
+          translatorByline + 
+          revhtml + 
+          translatorByline + 
+          (!isWarningClosed ? warning : '') + 
+          `<div id="bottom-links-container" style="min-height: 24px;"></div>`;
 
-    let dprUrl = getDprUrl(slug);
+      // === 2. НАСТРОЙКА ИНТЕРФЕЙСА (ПОКА ТЕКСТ УЖЕ МОЖНО ЧИТАТЬ) ===
+      if (canShowClose && !isWarningClosed) {
+        document.querySelectorAll('.close-warning').forEach(btn => {
+          btn.addEventListener('click', function() {
+            localStorage.setItem('warningClosed', 'true');
+            document.querySelectorAll('.warning-container').forEach(el => el.remove());
+          });
+        });
+      }
 
-    if (dprUrl) {
-        // Добавляем ссылку, сохраняя старый title "Myanmar and Thai Editions at DPR"
-        scLink += `<a target="_blank" title="Myanmar and Thai Editions at DPR" href="${dprUrl}">DPR</a>&nbsp;`;
-    }
+      const pageTitleElement = document.querySelector("h1.sutta-title");
+      let pageTitle = '';
+      if (pageTitleElement) {
+        let text = pageTitleElement.textContent;
+        const paliLettersRegex = /[a-zāīūṭḍñṃṁṅṇśṣ\s]/gi;
+        const filtered = text.match(paliLettersRegex);
+        if (filtered) {
+          pageTitle = filtered.join('');
+        }
+      }
 
-// } 
-// --- DPR END ---
+      let cleanSlug = slug.replace(/pli-tv-|vb-/g, '');
+      document.title = `${cleanSlug} ${pageTitle}`.trim();
 
-// --- BJT START:  ---
-function getBjtUrl(slug) {
-    // Проверяем, загружен ли массив данных из файла linksbjt.js
-    if (typeof bjtLinksData === 'undefined') {
-        return null;
-    }
+      var metaDescription = document.createElement('meta');
+      metaDescription.name = 'description';
+      metaDescription.content = document.title;
+      document.head.appendChild(metaDescription);
 
-    // Очищаем slug от параметров (все, что после &)
-    let cleanSlug = slug.split('&')[0].toLowerCase();
-
-    // Ищем совпадение: item[0] - это slug (например, dn1), item[1] - это код для ссылки
-    let bjtItem = bjtLinksData.find(item => item[0] === cleanSlug);
-
-    if (bjtItem && bjtItem[1]) {
-        return "https://open.tipitaka.lk/latn/" + bjtItem[1];
-    }
-    
-    return null;
-}
-
-let bjtUrl = getBjtUrl(slug);
-
-if (bjtUrl) {
-    // Добавляем ссылку к переменной scLink, точно так же, как это делает DPR и SC
-    scLink += `<a target="_blank" title="Buddha Jayanthi (Sri Lanka Edition at Tipitaka.lk)" href="${bjtUrl}">BJT</a>&nbsp;`;
-}
-// --- BJT END ---
-
-
-if ((translator === 'sujato') || (translator === 'brahmali')) {
-  scLink += `<a target="_blank" href="https://suttacentral.net/${slug}/en/${translator}">SC</a>&nbsp;`;  
-} else {
-  scLink += `<a target="_blank" href="https://suttacentral.net/${slug}">SC</a>&nbsp;`;
-}
-scLink += getTTSInterfaceHTML(texttype, slugReady, slug);
-      if (linksArray[0].length >= 4) {
-        scLink += linksArray[0];
-            console.log("extralinks " + linksArray[0]);
-      } 
-      scLink += "</p>"; 
-
-const origUrl = window.location.href;
-let rvUrl = origUrl.replace("/r/", "/read/");
-rvUrl = rvUrl.replace("/rev/", "");
-rvUrl = rvUrl.replace("/read/", "/rev/");
-
-frUrl = origUrl.replace("/rev/", "/frev/");
-
-thUrl = origUrl.replace("/read/", "/th/read/");
-dUrl = origUrl.replace("/rev/", "/d");
-
-rvorigUrl = origUrl.replace("/frev/", "/rev/");
-
-const rvfr = "<a class='text-decoration-none' target='' href='" + frUrl + "'>&nbsp;</a>";
-
-const scrollLink = "<a class='text-decoration-none' target='' href='javascript:void(0);' onclick='window.scrollTo(0, document.body.scrollHeight)'>&nbsp;</a>";
-
-var lineBreak = "\n\n",
-revhtml = html.split(lineBreak).reverse().join(lineBreak)
-// console.log(revhtml)
-// console.log(html)
-
-// Настройки
-const SHOW_CLOSE_AFTER = 10;  // Показывать кнопку закрытия после 10 просмотров
-
-// Получаем или инициализируем счетчик просмотров
-let viewCount = parseInt(localStorage.getItem('warningViewCount')) || 0;
-viewCount++;
-localStorage.setItem('warningViewCount', viewCount);
-
-// Проверяем, можно ли показывать кнопку закрытия
-const canShowClose = viewCount >= SHOW_CLOSE_AFTER;
-
-// Проверяем, был ли warning уже закрыт
-const isWarningClosed = localStorage.getItem('warningClosed');
-
-const warning = `
-  <div style="max-width: 550px; margin: 0 auto; text-align: center;" class="warning-container">
-    <p class='warning'>
-      <strong>Note:</strong><a style='cursor: pointer;' class='text-decoration-none' target='' href='${rvfr}'>&nbsp;</a>Translations, dictionaries and commentaries were not made by the Blessed One.<a style='cursor: pointer;' class='text-decoration-none' target='' href='${dUrl}'>&nbsp;</a>Cross-check with Pali in 4 main nikayas.<a class='text-decoration-none' target='' href='${scrollLink}'>&nbsp;</a>
-           ${canShowClose && !isWarningClosed ? `<span class="close-warning">×</span>` : ''} 
-    </p>
-  </div>
-`;
-
-// Добавляем HTML
-suttaArea.innerHTML = scLink + '<br>' + (!isWarningClosed ? warning : '') + translatorByline + revhtml + translatorByline + warning + scLink;
-
-// Добавляем обработчик события для кнопки закрытия (если она есть)
-if (canShowClose && !isWarningClosed) {
-  document.querySelector('.close-warning')?.addEventListener('click', function() {
-    localStorage.setItem('warningClosed', 'true');
-    document.querySelector('.warning-container')?.remove();
-  });
-}
-
-//конец вывода информации
-
-var metaDescription = document.createElement('meta');
-metaDescription.name = 'description';
-metaDescription.content = document.title;
-document.head.appendChild(metaDescription);
-
-var ogDescriptionMeta = document.createElement('meta');
-ogDescriptionMeta.property = 'og:description';
-ogDescriptionMeta.content = document.title;
-document.head.appendChild(ogDescriptionMeta);
-
+      var ogDescriptionMeta = document.createElement('meta');
+      ogDescriptionMeta.property = 'og:description';
+      ogDescriptionMeta.content = document.title;
+      document.head.appendChild(ogDescriptionMeta);
 
       toggleThePali();
-      
-      $.ajax({
-      url: "/read/php/api.php?fromjs=" +texttype +"/" +slugReady +"&type=A"
-    }).done(function(data) {
-      const nextArray = data.split(" ");
-      let nextSlug = nextArray[0];
-let nextSlugPrint = nextSlug.replace(/pli-tv-|b[ui]-vb-/g, "");
 
-let nextName = nextArray.slice(1).join(" ");
-nextName = nextName.replace(/[0-9.]/g, '');
+      // === ГЕНЕРАЦИЯ ССЫЛОК ИЗ COMMON.JS ===
+      scLink += generateThirdPartyLinks(slug, slugReady, texttype, translator);
+      scLink += "</p>";
 
-      if (nextName === undefined) {
-      var nextPrint = nextSlugPrint;
-      } else {
-     var nextPrint = nextSlugPrint +' ' +nextName;
-     }     
-           next.innerHTML = nextSlug
-          ? `<a href="?q=${nextSlug}${params.has("s") ? `&s=${finder}` : ""}">${nextPrint.trim()}
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="body_1" width="15" height="11">
+      const topContainer = document.getElementById('top-links-container');
+      const bottomContainer = document.getElementById('bottom-links-container');
+      if (topContainer) topContainer.innerHTML = scLink;
+      if (bottomContainer) bottomContainer.innerHTML = scLink;
 
-      <g transform="matrix(0.021484375 0 0 0.021484375 2 -0)">
-        <g>
-              <path d="M202.1 450C 196.03278 449.9987 190.56381 446.34256 188.24348 440.73654C 185.92316 435.13055 187.20845 428.67883 191.5 424.39L191.5 424.39L365.79 250.1L191.5 75.81C 185.81535 69.92433 185.89662 60.568687 191.68266 54.782654C 197.46869 48.996624 206.82434 48.91536 212.71 54.6L212.71 54.6L397.61 239.5C 403.4657 245.3575 403.4657 254.8525 397.61 260.71L397.61 260.71L212.70999 445.61C 209.89557 448.4226 206.07895 450.0018 202.1 450z" stroke="none" fill="#8f8f8f" fill-rule="nonzero" />
-        </g>
-      </g>
-      </svg></a>`
-        : "";
-        next2.innerHTML = next.innerHTML;
-    }
-    );
-  
-  $.ajax({
-      url: "/read/php/api.php?fromjs=" +texttype +"/" +slugReady +"&type=B"
-    }).done(function(data) {
-      const prevArray = data.split(" ");
-      let prevSlug = prevArray[0];
-      let prevSlugPrint = prevSlug.replace(/pli-tv-|b[ui]-vb-/g, "");
-let prevName = prevArray.slice(1).join(" ");
-prevName = prevName.replace(/[0-9.]/g, '');
+      // === ПОИСК ПРЕДЫДУЩЕЙ И СЛЕДУЮЩЕЙ СУТТЫ ===
+      renderNavigation(slug, slugReady);
 
-        if (prevName === undefined) {
-    var prevPrint = prevSlugPrint;
-      } else {
-        var prevPrint = prevSlugPrint +' ' +prevName;
-     }
-      previous.innerHTML = prevSlug
-  ? `<a href="?q=${prevSlug}${params.has("s") ? `&s=${finder}` : ""}">
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="body_1" width="15" height="11">
-      <g transform="matrix(0.021484375 0 0 0.021484375 2 -0)">
-        <g>
-          <path d="M353 450C 349.02106 450.0018 345.20444 448.4226 342.39 445.61L342.39 445.61L157.5 260.71C 151.64429 254.8525 151.64429 245.3575 157.5 239.5L157.5 239.5L342.39 54.6C 346.1788 50.809414 351.70206 49.328068 356.8792 50.713974C 362.05634 52.099876 366.10086 56.14248 367.4892 61.318974C 368.87753 66.49547 367.3988 72.01941 363.61002 75.81L363.61002 75.81L189.32 250.1L363.61 424.39C 367.90283 428.6801 369.18747 435.13425 366.8646 440.74118C 364.5417 446.34808 359.06903 450.00275 353 450z" stroke="none" fill="#8f8f8f" fill-rule="nonzero" />
-        </g>
-      </g>
-      </svg>${prevPrint.trim()}</a>`
-  : "";
-        previous2.innerHTML = previous.innerHTML;
+      if (typeof addToSearchHistory === 'function') {
+         addToSearchHistory();
       }
-      );
 
-    }
-    );
      
     })
 .catch(error => {
@@ -732,9 +606,9 @@ setLanguage(language);
 
   
 function setLanguage(language) {
-  if (language === "pli-rus") {
+  if (language === "pli-2nd") {
     showPaliEnglish();
-  } else if (language === "rus") {
+  } else if (language === "2nd") {
     showEnglish();
   } else if (language === "pli") {
     showPali();
@@ -771,29 +645,44 @@ function showPali() {
 function toggleThePali() {
   const languageButton = document.getElementById("language-button");
 
-// initial state
- if (!localStorage.paliToggleSpecial) {
-    localStorage.paliToggleRu = "pli-rus";
+  // Инициализация (исправлена опечатка)
+  if (!localStorage.paliToggleSpecial) {
+    localStorage.paliToggleSpecial = "pli-2nd";
   }   
 
-  languageButton.addEventListener("click", () => {
-    if (language === "pli") {
-      showPaliAll();
-      language = "pli-rus";    
-      localStorage.paliToggleSpecial = "pli-rus";
-    } else if (language === "pli-rus") {
-     showPali();
-           language = "pli";
-      localStorage.paliToggleSpecial = "pli";
+  // Клонируем кнопку, чтобы сбросить старые слушатели
+  const newButton = languageButton.cloneNode(true);
+  languageButton.parentNode.replaceChild(newButton, languageButton);
 
- /*   } else if (language === "rus") {
-     showPaliRussian();
-      language = "rus";
-      localStorage.paliToggleSpecial = "rus"; */
+  newButton.addEventListener("click", () => {
+    // Используем плавную обертку из common.js
+    if (typeof runWithTransition === 'function') {
+        runWithTransition(() => {
+            if (language === "pli") {
+              showPaliAll();
+              language = "pli-2nd";    
+              localStorage.paliToggleSpecial = "pli-2nd";
+            } else if (language === "pli-2nd") {
+              showPali();
+              language = "pli";
+              localStorage.paliToggleSpecial = "pli";
+            }
+        });
+    } else {
+        // Фолбэк, если common.js еще не подгрузился
+        if (language === "pli") {
+          showPaliAll();
+          language = "pli-2nd";    
+          localStorage.paliToggleSpecial = "pli-2nd";
+        } else if (language === "pli-2nd") {
+          showPali();
+          language = "pli";
+          localStorage.paliToggleSpecial = "pli";
+        }
     }
   });
-  
 }
+
 
 // clicking an abbreviation on the home page will replace the input field with that abbreviation
 const abbreviations = document.querySelectorAll("span.abbr");

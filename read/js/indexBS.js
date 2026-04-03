@@ -11,8 +11,7 @@ const form = document.getElementById("form");
 const citation = document.getElementById("paliauto");
 const pathLang = "en";
 
-citation.focus();
-let language = "pli-eng";
+let language = "pli-2nd";
 
 homeButton.addEventListener("click", () => {
   document.location.search = "";
@@ -104,7 +103,7 @@ var rootpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slugR
 var rootpath = `/assets/texts/devanagari/root/pli/ms/${texttype}/${slug}_rootd-pli-ms.json`
  } 
  else if (( script === "thai" ) || ( savedScript === "Thai" ) ) {
-var rootpath = `/assets/texts/th/root/pli/ms/${texttype}/${slug}_rootth-pli-ms.json`
+var rootpath = `/assets/texts/th/root/pli/ms/${texttype}/${slugReady}_rootth-pli-ms.json`
  } 
 else {
 var rootpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slug}_root-pli-ms.json`
@@ -153,27 +152,8 @@ const rootResponse = fetch(rootpath)
 
   const translationResponse = fetch(trnpath).then(response => response.json());
   const htmlResponse = fetch(htmlpath).then(response => response.json());
-async function fetchVariant() {
-  const paths = [varpath, varpathLocal];
 
-  for (const path of paths) {
-    try {
-      const response = await fetch(path);
-      if (response.ok) {
-        return await response.json();
-      }
-   //   console.log(`note: no var found at ${path}`);
-    } catch (error) {
-  //    console.log(`note: error fetching var ${path}`);
-    }
-  }
-
-//  console.log('note: no var found in any path');
-  return {}; // Если все пути недоступны
-}
-
-const varResponse = fetchVariant();    
-
+const varResponse = window.fetchVariantData(varpathLocal, varpath);
 
   Promise.all([rootResponse, translationResponse, htmlResponse, varResponse]).then(responses => {
     const [paliData, transData, htmlData, varData] = responses;
@@ -210,7 +190,6 @@ const varResponse = fetchVariant();
                   if (str.match(/^["“'‘]?(I\b|I'|O\b)/)) return str;
                   
                   // В остальных случаях просто делаем маленьким первый символ 
-                  // (кавычки не изменятся, и текст внутри останется с заглавной)
                   return str.charAt(0).toLowerCase() + str.slice(1);
               };
 
@@ -218,13 +197,10 @@ const varResponse = fetchVariant();
 
               // 1. Объединяем ПАЛИ
               if (paliData[nextSegment]) {
-                  // trim() убирает пробелы по краям
-                  // " " добавляет ровно один пробел между частями
-                  // toLower() делает вторую часть с маленькой буквы
                   paliData[segment] = (paliData[segment] || "").trim() + " " + toLower(paliData[nextSegment].trim());
               }
 
-              // 2. Объединяем ПЕРЕВОД (Русский)
+              // 2. Объединяем ПЕРЕВОД (Английский)
               if (transData[nextSegment]) {
                   transData[segment] = (transData[segment] || "").trim() + " " + toLower(transData[nextSegment].trim());
               }
@@ -249,18 +225,10 @@ const varResponse = fetchVariant();
       
       
       let [openHtml, closeHtml] = htmlData[segment].split(/{}/);
-   openHtml = openHtml || ''; // Запасное значение
-   closeHtml = closeHtml || ''; // Запасное значение
+   openHtml = openHtml || ''; 
+   closeHtml = closeHtml || ''; 
       
       
-      /* openHtml = openHtml.replace(/^<span class='verse-line'>/, "<br><span class='verse-line'>"); inputscript-IASTPali 
-      Roman (IAST)     	IAST
-Roman (IAST: Pāḷi)     	IASTPali
-Roman (IPA)            	IPA
-Roman (ISO 15919)      	ISO
-Roman (ISO 15919: Pāḷi)	ISOPali */
-// ISOPali ISO IASTPali IAST
-
 let startIndex = segment.indexOf(':') + 1;
 let anchor = segment.substring(startIndex);
 
@@ -279,32 +247,25 @@ if (localStorage.getItem("removePunct") === "true" && paliData[segment] !== unde
 }
 
 if (finder && finder.trim() !== "") {
-  let regex = new RegExp(finder, 'gi'); // 'gi' - игнорировать регистр
+  let regex = new RegExp(finder, 'gi'); 
 
   try {
     paliData[segment] = paliData[segment]?.replace(regex, match => `<b class='match finder'>${match}</b>`);
-  } catch (error) {
- //   console.log("Ошибка при выделении совпадений в paliData:", info);
-  }
+  } catch (error) {}
 
   try {
     transData[segment] = transData[segment]?.replace(regex, match => `<b class="match finder">${match}</b>`);
-  } catch (error) {
-  //  console.log("Ошибка при выделении совпадений в transData:", info);
-  }
+  } catch (error) {}
 
   if (varData[segment] !== undefined) {  
     try {
       varData[segment] = varData[segment].replace(regex, match => `<b class="match finder">${match}</b>`);
-    } catch (error) {
-      console.info("Ошибка при выделении совпадений в varData:", info);
-    }
+    } catch (error) {}
   }
 }
-//&nbsp;
-const linkToCopyStart = `<a class="text-decoration-none copyLink copyLink-start" style="cursor: pointer;" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;
-let linkToCopy = `<a class="text-decoration-none copyLink" style="cursor: pointer;" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`
-let linkWithDataSet = `<a class="text-decoration-none copyLink" style="cursor: pointer;" data-copy-text="${fullUrlWithAnchor}">&nbsp;</a>`
+
+const linkToCopyStart = `<a class="text-decoration-none copyLink copyLink-start" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;
+let linkToCopy = `<a class="text-decoration-none copyLink" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`
 
 if (paliData[segment] !== undefined && transData[segment] !== undefined && varData[segment] !== undefined) {
               html += `${openHtml}<span id="${anchor}">
@@ -330,7 +291,6 @@ if (paliData[segment] !== undefined && transData[segment] !== undefined && varDa
 }
 
 
-//console.log('texttype ' + texttype + ' translator ' + translator);
 if (translator === "o") {
   translatorforuser = '<a href=/assets/common/o-en.html>o</a> from Pali';
 } else if (translator === "sv") {
@@ -351,9 +311,6 @@ if (translator === "o") {
 	translatorforuser = translator ;
 }
 
-//console.log('texttype ' + texttype + ' translator ' + translator);
-
-//const translatorCapitalized = translator.charAt(0).toUpperCase() + translator.slice(1);
 
      const translatorByline = `<div id="trn" class="byline">
      <p>
@@ -361,254 +318,101 @@ if (translator === "o") {
      </p>
      </div>`;
      
-      const scButton = `<a title="SuttaCentral.net"  href="https://suttacentral.net/${slug}/en/${translator}">Read on SC</a>`;
-      
-      
-      $.ajax({
-      url: "/read/php/extralinks.php?fromjs=" +slug
-    }).done(function(data) {
-      const linksArray = data.split(",");
-   
+         const enUrl = window.location.href;
+      const ruUrl = enUrl.replace("/read/", "/r/");
 
+      let scLink = `<p class="sc-link"><a title="Russian (Alt+1)" href="${ruUrl}">Ru</a>&nbsp;`;
 
-const enUrl = window.location.href;
+      // === 1. МГНОВЕННЫЙ ВЫВОД ТЕКСТА НА ЭКРАН ===
+      const origUrl = window.location.href;
+      let rvUrl = origUrl.replace("/r/", "/read/");
+      rvUrl = rvUrl.replace("/ml/", "");
+      rvUrl = rvUrl.replace("/read/", "/memorize/");
+      let thUrl = origUrl.replace("/read/", "/th/read/");
+      let dUrl = origUrl.replace("/read/", "/d/");
 
-const ruUrl = enUrl.replace("/read/", "/r/");
+      const SHOW_CLOSE_AFTER = 10;
+      let viewCount = parseInt(localStorage.getItem('warningViewCount')) || 0;
+      viewCount++;
+      localStorage.setItem('warningViewCount', viewCount);
+      const canShowClose = viewCount >= SHOW_CLOSE_AFTER;
+      const isWarningClosed = localStorage.getItem('warningClosed');
 
-let scLink = `<p class="sc-link"><a title="Russian (Alt+1)" href="${ruUrl}">Ru</a>&nbsp;`;
- 
-// --- DPR START: ---
-function getDprUrl(slug) {
-    // Проверяем, загружен ли массив данных из файла linksdprmapping.js
-    // (В вашем файле переменная называется dprLinksData)
-    if (typeof dprLinksData === 'undefined') {
-        return null;
-    }
+      const warning = `
+        <div class="warning-container warning-box">
+          <p class='warning'>
+            <strong>Note:</strong><a class='text-decoration-none cursor-pointer' target='' href='${dUrl}'>&nbsp;</a>Translations, dictionaries and commentaries were not made by the Blessed One.<a class='text-decoration-none cursor-pointer' target='' href='${thUrl}'>&nbsp;</a>Cross-check with Pali in 4 main nikayas.
+                 ${canShowClose && !isWarningClosed ? `<span class="close-warning">×</span>` : ''} 
+          </p>
+        </div>
+      `;
 
-    // Очищаем slug от параметров (все, что после &) и приводим к нижнему регистру
-    let cleanSlug = slug.split('&')[0].toLowerCase();
+      // Выводим текст СРАЗУ
+      suttaArea.innerHTML = 
+          `<div id="top-links-container" class="min-h-24"></div><br>` + 
+          (!isWarningClosed ? warning : '') + 
+          translatorByline + 
+          html + 
+          translatorByline + 
+          (!isWarningClosed ? warning : '') + 
+          `<div id="bottom-links-container" class="min-h-24"></div>`;
+window.dispatchEvent(new Event('suttaLoaded'));
+if (typeof window.setupVariantVisibility === 'function') {
+          window.setupVariantVisibility();
+      }
 
-    // Ищем совпадение: item[0] - это slug (например, dn1), item[1] - это код локации
-    let dprItem = dprLinksData.find(item => item[0] === cleanSlug);
+      // === 2. НАСТРОЙКА ИНТЕРФЕЙСА ===
+      if (canShowClose && !isWarningClosed) {
+        document.querySelectorAll('.close-warning').forEach(btn => {
+          btn.addEventListener('click', function() {
+            localStorage.setItem('warningClosed', 'true');
+            document.querySelectorAll('.warning-container').forEach(el => el.remove());
+          });
+        });
+      }
 
-    if (dprItem && dprItem[1]) {
-        // Базовый URL для онлайн версии DPR.
-        // Если вы используете локальную версию или другое зеркало, измените эту строку.
-        const dprBaseUrl = "https://www.digitalpalireader.online/_dprhtml/index.html?loc=";
-        
-        return dprBaseUrl + dprItem[1];
-    }
-    
-    return null;
-}
+      const pageTitleElement = document.querySelector("h1.sutta-title");
+      let pageTitle = '';
+      if (pageTitleElement) {
+        let text = pageTitleElement.textContent;
+        const paliLettersRegex = /[a-zāīūṭḍñṃṁṅṇśṣ\s]/gi;
+        const filtered = text.match(paliLettersRegex);
+        if (filtered) pageTitle = filtered.join('');
+      }
+      let cleanSlug = slug.replace(/pli-tv-|vb-/g, '');
+      document.title = `${cleanSlug} ${pageTitle}`;
+          
+      var metaDescription = document.createElement('meta');
+      metaDescription.name = 'description';
+      metaDescription.content = document.title;
+      document.head.appendChild(metaDescription);
 
-// Если нужно сохранить проверку на Vinaya (как было в старом коде), раскомментируйте условие ниже.
-// if (typeof texttype === 'undefined' || texttype !== "vinaya") {
-
-    let dprUrl = getDprUrl(slug);
-
-    if (dprUrl) {
-        // Добавляем ссылку, сохраняя старый title "Myanmar and Thai Editions at DPR"
-        scLink += `<a target="_blank" title="Myanmar and Thai Editions at DPR" href="${dprUrl}">DPR</a>&nbsp;`;
-    }
-
-// } 
-// --- DPR END ---
-
-// --- BJT START:  ---
-function getBjtUrl(slug) {
-    // Проверяем, загружен ли массив данных из файла linksbjt.js
-    if (typeof bjtLinksData === 'undefined') {
-        return null;
-    }
-
-    // Очищаем slug от параметров (все, что после &)
-    let cleanSlug = slug.split('&')[0].toLowerCase();
-
-    // Ищем совпадение: item[0] - это slug (например, dn1), item[1] - это код для ссылки
-    let bjtItem = bjtLinksData.find(item => item[0] === cleanSlug);
-
-    if (bjtItem && bjtItem[1]) {
-        return "https://open.tipitaka.lk/latn/" + bjtItem[1];
-    }
-    
-    return null;
-}
-
-let bjtUrl = getBjtUrl(slug);
-
-if (bjtUrl) {
-    // Добавляем ссылку к переменной scLink, точно так же, как это делает DPR и SC
-    scLink += `<a target="_blank" title="Buddha Jayanthi (Sri Lanka Edition at Tipitaka.lk)" href="${bjtUrl}">BJT</a>&nbsp;`;
-}
-// --- BJT END ---
-
-
-scLink += `<a target="" title="SuttaCentral.net" href="https://suttacentral.net/${slug}/en/${translator}">SC</a>&nbsp;`;
-      
-scLink += getTTSInterfaceHTML(texttype, slugReady, slug);
-
-      if (linksArray[0].length >= 4) {
-        scLink += linksArray[0];
-        //    console.log("extralinks " + linksArray[0]);
-      } 
-      scLink += "</p>"; 
-
-const origUrl = window.location.href;
-let rvUrl = origUrl.replace("/r/", "/read/");
-rvUrl = rvUrl.replace("/ml/", "");
-rvUrl = rvUrl.replace("/read/", "/rev/");
-thUrl = origUrl.replace("/read/", "/th/read/");
-dUrl = origUrl.replace("/read/", "/d/");
-
-// Настройки
-const SHOW_CLOSE_AFTER = 10;  // Показывать кнопку закрытия после 10 просмотров
-
-// Получаем или инициализируем счетчик просмотров
-let viewCount = parseInt(localStorage.getItem('warningViewCount')) || 0;
-viewCount++;
-localStorage.setItem('warningViewCount', viewCount);
-
-// Проверяем, можно ли показывать кнопку закрытия
-const canShowClose = viewCount >= SHOW_CLOSE_AFTER;
-
-// Проверяем, был ли warning уже закрыт
-const isWarningClosed = localStorage.getItem('warningClosed');
-
-const warning = `
-  <div style="max-width: 550px; margin: 0 auto; text-align: center;" class="warning-container">
-    <p class='warning'>
-      <strong>Note:</strong><a style='cursor: pointer;' class='text-decoration-none' target='' href='${dUrl}'>&nbsp;</a>Translations, dictionaries and commentaries were not made by the Blessed One.<a style='cursor: pointer;' class='text-decoration-none' target='' href='${thUrl}'>&nbsp;</a>Cross-check with Pali in 4 main nikayas.
-           ${canShowClose && !isWarningClosed ? `<span class="close-warning">×</span>` : ''} 
-    </p>
-  </div>
-`;
-
-// Добавляем HTML
-suttaArea.innerHTML = scLink + '<br>' + (!isWarningClosed ? warning : '') + translatorByline + html + translatorByline + warning + scLink;
-
-// Добавляем обработчик события для кнопки закрытия (если она есть)
-if (canShowClose && !isWarningClosed) {
-  document.querySelector('.close-warning')?.addEventListener('click', function() {
-    localStorage.setItem('warningClosed', 'true');
-    document.querySelector('.warning-container')?.remove();
-  });
-}
-
-//конец вывода информации
-
-
-const pageTitleElement = document.querySelector("h1.sutta-title");
-let pageTitle = '';
-
-if (pageTitleElement) {
-  // Получаем весь текст из элемента, включая вложенные теги
-  let text = pageTitleElement.textContent;
-  const paliLettersRegex = /[a-zāīūṭḍñṃṁṅṇśṣ\s]/gi;
-
-  // Извлечь только эти символы и собрать обратно в строку
-  const filtered = text.match(paliLettersRegex);
-  if (filtered) {
-    pageTitle = filtered.join('');
-  }
-}
-
-slug = slug.replace(/pli-tv-|vb-/g, '');
-document.title = `${slug} ${pageTitle}`;
-    
-var metaDescription = document.createElement('meta');
-metaDescription.name = 'description';
-metaDescription.content = document.title;
-document.head.appendChild(metaDescription);
-
-var ogDescriptionMeta = document.createElement('meta');
-ogDescriptionMeta.property = 'og:description';
-ogDescriptionMeta.content = document.title;
-document.head.appendChild(ogDescriptionMeta);
-
+      var ogDescriptionMeta = document.createElement('meta');
+      ogDescriptionMeta.property = 'og:description';
+      ogDescriptionMeta.content = document.title;
+      document.head.appendChild(ogDescriptionMeta);
 
       toggleThePali();
-      
-      $.ajax({
-      url: "/read/php/api.php?fromjs=" +texttype +"/" +slugReady +"&type=A"
-    }).done(function(data) {
-      let nextArray = data.split(" ");
-      let nextSlug = nextArray[0];
-      let nextSlugPrint = nextSlug.replace(/pli-tv-|b[ui]-vb-/g, "");
-let nextName = nextArray.slice(1).join(" ");
-nextName = nextName.replace(/[0-9.]/g, '');
-     if (nextName === undefined) {
-      var nextPrint = nextSlugPrint;
-      } else {
-     var nextPrint = nextSlugPrint +' ' +nextName;
-     }
-        let finder = (params.get("s") || "").replace(/ṃ/g, "ṁ");
-         next.innerHTML = nextSlug
-          ? `<a href="?q=${nextSlug}${params.has("s") ? `&s=${finder}` : ""}">${nextPrint.trim()}
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="body_1" width="15" height="11">
 
-      <g transform="matrix(0.021484375 0 0 0.021484375 2 -0)">
-        <g>
-              <path d="M202.1 450C 196.03278 449.9987 190.56381 446.34256 188.24348 440.73654C 185.92316 435.13055 187.20845 428.67883 191.5 424.39L191.5 424.39L365.79 250.1L191.5 75.81C 185.81535 69.92433 185.89662 60.568687 191.68266 54.782654C 197.46869 48.996624 206.82434 48.91536 212.71 54.6L212.71 54.6L397.61 239.5C 403.4657 245.3575 403.4657 254.8525 397.61 260.71L397.61 260.71L212.70999 445.61C 209.89557 448.4226 206.07895 450.0018 202.1 450z" stroke="none" fill="#8f8f8f" fill-rule="nonzero" />
-        </g>
-      </g>
-      </svg></a>`
-        : "";
-        next2.innerHTML = next.innerHTML;
-    }
-    );
-  
-  $.ajax({
-      url: "/read/php/api.php?fromjs=" +texttype +"/" +slugReady +"&type=B"
-    }).done(function(data) {
-      const prevArray = data.split(" ");
-      let prevSlug = prevArray[0];
-      let prevSlugPrint = prevSlug.replace(/pli-tv-|b[ui]-vb-/g, "");
-let prevName = prevArray.slice(1).join(" ");
-prevName = prevName.replace(/[0-9.]/g, '');
-      
-    if (prevName === undefined) {
-    var prevPrint = prevSlugPrint;
-      } else {
-        var prevPrint = prevSlugPrint +' ' +prevName;
-     }
-      let finder = (params.get("s") || "").replace(/ṃ/g, "ṁ");
+      scLink += generateThirdPartyLinks(slug, slugReady, texttype, translator);
+      scLink += "</p>";
 
-    previous.innerHTML = prevSlug
-  ? `<a href="?q=${prevSlug}${params.has("s") ? `&s=${finder}` : ""}">
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="body_1" width="15" height="11">
-      <g transform="matrix(0.021484375 0 0 0.021484375 2 -0)">
-        <g>
-          <path d="M353 450C 349.02106 450.0018 345.20444 448.4226 342.39 445.61L342.39 445.61L157.5 260.71C 151.64429 254.8525 151.64429 245.3575 157.5 239.5L157.5 239.5L342.39 54.6C 346.1788 50.809414 351.70206 49.328068 356.8792 50.713974C 362.05634 52.099876 366.10086 56.14248 367.4892 61.318974C 368.87753 66.49547 367.3988 72.01941 363.61002 75.81L363.61002 75.81L189.32 250.1L363.61 424.39C 367.90283 428.6801 369.18747 435.13425 366.8646 440.74118C 364.5417 446.34808 359.06903 450.00275 353 450z" stroke="none" fill="#8f8f8f" fill-rule="nonzero" />
-        </g>
-      </g>
-      </svg>${prevPrint.trim()}</a>`
-  : "";
-        previous2.innerHTML = previous.innerHTML;
-      }
-      );
-    }
-    );
+      const topContainer = document.getElementById('top-links-container');
+      const bottomContainer = document.getElementById('bottom-links-container');
+      if (topContainer) topContainer.innerHTML = scLink;
+      if (bottomContainer) bottomContainer.innerHTML = scLink;
+
+      renderNavigation(slug, slugReady);
+   
 	     addToSearchHistory(); 
 
     })
 .catch(error => {
   console.log('error: not found');
-  console.log('Slug:', slug, 'SlugReady:', slugReady);
-  console.log(`Paths:
-root: ${rootpath}
-trn : ${trnpath}
-html: ${htmlpath}
-var : ${varpath}`);
-
-  // Проверяем, не было ли уже слишком много попыток
   const redirectKey = `redirect_${slug}`;
   const redirectCount = localStorage.getItem(redirectKey) || 0;
   
   if (redirectCount >= 3) {
-    
-    console.error('Превышено максимальное количество редиректов для slug:', slug);
-      // Обновление сообщения об ошибке на странице
         suttaArea.innerHTML = `<p>Search for "${decodeURIComponent(slug)}" failed. Please try another slug.</p>
               <div class="spinner-border" role="status">
                 <span class="visually-hidden">Loading...</span>
@@ -621,12 +425,8 @@ More search options available from the main page.</p>`;
     return;
   }
 
-  // Увеличиваем счетчик и сохраняем
   localStorage.setItem(redirectKey, parseInt(redirectCount) + 1);
 
-
-// Отправка запроса по адресу http://localhost:8080/ru/?q= с использованием значения slug
-var xhr = new XMLHttpRequest();
 var xhr = new XMLHttpRequest();
 xhr.open("GET", "/?p=-kn&q=" + encodeURIComponent(slug), true);
 xhr.send();
@@ -634,20 +434,11 @@ xhr.send();
 xhr.onreadystatechange = function() {
   if (xhr.readyState == 4) {
     if (xhr.status == 200) {
-      // Проверяем, что ответ не является страницей 404 или другой ошибкой
-      // Например, можно проверить наличие определенного текста или структуры ответа
       if (!xhr.responseText.includes("Page not found") && 
           !xhr.responseText.includes("404") &&
           xhr.responseText.trim().length > 0) {
-        console.log(xhr.responseText);
         window.location.href = "/?p=-kn&q=" + encodeURIComponent(slug);
-      } else {
-        console.log('Page not found or empty response');
       }
-    } else if (xhr.status == 404) {
-      console.log('Error 404: Page not found');
-    } else {
-      console.log('Error sending request. Status:', xhr.status);
     }
   }
 };
@@ -667,7 +458,6 @@ if (lang) {
     setLanguage(lang);
   } else if  (localStorage.paliToggle) {
     	language = localStorage.paliToggle; 
-		//  console.log('read from ls ' + language);
 setLanguage(language);
   }
 } else {
@@ -700,7 +490,6 @@ setLanguage(language);
   
   
   <div>
-  <!-- <h2>Vinaya</h2> -->
   <div class="vinaya">
   <div>
   <h3>Bhikkhu Vinaya</h3>
@@ -768,9 +557,9 @@ setLanguage(language);
 }
 
 function setLanguage(language) {
-  if (language === "pli-eng") {
+  if (language === "pli-2nd") {
     showPaliEnglish();
-  } else if (language === "eng") {
+  } else if (language === "2nd") {
     showEnglish();
   } else if (language === "pli") {
     showPali();
@@ -781,10 +570,9 @@ function showPaliEnglish() {
   suttaArea.classList.remove("hide-pali");
   suttaArea.classList.remove("hide-english");
   suttaArea.classList.remove("hide-russian");
-    const savedMode = localStorage.getItem('viewMode') || 'alternate'; // Получаем сохранённое значение или 'alternate' по умолчанию
+  const savedMode = localStorage.getItem('viewMode') || 'alternate'; 
   const isColumnView = (savedMode === 'columns');
 
-  // Применяем сохранённый режим
   if (isColumnView) {
     suttaArea.classList.add('column-view');
   }
@@ -793,36 +581,34 @@ function showEnglish() {
   suttaArea.classList.add("hide-pali");
   suttaArea.classList.remove("hide-english");
   suttaArea.classList.remove("hide-russian");
-  suttaArea.classList.remove('column-view'); // Отключаем двухколоночный режим
+  suttaArea.classList.remove('column-view'); 
 }
 function showPali() {
   suttaArea.classList.add("hide-english");
-    suttaArea.classList.remove("hide-pali");
-      suttaArea.classList.add("hide-russian");
-      suttaArea.classList.remove('column-view'); // Отключаем двухколоночный режим
-  
+  suttaArea.classList.remove("hide-pali");
+  suttaArea.classList.add("hide-russian");
+  suttaArea.classList.remove('column-view'); 
 }
 
 function toggleThePali() {
   const languageButton = document.getElementById("language-button");
 
-  if (!localStorage.paliToggle) localStorage.paliToggle = "pli-eng";
+  if (!localStorage.paliToggle) localStorage.paliToggle = "pli-2nd";
 
   const newButton = languageButton.cloneNode(true);
   languageButton.parentNode.replaceChild(newButton, languageButton);
 
   newButton.addEventListener("click", () => {
-    // Та же обертка, но логика внутри своя (английская)
     runWithTransition(() => {
         if (language === "pli") {
           showPaliEnglish();
-          language = "pli-eng";
-          localStorage.paliToggle = "pli-eng";
-        } else if (language === "pli-eng") {
+          language = "pli-2nd";
+          localStorage.paliToggle = "pli-2nd";
+        } else if (language === "pli-2nd") {
           showEnglish();
-          language = "eng";
-          localStorage.paliToggle = "eng";
-        } else if (language === "eng") {
+          language = "2nd";
+          localStorage.paliToggle = "2nd";
+        } else if (language === "2nd") {
           showPali();
           language = "pli";
           localStorage.paliToggle = "pli";
@@ -831,14 +617,10 @@ function toggleThePali() {
   });
 }
 
-
-// clicking an abbreviation on the home page will replace the input field with that abbreviation
 const abbreviations = document.querySelectorAll("span.abbr");
 abbreviations.forEach(book => {
   book.addEventListener("click", e => {
     citation.value = e.target.innerHTML;
-    // form.input.setSelectionRange(10, 10);
     citation.focus();
   });
 });
-

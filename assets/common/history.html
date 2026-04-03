@@ -98,7 +98,7 @@
     }
   </style>
 </head>
-<body data-bs-theme="light">
+<body>
 
 <!-- НАВИГАЦИОННАЯ ПАНЕЛЬ -->
 <div class="container mt-3">
@@ -112,6 +112,11 @@
       <a href="/ru" title="Sutta and Vinaya search" rel="noreferrer" class="me-1">
         <img width="24px" alt="dhamma.gift icon" src="/assets/img/gray-white.png">
       </a>
+                      <a onclick="toggleQuickModal()" 
+                   aria-label="Open Cattāri Ariyasaccāni"
+                   class="me-1 ms-1 d-flex align-items-center cursor-pointer">
+                    <img src="/assets/svg/compass.svg" class="compass-icon">
+                </a>
       <a class="ms-1 toggle-dict-btn">
         <img src="/assets/svg/comment.svg" class="dictIcon-sitePages">
       </a>
@@ -166,7 +171,7 @@
       'title': 'История поиска',
       'description': 'Просмотр истории ваших поисковых запросов на Dhamma.gift.',
       'heading': 'История ваших поисковых запросов',
-      'subheading': 'Анонимная история, только на этом устройстве',
+      'subheading': 'Тексты и поисковые запросы',
       'query': 'Запрос',
       'date': 'Дата и время',
       'empty': 'История поиска пуста.',
@@ -176,7 +181,7 @@
       'title': 'Search History',
       'description': 'View your search history on Dhamma.gift.',
       'heading': 'Your Search History',
-      'subheading': 'Anonymous, only on this device',
+      'subheading': 'Texts and Searches',
       'query': 'Query',
       'date': 'Date and Time',
       'empty': 'Search history is empty.',

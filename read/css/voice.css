@@ -1,4 +1,3 @@
-
 .tts-active {
     background-color: rgba(var(--bs-primary-rgb), 0.2); /* Чуть прозрачнее, чем слово */
     border-radius: 0.25rem;
@@ -10,19 +9,12 @@
     box-decoration-break: clone;
 }
 
-
 @media (max-width: 768px) {
   .tts-active {
     scroll-margin-top: 15vh; 
   }
 }
 
-
-.tts-mini-button {
-  width: 17px; 
-  height: 17px; 
-  vertical-align: middle;
-}
 
 /* Универсальный класс для кнопок-иконок в меню Voice */
 .tts-icon-btn {
@@ -43,31 +35,16 @@
     text-decoration: none !important;
 }
 
+/* Точечное увеличение иконок (шестеренка и т.д.) на 20% */
 .tts-icon-btn img {
     display: block;
     margin: 0;
+    transform: scale(1.2); 
 }
 
 /* Убираем стандартные подчеркивания ссылок внутри плеера */
 .voice-player a {
     text-decoration: none !important;
-}
-
-
-/* Подсветка последнего нажатого слова (Bootstrap primary) */
-.active-word {
-  background-color: rgba(var(--bs-primary-rgb), 0.35);
-  border-radius: 0.25rem;
-    box-shadow: 0 0 0 1px rgba(var(--bs-secondary-rgb), 0.15);
-}
-
-.dark .active-word {
-  background-color: rgba(var(--bs-primary-rgb), 0.25);
-    box-shadow: 0 0 0 1px rgba(var(--bs-secondary-rgb), 0.15);
-}
-
-  .pli-lang, .rus-lang, .eng-lang {
-transition: background-color 260ms ease-in-out;
 }
 
 /* Объединенный стиль для селекторов режима и скорости */
@@ -76,11 +53,11 @@ transition: background-color 260ms ease-in-out;
     background: transparent;
     border: 1px solid #ccc;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 14px; 
     padding: 2px;
     color: #666;
     cursor: pointer;
-    margin-bottom: 5px; /* Чтобы не прилипали друг к другу при переносе */
+    margin-bottom: 5px; 
 }
 
 /* Стилизация темной темы для обоих селекторов */
@@ -93,12 +70,10 @@ transition: background-color 260ms ease-in-out;
 
 /* Контейнер для подписи "Speed" */
 .tts-speed-label {
-    font-size: 12px;
+    font-size: 14px; 
     color: #888;
     margin-right: 3px;
 }
-
-
 
 .tts-controls {
     display: flex;
@@ -154,9 +129,8 @@ transition: background-color 260ms ease-in-out;
     /* Состояние "Скрыто": смещаем вниз на 120% высоты элемента */
     transform: translate(-50%, 120%);
     
-    /* Сохраняем ваш дизайн */
     background: white;
-    padding: 10px;
+    padding: 10px; 
     border: 1px solid #ddd;
     z-index: 999;
     min-width: 130px;
@@ -173,14 +147,14 @@ transition: background-color 260ms ease-in-out;
     visibility: visible;
     opacity: 1;
     
-    /* Поднимаем чуть выше края экрана (на 30px), чтобы висела красиво, как раньше */
+    /* Поднимаем чуть выше края экрана */
     transform: translate(-50%, -30px);
     
     /* Убираем задержку видимости при появлении */
     transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease, visibility 0s;
 }
 
-/* Темная тема (остается без изменений, просто для сохранения контекста) */
+/* Темная тема */
 .dark .voice-player {
     background: #333;
     border-color: #555;
@@ -195,23 +169,22 @@ transition: background-color 260ms ease-in-out;
 /* Мобильная адаптация */
 @media (max-width: 768px) {
     .voice-player {
-    width: 95%;  /* Чуть шире на мобильных */
-        max-width: 210px;
-        max-height: 80vh;
+        width: 95%;  
+        max-width: 210px; 
+        max-height: 95vh; 
         overflow-y: auto;
     }
     
-.tts-link {
-  font-size: 0.7em;
-  position: relative;
-  top: -2px;
-}
-    /* При активном состоянии на мобильных можно поднимать чуть меньше, если нужно */
+    .tts-link {
+        font-size: 0.85em; 
+        position: relative;
+        top: -2px;
+    }
     .voice-dropdown.active .voice-player {
          transform: translate(-50%, -20px);
     }
 }
-/*
+
 .close-tts-btn {
   position: relative; 
   top: -3px;    
@@ -219,15 +192,14 @@ transition: background-color 260ms ease-in-out;
   color: #999;
   text-decoration: none !important;
   z-index: 10;
+  font-size: 1.3em; 
 }
-*/
 
 .close-tts-btn:hover {
   opacity: 0.7;
-  color: #333;        /* Затемнение при наведении */
+  color: #333;        
 }
 
-/* Для темной темы (чтобы крестик был виден) */
 .dark .close-tts-btn {
   color: #bbb;
 }
@@ -235,17 +207,18 @@ transition: background-color 260ms ease-in-out;
   color: #fff;
 }
 
-
 .tts-icon {
   display: inline-block;
 }
 
 .tts-icon.backward, .tts-icon.forward {
-  width: 20px;
+  width: 24px; 
+  transform: none; 
 }
 
 .tts-icon.play {
-  width: 45px;
+  width: 45px; 
+  transform: none; 
 }
 
 .tts-icon.forward {
@@ -253,87 +226,54 @@ transition: background-color 260ms ease-in-out;
   right:5px;
 }
 
-
 .tts-mode-select,
 .tts-rate-select {
-  font-size: 14px;
+  font-size: 16px; 
 }
 
-/* Анимация появления: увеличение с небольшим отскоком */
-@keyframes btnPopIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.5); /* Начинаем с маленького размера */
-  }
-  60% {
-    transform: scale(1.1); /* Чуть увеличиваем больше нормы (пружина) */
-  }
-  100% {
-    opacity: 0.8;
-    transform: scale(1);   /* Возвращаем в норму */
-  }
+/* Лейбл точь-в-точь как Scroll и Autoplay */
+.tts-delay-label { 
+    font-size: 16px; 
+    color: #666; 
+    margin: 0; 
+    display: inline-flex; 
+    align-items: center; 
+    justify-content: center;
+    gap: 3px; /* СУЗИЛИ: было 6px, теперь песочные часы ближе к тексту/инпуту */
+    line-height: 1;
+    padding: 2px 4px; /* Немного уменьшили боковые отступы */
 }
 
-.dynamic-tts-btn {
-  position: fixed;
-  right: 90px; 
-  bottom: 30px; 
-  z-index: 99;
-  width: 30px;  
-  height: 30px;
-  
-  /* Идеальная центровка */
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  
-  box-sizing: border-box;
-  border-radius: 50%; /* Круглая форма */
-  border: 2px solid #5a5a5a; 
-  background-color: rgb(221, 221, 221);
-  cursor: pointer;
-  
-  /* --- ИЗМЕНЕНИЯ ЗДЕСЬ --- */
-  opacity: 0; /* Исходно невидима, анимация сделает 0.8 */
-  transform: scale(0.5); /* Исходно маленькая */
-  animation: btnPopIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-  /* ----------------------- */
-
-  transition: all 0.3s ease; /* Это оставим для hover эффектов */
-  padding: 0;
-  margin: 0;
+.dark .tts-delay-label {
+    color: #ccc;
 }
 
-.dynamic-tts-btn.shifted {
-  right: 132px; /* Сдвигаем левее, чтобы освободить место кнопке "Вверх" */
+/* Инпут прозрачный, с цветами как у остального текста */
+.tts-delay-input { 
+    width: 40px; /* СУЗИЛИ: было 44px, чтобы сэкономить место для корзины */
+    height: 26px; 
+    box-sizing: border-box;
+    background: transparent; 
+    border: 1px solid #ccc; 
+    color: #666; 
+    border-radius: 4px; 
+    padding: 0; 
+    margin: 0;
+    font-size: 16px; 
+    text-align: center; 
+    outline: none;
+    -webkit-appearance: none; 
+    appearance: none;
+    box-shadow: none;
 }
 
-/* Добавим эффект при наведении для живости */
-.dynamic-tts-btn:hover {
-  opacity: 1 !important;
-  transform: scale(1.1) !important; /* Кнопка чуть увеличится при наведении */
+.dark .tts-delay-input { 
+    background: #333; 
+    border-color: #555; 
+    color: #ccc; 
 }
 
-
-.dynamic-tts-btn img {
-  width: 14px;
-  height: 14px;
-  /* Убираем любые дефолтные смещения браузера */
-  display: block;
-  margin: 0 auto; 
-}
-
-/* Темная тема для соответствия uiextra.css */
-.dark .dynamic-tts-btn {
-  border-color: #5a5a5a;
-  background-color: #42426a;
-}
-
-.dark .dynamic-tts-btn img {
-  filter: invert(1);
-}
-
-/* 1. Контейнер лейбла */
+/* Контейнер лейбла */
 .tts-checkbox-custom {
   display: inline-flex;
   align-items: center;
@@ -347,7 +287,6 @@ transition: background-color 260ms ease-in-out;
   width: auto;
 }
 
-/* 2. Сам чекбокс (базовые настройки для светлой темы) */
 .tts-checkbox-custom input {
   appearance: checkbox !important;
   -webkit-appearance: checkbox !important;
@@ -358,11 +297,9 @@ transition: background-color 260ms ease-in-out;
   cursor: pointer;
   vertical-align: middle;
   border-radius: 4px;
-  /* Принудительно задаем светлую схему для белого фона */
   color-scheme: light; 
 }
 
-/* 3. Поддержка темной темы */
 .dark .tts-checkbox-custom {
   border-color: #555;
   color: #ccc;
@@ -370,60 +307,248 @@ transition: background-color 260ms ease-in-out;
 }
 
 .dark .tts-checkbox-custom input {
-    /* Принудительно задаем темную схему для темного фона */
     color-scheme: dark;
 }
 
-/* Убираем или меняем accent-color, если он перекрывает стандартный вид */
 .tts-checkbox-custom input[type="checkbox"] {
   accent-color: #5a5a5a; 
 }
 
-/* --- ГРУППОВАЯ ПОДСВЕТКА БЛОКА (Исправленная) --- */
-
-/* 1. Сам блок-контейнер */
+/* ГРУППОВАЯ ПОДСВЕТКА БЛОКА */
 #sutta span[id]:has(.tts-active) {
     display: block; 
-        scroll-margin-top: 15vh;
-
-    /* Зеленоватый цвет (тот же тон, что и active-word), прозрачность 0.15 */
+    scroll-margin-top: 15vh;
     background-color: rgba(var(--bs-primary-rgb), 0.25);
     border-radius: 6px;
- /*   padding: 2px 2px; 
-    margin: 2px -2px; */
     transition: background-color 0.2s ease;
-    /* Убирает разрывы заливки, если блок переносится */
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
 }
 
-/* 2. Поддержка темной темы */
 .dark #sutta span[id]:has(.tts-active),
 body[data-theme="dark"] #sutta span[id]:has(.tts-active) {
-    /* В темной теме чуть плотнее, чтобы было видно */
     background-color: rgba(var(--bs-primary-rgb), 0.30); 
 }
 
-/* 3. УБИРАЕМ АРТЕФАКТЫ ВНУТРИ (Самое важное) */
-/* Мы говорим: если блок подсвечен целиком, то внутренние элементы (.active-word и .tts-active)
-   должны стать полностью прозрачными и без рамок */
 #sutta span[id]:has(.tts-active) .tts-active,
 #sutta span[id]:has(.tts-active) .active-word {
     background-color: transparent !important;
-    box-shadow: none !important; /* Убирает "тень" или обводку вокруг слов */
+    box-shadow: none !important; 
     border: none !important;
     border-radius: 0;
-    padding: 0; /* Убираем отступы, чтобы текст не прыгал */
+    padding: 0; 
 }
 
-/* 4. Исправление для режима колонок */
 .column-view #sutta span[id]:has(.tts-active) {
     display: flow-root;
 }
 
-/* Выравнивание плеера и боковых кнопок в одну горизонтальную линию на широких экранах */
 @media (min-width: 475px) {
     .voice-dropdown.active .voice-player {
         transform: translate(-50%, 25px);
     }
+}
+
+/* Универсальный класс для полей ввода (A-B таймеры) */
+.tts-editable-span { 
+    display: inline-block;
+    box-sizing: border-box;
+    min-width: 46px; /* СУЗИЛИ: было 50px (изначально 42px). Золотая середина для вместимости */
+    background: #eee; 
+    border: 1px solid #ccc; 
+    color: #333; 
+    border-radius: 4px; 
+    padding: 0 2px; 
+    font-size: 13px; 
+    text-align: center; 
+    outline: none;
+    line-height: 21px; 
+    cursor: text;
+    transition: background 0.3s, color 0.3s; 
+}
+
+.dark .tts-editable-span { 
+    background: #333; 
+    border: 1px solid #555; 
+    color: #ccc; 
+}
+
+.refresh-api-btn img, 
+.reset-tts-btn img {
+    pointer-events: none;
+}
+
+
+/* --- ОБНОВЛЕНИЕ СУЩЕСТВУЮЩИХ СЕЛЕКТОРОВ --- */
+
+.tts-main-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 15px;
+    height: 40px;
+    position: relative; /* Добавлено из JS */
+}
+
+/* =========================================
+   A-B Loop / Voice Memory Styles (Из voice-mem.js)
+   ========================================= */
+
+.memo-app-btn {
+    position: absolute;
+    left: 20px;
+    top: 34px;
+    background: transparent;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: #777;
+    font-size: 9px;
+    font-family: sans-serif;
+    font-weight: 700;
+    padding: 2px 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    z-index: 10;
+    line-height: 1;
+}
+.memo-app-btn:hover { background: #eee; color: #333; border-color: #bbb; }
+.dark .memo-app-btn { border-color: #555; color: #aaa; }
+.dark .memo-app-btn:hover { background: #444; color: #fff; border-color: #777; }
+
+.ab-loop-toggle-btn {
+    position: absolute;
+    right: 20px; 
+    top: 34px;   
+    background: transparent;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: #777;
+    font-size: 9px;
+    font-family: sans-serif;
+    font-weight: 700;
+    padding: 2px 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    z-index: 10;
+    line-height: 1;
+}
+.ab-loop-toggle-btn:hover { background: #eee; color: #333; border-color: #bbb; }
+.dark .ab-loop-toggle-btn { border-color: #555; color: #aaa; }
+.dark .ab-loop-toggle-btn:hover { background: #444; color: #fff; border-color: #777; }
+
+.ab-loop-toggle-btn.loop-active {
+    color: var(--blue, #3434be);
+    border-color: var(--blue, #3434be);
+    background: rgba(52, 52, 190, 0.05);
+}
+.dark .ab-loop-toggle-btn.loop-active {
+    color: rgb(122, 122, 249);
+    border-color: rgb(122, 122, 249);
+    background: rgba(122, 122, 249, 0.1);
+}
+
+#memorize-panel {
+    width: 100%;
+    box-sizing: border-box;
+    max-height: 0; opacity: 0; overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
+    border-top: 1px dashed #555;
+    background: transparent;
+    padding: 0 5px;
+}
+#memorize-panel.visible {
+    max-height: 400px; opacity: 1; margin-top: 10px; padding-top: 8px;
+}
+.mem-row { 
+    width: 100%; box-sizing: border-box; 
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; 
+}
+
+.mem-row-actions {
+    justify-content: space-around; 
+    gap: 5px;
+}
+
+.mem-btn-wrapper { 
+    display: flex; align-items: center; gap: 4px; 
+    flex: 1; min-width: 0; width: 50%;
+}
+.mem-btn-label { color: #aaa; font-size: 11px; flex-shrink: 0; font-weight: 600; }
+
+.mem-pick-btn {
+    flex: 1; min-width: 0; width: 100%; 
+    background: #eee; border: 1px dashed #ccc; color: #555;
+    padding: 4px; border-radius: 4px; font-size: 11px; cursor: pointer;
+    transition: all 0.2s; text-align: left; 
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    user-select: none; -webkit-user-select: none; 
+    display: block; 
+}
+
+.mem-pick-btn span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 58px;
+}
+
+.dark .mem-pick-btn { background: #333; border-color: #555; color: #aaa; }
+
+.mem-pick-btn.picking { border-color: var(--blue, #3434be); background: rgba(52, 52, 190, 0.1); animation: memPulseLight 1.5s infinite; color: #333; }
+.mem-pick-btn.set { border-color: var(--blue, #3434be); border-style: solid; color: #000; }
+.mem-status { font-size: 11px; color: var(--blue, #3434be); text-align: center; margin-top: 2px; min-height: 14px; }
+
+.dark .mem-pick-btn.picking { border-color: rgb(122, 122, 249); background: rgba(122, 122, 249, 0.15); animation: memPulseDark 1.5s infinite; color: #fff; }
+.dark .mem-pick-btn.set { border-color: rgb(122, 122, 249); color: #fff; }
+.dark .mem-status { color: rgb(122, 122, 249); }
+
+.memorize-highlight { 
+    border-left: 3px solid var(--blue, #3434be) !important; 
+    padding-left: 5px !important; 
+    margin-bottom: 0 !important;
+    padding-bottom: 4px !important;
+}
+.dark .memorize-highlight { 
+    border-left: 3px solid rgb(122, 122, 249) !important; 
+}
+
+#sutta span[id]:has(.tts-active) .memorize-highlight.tts-active,
+#sutta span[id]:has(.tts-active) .memorize-highlight.active-word {
+    border-left: 3px solid var(--blue, #3434be) !important;
+    padding-left: 5px !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 4px !important;
+}
+.dark #sutta span[id]:has(.tts-active) .memorize-highlight.tts-active,
+.dark #sutta span[id]:has(.tts-active) .memorize-highlight.active-word {
+    border-left: 3px solid rgb(122, 122, 249) !important;
+}
+
+.mem-label { font-size: 11px; color: #aaa; margin: 0; display: flex; align-items: center; gap: 5px; }
+
+.mem-clear-btn {
+    background: transparent; border: none; font-size: 14px; cursor: pointer; padding: 2px;
+    display: flex; align-items: center; justify-content: center; opacity: 0.7; transition: 0.2s;
+}
+.mem-clear-btn:hover { opacity: 1; transform: scale(1.1); }
+
+@keyframes memPulseLight { 0% { box-shadow: 0 0 0 0 rgba(52, 52, 190, 0.4); } 70% { box-shadow: 0 0 0 4px rgba(52, 52, 190, 0); } 100% { box-shadow: 0 0 0 0 rgba(52, 52, 190, 0); } }
+@keyframes memPulseDark { 0% { box-shadow: 0 0 0 0 rgba(122, 122, 249, 0.4); } 70% { box-shadow: 0 0 0 4px rgba(122, 122, 249, 0); } 100% { box-shadow: 0 0 0 0 rgba(122, 122, 249, 0); } }
+
+.ab-btn-timer-text {
+    display: none; 
+    margin-left: 2px; 
+    font-variant-numeric: tabular-nums;
+}
+.mem-timer-icon {
+    margin-right: 4px; 
+    vertical-align: text-bottom;
 }

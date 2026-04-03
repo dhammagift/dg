@@ -1,0 +1,19 @@
+[
+  {
+    "title": "Dukkhasamudayaṁ Ariyasaccaṁ",
+    "url": "/?text=Katama%C3%B1ca%2C+bhikkhave%2C+dukkhasamudaya%E1%a%E1%B9%81+s%C4%81tar%C5%ABpa%E1%B9%81%2C+etthes%C4%81+ta%E1%B9%87h%C4%81+uppajjam%C4%81n%C4%81+uppajjati%2C+ettha+nivisam%C4%81n%C4%81+nivisati.%0AIda%E1%B9%81+vuccati%2C+bhikkhave%2C+dukkhasamudaya%E1%B9%81+ariyasacca%E1%B9%81.&delay=30&end=10&trn=0&loop=1&lc=%E2%88%9E&snd=gong.mp3&sep=%5Cn"
+  },
+  {
+    "title": "Пример нового, читаемого пресета",
+    "text": "Sabbaṁ taṁ abhiññāya...\nПросто пишем текст здесь с переносами \\n",
+    "delay": 20,
+    "end": 5,
+    "loop": 1,
+    "snd": "tick.mp3",
+    "sep": "\\n"
+  }
+]
+
+
+
+

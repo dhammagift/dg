@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Sync - Dhamma.gift</title>
+    
+    <link rel="icon" type="image/png" href="/assets/img/favico-noglass.png" />
+    
+    <link href="/assets/css/styles.css" rel="stylesheet" />
+    <link href="/assets/css/jquery-ui.min.css" rel="stylesheet" />
+    <link href="/assets/css/extrastyles.css" rel="stylesheet" />
+
+    <script src="/assets/js/fontawesome.6.1.all.js"></script>
+    
+    <style>
+        body { 
+            display: flex; 
+            flex-direction: column;
+            min-height: 100vh; 
+            margin: 0; 
+        }
+        
+        /* Навигация строго по верхнему краю */
+        .top-nav-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .nav-icon {
+            color: #989898 !important;
+            font-size: 24px; 
+            transition: color 0.2s;
+        }
+        .nav-icon:hover {
+            color: var(--bs-body-color) !important;
+        }
+        
+        /* Плашка синхронизации */
+        .sync-wrapper { 
+            max-width: 450px; 
+            width: 100%; 
+            border-radius: 16px; 
+            padding: 30px; 
+            margin: 90px auto 40px auto; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            background-color: var(--bs-body-bg, #ffffff);
+            color: var(--bs-body-color, #212529);
+        }
+
+        /* ЖЕСТКОЕ ПЕРЕОПРЕДЕЛЕНИЕ ДЛЯ ТЕМНОЙ ТЕМЫ */
+        body.dark .sync-wrapper,
+        [data-bs-theme="dark"] .sync-wrapper, 
+        [data-theme="dark"] .sync-wrapper,
+        body.dark .modal-content,
+        [data-bs-theme="dark"] .modal-content, 
+        [data-theme="dark"] .modal-content {
+            background-color: #212529 !important;
+            border-color: #343a40 !important;
+            color: #f8f9fa !important;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6) !important;
+        }
+
+        /* Улучшение читаемости серого текста в темной теме */
+        body.dark .text-muted, [data-bs-theme="dark"] .text-muted, [data-theme="dark"] .text-muted,
+        body.dark .opacity-75, [data-bs-theme="dark"] .opacity-75, [data-theme="dark"] .opacity-75 {
+            color: #ced4da !important;
+            opacity: 1 !important;
+        }
+
+        .logo-placeholder { text-align: center; font-size: 3.5rem; margin-bottom: 10px; line-height: 1; }
+        
+        .status-card { 
+            border-radius: 10px; 
+            padding: 15px; 
+            background: rgba(128, 128, 128, 0.05);
+        }
+
+        #sync-phrase-value-status { 
+            font-family: monospace; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            background: rgba(128, 128, 128, 0.1);
+        }
+        
+        .sync-mini-btn { padding: 4px 10px; font-size: 0.85rem; }
+        
+        .danger-link { cursor: pointer; text-decoration: none; font-size: 0.85rem; }
+        .danger-link:hover { text-decoration: underline; opacity: 0.8; }
+        
+        .logout-link { cursor: pointer; text-decoration: none; font-size: 0.85rem; transition: 0.2s; }
+        .logout-link:hover { text-decoration: underline; }
+        
+        /* Темная тема для поля ввода */
+        body.dark .form-control,
+        [data-bs-theme="dark"] .form-control, 
+        [data-theme="dark"] .form-control {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            border-color: #495057 !important;
+            color: #f8f9fa !important;
+        }
+
+        /* Цвет плейсхолдера в темной теме */
+        body.dark .form-control::placeholder,
+        [data-bs-theme="dark"] .form-control::placeholder, 
+        [data-theme="dark"] .form-control::placeholder {
+            color: #adb5bd !important;
+        }
+    </style>
+</head>
+<body class="bg-body text-body">
+
+    <div class="top-nav-bar">
+        <div class="d-flex align-items-center gap-2">
+            <a href="/read.php" id="nav_home_link" title="Home" class="text-decoration-none">
+                <svg fill="#979797" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="26px" viewBox="0 0 547.596 547.596" xml:space="preserve" stroke="#979797"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#CCCCCC" stroke-width="3.285576"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M540.76,254.788L294.506,38.216c-11.475-10.098-30.064-10.098-41.386,0L6.943,254.788 c-11.475,10.098-8.415,18.284,6.885,18.284h75.964v221.773c0,12.087,9.945,22.108,22.108,22.108h92.947V371.067 c0-12.087,9.945-22.108,22.109-22.108h93.865c12.239,0,22.108,9.792,22.108,22.108v145.886h92.947 c12.24,0,22.108-9.945,22.108-22.108v-221.85h75.965C549.021,272.995,552.081,264.886,540.76,254.788z"></path> </g> </g></svg>
+            </a>
+            <a href="/" id="nav_search_link" title="Search" class="text-decoration-none">
+                <img width="24px" alt="dhamma.gift icon" src="/assets/img/gray-white.png">
+            </a>
+
+                <a id="theme-button" title="Switch theme (Alt+T)" onclick="switchIcon(this)" class="mx-1 top-nav-icon-link">
+                    <img src="/assets/svg/circle-half-stroke.svg" alt="Switch theme" class="top-nav-icon changesvg">
+                </a>
+            <a onclick="toggleQuickModal()" title="Compass" class="text-decoration-none cursor-pointer d-flex align-items-center">
+                <img src="/assets/svg/compass.svg" class="compass-icon" style="height: 24px; opacity: 0.7; transition: 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+            </a>
+                
+        </div>
+        <div id="lang-switcher" class="d-flex align-items-center"></div>
+    </div>
+
+    <div class="container d-flex justify-content-center px-3">
+        <div class="sync-wrapper border">
+            <div class="logo-placeholder" style="display: flex; align-items: center; justify-content: center; gap: 12px; color: #87CEEB;">
+                <img src="/assets/img/pwa-bold-monocolor-192.png" alt="logo" style="width: 55px; height: 55px;">
+                <i class="fa-solid fa-cloud"></i>
+            </div>
+            
+            <h2 id="sync-page-title" class="text-center mb-2 fw-bold">Cloud Sync</h2>
+            <p id="sync-page-desc" class="text-center opacity-75 mb-4" style="font-size: 0.95rem;">Sync your history, favorites, and settings.</p>
+
+            <div id="sync-logged-out">
+                <button id="btn-google-login" class="btn btn-outline-primary w-100 mb-3 fw-medium" onclick="syncLoginGoogleWrapper()">
+                    <i class="fa-brands fa-google me-2"></i> Sign in with Google
+                </button>
+
+                <div class="d-flex align-items-center mb-3">
+                    <hr class="flex-grow-1 border-secondary-subtle"><span id="sync-or" class="px-3 opacity-75" style="font-size: 0.85rem;">or</span><hr class="flex-grow-1 border-secondary-subtle">
+                </div>
+                
+                <label id="sync-phrase-label" class="form-label fw-medium">Login Anonymously with Secret Passphrase</label>
+                <div class="input-group mb-2">
+                    <input type="password" id="sync-phrase-input" class="form-control" placeholder="e.g. Dukkha-Samudayo-8358">
+                    <button class="btn btn-outline-secondary" type="button" onclick="uiToggleEyeInput()" id="btn-toggle-eye" style="width: 50px;">
+                        <i class="fa-solid text-muted fa-eye"></i>
+                    </button>
+                </div>
+                
+                <div id="sync-hint" class="opacity-75 mb-4" style="font-size: 0.85rem; line-height: 1.4;">
+                    Min 8 chars. Using this phrase, you can anonymously access your synced data from any device.
+                </div>
+                
+                <button id="btn-phrase-login" class="btn btn-success w-100 fw-medium" onclick="uiLoginPhrase()">
+                    Anonymous Login
+                </button>
+            </div>
+
+            <div id="sync-logged-in" style="display: none;">
+                <div class="status-card border mb-3">
+                    <div class="mb-3">
+                        <div id="sync-status-label" class="opacity-75 mb-1" style="font-size: 0.85rem;">Account:</div>
+                        <div id="sync-user-info" class="text-primary fw-medium" style="font-size: 1rem; word-break: break-all;"></div>
+                    </div>
+
+                    <hr class="my-2 border-secondary-subtle">
+
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <div>
+                            <div id="sync-time-label" class="opacity-75" style="font-size: 0.8rem; line-height: 1.2;">Last synced:</div>
+                            <div id="sync-last-time" class="fw-semibold" style="font-size: 0.9rem;">Never</div>
+                        </div>
+                        <button id="btn-sync-now-login" class="btn btn-outline-primary sync-mini-btn" onclick="forceSyncNow()" title="Sync Now">
+                            <i class="fa-solid fa-rotate me-1"></i> <span id="lbl-sync">Sync</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between pt-2 px-1 align-items-center">
+                    <a class="logout-link opacity-75" onclick="syncLogout()">
+                        <i class="fa-solid fa-arrow-right-from-bracket me-1"></i> <span id="lbl-logout">Logout</span>
+                    </a>
+                    <a class="danger-link text-danger" onclick="uiDeleteAccount()">
+                        <i class="fa-solid fa-trash-can me-1"></i> <span id="lbl-delete">Delete Cloud Data</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="mergeChoiceModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header border-bottom-0 pb-0">
+            <h5 class="modal-title fw-bold" id="mergeModalTitle">Локальные данные</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body opacity-75" id="mergeModalBody" style="font-size: 0.95rem;">
+            Мы нашли историю поиска и избранное на этом устройстве. Как вы хотите поступить при входе?
+          </div>
+          <div class="modal-footer border-top-0 pt-0 flex-column align-items-stretch gap-2 mt-2">
+            <button type="button" class="btn btn-primary m-0" id="btn-modal-merge" onclick="executePendingLogin('merge')" data-bs-dismiss="modal">
+                Объединить с облаком
+            </button>
+            <button type="button" class="btn btn-outline-danger m-0" id="btn-modal-overwrite" onclick="executePendingLogin('overwrite')" data-bs-dismiss="modal">
+                Заменить из облака (Удалить локальные)
+            </button>
+            <button type="button" class="btn btn-ghost text-muted m-0" id="btn-modal-cancel" data-bs-dismiss="modal">Отмена</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/assets/js/jquery-3.7.0.min.js"></script>
+    <script src="/assets/js/bootstrap.bundle.5.3.1.min.js"></script>
+<script defer src="/assets/js/themeswitch.js"></script>
+    <script src="/assets/js/settings.js"></script>
+
+    <script>
+        const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
+        
+        document.addEventListener("DOMContentLoaded", () => {
+            // Адаптация ссылок "Домик" и "Лупа"
+            if (isRu) {
+                const navHomeLink = document.getElementById('nav_home_link');
+                if (navHomeLink) navHomeLink.href = "/ru/read.php";
+                const navSearchLink = document.getElementById('nav_search_link');
+                if (navSearchLink) navSearchLink.href = "/ru/";
+            }
+
+            // Переключатель En/Ru
+            const switcher = document.getElementById('lang-switcher');
+            if (switcher) {
+                const currentPath = window.location.pathname;
+                const currentSearch = window.location.search;
+                if (isRu) {
+                    let enPath = currentPath.replace(/^\/(ru|r|ml)\//, '/');
+                    switcher.innerHTML = `
+                        <a class="btn btn-sm btn-secondary rounded-pill py-0 px-1 text-decoration-none me-0" href="${enPath + currentSearch}">en</a>
+                        <span class="py-0 px-1 text-muted">ru</span>
+                    `;
+                } else {
+                    let ruPath = '/ru' + (currentPath === '/' ? '' : currentPath);
+                    switcher.innerHTML = `
+                        <span class="py-0 px-1 text-muted me-0">en</span>
+                        <a class="btn btn-sm btn-secondary rounded-pill py-0 px-1 text-decoration-none" href="${ruPath + currentSearch}">ru</a>
+                    `;
+                }
+            }
+
+            // Обработка Enter
+            const phraseInput = document.getElementById('sync-phrase-input');
+            if (phraseInput) {
+                phraseInput.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        uiLoginPhrase();
+                    }
+                });
+            }
+        });
+
+        // ПРОВЕРКА НАЛИЧИЯ ДАННЫХ ДЛЯ ОТОБРАЖЕНИЯ МОДАЛКИ
+        function hasLocalData() {
+            const hist = JSON.parse(localStorage.getItem('localSearchHistory')) || [];
+            const favs = JSON.parse(localStorage.getItem('dg_favorites')) || [];
+            return hist.length > 0 || favs.length > 0;
+        }
+
+        function showMergeModal() {
+            const title = document.getElementById('mergeModalTitle');
+            const body = document.getElementById('mergeModalBody');
+            const btnMerge = document.getElementById('btn-modal-merge');
+            const btnOverwrite = document.getElementById('btn-modal-overwrite');
+            const btnCancel = document.getElementById('btn-modal-cancel');
+
+            if (title) {
+                title.textContent = isRu ? "Обнаружены локальные данные" : "Local Data Found";
+                body.innerHTML = isRu 
+                    ? "На этом устройстве есть сохраненная история и избранное. Как поступить при входе?<br><br><b>Объединить</b>: сохранить текущие данные и добавить к ним облачные.<br><b>Заменить</b>: удалить данные с этого устройства и скачать копию из облака." 
+                    : "History and favorites were found on this device. How would you like to proceed?<br><br><b>Merge</b>: keep local data and combine it with the cloud.<br><b>Overwrite</b>: delete data from this device and download cloud copy.";
+                btnMerge.textContent = isRu ? "Объединить (Merge)" : "Merge Data";
+                btnOverwrite.textContent = isRu ? "Заменить из облака (Overwrite)" : "Overwrite from Cloud";
+                btnCancel.textContent = isRu ? "Отмена" : "Cancel";
+            }
+            
+            const modal = new bootstrap.Modal(document.getElementById('mergeChoiceModal'));
+            modal.show();
+        }
+
+        // Выполняется после выбора ответа в модалке
+        function executePendingLogin(mode) {
+            if (mode === 'overwrite') {
+                // Если пользователь выбрал затереть, сносим базу прямо перед логином
+                localStorage.removeItem('localSearchHistory');
+                localStorage.removeItem('dg_favorites');
+                localStorage.removeItem('dg_deleted_history');
+            }
+            
+            if (window.pendingLoginType === 'google') {
+                if (typeof syncLoginGoogle === 'function') syncLoginGoogle();
+            } else if (window.pendingLoginType === 'phrase') {
+                uiLoginPhrase(true); // Передаем флаг "пропустить проверку", так как выбор уже сделан
+            }
+        }
+
+        // Обертка для входа через Google
+        window.syncLoginGoogleWrapper = function() {
+            if (hasLocalData()) {
+                window.pendingLoginType = 'google';
+                showMergeModal();
+            } else {
+                if (typeof syncLoginGoogle === 'function') syncLoginGoogle();
+            }
+        };
+
+        // НАДЕЖНОЕ КОПИРОВАНИЕ
+        window.copySyncPhrase = function() {
+            const realPhraseSpan = document.getElementById('sync-phrase-real-status');
+            if (!realPhraseSpan) return;
+            
+            const phraseToCopy = realPhraseSpan.textContent;
+
+            if (phraseToCopy) {
+                const tempTextarea = document.createElement("textarea");
+                tempTextarea.value = phraseToCopy;
+                tempTextarea.style.position = "fixed";
+                tempTextarea.style.left = "-999999px";
+                document.body.appendChild(tempTextarea);
+                tempTextarea.select();
+                
+                try {
+                    document.execCommand("copy");
+                    if (typeof showBubbleNotification === 'function') {
+                        showBubbleNotification(isRu ? ' Скопировано' : 'Copied to Clipboard');
+                    }
+                } catch (err) {}
+                document.body.removeChild(tempTextarea);
+            }
+        };
+
+        async function uiDeleteAccount() {
+            const confirmMsg = isRu 
+                ? "Вы уверены? Это удалит данные ТОЛЬКО из облака. \n\nВаша локальная история и избранное на этом устройстве останутся нетронутыми." 
+                : "Are you sure? This will delete data ONLY from the cloud. \n\nYour local history and favorites on this device will remain safe.";
+
+            if (confirm(confirmMsg)) {
+                const btnDelete = document.getElementById('lbl-delete');
+                if (btnDelete) btnDelete.textContent = isRu ? "Удаление..." : "Deleting...";
+                if (typeof showBubbleNotification === 'function') {
+                    showBubbleNotification(isRu ? "🗑️ Данные в облаке удалены" : "🗑️ Cloud data deleted");
+                }
+                if (typeof syncDeleteData === 'function') await syncDeleteData();
+            }
+        }
+
+        // ФУНКЦИЯ ВХОДА С ПРОВЕРКОЙ (skipCheck - флаг обхода проверки)
+        async function uiLoginPhrase(skipCheck = false) {
+            const input = document.getElementById('sync-phrase-input');
+            const phrase = input.value;
+            
+            if (phrase && phrase.trim().length >= 8) {
+                
+                // Перехватываем ввод, если есть данные и мы еще не показывали модалку
+                if (!skipCheck && hasLocalData()) {
+                    window.pendingLoginType = 'phrase';
+                    showMergeModal();
+                    return; // Ждем ответа от пользователя в окне
+                }
+
+                const rawPhrase = phrase.trim().toLowerCase().replace(/\s+/g, '-');
+                const btn = document.getElementById('btn-phrase-login');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin me-2"></i>` + (isRu ? "Вход..." : "Logging in...");
+                }
+
+                try {
+                    const msgUint8 = new TextEncoder().encode(rawPhrase);
+                    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+                    const hashArray = Array.from(new Uint8Array(hashBuffer));
+                    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                    const hashedId = "anon_" + hashHex.substring(0, 24);
+
+                    input.value = ''; 
+                    syncEnablePhrase(rawPhrase, hashedId);
+                } catch(e) {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = isRu ? "Ошибка" : "Error";
+                    }
+                }
+            } else {
+                if (typeof showBubbleNotification === 'function') {
+                    showBubbleNotification(isRu ? "❌ Слишком короткая фраза" : "❌ Phrase too short");
+                }
+            }
+        }
+
+        function uiToggleEyeInput() {
+            const input = document.getElementById('sync-phrase-input');
+            const eyeBtn = document.getElementById('btn-toggle-eye');
+            const isPass = input.type === 'password';
+            input.type = isPass ? 'text' : 'password';
+            eyeBtn.innerHTML = isPass ? '<i class="fa-solid text-muted fa-eye-slash"></i>' : '<i class="fa-solid text-muted fa-eye"></i>';
+        }
+
+        function uiToggleEyeStatus() {
+            const valueSpan = document.getElementById('sync-phrase-value-status');
+            const realSpan = document.getElementById('sync-phrase-real-status');
+            const eyeBtn = document.getElementById('sync-status-eye-btn');
+            const isHidden = realSpan.style.display === 'none';
+            
+            realSpan.style.display = isHidden ? 'inline' : 'none';
+            valueSpan.style.display = isHidden ? 'none' : 'inline';
+            eyeBtn.innerHTML = isHidden ? '<i class="fa-solid text-muted fa-eye-slash"></i>' : '<i class="fa-solid text-muted fa-eye"></i>';
+        }
+
+        function getFormattedTime() {
+            const ts = localStorage.getItem('lastSyncTime');
+            if (!ts) return isRu ? "Никогда" : "Never";
+            const date = new Date(parseInt(ts));
+            return date.toLocaleString(isRu ? 'ru-RU' : 'en-US', {
+                day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        // ОТРИСОВКА ИНТЕРФЕЙСА
+        window.renderLoginPageUI = function(user, phraseId) {
+            const el = (id) => document.getElementById(id);
+            if (!el('sync-logged-out')) return;
+
+            const btnGoogle = el('btn-google-login');
+            if (btnGoogle) {
+                btnGoogle.disabled = false;
+                btnGoogle.innerHTML = `<i class="fa-brands fa-google me-2"></i> ${isRu ? "Войти через Google" : "Sign in with Google"}`;
+            }
+            const btnPhrase = el('btn-phrase-login');
+            if (btnPhrase) {
+                btnPhrase.disabled = false;
+                btnPhrase.textContent = isRu ? "Анонимный вход" : "Anonymous Login";
+            }
+
+            const t = isRu ? {
+                title: "Облачная синхронизация", desc: "История, избранное и настройки.",
+                google: "Войти через Google", or: "или", phraseLabel: "Секретная фраза",
+                hint: "Минимум 8 символов. Полная анонимность.", 
+                loginPhrase: "Анонимный вход",
+                statusLabelGoogle: "Google аккаунт:", statusLabelPhrase: "Ваша фраза:",
+                syncLabel: "Синхронизировано:", lblSync: "Синхр.",
+                logout: "Выйти", delete: "Удалить данные"
+            } : {
+                title: "Cloud Sync", desc: "History, favorites, and settings.",
+                google: "Sign in with Google", or: "or", phraseLabel: "Secret Passphrase",
+                hint: "Min 8 chars. Completely anonymous.", 
+                loginPhrase: "Anonymous Login",
+                statusLabelGoogle: "Google Account:", statusLabelPhrase: "Your Phrase:",
+                syncLabel: "Last synced:", lblSync: "Sync",
+                logout: "Logout", delete: "Delete Cloud Data"
+            };
+
+            el('sync-page-title').textContent = t.title;
+            el('sync-page-desc').textContent = t.desc;
+            if (el('sync-or')) el('sync-or').textContent = t.or;
+            el('sync-phrase-label').textContent = t.phraseLabel;
+            el('sync-hint').textContent = t.hint;
+            el('sync-time-label').textContent = t.syncLabel;
+            el('lbl-sync').textContent = t.lblSync;
+            el('lbl-logout').textContent = t.logout;
+            el('lbl-delete').textContent = t.delete;
+
+            if (user || phraseId) {
+                el('sync-logged-out').style.display = 'none';
+                el('sync-logged-in').style.display = 'block';
+
+                if (user) {
+                    el('sync-status-label').textContent = t.statusLabelGoogle;
+                    el('sync-user-info').textContent = user.email;
+                } else {
+                    el('sync-status-label').textContent = t.statusLabelPhrase;
+                    const realPhrase = (typeof phraseId === 'string') ? phraseId.replace('phrase_', '') : phraseId;
+                    const starsPhrase = '•'.repeat(realPhrase.length);
+                    const copyHint = isRu ? "Копировать" : "Copy";
+                    
+                    el('sync-user-info').innerHTML = `
+                        <div class="d-flex align-items-center">
+                            <span id="sync-phrase-value-status" onclick="window.copySyncPhrase()" title="${copyHint}" style="letter-spacing: 2px; cursor: pointer;">${starsPhrase}</span>
+                            <span id="sync-phrase-real-status" onclick="window.copySyncPhrase()" title="${copyHint}" class="text-primary" style="display:none; font-family: monospace; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: rgba(128, 128, 128, 0.1); cursor: pointer;">${realPhrase}</span>
+                            <button class="btn btn-sm p-0 ms-2 opacity-75" style="border:0; background:transparent;" type="button" onclick="uiToggleEyeStatus()" id="sync-status-eye-btn">
+                                <i class="fa-solid text-muted fa-eye"></i>
+                            </button>
+                        </div>`;
+                }
+
+                // --- ЛОГИКА ПЕРВОЙ СИНХРОНИЗАЦИИ ---
+                if (!localStorage.getItem('lastSyncTime') && !window.isInitialSyncing) {
+                    window.isInitialSyncing = true; // Защита от двойного запуска
+                    el('sync-last-time').textContent = isRu ? "Синхронизация..." : "Syncing...";
+                    el('sync-last-time').classList.add('text-primary'); // Выделяем цветом
+                    
+                    if (typeof forceSyncNow === 'function') {
+                        forceSyncNow().then(() => {
+                            localStorage.setItem('lastSyncTime', Date.now());
+                            el('sync-last-time').textContent = getFormattedTime();
+                            el('sync-last-time').classList.remove('text-primary');
+                            window.isInitialSyncing = false;
+                        });
+                    } else {
+                        localStorage.setItem('lastSyncTime', Date.now());
+                        el('sync-last-time').textContent = getFormattedTime();
+                        window.isInitialSyncing = false;
+                    }
+                } else if (!window.isInitialSyncing) {
+                    // Если это не первый вход и прямо сейчас не идет авто-синхронизация
+                    el('sync-last-time').textContent = getFormattedTime();
+                }
+
+            } else {
+                el('sync-last-time').textContent = getFormattedTime();
+                el('sync-logged-out').style.display = 'block';
+                el('sync-logged-in').style.display = 'none';
+            }
+        };
+
+    </script>
+</body>
+</html>

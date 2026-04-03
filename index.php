@@ -39,18 +39,19 @@ include 'scripts/search-handler.php';
 <meta property="og:title" content="Dhamma.Gift" />
 <meta property="og:description" content="<?php echo $ogdesc;?>" />
 
-<style>
-    body {
-        opacity: 0;
-        background: black;
-        visibility: hidden;
-        transition: opacity 0.3s ease-in-out; /* Плавное появление */
-    }
-    
+<head>
+    <style id="anti-fouc">
+        body {
+            opacity: 0;
+            background: black;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out; /* Плавное появление */
+        }
+        
         [data-bs-theme="dark"] .list-group-numbered > .list-group-item::before {
-        color: #e9ecef !important;
-    }
-</style>
+            color: #e9ecef !important;
+        }
+    </style>
 
   <!-- PWA-метатеги -->
   <meta name="theme-color" content="#ffffff">
@@ -64,6 +65,54 @@ include 'scripts/search-handler.php';
 <link rel="alternate" href="https://dhamma.gift/" hreflang="x-default">
 
 <!-- для PWA где нет адресной строки, но нужно установить язык по умолчанию. --> 
+
+<meta property="og:url" content="https://Dhamma.Gift" />
+<meta property="og:site_name" content="Dhamma.Gift" />
+<meta property="og:image" content="<?php echo $ogshare;?>" />
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="<?php echo $titletwit;?>">
+<meta name="twitter:description" content="<?php echo $ogdesc;?>">
+<!-- Favicon favico-noglass
+<link href="/assets/img/gray.png" rel="icon" media="(prefers-color-scheme: light)">
+<link href="/assets/img/gray-white.png" rel="icon" media="(prefers-color-scheme: dark)"> -->
+
+<link rel="icon" type="image/png" sizes="56x56" href="/assets/img/favicon-56x56.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16x16.png">
+<link rel="icon" href="/assets/img/favicon.ico">
+
+  <!-- Загрузка иконки для iOS -->
+  <link rel="apple-touch-icon" sizes="152x152" href="/assets/img/favico-noglass.png">
+  
+  <!-- iOS-специфичные -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Dhamma.Gift">
+  <link rel="apple-touch-icon" href="/icons/icon-180x180.png">
+  <link rel="apple-touch-startup-image" href="/splash.png">
+    <meta name="mobile-web-app-capable" content="yes">
+  
+<!-- Google fonts
+<link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css" />
+<link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css" />
+-->
+
+<!--  Core theme CSS (includes Bootstrap)-->
+<!-- -->
+<link href="/assets/css/styles.css" rel="stylesheet" />
+<link href="/assets/css/extrastyles.css" rel="stylesheet" />
+<script src="/assets/js/loadCssJsMain.js"></script>
+
+<script src="/assets/js/jquery-3.7.0.min.js"></script>
+<!-- <script
+  src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+  async
+  defer
+></script> -->
+
+<?php echo $fontawesomejs;?> 
+
 <script>
 // Получаем текущие параметры URL
 const urlParams = new URLSearchParams(window.location.search);
@@ -111,64 +160,6 @@ if (isPWA) {
 }
 </script>
 
-<meta property="og:url" content="https://Dhamma.Gift" />
-<meta property="og:site_name" content="Dhamma.Gift" />
-<meta property="og:image" content="<?php echo $ogshare;?>" />
-
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="<?php echo $titletwit;?>">
-<meta name="twitter:description" content="<?php echo $ogdesc;?>">
-<!-- Favicon favico-noglass
-<link href="/assets/img/gray.png" rel="icon" media="(prefers-color-scheme: light)">
-<link href="/assets/img/gray-white.png" rel="icon" media="(prefers-color-scheme: dark)"> -->
-
-<link rel="icon" type="image/png" sizes="56x56" href="/assets/img/favicon-56x56.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16x16.png">
-<link rel="icon" href="/assets/img/favicon.ico">
-
-  <!-- Загрузка иконки для iOS -->
-  <link rel="apple-touch-icon" sizes="152x152" href="/assets/img/favico-noglass.png">
-  
-  
-  
-  <!-- iOS-специфичные -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Dhamma.Gift">
-  <link rel="apple-touch-icon" href="/icons/icon-180x180.png">
-  <link rel="apple-touch-startup-image" href="/splash.png">
-    <meta name="mobile-web-app-capable" content="yes">
-  
-  
-  
-<!-- Google fonts
-<link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css" />
-<link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css" />
--->
-
-<!--  Core theme CSS (includes Bootstrap)-->
-<link href="/assets/css/paliLookup.css" rel="stylesheet" />
-
-
-<link rel="stylesheet" href="/assets/css/jquery-ui.min.css">
-<!-- -->
-
-<link href="/assets/css/styles.css" rel="stylesheet" />
-
-
-<link href="/assets/css/extrastyles.css" rel="stylesheet" />
-<script src="/assets/js/loadCssJsMain.js"></script>
-
-<script src="/assets/js/jquery-3.7.0.min.js"></script>
-<script src="/assets/js/jquery-ui.min.js"></script>
-<!-- <script
-  src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-  async
-  defer
-></script> -->
-
-<?php echo $fontawesomejs;?> 
 </head>
 
 
@@ -212,11 +203,9 @@ function updateURL(params) {
         <nav class="navbar navbar-expand-lg bg-secondary text-uppercase" id="mainNav">
             <a class="navbar-brand mobile-center" href="<?php echo $mainpage;?>"> <div class="container">
               
-              
-    <!--    <img loading="lazy" alt="Precise search in Pali Suttas and Vinaya" src="/assets/img/gray-white.png"  style="width:50px;"></a>
-   
-   -->
-   <img loading="lazy" alt="Precise search in Pali Suttas and Vinaya" src="/assets/img/dhammafindlogo.webp"  style="width:100px;"></a>
+            
+<img loading="lazy" alt="Precise search in Pali Suttas and Vinaya" src="/assets/img/dhammafindlogo.webp" class="w-100px">
+</a>
 
             
                 <a class="navbar-brand mobile-none" href="<?php echo $mainpage;?>">Dhamma.Gift</a>
@@ -241,11 +230,29 @@ function updateURL(params) {
 <li>
 
 <div class="align-items-center form-check-inline mx-0">
-     <a id="theme-button" class=" mb-1 text-white ">
-<i onclick="switchIcon(this)" class="fa-solid fa-circle-half-stroke"></i>
-</a>	  
+<a href="/login" onclick="openLoginWindow(); return false;" 
+   class="mb-1 text-white me-2" title="Login / Sync"><i class="fa-solid fa-user"></i></a><a id="theme-button" class=" mb-1 text-white "><i onclick="switchIcon(this)" class="fa-solid fa-circle-half-stroke"></i></a>	  
 </div>
 
+
+<script>
+function openLoginWindow() {
+    const match = window.location.pathname.match(/^\/(ru|r|ml)\b/);
+    const lang = match ? match[1] : 'ru';
+
+    const width = 420;
+    const height = 520;
+
+    const left = (window.screen.width / 2) - (width / 2);
+    const top = (window.screen.height / 2) - (height / 2);
+
+    window.open(
+        `/${lang}/login`,
+        'LoginWindow',
+        `width=${width},height=${height},top=${top},left=${left},resizable=no`
+    );
+}
+</script>
 
 </li>
        </ul>
@@ -259,7 +266,7 @@ function updateURL(params) {
                 <!-- Masthead Heading-->
 <div class="hideOnMobile">
 <h1 class="masthead-heading mb-5">
-    <div data-bs-toggle="tooltip" style="cursor: pointer;" data-bs-placement="bottom" title="<?php echo $tooltiptitle;?>">
+    <div data-bs-toggle="tooltip" class="cursor-pointer" data-bs-placement="bottom" title="<?php echo $tooltiptitle;?>">
         <?php echo $title;?>
     </div>
 </h1>
@@ -303,7 +310,7 @@ if (isset($_GET['q'])) {
 <i class="fas fa-search fa-flip-horizontal" aria-hidden="true"></i>
     <span class="visually-hidden"><?php echo $searchcaption;?></span>
 </button>
- <div class="text-start text-muted form-check-inline" data-bs-toggle="tooltip" style="cursor: pointer;" data-bs-placement="bottom" id="searchbar-help" title="<?php echo $tooltipsearchbar;?>">*</div>
+ <div class="text-start text-muted form-check-inline cursor-pointer" data-bs-toggle="tooltip" data-bs-placement="bottom" id="searchbar-help" title="<?php echo $tooltipsearchbar;?>">*</div>
 </div>
 
 </div>
@@ -320,7 +327,7 @@ if (isset($_GET['q'])) {
         <option value="-tru" <?php if (isset($p) && $p == "-tru") echo "selected";?> ><?php echo $radiotru;?></option>        
     </select>
 
-    <div class="text-start text-muted form-check-inline me-0" data-bs-toggle="tooltip" id="texttype-help" style="cursor: pointer;" data-bs-placement="bottom" title="<?php echo $tooltiptextype;?>">*</div>
+    <div class="text-start text-muted form-check-inline me-0 cursor-pointer" data-bs-toggle="tooltip" id="texttype-help" data-bs-placement="bottom" title="<?php echo $tooltiptextype;?>">*</div>
 
     <select class="dropdown droponmain rounded-pill text-muted border-2 border-primary text-center flex-shrink-1" id="extraOptions" name="extra">
         <option value="" <?php if (isset($extra)) echo "selected";?> ><?php echo "$liststd";?></option>
@@ -333,7 +340,7 @@ if (isset($_GET['q'])) {
         <option value="-nm5" <?php if (isset($extra) && $extra == "-nm5") echo "selected";?> ><?php echo "$listnm";?></option>
     </select>
 
-    <div class="text-muted text-decoration-none me-0 form-check-inline" data-bs-toggle="tooltip" id="searchtype-help" style="cursor: pointer;" data-bs-placement="bottom" title="<?php echo $tooltipsearchtype;?>">*</div>
+    <div class="text-muted text-decoration-none me-0 form-check-inline cursor-pointer" data-bs-toggle="tooltip" id="searchtype-help" data-bs-placement="bottom" title="<?php echo $tooltipsearchtype;?>">*</div>
 
     <div id="gear" class="text-white ms-1 flex-shrink-0" data-bs-toggle="collapse" href="#collapseSettings" role="button" aria-expanded="false" aria-controls="collapseSettings">
         <i class="fa-solid fa-gear fa-lg"></i>
@@ -363,7 +370,7 @@ $(document).ready(function() {
 
  <?php
 if (strpos($_SERVER['REQUEST_URI'], "/ru") !== false){
-echo '<div style="max-width: 450px; display: none;" class="alert alert-primary alert-dismissible fade show mt-3" role="alert" id="infoUpdate">
+echo '<div style="display: none;" class="alert alert-primary alert-dismissible fade show mt-3 max-w-450" role="alert" id="infoUpdate">
 Добавить <strong>Dhamma.Gift</strong> на Домашний Экран?
     <a class="btn btn-secondary installButton" id="" style="display:none;">' . $installpwalong . '</a>
    <br>
@@ -373,7 +380,7 @@ echo '<div style="max-width: 450px; display: none;" class="alert alert-primary a
 
 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
 } else {
-echo '<div style="max-width: 450px; display: none;" class="alert alert-primary alert-dismissible fade show mt-3" role="alert" id="infoUpdate">
+echo '<div style="display: none;" class="max-w-450 alert alert-primary alert-dismissible fade show mt-3" role="alert" id="infoUpdate">
 Add <strong>Dhamma.Gift</strong> to your Home Screen?
     <a class="btn btn-secondary installButton" id="" style="display:none;">' . $installpwalong . '</a>
    <br>
@@ -384,7 +391,8 @@ Add <strong>Dhamma.Gift</strong> to your Home Screen?
 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
 }
 ?>
-<div style="max-width: 450px; display: none;" class='alert alert-warning alert-dismissible fade show container-lg mt-3 text-start' role='alert' id='successAlert'>
+<div class="alert alert-warning alert-dismissible fade show container-lg mt-3 mb-1 text-start max-w-450" style="display: none;" role="alert" id="successAlert">
+
   <div id="response"></div>
   <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
 </div>
@@ -395,14 +403,14 @@ Add <strong>Dhamma.Gift</strong> to your Home Screen?
 
  <div class="form-check form-check-inline">
         <input class="form-check-input" type="checkbox" id="onlCheckbox" name="extra" <?php if (isset($extra) && $extra=="-anyd ") echo "checked";?>  value="-anyd">
-  <div data-bs-toggle="tooltip" style="cursor: pointer;" data-bs-placement="bottom" title='<?php echo $tooltiponl;?>'><?php echo $checkboxonl;?><span class="text-muted">*</span></div>
+  <div data-bs-toggle="tooltip" class="cursor-pointer" data-bs-placement="bottom" title='<?php echo $tooltiponl;?>'><?php echo $checkboxonl;?><span class="text-muted">*</span></div>
   </div>
 
   
   
 <div class="form-check form-check-inline">
   <input class="form-check-input" type="checkbox" id="laCheckbox" name="la" <?php if (isset($extra) && $extra=="-la$defaultla -lb$defaultla") echo "checked";?>  value='<?php echo "-la$defaultla -lb$defaultla"?>'>
-  <div data-bs-toggle="tooltip" style="cursor: pointer;" data-bs-placement="bottom" title='<?php echo $tooltipla;?>'><?php echo $checkboxla;?><span class="text-muted">*</span></div>
+  <div data-bs-toggle="tooltip" class="cursor-pointer" data-bs-placement="bottom" title='<?php echo $tooltipla;?>'><?php echo $checkboxla;?><span class="text-muted">*</span></div>
   </div>
   
 <div style="display:none;">
@@ -410,7 +418,7 @@ Add <strong>Dhamma.Gift</strong> to your Home Screen?
   <input type="text" id="ssearch" name="ssearch" tabindex="-1" autocomplete="off">
 </div>
 
-         <div style="max-width: 300px;" class="my-2"> 
+<div class="my-2 max-w-300"> 
     
 <div class="align-items-center form-check-inline mt-3">
   <div class="mb-2"><button class="btn btn-secondary rounded-pill insert-letter" data-letter="ā" autocomplete="off">ā</button>
@@ -428,12 +436,8 @@ Add <strong>Dhamma.Gift</strong> to your Home Screen?
 </div>
 
 <div class="mt-3">
-  <a 
-  type="button"
-  onclick="toggleQuickModal()" 
-  aria-label="Open Cattāri Ariyasaccāni" 
-  class="common-size-icon4" 
-  style="color: grey; cursor: pointer; height: 25px">
+<a type="button" onclick="toggleQuickModal()" aria-label="Open Cattāri Ariyasaccāni" class="common-size-icon4 cursor-pointer h-25px">
+
   <i class="fa-solid fa-compass"></i>
 </a>
 
@@ -455,7 +459,7 @@ Add <strong>Dhamma.Gift</strong> to your Home Screen?
 
 
  <h5 class="mt-4"><?php echo $regexMemoh5;?></h5> 
-<div class="mt-4" style="text-align: left;">
+<div class="mt-4 text-start">
   <button class="btn btn-primary btn-sm rounded-pill insert-letter" data-letter=" -exc "><strong>X -exc Y Z</strong></button> - <?php echo $exc;?> <br>
   <button class="btn rounded-pill btn-primary btn-sm rounded-pill insert-letter" data-letter=" -la<?php echo $defaultla;?> "><strong>-la<?php echo $defaultla;?> X</strong></button> - <?php echo $lax;?> <br>
   <button class="btn btn-primary btn-sm rounded-pill insert-letter" data-letter=" -lb<?php echo $defaultla;?> "><strong>-lb<?php echo $defaultla;?> X</strong></button> - <?php echo $lbx;?> <br>
@@ -691,7 +695,7 @@ include 'assets/common/horizontalMenuEn.php';
 ?>
 
 <!--Slideshow section-->
-<div style="max-width: 450px;" class="container-lg my-5">
+<div class="max-w-450 container-lg my-5">
  <!-- <h4><?php echo $carouseltitle;?>:</h4><br> -->
  
 <div id="carouselWithCaptions" class="carousel slide" data-bs-ride="carousel">
@@ -716,7 +720,7 @@ foreach ($slides as $index => $slide) {
     <h5><?php echo $title; ?></h5>
     <span><?php echo $desc; ?></span>
 	<br>
-    <a href="<?php echo $link; ?>" style="text-align: left;"><?php echo $read; ?></a>
+    <a href="<?php echo $link; ?>" class="text-start"><?php echo $read; ?></a>
 </div>
 
 <?php
@@ -829,13 +833,13 @@ foreach ($slides as $index => $slide) {
 <iframe src="<?php echo $linkhowtovideo;?>" title="<?php echo $titledeschowtovideo;?>" frameborder="0" allowfullscreen></iframe>
 </div>-->
 
-<div style="max-width: 600px;" class="container-lg">
+<div class="container-lg max-w-600">
 <div class="alert alert-warning float-start text-left mb-3" role="alert">
 <?php echo $transwarning;?>
 </div>
 </div>
    
-<div style="max-width: 992px;" class="container-lg">
+<div class="container-lg max-w-992">
 <h2 class="page-section-heading text-center text-uppercase text-secondary mb-3"><?php echo $headerexamples; ?></h2>  
 <div class="container mb-5">
 <ol class="col-lg-8 col-md-10 mx-auto text-start">
@@ -858,8 +862,8 @@ foreach ($slides as $index => $slide) {
                 <!-- Portfolio Grid Items-->
 <div class="row justify-content-center">
 
-<div style="max-width: 600px;" class="container-lg text-start">
-<div data-bs-toggle="tooltip" style="cursor: pointer;" data-bs-placement="bottom" title="<?php echo $howtosearchquotetooltip;?>"></div>
+<div class="container-lg text-start max-w-600">
+<div data-bs-toggle="tooltip" class="cursor-pointer" data-bs-placement="bottom" title="<?php echo $howtosearchquotetooltip;?>"></div>
 <?php echo $howtosearchquote;?>
 
 </div>
@@ -1254,7 +1258,7 @@ foreach ($slides as $index => $slide) {
 
 <p class="lead mt-4">
 <?php echo $poweredby; ?>
- <a class="text-white text-decoration-none me-0" data-bs-html="true" data-bs-toggle="tooltip" style="cursor: pointer;" data-bs-placement="top" title="<?php echo $tooltippoweredby;?>"> *</a></p>
+ <a class="text-white text-decoration-none me-0 cursor-pointer" data-bs-html="true" data-bs-toggle="tooltip" data-bs-placement="top" title="<?php echo $tooltippoweredby;?>"> *</a></p>
 
                     </div>
                 </div>
@@ -1265,7 +1269,7 @@ foreach ($slides as $index => $slide) {
 <div id="copyright" class="copyright py-4 text-center text-white " >
 <div class="container"><a target="_blank" rel="license" href="<?php echo $cclink; ?>" title="<?php echo $cctitle; ?>"><img alt="Creative Commons License" style="border-width:0" src="/assets/img/88x31.png" loading="lazy" /></a><small> Copyright <a class="text-white text-decoration-none" href="/assets/readylinebyline.html">&copy;</a> Dhamma.Gift <?php echo $mode; ?> <a class="text-white text-decoration-none" href="/assets/countdowntable.php">2022</a>-<?php echo date("Y"); ?></small>  <small id="copyrightnote">
  
-<p class="text-muted text-center mx-auto" style="max-width: 650px;">
+<p class="text-muted text-center mx-auto max-w-650">
    <?php echo $copyrightnote; ?> 
 </p>
 
@@ -1495,9 +1499,37 @@ var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
 </script>
 
 <!--  -->
-<script src="/assets/js/paliLookup.js"></script>
 <script src="/read/js/urlForLbl.js" defer></script>
 <script src="/assets/js/settings.js"></script>
+
+<script>
+    // Проверяем, ГДЕ мы находимся. 
+    // Запускаем логику редиректа ТОЛЬКО если мы НЕ на локальном сервере.
+    if (window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost') {
+        
+        function tryLocalServer() {
+            fetch('http://127.0.0.1:8080/', { mode: 'no-cors', cache: 'no-store' })
+                .then(() => {
+                    // Сервер ответил! Делаем редирект.
+                    window.location.replace('http://127.0.0.1:8080');
+                })
+                .catch(() => {
+                    // Сервера нет. Остаемся в PWA.
+                    console.log('Локальный сервер не запущен. Остаемся на закэшированной PWA версии.');
+                });
+        }
+
+        window.addEventListener('load', () => {
+            if (!navigator.onLine) {
+                tryLocalServer();
+            }
+        });
+
+        window.addEventListener('offline', () => {
+            tryLocalServer();
+        });
+        }
+</script>
 
 </body>
 
