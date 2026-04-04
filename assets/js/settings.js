@@ -14,7 +14,7 @@
                 loadingEl.className = 'dict-loading-indicator';
                 document.body.appendChild(loadingEl);
             }
-            const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/');
+            const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/');
             loadingEl.textContent = customText || (isRu ? 'Инициализация словаря...' : 'Initializing dictionary...');
             
             setTimeout(() => loadingEl.classList.add('show'), 10);

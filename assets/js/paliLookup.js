@@ -461,7 +461,7 @@ function lazyLoadStandaloneScripts(lang = 'en') {
         const loadingEl = document.createElement('div');
         loadingEl.id = loadingId;
         loadingEl.className = 'dict-loading-indicator';
-        const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/');
+        const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/');
         loadingEl.textContent = isRu ? 'Загрузка Словаря...' : 'Loading Dictionary...';
         document.body.appendChild(loadingEl);
         setTimeout(() => loadingEl.classList.add('show'), 10);
