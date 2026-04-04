@@ -2227,10 +2227,16 @@ window.getAnonymousDeviceName = function() {
     else if (ua.indexOf("Firefox/") !== -1) browser = "Firefox";
     else if (ua.indexOf("Safari/") !== -1) browser = "Safari";
 
-    // 3. Сборка полного имени (ОС + модель в скобках)
-    const displayName = model ? `${os} (${model})` : os;
-    return `${displayName} • ${browser}`;
+    // Возвращаем объект. В displayName больше нет кривой модели (типа "K").
+    return {
+        displayName: `${os} • ${browser}`,
+        os: os,
+        browser: browser,
+        model: model, 
+        raw: ua // Сырой User-Agent на всякий случай
+    };
 };
+
 
 // УДАЛЕНИЕ ЧУЖОЙ СЕССИИ (Кнопка Крестик)
 window.terminateRemoteSession = async function(sessionId) {
@@ -2356,6 +2362,13 @@ window.setupCloudListeners = function(uid) {
     // Слушатель Настроек
     unsubSettings = userRef.onSnapshot((doc) => {
         if (doc.metadata.hasPendingWrites) return; 
+
+        // БЛОКИРОВКА УДАЛЕННЫХ АККАУНТОВ
+        if (doc.exists && doc.data().isDeleted) {
+            console.warn("Аккаунт помечен как удаленный!");
+            if (typeof triggerSelfDestruct === 'function') triggerSelfDestruct("deleted");
+            return; // Прерываем работу слушателя
+        }
 
         if (doc.exists && doc.data().settings) {
             const cloudSettings = doc.data().settings;
@@ -2487,10 +2500,12 @@ window.setupCloudListeners = function(uid) {
     }
 
     const mySessionRef = userRef.collection("sessions").doc(localSessionId);
+    const deviceData = window.getAnonymousDeviceName();
     
     // Пишем анонимные данные в базу при входе/перезагрузке
     mySessionRef.set({
-        deviceName: window.getAnonymousDeviceName(),
+        deviceName: deviceData.displayName, // Идет в интерфейс: "Android • Chrome"
+        deviceMeta: deviceData,             // Идет в базу: модель, raw-строка и тд
         lastActive: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
 
@@ -2508,6 +2523,7 @@ window.setupCloudListeners = function(uid) {
         }
     });
 };
+
 
 // === БЛОКПОСТ: ПРОВЕРКА СЕССИИ ===
 window.verifySessionActive = async function() {
@@ -2532,8 +2548,8 @@ window.verifySessionActive = async function() {
 };
 
 // === ПРОТОКОЛ САМОУНИЧТОЖЕНИЯ ===
-window.triggerSelfDestruct = async function() {
-    console.warn("Протокол самоуничтожения: сессия была аннулирована удаленно.");
+window.triggerSelfDestruct = async function(reason = "terminated") {
+    console.warn("Протокол самоуничтожения активирован.");
     
     if (typeof unsubSettings !== 'undefined' && unsubSettings) unsubSettings();
     if (typeof unsubFavs !== 'undefined' && unsubFavs) unsubFavs();
@@ -2554,7 +2570,14 @@ window.triggerSelfDestruct = async function() {
 
     if (typeof showBubbleNotification === 'function') {
         const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
-        showBubbleNotification(isRu ? "Сессия удалена. Данные очищены." : "Session terminated. Data wiped.", 5000);
+        let msg = isRu ? "Сессия удалена. Данные очищены." : "Session terminated. Data wiped.";
+        
+        // Кастомное сообщение, если аккаунт удален целиком
+        if (reason === "deleted") {
+            msg = isRu ? "Аккаунт был удален. Доступ закрыт." : "Account deleted. Access revoked.";
+        }
+        
+        showBubbleNotification(msg, 5000);
     }
 
     setTimeout(() => {
@@ -2808,14 +2831,23 @@ window.syncDeleteData = async function() {
     const uid = getUid();
     if (uid && db) {
         try {
-            await db.collection("users").doc(uid).delete();
-            await clearCloudHistory(); 
+            // Мягкое удаление: помечаем аккаунт и генерируем мусорный хеш
+            const scrambleHash = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            
+            await db.collection("users").doc(uid).set({
+                isDeleted: true,
+                deletedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                deletedHash: scrambleHash, // Гарантированно "ломаем" слепок аккаунта
+                settings: firebase.firestore.FieldValue.delete() // Затираем настройки
+            }, { merge: true });
+
             const user = auth ? auth.currentUser : null;
-            if (user) await user.delete();
+            if (user) await user.delete(); 
         } catch (error) { console.error("Delete Error:", error); }
     }
     syncLogout(); 
 };
+
 
 window.updateGlobalSyncButtons = function(user, phraseId) {
     const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
