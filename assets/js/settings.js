@@ -2381,16 +2381,9 @@ window.setupCloudListeners = function(uid) {
 
     const userRef = db.collection("users").doc(uid);
 
-    // Слушатель Настроек
+    // Слушатель Настроек (без капкана isDeleted)
     unsubSettings = userRef.onSnapshot((doc) => {
         if (doc.metadata.hasPendingWrites) return; 
-
-        // БЛОКИРОВКА УДАЛЕННЫХ АККАУНТОВ
-        if (doc.exists && doc.data().isDeleted) {
-            console.warn("Аккаунт помечен как удаленный!");
-            if (typeof triggerSelfDestruct === 'function') triggerSelfDestruct("deleted");
-            return; // Прерываем работу слушателя
-        }
 
         if (doc.exists && doc.data().settings) {
             const cloudSettings = doc.data().settings;
@@ -2514,7 +2507,6 @@ window.setupCloudListeners = function(uid) {
 
     // === ЛОГИКА СЕССИЙ (УСТРОЙСТВ) ===
     
-    // 1. Создаем/Обновляем текущую сессию
     let localSessionId = localStorage.getItem('dg_session_id');
     if (!localSessionId) {
         localSessionId = 'sess_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
@@ -2526,12 +2518,12 @@ window.setupCloudListeners = function(uid) {
     
     // Пишем анонимные данные в базу при входе/перезагрузке
     mySessionRef.set({
-        deviceName: deviceData.displayName, // Идет в интерфейс: "Android • Chrome"
-        deviceMeta: deviceData,             // Идет в базу: модель, raw-строка и тд
+        deviceName: deviceData.displayName,
+        deviceMeta: deviceData,
         lastActive: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
 
-    // 2. Слушаем СВОЮ сессию. Если её удалили, мы должны уйти.
+    // Слушаем СВОЮ сессию. Если её удалили, мы должны уйти.
     if (typeof unsubMySession !== 'undefined' && unsubMySession) unsubMySession();
     unsubMySession = mySessionRef.onSnapshot((doc) => {
         if (doc.metadata.hasPendingWrites) return;
@@ -2545,7 +2537,6 @@ window.setupCloudListeners = function(uid) {
         }
     });
 };
-
 
 // === БЛОКПОСТ: ПРОВЕРКА СЕССИИ ===
 window.verifySessionActive = async function() {
@@ -2848,28 +2839,66 @@ window.syncLogout = async function() {
     if (typeof updateGlobalSyncButtons === 'function') updateGlobalSyncButtons(null, null);
 };
 
-
 window.syncDeleteData = async function() {
-    const uid = getUid();
-    if (uid && db) {
+    const uid = typeof getUid === 'function' ? getUid() : null;
+    const currentDb = typeof db !== 'undefined' ? db : window.db;
+    const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
+
+    if (uid && currentDb) {
         try {
-            // Мягкое удаление: помечаем аккаунт и генерируем мусорный хеш
-            const scrambleHash = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-            
-            await db.collection("users").doc(uid).set({
-                isDeleted: true,
-                deletedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                deletedHash: scrambleHash, // Гарантированно "ломаем" слепок аккаунта
-                settings: firebase.firestore.FieldValue.delete() // Затираем настройки
-            }, { merge: true });
+            // Меняем текст кнопки, так как физическое удаление может занять 1-2 секунды
+            const btnDelete = document.getElementById('lbl-delete');
+            if (btnDelete) btnDelete.textContent = isRu ? "Стираем базу..." : "Wiping data...";
 
-            const user = auth ? auth.currentUser : null;
+            // Функция физического пакетного удаления коллекции (у Firestore лимит 500 за раз)
+            const deleteCollection = async (colName) => {
+                const ref = currentDb.collection("users").doc(uid).collection(colName);
+                const snap = await ref.get();
+                if (snap.empty) return;
+                
+                let batch = currentDb.batch();
+                let count = 0;
+                for (const doc of snap.docs) {
+                    batch.delete(doc.ref);
+                    count++;
+                    if (count === 500) {
+                        await batch.commit();
+                        batch = currentDb.batch();
+                        count = 0;
+                    }
+                }
+                if (count > 0) await batch.commit();
+            };
+
+            // 1. Уничтожаем все вложенные коллекции истории, избранного, прогресса и сессий
+            await Promise.all([
+                deleteCollection("history"),
+                deleteCollection("favorites"),
+                deleteCollection("progress"),
+                deleteCollection("sessions")
+            ]);
+
+            // 2. Уничтожаем сам корневой документ (с настройками)
+            await currentDb.collection("users").doc(uid).delete();
+
+            // 3. Если это Google-аккаунт, удаляем и его
+            const user = typeof auth !== 'undefined' && auth ? auth.currentUser : null;
             if (user) await user.delete(); 
-        } catch (error) { console.error("Delete Error:", error); }
-    }
-    syncLogout(); 
-};
 
+        } catch (error) { 
+            console.error("Delete Error:", error); 
+        }
+    }
+    
+    // --- ЛОКАЛЬНАЯ ОЧИСТКА И ВЫХОД ---
+    if (typeof auth !== 'undefined' && auth && auth.currentUser) await auth.signOut();
+    
+    const keysToRemove = ['syncPhraseId', 'syncPhraseRaw', 'lastSyncTime', 'dg_cloud_session', 'dg_cloudProgress', 'dg_session_id'];
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+    
+    if (typeof renderLoginPageUI === 'function') renderLoginPageUI(null, null);
+    if (typeof updateGlobalSyncButtons === 'function') updateGlobalSyncButtons(null, null);
+};
 
 window.updateGlobalSyncButtons = function(user, phraseId) {
     const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
