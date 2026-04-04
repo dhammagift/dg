@@ -15,7 +15,7 @@
                 document.body.appendChild(loadingEl);
             }
             const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/');
-            loadingEl.textContent = customText || (isRu ? 'Инициализация словаря...' : 'Initializing dictionary...');
+            loadingEl.textContent = customText || (isRu ? 'Словарь загружается...' : 'Dictionary is loading...');
             
             setTimeout(() => loadingEl.classList.add('show'), 10);
         } else {
@@ -27,25 +27,31 @@
     };
 
     window.dg_loadDictionaryScripts = function() {
-        if (window.isDictScriptLoaded) return Promise.resolve();
+        if (window.isDictScriptLoaded) return Promise.resolve(false);
         if (dictScriptPromise) return dictScriptPromise;
 
         dictScriptPromise = new Promise((resolve, reject) => {
-            // Показываем твою плашку
-            window.dg_toggleNativeLoader(true);
+            let slowLoadTriggered = false;
+            
+            // Заводим таймер. Если грузится долго — показываем лоадер и запоминаем это
+            const slowLoadTimer = setTimeout(() => {
+                slowLoadTriggered = true;
+                window.dg_toggleNativeLoader(true);
+            }, 150);
 
             const script = document.createElement('script');
             script.src = "/assets/js/paliLookup.js";
             
             script.onload = () => {
+                clearTimeout(slowLoadTimer); 
                 window.isDictScriptLoaded = true;
-                
-                // Метка: словарь скачан на диск
                 localStorage.setItem('dg_dict_cached', 'true'); 
-                resolve();
+                // Возвращаем статус: была ли медленная загрузка
+                resolve(slowLoadTriggered);
             };
             
             script.onerror = (e) => {
+                clearTimeout(slowLoadTimer);
                 dictScriptPromise = null;
                 window.dg_toggleNativeLoader(false);
                 reject(e);
@@ -75,7 +81,7 @@
             const target = e.target;
 
             window.dg_loadDictionaryScripts().then(() => {
-                // Прячем плашку перед открытием самого перевода
+                // Если лоадер был показан (медленная сеть), убираем его перед показом перевода
                 window.dg_toggleNativeLoader(false);
 
                 const clickEvent = new MouseEvent('click', {
@@ -105,26 +111,25 @@ window.addEventListener('load', () => {
             const savedDictType = typeof savedDict !== 'undefined' ? savedDict : localStorage.getItem('dictType') || 'standalone';
             const lang = (savedDictType === 'standaloneru' || isRu) ? 'ru' : 'en';
 
-            window.dg_loadDictionaryScripts().then(() => {
+            window.dg_loadDictionaryScripts().then((scriptWasSlow) => {
                 if (typeof lazyLoadStandaloneScripts === 'function') {
                     
-                    // Скрипт скачан, грузим базы. Показываем твою же плашку с другим текстом
-                    window.dg_toggleNativeLoader(true, isRu ? 'Загрузка баз словаря...' : 'Loading dictionary databases...');
-
-                    lazyLoadStandaloneScripts(lang).then(() => {
-                        // Показываем, что всё готово!
-                        window.dg_toggleNativeLoader(true, isRu ? 'Словарь готов!' : 'Dictionary ready!');
-                        
-                        // И плавно скрываем твою плашку через 1.5 секунды
-                        setTimeout(() => {
-                            window.dg_toggleNativeLoader(false);
-                        }, 1500);
+                    lazyLoadStandaloneScripts(lang).then((dbWasSlow) => {
+                        // Показываем "Словарь загружен" ТОЛЬКО если до этого показывалась плашка "загружается"
+                        if (scriptWasSlow || dbWasSlow) {
+                            window.dg_toggleNativeLoader(true, isRu ? 'Словарь загружен.' : 'Dictionary is loaded.');
+                            
+                            // Даем 1 секунду на прочтение радостной новости, раз уж пользователь ждал
+                            setTimeout(() => {
+                                window.dg_toggleNativeLoader(false);
+                            }, 1000);
+                        }
                     }).catch(e => {
                         console.error("Ошибка фоновой загрузки:", e);
                         window.dg_toggleNativeLoader(false);
                     });
                 } else {
-                    window.dg_toggleNativeLoader(false);
+                    if (scriptWasSlow) window.dg_toggleNativeLoader(false);
                 }
             });
         };
@@ -134,7 +139,7 @@ window.addEventListener('load', () => {
         } else {
             preloadDictionary();
         }
-    }, 1000); 
+    }, 400); 
 });
 
 

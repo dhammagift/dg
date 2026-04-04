@@ -452,19 +452,24 @@ function lazyLoadStandaloneScripts(lang = 'en') {
     });
 
     if (scriptsToLoad.length === 0) {
-        return Promise.resolve();
+        return Promise.resolve(false); // Если всё уже есть - возвращаем false (быстро)
     }
 
     dbLoadPromise = new Promise((resolve) => {
-        // Показываем визуальный индикатор загрузки баз
         const loadingId = 'dict-loading-' + Date.now();
-        const loadingEl = document.createElement('div');
-        loadingEl.id = loadingId;
-        loadingEl.className = 'dict-loading-indicator';
-        const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/');
-        loadingEl.textContent = isRu ? 'Загрузка Словаря...' : 'Loading Dictionary...';
-        document.body.appendChild(loadingEl);
-        setTimeout(() => loadingEl.classList.add('show'), 10);
+        let slowLoadTriggered = false;
+        
+        // Запускаем таймер
+        const slowLoadTimer = setTimeout(() => {
+            slowLoadTriggered = true;
+            const loadingEl = document.createElement('div');
+            loadingEl.id = loadingId;
+            loadingEl.className = 'dict-loading-indicator';
+            const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/');
+            loadingEl.textContent = isRu ? 'Словарь загружается...' : 'Dictionary is loading...';
+            document.body.appendChild(loadingEl);
+            setTimeout(() => loadingEl.classList.add('show'), 10);
+        }, 150);
 
         const loadPromises = scriptsToLoad.map(src => {
             return new Promise((scriptResolve) => {
@@ -480,19 +485,23 @@ function lazyLoadStandaloneScripts(lang = 'en') {
         });
 
         Promise.all(loadPromises).then(() => {
-            const el = document.getElementById(loadingId);
-            if (el) {
-                el.classList.remove('show');
-                setTimeout(() => el.remove(), 300);
+            clearTimeout(slowLoadTimer); 
+            
+            // Если плашка успела появиться - убираем её
+            if (slowLoadTriggered) {
+                const el = document.getElementById(loadingId);
+                if (el) {
+                    el.classList.remove('show');
+                    setTimeout(() => el.remove(), 300);
+                }
             }
-            resolve();
+            // Передаем статус "медленности" наружу
+            resolve(slowLoadTriggered);
         });
     });
 
     return dbLoadPromise;
 }
-
-
 
 
 function createClickableLink(wordToLink) {
