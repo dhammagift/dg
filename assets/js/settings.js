@@ -2240,12 +2240,34 @@ window.getAnonymousDeviceName = function() {
 
 // УДАЛЕНИЕ ЧУЖОЙ СЕССИИ (Кнопка Крестик)
 window.terminateRemoteSession = async function(sessionId) {
+    const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
+    
+    // 1. Спрашиваем подтверждение
+    const confirmMsg = isRu 
+        ? "Вы уверены, что хотите принудительно завершить эту сессию? Устройство будет отключено от облака, а локальные данные на нем будут стерты." 
+        : "Are you sure you want to forcibly terminate this session? The device will be disconnected and its local data will be wiped.";
+
+    if (!confirm(confirmMsg)) return; // Если юзер нажал "Отмена" — прерываем
+
     const uid = getUid();
     if (!uid || !db) return;
+    
+    // 2. Выполняем удаление
     try {
         await db.collection("users").doc(uid).collection("sessions").doc(sessionId).delete();
-    } catch (e) { console.error("Error terminating session", e); }
+        
+        // 3. Показываем красивое уведомление об успехе
+        if (typeof showBubbleNotification === 'function') {
+            showBubbleNotification(isRu ? "Устройство отключено" : "Device disconnected");
+        }
+    } catch (e) { 
+        console.error("Error terminating session", e); 
+        if (typeof showBubbleNotification === 'function') {
+            showBubbleNotification(isRu ? "❌ Ошибка при отключении" : "❌ Error disconnecting");
+        }
+    }
 };
+
 
 function getUid() {
     const user = auth ? auth.currentUser : null;
