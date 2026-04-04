@@ -1219,7 +1219,6 @@ window.addEventListener('load', function() {
     const editToggle = document.getElementById('editModeToggle');
     if (editToggle) {
         const savedEditMode = localStorage.getItem('memo_auto_cursor');
-        // Изменено на дефолт = false
         editToggle.checked = savedEditMode !== 'false';
         editToggle.addEventListener('change', (e) => localStorage.setItem('memo_auto_cursor', e.target.checked));
     }
@@ -1228,7 +1227,6 @@ window.addEventListener('load', function() {
     let textParam = urlParams.get('text');
     const savedIdParam = urlParams.get('saved_id');
 
-    // Подхватываем напрямую сохраненный длинный текст
     if (savedIdParam) {
         const storedText = localStorage.getItem(savedIdParam);
         if (storedText) {
@@ -1236,35 +1234,31 @@ window.addEventListener('load', function() {
         }
     }
     
-    // Проверяем, является ли ссылка пресетом медитации (есть настройки таймера, но нет текста)
     const isMeditationPreset = !textParam && !savedIdParam && (urlParams.has('delay') || urlParams.has('end') || urlParams.has('snd'));
     
     if (textParam) {
-        // Загрузка обычного текста
         const ta = document.getElementById("inputText");
         ta.value = textParam;
-        ta.setSelectionRange(0, 0); // <--- ДОБАВИТЬ СЮДА (сброс курсора в начало)
-        document.getElementById("inputText").value = textParam;
+        ta.setSelectionRange(0, 0); 
         localStorage.setItem("currentMemoText", textParam); 
         document.getElementById("результат").innerText = "";
         document.getElementById("result_header").style.display = 'none';
         if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
     } else if (isMeditationPreset) {
-        // Загрузка таймера медитации - принудительно очищаем поле и кэш
         document.getElementById("inputText").value = "";
         localStorage.removeItem("currentMemoText");
         document.getElementById("результат").innerText = "";
         document.getElementById("result_header").style.display = 'none';
         if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
     } else {
-        // Обычная загрузка страницы без параметров - достаем из кэша
         const currentMemoText = localStorage.getItem("currentMemoText");
         const результат = localStorage.getItem("результат");
+        
         if (currentMemoText) {
-            document.getElementById("inputText").value = currentMemoText;
             const ta = document.getElementById("inputText");
-            ta.value = textParam;
-            ta.setSelectionRange(0, 0); // <--- ДОБАВИТЬ СЮДА (сброс курсора в начало)
+            // ИСПРАВЛЕНО: Теперь вставляем найденный текст, а не пустой textParam
+            ta.value = currentMemoText;
+            ta.setSelectionRange(0, 0); 
             if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
         }
         if (результат && результат.trim() !== "") {
@@ -1307,32 +1301,27 @@ window.addEventListener('load', function() {
     if (savedSound) {
         document.getElementById('ttsSound').value = savedSound;
     } else {
-        // Если текста нет (или загружен пресет медитации), ставим гонг по умолчанию
         if (!document.getElementById("inputText").value.trim() || isMeditationPreset) {
             document.getElementById('ttsSound').value = 'gong.mp3';
         }
     }
 
-    toggleLoopInputVisibility();
+    if (typeof toggleLoopInputVisibility === 'function') toggleLoopInputVisibility();
 
-    // === AUTOPLAY LOGIC FOR MEMO ===
     if (urlParams.has('autoplay') || localStorage.getItem('ttsMode') === 'true') {
         setTimeout(() => {
             const text = document.getElementById("inputText").value.trim();
             const delaySec = parseFloat(document.getElementById("ttsDelay").value) || 0;
             const endSec = parseFloat(document.getElementById("ttsEndDelay").value) || 0;
             
-            // Start only if there is text to read OR it's configured as a meditation timer
             if (text !== "" || delaySec > 0 || endSec > 0) {
-                if (!window.isMemoPlaying) {
+                if (!window.isMemoPlaying && typeof startMemoTTS === 'function') {
                     startMemoTTS();
                 }
             }
         }, 1000); 
     }
-    // ===============================
 });
-
 
         function toggleLoopInputVisibility() {
             const loopInput = document.getElementById('ttsLoopCount');
@@ -1857,7 +1846,7 @@ function stopMemoTTS(fullReset = true) {
         }, { capture: true }); 
 
 window.resetTTSSettings = function() {
-    const msg = window.memoLang === 'ru' ? 'Сбросить настройки и текст по умолчанию?' : 'Reset settings and text to default?';
+    const msg = window.memoLang === 'ru' ? 'Сбросить настройки и восстановить  текст по умолчанию?' : 'Reset settings and replace the defailt text?';
     if (confirm(msg)) {
         document.getElementById('ttsDelimiter').value = '.,:;?!—…|\\n';
         document.getElementById('ttsDelay').value = '2';
