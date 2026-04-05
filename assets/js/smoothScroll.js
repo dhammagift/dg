@@ -15,7 +15,6 @@ const ScrollManager = {
         
         // Автосохранение прогресса
         window.addEventListener('scroll', () => {
-            // Если функция полностью отключена пользователем - выходим
             if (localStorage.getItem('dg_progressEnabled') === 'false') return;
 
             if (document.visibilityState !== 'visible') return; 
@@ -30,9 +29,9 @@ const ScrollManager = {
                 }
             }
 
-            // 2. ОПТИМИЗАЦИЯ БАЗЫ: Мертвая зона наверху
-            if (window.scrollY < 100 && !this.hasScrolledDeep) return;
-            if (window.scrollY >= 100) this.hasScrolledDeep = true;
+            // 2. ОПТИМИЗАЦИЯ БАЗЫ: Мертвая зона наверху 
+            if (window.scrollY < 500 && !this.hasScrolledDeep) return;
+            if (window.scrollY >= 500) this.hasScrolledDeep = true;
 
             clearTimeout(this.scrollSaveTimeout);
             this.scrollSaveTimeout = setTimeout(() => this.saveReadingProgress(), 1000); 
@@ -121,7 +120,6 @@ const ScrollManager = {
     },
 
     async handleInitialScroll(event) {
-        // Если пользователь отключил прогресс полностью
         if (localStorage.getItem('dg_progressEnabled') === 'false') {
             window.isRestoringProgress = false;
             this.scrollToHash();
@@ -224,7 +222,6 @@ const ScrollManager = {
         this.isWaitingForToast = false;
     },
 
-    // НОВОЕ: Плашка с явной кнопкой и принудительно видимым чекбоксом
     showProgressNotification(data) {
         this.hideProgressNotification(); 
         this.isWaitingForToast = true;
@@ -254,7 +251,6 @@ const ScrollManager = {
             const cb = document.getElementById('toast-dont-ask-cb');
             const isChecked = cb && cb.checked;
 
-            // 1. КЛИК ЗАКРЫТЬ (Крестик)
             if (e.target.id === 'close-progress-toast') {
                 if (isChecked) {
                     localStorage.setItem('dg_progressEnabled', 'false');
@@ -263,12 +259,10 @@ const ScrollManager = {
                 return;
             }
             
-            // 2. КЛИК ПО ЧЕКБОКСУ (только ставит галочку)
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL' || e.target.closest('.dg-toast-cb-label')) {
                 return; 
             }
             
-            // 3. КЛИК ПЕРЕЙТИ (Новая явная кнопка)
             if (e.target.closest('#btn-jump-progress')) {
                 if (isChecked) {
                     localStorage.setItem('dg_autoJumpProgress', 'true');
@@ -347,10 +341,7 @@ const ScrollManager = {
         const slug = this.normalizeSlug(urlParams.get('q'));
         if (!slug) return;
 
-        // --- ИСПРАВЛЕНИЕ: Жесткая мертвая зона наверху страницы ---
-        // Если мы в самом начале страницы, это не прогресс. 
-        // Удаляем запись, чтобы не показывать плашку на первом абзаце.
-        if (window.scrollY < 300) {
+        if (window.scrollY < 1000) {
             try {
                 let progressData = JSON.parse(localStorage.getItem('dg_suttaProgress') || '{}');
                 if (progressData[slug]) {
@@ -358,13 +349,17 @@ const ScrollManager = {
                     localStorage.setItem('dg_suttaProgress', JSON.stringify(progressData));
                 }
             } catch (e) {}
-            return; // Прерываем выполнение, сохранять тут нечего
+            return; 
         }
 
         const suttaContainer = document.getElementById('sutta');
         if (!suttaContainer) return;
 
-        const elements = suttaContainer.querySelectorAll('[id]');
+        // --- ИСПРАВЛЕНИЕ: Фильтруем технические блоки, ссылки и метаданные ---
+        const elements = Array.from(suttaContainer.querySelectorAll('[id]')).filter(el => {
+            return !el.closest('#top-links-container, #bottom-links-container, .byline, .warning-container');
+        });
+
         if (elements.length === 0) return;
 
         let bestElement = null;
@@ -407,7 +402,6 @@ const ScrollManager = {
             localStorage.setItem('dg_suttaProgress', JSON.stringify(progressData));
         }
     },
-
 
     findFallbackElement(baseId) {
         if (!baseId) return null;
