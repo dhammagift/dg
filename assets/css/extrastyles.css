@@ -1708,3 +1708,21 @@ body.dark .hist-icon img { filter: invert(0.7); opacity: 1; }
 end   QUICK MODAL STYLES (Оптимизировано) end Css for settings.js 
    ========================================= */
 
+/* Индикатор загрузки словаря */
+.dict-loading-indicator {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    padding: 10px;
+    background: rgba(0,0,0,0.7);
+    color: grey;
+    border-radius: 12px;
+    z-index: 10000;
+    font-size: 14px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.dict-loading-indicator.show {
+    opacity: 1;
+}

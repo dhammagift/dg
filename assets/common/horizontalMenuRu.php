@@ -435,13 +435,13 @@ DG
 <!--  <a href="/ru/r.php" id="chapter-button" class="text-reset" target="Читать Книгами или Главами" >Read+</a>  
 	  <script src="/read/js/urlForLbl.js" defer></script> -->
 
-<a href="/r.php" class="text-reset" target="Читать Книгами или Главами"
+<a href="/ru/r.php" class="text-reset" target="Читать Книгами или Главами"
    onclick="
        (function(e){
            let q = document.getElementById(\'paliauto\')?.value.trim().toLowerCase()|| \'\';
            let match = q.match(/^([a-z]+[0-9]+)/i);
            let base = match ? match[1] : q;
-           return openWithQuery(e, \'/r.php?q=\' + encodeURIComponent(base) + \'#\' + encodeURIComponent(q));
+           return openWithQuery(e, \'/ru/r.php?q=\' + encodeURIComponent(base) + \'#\' + encodeURIComponent(q));
        })(event)
    ">Read+</a>
 

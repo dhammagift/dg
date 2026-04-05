@@ -1,12 +1,69 @@
-
-
-// === ЗАГРУЗКА СЛОВАРЯ СТРОГО ПО КЛИКУ (ДЛЯ ВСЕХ) ===
+// === ЗАГРУЗКА СЛОВАРЯ (УМНАЯ ФОНОВАЯ ИЛИ ПО КЛИКУ) ===
 (function() {
     window.isDictScriptLoaded = false;
-    let isDictInitializing = false;
+    let dictScriptPromise = null;
+
+    // Функция управления твоим родным лоадером
+    window.dg_toggleNativeLoader = function(show, customText = null) {
+        let loadingEl = document.getElementById('main-dict-loader');
+        
+        if (show) {
+            if (!loadingEl) {
+                loadingEl = document.createElement('div');
+                loadingEl.id = 'main-dict-loader';
+                loadingEl.className = 'dict-loading-indicator';
+                document.body.appendChild(loadingEl);
+            }
+            const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/');
+            loadingEl.textContent = customText || (isRu ? 'Словарь загружается...' : 'Dictionary is loading...');
+            
+            setTimeout(() => loadingEl.classList.add('show'), 10);
+        } else {
+            if (loadingEl) {
+                loadingEl.classList.remove('show');
+                setTimeout(() => loadingEl.remove(), 300);
+            }
+        }
+    };
+
+    window.dg_loadDictionaryScripts = function() {
+        if (window.isDictScriptLoaded) return Promise.resolve(false);
+        if (dictScriptPromise) return dictScriptPromise;
+
+        dictScriptPromise = new Promise((resolve, reject) => {
+            let slowLoadTriggered = false;
+            
+            // Заводим таймер. Если грузится долго — показываем лоадер и запоминаем это
+            const slowLoadTimer = setTimeout(() => {
+                slowLoadTriggered = true;
+                window.dg_toggleNativeLoader(true);
+            }, 150);
+
+            const script = document.createElement('script');
+            script.src = "/assets/js/paliLookup.js";
+            
+            script.onload = () => {
+                clearTimeout(slowLoadTimer); 
+                window.isDictScriptLoaded = true;
+                localStorage.setItem('dg_dict_cached', 'true'); 
+                // Возвращаем статус: была ли медленная загрузка
+                resolve(slowLoadTriggered);
+            };
+            
+            script.onerror = (e) => {
+                clearTimeout(slowLoadTimer);
+                dictScriptPromise = null;
+                window.dg_toggleNativeLoader(false);
+                reject(e);
+            };
+            
+            document.head.appendChild(script);
+        });
+
+        return dictScriptPromise;
+    };
 
     const clickHandler = function(e) {
-        // Если словарь выключен кнопкой, не вмешиваемся
         if (typeof dictionaryVisible !== 'undefined' && !dictionaryVisible) return;
 
         const isPaliWord = e.target.closest('.pli-lang, [lang="pi"]');
@@ -14,59 +71,76 @@
         const isMultiSelectBtn = e.target.closest('#toggle-multiselect');
 
         if (isPaliWord || isDictBtn || isMultiSelectBtn) {
-            // Если скрипт уже загружен, пусть работает сам
-            if (window.isDictScriptLoaded) return;
+            if (window.isDictScriptLoaded) return; 
 
             e.preventDefault();
             e.stopPropagation();
 
-            if (isDictInitializing) return;
-            isDictInitializing = true;
-
-            // 1. Создаем НАСТОЯЩИЙ визуальный лоадер
-            let loadingEl = document.getElementById('main-dict-loader');
-            if (!loadingEl) {
-                loadingEl = document.createElement('div');
-                loadingEl.id = 'main-dict-loader';
-                loadingEl.className = 'dict-loading-indicator';
-                const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/');
-                loadingEl.textContent = isRu ? 'Инициализация словаря...' : 'Initializing dictionary...';
-                document.body.appendChild(loadingEl);
-                setTimeout(() => loadingEl.classList.add('show'), 10);
-            }
-
-            // 2. Сохраняем точные координаты клика
             const clickX = e.clientX;
             const clickY = e.clientY;
             const target = e.target;
 
-            // 3. Скачиваем ядро словаря
-            const script = document.createElement('script');
-            script.src = "/assets/js/paliLookup.js";
-            
-            script.onload = () => {
-                window.isDictScriptLoaded = true;
-                
-                // Убираем стартовый лоадер
-                if (loadingEl) {
-                    loadingEl.classList.remove('show');
-                    setTimeout(() => loadingEl.remove(), 300);
-                }
+            window.dg_loadDictionaryScripts().then(() => {
+                // Если лоадер был показан (медленная сеть), убираем его перед показом перевода
+                window.dg_toggleNativeLoader(false);
 
-                // Имитируем клик с правильными координатами, чтобы словарь открылся
                 const clickEvent = new MouseEvent('click', {
                     view: window, bubbles: true, cancelable: true, clientX: clickX, clientY: clickY
                 });
                 target.dispatchEvent(clickEvent);
-                isDictInitializing = false;
-            };
-            
-            document.head.appendChild(script);
+            });
         }
     };
 
     document.addEventListener('click', clickHandler, true);
 })();
+
+// ==========================================
+// ФОНОВАЯ АКТИВАЦИЯ С РОДНОЙ ПЛАШКОЙ (СО 2-ГО ВИЗИТА)
+// ==========================================
+window.addEventListener('load', () => {
+    if (localStorage.getItem('dg_dict_cached') !== 'true') return;
+
+    setTimeout(() => {
+        const preloadDictionary = () => {
+            if (typeof dictionaryVisible !== 'undefined' && !dictionaryVisible) return;
+
+            const isRu = window.location.pathname.includes('/ru/') || 
+                         window.location.pathname.includes('/r/') || 
+                         localStorage.getItem('siteLanguage') === 'ru';
+            const savedDictType = typeof savedDict !== 'undefined' ? savedDict : localStorage.getItem('dictType') || 'standalone';
+            const lang = (savedDictType === 'standaloneru' || isRu) ? 'ru' : 'en';
+
+            window.dg_loadDictionaryScripts().then((scriptWasSlow) => {
+                if (typeof lazyLoadStandaloneScripts === 'function') {
+                    
+                    lazyLoadStandaloneScripts(lang).then((dbWasSlow) => {
+                        // Показываем "Словарь загружен" ТОЛЬКО если до этого показывалась плашка "загружается"
+                        if (scriptWasSlow || dbWasSlow) {
+                            window.dg_toggleNativeLoader(true, isRu ? 'Словарь загружен.' : 'Dictionary is loaded.');
+                            
+                            // Даем 1 секунду на прочтение радостной новости, раз уж пользователь ждал
+                            setTimeout(() => {
+                                window.dg_toggleNativeLoader(false);
+                            }, 1000);
+                        }
+                    }).catch(e => {
+                        console.error("Ошибка фоновой загрузки:", e);
+                        window.dg_toggleNativeLoader(false);
+                    });
+                } else {
+                    if (scriptWasSlow) window.dg_toggleNativeLoader(false);
+                }
+            });
+        };
+
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => preloadDictionary());
+        } else {
+            preloadDictionary();
+        }
+    }, 400); 
+});
 
 
 // === ЗАГРУЗКА TTS СТРОГО ПО КЛИКУ / ХОТКЕЮ / АВТОПЛЕЮ ===

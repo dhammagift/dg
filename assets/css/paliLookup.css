@@ -318,7 +318,7 @@ img[data-size="large"] {
    PALI LOOKUP DICTIONARY POPUP
    ========================================= */
 
-/* Индикатор загрузки словаря (Lazy Load) */
+/* Индикатор загрузки словаря */
 .dict-loading-indicator {
     position: fixed;
     bottom: 20px;

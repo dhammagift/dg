@@ -95,7 +95,6 @@ function load_all_languages_interleaved($slug, $is_dev) {
           $file_pattern = "{$slug}_html.json";
           break;
         case 'pali':
-          // Выбор файла: _rootd (Devanagari) или _root (Roman)
           if ($is_dev) {
               $file_pattern = "{$slug}_rootd-pli-ms.json";
           } else {
@@ -153,40 +152,26 @@ function load_all_languages_interleaved($slug, $is_dev) {
       // --- ПОЛУЧЕНИЕ И ОБРАБОТКА ПАЛИ ---
       $raw_pali = $data_sources['pali'][$key] ?? '';
 
-      // --- ПРОВЕРКА УСЛОВИЙ (Зеркально с JS) ---
-      // 1. Проверяем, передан ли параметр 'rp' вообще (аналог urlParams.has('rp'))
       $hasRp = isset($_GET['rp']);
-      
-      // 2. Получаем значение (аналог urlParams.get('rp'))
       $rpValue = $hasRp ? $_GET['rp'] : null;
-
-      // 3. Условие активации: параметр есть И он равен 'true', '1' или '' (пусто)
       $removePunctParam = $hasRp && ($rpValue === 'true' || $rpValue === '1' || $rpValue === '');
 
-      // --- ПРИМЕНЕНИЕ ОЧИСТКИ ---
       if ($is_dev || $removePunctParam) {
-          // 1. Замена тире и дефисов на пробел
           $raw_pali = str_replace(['-', '—', '–'], ' ', $raw_pali);
-          
-          // 2. Замена западной пунктуации (точки, вопросы) на клавиатурную черту
           $raw_pali = str_replace(['.', '?', '!'], ' | ', $raw_pali);
-
-          // 3. ДОБАВЛЕНО: Замена родных данд Деванагари (।, ॥) на клавиатурную черту
-          // Без этого шага они удалятся, так как код символа у них другой
           $raw_pali = str_replace(['।', '॥'], ' | ', $raw_pali);
-          
-          // 4. Удаляем всю остальную пунктуацию, КРОМЕ клавиатурной черты (|)
           $raw_pali = preg_replace('/(?!\|)[\p{P}\p{S}]/u', '', $raw_pali);
       }
 
-
       $pali_text = htmlspecialchars($raw_pali, ENT_QUOTES, 'UTF-8');
-      // ------------------------------------
+      
+      // Иконка-ромбик в стиле твоей читалки
+      $open_reader_icon = '<span class="open-reader-link" title="Open in Reader" style="cursor:pointer; opacity:0.3; margin-right:0.3em; user-select:none; transition: opacity 0.2s ease;" onmouseover="this.style.opacity=0.9" onmouseout="this.style.opacity=0.3">✦</span>';
 
       $en_text = htmlspecialchars($data_sources['en'][$key] ?? '', ENT_QUOTES, 'UTF-8');
       $ru_text = htmlspecialchars($data_sources['ru'][$key] ?? '', ENT_QUOTES, 'UTF-8');
       
-      $pali_col_html = str_replace('{}', $pali_text, $template);
+      $pali_col_html = str_replace('{}', $open_reader_icon . $pali_text, $template);
       $en_col_html = str_replace('{}', $en_text, $template);
       $ru_col_html = str_replace('{}', $ru_text, $template);
       
@@ -200,7 +185,6 @@ function load_all_languages_interleaved($slug, $is_dev) {
   }
   $html_output .= '</tbody></table></div>';
   
-  // --- НАХОДИМ ЗАГОЛОВОК ---
   $found_title = '';
   foreach ($all_keys as $key) {
     if (preg_match('/:0\.2$/', $key)) {
@@ -217,6 +201,7 @@ function load_all_languages_interleaved($slug, $is_dev) {
   }
   return ['content' => $html_output, 'title' => $found_title];
 }
+
 
 // Генерация контента
 if ($slug) {
@@ -543,6 +528,20 @@ body.dark .dt-button-background {
     background: rgba(0, 0, 0, 0.7) !important;
 }
 
+
+#sutta-table td.en-text, 
+#sutta-table td.ru-text {
+  opacity: 0.55;
+}
+
+#sutta-table td.en-text:hover, 
+#sutta-table td.ru-text:hover {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+
+
  </style>
 </head>
 <body data-bs-theme="light"> 
@@ -617,6 +616,39 @@ function goToSlug() {
   window.location.search = newUrl;
 }
 
+document.addEventListener("DOMContentLoaded", function() {
+    // Делегируем слушатель на body, чтобы избежать привязки к каждой отдельной строке
+    document.body.addEventListener('click', function(e) {
+        // Проверяем, был ли клик по самой иконке или её внутренностям (path/svg)
+        const readerLink = e.target.closest('.open-reader-link');
+        
+        if (readerLink) {
+            e.preventDefault();
+            e.stopPropagation(); // Не даем событию всплывать дальше
+
+            const tr = readerLink.closest('tr');
+            if (!tr || !tr.id) return;
+
+            // Разбиваем ID (например, "mn1:1.1")
+            const parts = tr.id.split(':');
+            if (parts.length !== 2) return;
+
+            const slug = parts[0];
+            const segment = parts[1];
+
+            // Проверяем URL для подстановки правильного пути ридера
+            const currentPath = window.location.pathname.toLowerCase();
+            const baseUrl = currentPath.includes('/ru/r.php') ? '/r/' : '/read/';
+
+            // Формируем финальную ссылку
+            const finalUrl = `${baseUrl}?q=${slug}#${segment}`;
+
+            // Открываем ридер в новой вкладке
+            window.open(finalUrl, '_blank');
+        }
+    });
+});
+
 
 document.addEventListener("DOMContentLoaded", function() {
   const url = new URL(window.location.href);
@@ -678,11 +710,21 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 $(document).ready(function() {
+  // Определяем текущий режим для отдельного сохранения состояния
+  var isDevMode = new URLSearchParams(window.location.search).get('script') === 'dev';
+  var stateSuffix = isDevMode ? '_dev' : '_rom';
+
   var table = $('#sutta-table').DataTable({
     stateSave: true,
+    stateSaveCallback: function(settings, data) {
+      localStorage.setItem('DataTables_' + settings.sInstance + '_' + location.pathname + stateSuffix, JSON.stringify(data));
+    },
+    stateLoadCallback: function(settings) {
+      return JSON.parse(localStorage.getItem('DataTables_' + settings.sInstance + '_' + location.pathname + stateSuffix));
+    },
     colReorder: true,
     ordering: false,
-       columnDefs: [
+    columnDefs: [
       {
         targets: 0,
         visible: false,
@@ -708,23 +750,23 @@ $(document).ready(function() {
       text: '🌐',
       className: 'btn-secondary btn-sm'
     }],
-       searchBuilder: {
-            preDefined: {
-                criteria: [
-                    {
-                    condition: 'contains',
-                    data: 'Pali',
-                    value: ['']
-                },
-                   {
-                    condition: 'contains',
-                    data: 'Pali',
-                    value: ['']
-                }
-            ],
-                logic: 'OR'
+    searchBuilder: {
+        preDefined: {
+            criteria: [
+                {
+                condition: 'contains',
+                data: 'Pali',
+                value: ['']
+            },
+               {
+                condition: 'contains',
+                data: 'Pali',
+                value: ['']
             }
-        },
+        ],
+            logic: 'OR'
+        }
+    },
     language: {
       search: "Filter...",
       buttons: {
@@ -747,12 +789,13 @@ $(document).ready(function() {
     }
   });
   
-$('#custom-search-filter').on('keyup input', function() {
-  table.search(this.value).draw();
-});
-$('.dt-buttons')
-  .addClass('me-auto') 
-  .prependTo('#datatables-controls-placeholder');
+  $('#custom-search-filter').on('keyup input', function() {
+    table.search(this.value).draw();
+  });
+
+  $('.dt-buttons')
+    .addClass('me-auto') 
+    .prependTo('#datatables-controls-placeholder');
 
   function scrollToHash() {
     const hash = window.location.hash;
