@@ -253,6 +253,9 @@ if ($is_dev) {
  <link href="/assets/css/paliLookup.css" rel="stylesheet" />
  <link rel="stylesheet" type="text/css" href="/assets/js/datatables/datatables.min.css"/>
  
+ <script src="/assets/js/nav-component.js" defer></script>
+ <script src="/assets/js/themeswitch.js" defer></script>
+ 
  <script>
  const path = location.pathname.toLowerCase();
  let lang;
@@ -544,30 +547,21 @@ body.dark .dt-button-background {
 
  </style>
 </head>
-<body data-bs-theme="light"> 
+<body> 
 <div class="container-fluid controls-container">
  <div class="d-flex flex-wrap align-items-center justify-content-between">
   <div class="d-flex align-items-center mb-2 mb-sm-0">
-   <a id="readLink" href="/read" title="Sutta and Vinaya reading" rel="noreferrer" class="mode-switch me-1">
-    <svg fill="#979797" xmlns="http://www.w3.org/2000/svg" height="26px" viewBox="0 0 547.596 547.596" stroke="#979797"><g><path d="M540.76,254.788L294.506,38.216c-11.475-10.098-30.064-10.098-41.386,0L6.943,254.788 c-11.475,10.098-8.415,18.284,6.885,18.284h75.964v221.773c0,12.087,9.945,22.108,22.108,22.108h92.947V371.067 c0-12.087,9.945-22.108,22.109-22.108h93.865c12.239,0,22.108,9.792,22.108,22.108v145.886h92.947 c12.24,0,22.108-9.945,22.108-22.108v-221.85h75.965C549.021,272.995,552.081,264.886,540.76,254.788z"></path></g></svg>
-   </a>
-
-   <a href="/read.php" id="homeLink" title="Home" class="me-2"><img width="24px" alt="dhamma.gift icon" src="/assets/img/gray-white.png"></a>
    
+   <top-nav-icons type="read" show-dict></top-nav-icons>
+
    <form id="slugForm" class="d-flex align-items-center flex-nowrap me-2" onsubmit="goToSlug(); return false;">
     <input type="search" class="form-control form-control-sm rounded-pill" id="paliauto" name="q" value="<?= htmlspecialchars($slug) ?>" placeholder="e.g. dn9" style="width: 120px;" autofocus>
     <button type="submit" id="searchbtn" class="btn btn-sm btn-outline-secondary rounded-circle p-1 ms-1 flex-shrink-0" style="width:30px; height:30px;">Go</button>
    </form>
    
-   <a alt="Onclick popup dictionary" title="Onclick popup dictionary (Alt+A)" class="toggle-dict-btn text-decoration-none text-dark me-2">
-    <img src="/assets/svg/comment.svg" class="dictIcon" style="width: 20px; height: 20px;">
-   </a>
    <a id="ttsLink" href="/tts.php" class="mode-switch text-decoration-none text-dark me-2" title="Text-to-Speech Mode">
       <img src="/assets/svg/volume-high.svg" style="width: 25px; height: 25px;">
    </a>
-   <div class="form-check form-switch me-2">
-    <input type="checkbox" class="form-check-input" id="darkSwitch">
-   </div>
   </div>
   
   <a href="#" id="script-toggle" class="mode-switch text-decoration-none text-dark" title="<?= $toggle_title ?>">
@@ -581,6 +575,7 @@ body.dark .dt-button-background {
   </div>
  </div>
 </div>
+
 <div class="container-fluid">
   <div class="row">
     <div class="col-12">
@@ -595,7 +590,6 @@ body.dark .dt-button-background {
  <script type="text/javascript" src="/assets/js/natural.js"></script>
  <script type="text/javascript" src="/assets/js/strip-html.js"></script>
  <script src="/assets/js/autopali.js" defer></script>
- <script src="/assets/js/dark-mode-switch/dark-mode-switch.js"></script>
  <script src="/assets/js/paliLookup.js" defer></script>
  <script src="/assets/js/settings.js"></script>
  <script src="/assets/js/smoothScroll.js" defer></script>

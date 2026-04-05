@@ -1,5 +1,4 @@
-
-    /* Контейнер для правильного позиционирования кнопки над полем */
+/* Контейнер для правильного позиционирования кнопки над полем */
 .input-wrapper {
     position: relative;
     width: 100%;
@@ -35,78 +34,28 @@
     filter: invert(1);
 }
 
+.tts-delay-label,
+#tts-segment-delay-input {
+    display: none !important;
+}
 
-        .tts-delay-label,
-        #tts-segment-delay-input {
-            display: none !important;
-        }
-        
-        /* --- Иконка песочных часов для таймера --- */
-        .memo-timer-icon {
-            width: 12px;
-            height: 12px;
-            opacity: 0.6;
-            vertical-align: middle;
-            margin-top: -2px;
-        }
-        .memo-timer-icon.spaced {
-            margin-right: 4px;
-        }
+/* --- Иконка песочных часов для таймера --- */
+.memo-timer-icon {
+    width: 12px;
+    height: 12px;
+    opacity: 0.6;
+    vertical-align: middle;
+    margin-top: -2px;
+}
+.memo-timer-icon.spaced {
+    margin-right: 4px;
+}
 
-        /* --- ФЕЙКОВЫЙ КОНТЕЙНЕР ТАЙМЕРА ДЛЯ ПЛЕЕРА --- */
-        .dummy-ab-timer-container {
-            position: absolute;
-            right: 20px; 
-            top: 32px;   
-            background: transparent;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            color: #777;
-            font-size: 11px;
-            font-family: sans-serif;
-            font-weight: 700;
-            padding: 2px 4px;
-            display: none; /* Скрыт по умолчанию */
-            align-items: center;
-            justify-content: center;
-            gap: 2px;
-            z-index: 10;
-            line-height: 1;
-        }
-        .dark .dummy-ab-timer-container {
-            border-color: #555;
-            color: #aaa;
-        }
-
-        /* --- ВСТРОЕННЫЙ ТАЙМЕР В РЯДУ С КНОПКАМИ --- */
-        #memo-timer-status {
-            display: none; 
-            font-size: 14px;
-            font-weight: 600;
-            color: #0d6efd;
-            background: rgba(13, 110, 253, 0.1);
-            padding: 0 12px;
-            border-radius: 6px;
-            border: 1px solid rgba(13, 110, 253, 0.2);
-            height: 38px; 
-            align-items: center;
-            justify-content: center;
-            min-width: 42px;
-            white-space: nowrap;
-            user-select: none;
-        }
-        
-        .dark #memo-timer-status {
-            color: #6ea8fe;
-            background: rgba(13, 110, 253, 0.15);
-            border-color: rgba(110, 168, 254, 0.2);
-        }
-
-/* --- ОБЩИЙ ТАЙМЕР СЕССИИ (внутри плеера) --- */
-#global-session-timer {
+/* --- ФЕЙКОВЫЙ КОНТЕЙНЕР ТАЙМЕРА ДЛЯ ПЛЕЕРА --- */
+.dummy-ab-timer-container {
     position: absolute;
-    left: 20px;        /* Слева */
-    top: 32px;         /* На той же линии, что и таймер фрагментов */
+    right: 20px; 
+    top: 32px;   
     background: transparent;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -115,7 +64,62 @@
     font-family: sans-serif;
     font-weight: 700;
     padding: 2px 4px;
-    display: none;     /* Появляется при старте */
+    display: none; /* Скрыт по умолчанию */
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    z-index: 10;
+    line-height: 1;
+}
+
+.dummy-ab-timer-container.active {
+    display: inline-flex;
+    align-items: center;
+}
+
+.dark .dummy-ab-timer-container {
+    border-color: #555;
+    color: #aaa;
+}
+
+/* --- ВСТРОЕННЫЙ ТАЙМЕР В РЯДУ С КНОПКАМИ --- */
+#memo-timer-status {
+    display: none; 
+    font-size: 14px;
+    font-weight: 600;
+    color: #0d6efd;
+    background: rgba(13, 110, 253, 0.1);
+    padding: 0 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(13, 110, 253, 0.2);
+    height: 38px; 
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.dark #memo-timer-status {
+    color: #6ea8fe;
+    background: rgba(13, 110, 253, 0.15);
+    border-color: rgba(110, 168, 254, 0.2);
+}
+
+/* --- ОБЩИЙ ТАЙМЕР СЕССИИ (внутри плеера) --- */
+#global-session-timer {
+    position: absolute;
+    left: 20px;
+    top: 32px;
+    background: transparent;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: #777;
+    font-size: 11px;
+    font-family: sans-serif;
+    font-weight: 700;
+    padding: 2px 4px;
+    display: none;
     align-items: center;
     justify-content: center;
     z-index: 10;
@@ -129,74 +133,67 @@
     color: #aaa;
 }
 
-
-
-        /* --- ТЕМНАЯ ТЕМА --- */
-        .dark .form-control,
-        .dark .form-select {
-            background-color: #222;
-            color: #e0e0e0;
-            border-color: #444;
-        }
-        .dark .form-control:focus,
-        .dark .form-select:focus {
-            background-color: #2a2a2a;
-            color: #fff;
-            border-color: #0d6efd;
-        }
-        .dark .form-control::placeholder {
-            color: #777;
-        }
-        .dark .list-group-item {
-            background-color: #222;
-            color: #ccc;
-            border-color: #444;
-        }
-        .dark .list-group-item a {
-            color: #5c93fa; 
-        }
-        .dark .list-group-item a:hover {
-            color: #7ab0ff;
-        }
-        .dark .form-check-label {
-            color: #ccc;
-        }
-
-        #btn_reset_tts img, #reset-tts-btn img {
-            opacity: 0.6;
-            transition: all 0.2s;
-        }
-        #btn_reset_tts:hover img, #reset-tts-btn:hover img {
-            opacity: 1;
-        }
-        
-        /* базовая унификация кнопок */
-        .memo-controls .btn{
-          display:inline-flex;
-          align-items:center;
-          justify-content:center;
-          height:38px;              
-          padding:0 12px;           
-          min-width:42px;           
-          border-radius:6px;
-          box-sizing:border-box;
-          border-width:1px;
-          border-style:solid;
-          border-color:transparent; 
-        }
-
-        .memo-controls .btn.icon{ width:42px; padding:0; }
-        .memo-controls .btn.text{ min-width:88px; padding:0 14px; }
-        .dark .memo-controls .btn{ border-color: rgba(255,255,255,0.06); }
-        
-        
-        /* =========================================
-   CLEANED INLINE STYLES (Layout & UI)
-   ========================================= */
-
-#global-session-timer {
-    display: none;
+/* --- ТЕМНАЯ ТЕМА --- */
+.dark .form-control,
+.dark .form-select {
+    background-color: #222;
+    color: #e0e0e0;
+    border-color: #444;
 }
+.dark .form-control:focus,
+.dark .form-select:focus {
+    background-color: #2a2a2a;
+    color: #fff;
+    border-color: #0d6efd;
+}
+.dark .form-control::placeholder {
+    color: #777;
+}
+.dark .list-group-item {
+    background-color: #222;
+    color: #ccc;
+    border-color: #444;
+}
+.dark .list-group-item a {
+    color: #5c93fa; 
+}
+.dark .list-group-item a:hover {
+    color: #7ab0ff;
+}
+.dark .form-check-label {
+    color: #ccc;
+}
+
+#btn_reset_tts img, #reset-tts-btn img {
+    opacity: 0.6;
+    transition: all 0.2s;
+}
+#btn_reset_tts:hover img, #reset-tts-btn:hover img {
+    opacity: 1;
+}
+
+/* базовая унификация кнопок */
+.memo-controls .btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height:38px;              
+  padding:0 12px;           
+  min-width:42px;           
+  border-radius:6px;
+  box-sizing:border-box;
+  border-width:1px;
+  border-style:solid;
+  border-color:transparent; 
+}
+
+.memo-controls .btn.icon{ width:42px; padding:0; }
+.memo-controls .btn.text{ min-width:88px; padding:0 14px; }
+.dark .memo-controls .btn{ border-color: rgba(255,255,255,0.06); }
+
+/* =========================================
+CLEANED INLINE STYLES (Layout & UI)
+========================================= */
 
 /* Flex Containers & Gaps */
 .flex-col-gap-15 { display: flex; flex-direction: column; gap: 15px; }
@@ -280,4 +277,169 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+}
+
+/* =========================================
+NEW CLASSES EXTRACTED FROM INLINE STYLES 
+========================================= */
+
+/* Inputs & Elements */
+#inputText {
+    resize: vertical;
+}
+
+#nav_search_link {
+    opacity: 1;
+}
+
+.btn-ai-custom {
+    background-color: #6f42c1;
+    border-color: #6f42c1;
+    color: white;
+}
+
+#star-solid {
+    display: none;
+}
+
+.tts-settings-panel {
+    background: rgba(128,128,128,0.05);
+    border: 1px dashed #ccc;
+    border-radius: 8px;
+    max-width: 650px;
+}
+
+.btn-reset-tts {
+    padding: 0;
+    border: none;
+    background: transparent;
+}
+
+.tts-label {
+    font-size: 12px;
+    color: #888;
+}
+
+.tts-check-label {
+    font-size: 13px;
+}
+
+#ttsDelimiter {
+    width: 100px;
+}
+
+#ttsDelay,
+#ttsEndDelay {
+    width: 60px;
+}
+
+#ttsSound {
+    width: 80px;
+}
+
+#ttsIsLoop {
+    margin-top: 0;
+}
+
+#tts_loop_label {
+    font-size: 13px;
+    margin-right: 2px;
+}
+
+#ttsLoopCount {
+    width: 36px;
+    height: 22px;
+    font-size: 12px;
+}
+
+.preset-loading {
+    font-size: 0.9em;
+}
+
+#result_header {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+#copy_icon_btn {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: 0.2s;
+}
+
+#hiddenVoiceLink {
+    display: none;
+}
+
+#tts-virtual-container {
+    display: none;
+    padding-bottom: 50px;
+}
+
+/* JS Dynamically Applied Classes */
+.tabular-nums {
+    font-variant-numeric: tabular-nums;
+}
+
+.timer-prefix-text {
+    margin-right: 4px;
+}
+
+.timer-mode-display {
+    text-align: center;
+    padding: 40px 20px;
+    background: rgba(128,128,128,0.03);
+    border-radius: 16px;
+    max-width: 450px;
+    margin: 0 auto;
+    border: 1px dashed rgba(128,128,128,0.3);
+}
+
+.timer-title-small {
+    font-size: 1rem;
+    color: #888;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+#large-global-timer {
+    font-size: 4.5rem;
+    font-weight: 300;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    margin-bottom: 35px;
+}
+
+.timer-subtitle-small {
+    font-size: 0.9rem;
+    color: #888;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+#large-countdown-timer {
+    font-size: 3rem;
+    font-weight: 400;
+    color: #6f42c1;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+}
+
+.tts-word {
+    display: inline-block;
+    margin: 2px 4px;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.body-tts-active {
+    transition: padding-bottom 0.4s ease;
+    padding-bottom: 120px;
 }

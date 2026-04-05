@@ -39,33 +39,21 @@
 <body>
 <div class="container mt-3">
   <div class="d-flex align-items-center">
-    <div class="input-group">
-      <a href="/ru/read.php" title="Sutta and Vinaya reading" rel="noreferrer" class="me-1">
-        <svg fill="#979797" version="1.1" xmlns="http://www.w3.org/2000/svg" height="26px" viewBox="0 0 547.596 547.596" stroke="#979797">
-          <g><path d="M540.76,254.788L294.506,38.216c-11.475-10.098-30.064-10.098-41.386,0L6.943,254.788c-11.475,10.098-8.415,18.284,6.885,18.284h75.964v221.773c0,12.087,9.945,22.108,22.108,22.108h92.947V371.067c0-12.087,9.945-22.108,22.109-22.108h93.865c12.239,0,22.108,9.792,22.108,22.108v145.886h92.947c12.24,0,22.108-9.945,22.108-22.108v-221.85h75.965C549.021,272.995,552.081,264.886,540.76,254.788z"></path></g>
-        </svg>
-      </a>
-      <a href="/ru" title="Sutta and Vinaya search" rel="noreferrer" class="me-1">
-        <img width="24px" alt="dhamma.gift icon" src="/assets/img/gray-white.png">
-      </a>
-      <a class="ms-1 toggle-dict-btn">
-        <img src="/assets/svg/comment.svg" class="dictIcon-sitePages">
-      </a>
-<a href="javascript:void(0)" title="Listen to the article" class="ms-1 voice-link">
+    <div class="input-group align-items-center">
+      <top-nav-icons type="read" show-dict></top-nav-icons>
+
+      <a href="javascript:void(0)" title="Listen to the article" class="ms-2 voice-link top-nav-icon-link">
         <svg fill="#979797" height="26px" viewBox="0 0 24 24" width="26px" xmlns="http://www.w3.org/2000/svg">
             <path d="M8 5v14l11-7z"/>
         </svg>
-      </a>       
-      
-      <div class="ms-1 form-check form-switch">
-        <input type="checkbox" class="form-check-input" id="darkSwitch">
-      </div>
-      <a href="./rationale-en.html">Rationale</a>
+      </a> 
+      <a href="/assets/common/rationale-en.html" class="ms-3 ">Rationale</a>
     </div>
+
     <!-- Language switcher on the right -->
     <div class="ms-auto d-inline-flex align-items-center">
         <span class="ms-2">en</span>
-        <a class="btn btn-sm btn-secondary rounded-pill text-decoration-none ms-1" href="./o.html">ru</a>
+        <a class="btn btn-sm btn-secondary rounded-pill text-decoration-none ms-1" href="/ru/assets/common/o.html">ru</a>
     </div>
   </div>
 </div>
@@ -208,11 +196,10 @@ Magazine — "periodical" and магазин — "store"
 </script>
         
 
-          <script src="/assets/js/paliLookup.js"></script>
-
-    <script src="/assets/js/dark-mode-switch/dark-mode-switch.js"></script>
+          <script src="/assets/js/settings.js"></script>
+<script src="/assets/js/nav-component.js" defer></script>
+<script src="/assets/js/themeswitch.js" defer></script>
           <script src="/assets/js/smoothScroll.js" defer></script>
-<script src="/read/js/voice.js" defer></script>
 
 </body>
 </html>

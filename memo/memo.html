@@ -10,28 +10,47 @@
     <link href="/memo/memo.css" rel="stylesheet" />
     <link rel="stylesheet" href="/read/css/voice.css">
     <script src="/assets/js/dark-mode-switch/dark-mode-switch.js"></script>
-    <script src="/assets/js/nav-component.js" defer></script>
-</head>
 
+</head>
 <body>
 <div id="global-session-timer">00:00</div>
 
     <div class="container mt-3">
         <div class="align-items-center toggle-switch input-group-append">
+          
             <div id="" class="input-group align-items-center">
-                
-                <top-nav-icons type="read" show-dict></top-nav-icons>
+<a href="/read.php" id="nav_read_link" title="Sutta and Vinaya reading" rel="noreferrer" class="me-1 top-nav-icon-link">
+    <svg fill="#979797" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="26px" viewBox="0 0 547.596 547.596" xml:space="preserve" stroke="#979797"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#CCCCCC" stroke-width="3.285576"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M540.76,254.788L294.506,38.216c-11.475-10.098-30.064-10.098-41.386,0L6.943,254.788 c-11.475,10.098-8.415,18.284,6.885,18.284h75.964v221.773c0,12.087,9.945,22.108,22.108,22.108h92.947V371.067 c0-12.087,9.945-22.108,22.109-22.108h93.865c12.239,0,22.108,9.792,22.108,22.108v145.886h92.947 c12.24,0,22.108-9.945,22.108-22.108v-221.85h75.965C549.021,272.995,552.081,264.886,540.76,254.788z"></path> </g> </g></svg>
+</a>
 
-                <a href="/memorize/?q=sn56.11" title="Sutta and Vinaya search" rel="noreferrer" class="ms-4 me-2 text-decoration-none text-muted">sn56.11</a>
+                <a href="/" id="nav_search_link" title="Sutta and Vinaya search" rel="noreferrer" class="me-1 top-nav-icon-link">
+                    <img width="24px" alt="dhamma.gift icon" src="/assets/img/gray-white.png">
+                </a>
+
+                <a alt="Onclick popup dictionary" title="Onclick popup dictionary (Alt+A)" class="mx-1 toggle-dict-btn top-nav-icon-link">
+                    <img src="/assets/svg/comment.svg" class="top-nav-icon dictIcon">
+                </a>
+  
+                <a id="theme-button" title="Switch theme (Alt+T)" onclick="switchIcon(this)" class="mx-1 top-nav-icon-link">
+                    <img src="/assets/svg/circle-half-stroke.svg" alt="Switch theme" class="top-nav-icon changesvg">
+                </a>
+                
+                <a onclick="toggleQuickModal()" aria-label="Open Cattāri Ariyasaccāni" class="mx-1 top-nav-icon-link">
+                    <img src="/assets/svg/compass.svg" class="top-nav-icon">
+                </a>
+   
+
+ <a href="/memorize/?q=sn56.11" title="Sutta and Vinaya search" rel="noreferrer" class="ms-4 me-2 text-decoration-none text-muted">sn56.11</a>
                 <a href="/assets/texts/dn2.9.html" title="Sutta and Vinaya search" rel="noreferrer" class="me-2 text-decoration-none text-muted">dn22</a>
                 <a href="/memorize/?q=sn12.2" title="Sutta and Vinaya search" rel="noreferrer" class="me-2 text-decoration-none text-muted">sn12.2</a>
                 
                 <div class="ms-4 me- d-inline-flex align-items-center lang-switcher" id="lang-switcher">
                 </div>
+
+
             </div>
         </div>
     </div>
-
 
 
     <div class="container mt-1">
