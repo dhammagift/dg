@@ -244,7 +244,7 @@ if ($is_dev) {
 <html lang="ru">
 <head>
  <meta charset="UTF-8">
- <title><?= htmlspecialchars($title) ?> :: Parallel Reader</title>
+ <title><?= htmlspecialchars($title) ?> :: Chapter Reader</title>
  <link rel="icon" type="image/png" sizes="32x32" href="https://dhamma.gift/assets/img/favico_black.png">
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <link rel="stylesheet" href="/assets/css/jquery-ui.min.css">
