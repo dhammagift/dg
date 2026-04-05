@@ -3045,3 +3045,121 @@ window.initSettingsObserver = function() {
         originalClear.apply(this, arguments);
     };
 };
+
+
+// ==========================================
+// PWA INSTALL BANNER LOGIC
+// ==========================================
+(function initGlobalPwa() {
+    let deferPrompt = null;
+    let banner = null;
+    const pwaBannerShownKey = 'pwaBannerShown';
+    const targetVisitForPWApopup = 9;
+
+    function getLanguage() {
+        const path = window.location.pathname;
+        return (path.startsWith('/ru/') || path.startsWith('/r/')) ? 'ru' : 'en';
+    }
+
+    function createPwaBanner() {
+        if (document.getElementById('pwa-banner')) return;
+        
+        const bannerHTML = `
+            <div id="pwa-banner" class="pwa-install hidden">
+                <img src="/assets/img/icon-192x192.png" alt="App Icon" class="icon">
+                <div class="text">
+                    <h2 class="pwa-title">Install Dhamma.Gift</h2>
+                    <p class="pwa-description">Add to home screen for quick access</p>
+                </div>
+                <div class="actions">
+                    <button id="installBtn" class="pwa-button">Install</button>
+                    <button id="closePwaBanner">✕</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', bannerHTML);
+        
+        banner = document.getElementById('pwa-banner');
+        
+        document.getElementById('installBtn').addEventListener('click', async () => {
+            if (deferPrompt) {
+                try {
+                    deferPrompt.prompt();
+                    const { outcome } = await deferPrompt.userChoice;
+                    if (outcome === 'accepted') hidePwaBanner();
+                } catch (error) {
+                    console.error('Ошибка при установке PWA:', error);
+                } finally {
+                    deferPrompt = null;
+                }
+            }
+        });
+
+        document.getElementById('closePwaBanner').addEventListener('click', hidePwaBanner);
+    }
+
+    function hidePwaBanner() {
+        if (banner) {
+            banner.classList.add('hidden');
+            localStorage.setItem(pwaBannerShownKey, 'true');
+        }
+    }
+
+    function localizePwaBanner() {
+        if (!banner) return;
+        const texts = {
+            ru: {
+                title: 'Установить Dhamma.Gift',
+                description: 'Добавить на главный экран для быстрого доступа',
+                installBtn: 'Установить'
+            },
+            en: {
+                title: 'Install Dhamma.Gift',
+                description: 'Add to home screen for quick access',
+                installBtn: 'Install'
+            }
+        };
+        
+        const currentTexts = texts[getLanguage()] || texts.en;
+        banner.querySelector('.pwa-title').textContent = currentTexts.title;
+        banner.querySelector('.pwa-description').textContent = currentTexts.description;
+        banner.querySelector('.pwa-button').textContent = currentTexts.installBtn;
+    }
+
+    // Слушаем событие глобально
+    window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('beforeinstallprompt event triggered');
+        e.preventDefault();
+        deferPrompt = e;
+        
+        const visitCount = parseInt(localStorage.getItem('visitCount') || '0', 10);
+        const alreadyShown = localStorage.getItem(pwaBannerShownKey);
+        
+        // Показываем баннер только если достигнут таргет визитов и баннер не закрывали ранее
+        if (visitCount >= targetVisitForPWApopup && !alreadyShown) {
+            createPwaBanner();
+            localizePwaBanner();
+            banner.classList.remove('hidden');
+        }
+    });
+})();
+
+
+(function checkAndLoadUiHelper() {
+    // Используем новый глобальный счетчик из uihelp.js
+    const visitGlobal = parseInt(localStorage.getItem("visitGlobal") || "0", 10);
+    const targetGlobal = 13; // Максимальный таргет (для PWA окна)
+    
+    // Проверяем, закрыл ли пользователь тосты с подсказками
+    const hintReadShown = localStorage.getItem('hintShown_read_mode');
+    const hintResultShown = localStorage.getItem('hintShown_result_mode');
+
+    // Грузим скрипт, если глобальных визитов <= 13 ИЛИ какая-то из подсказок еще не закрыта
+    if (visitGlobal <= targetGlobal || !hintReadShown || !hintResultShown) {
+        const script = document.createElement('script');
+        script.src = '/assets/js/uihelp.js';
+        script.defer = true;
+        document.head.appendChild(script);
+    }
+})();

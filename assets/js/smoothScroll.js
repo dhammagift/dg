@@ -536,3 +536,9 @@ const ScrollManager = {
 };
 
 ScrollManager.init();
+
+// Делаем объект глобальным, чтобы другие скрипты его видели
+window.ScrollManager = ScrollManager;
+
+// Сообщаем всему документу, что скролл-менеджер готов к работе
+document.dispatchEvent(new CustomEvent('scrollManagerReady'));
