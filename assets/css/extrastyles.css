@@ -1726,7 +1726,7 @@ end   QUICK MODAL STYLES (Оптимизировано) end Css for settings.js
 }
 
 .dict-loading-indicator.show {
-    opacity: 1;
+    opacity: 0.6;
 }
 
 /* Темная тема */
