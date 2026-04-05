@@ -307,6 +307,7 @@ function buildQuickModalDOM() {
               
               if (newTitle !== null && newTitle.trim() !== "") {
                   favData[itemIndex].title = newTitle.trim();
+                  favData[itemIndex].hasCustomTitle = true; // <-- СТАВИМ ЗАЩИТНЫЙ ФЛАГ
                   localStorage.setItem('dg_favorites', JSON.stringify(favData));
                   
                   if (typeof syncFavoriteItemToCloud === 'function') {
@@ -317,6 +318,8 @@ function buildQuickModalDOM() {
               }
           }
       }
+
+
   });
 
   histContainer.addEventListener('click', (e) => {
