@@ -38,20 +38,11 @@ include './scripts/opentexts.php';
 
 <body>
       <div class="container mt-3">
-        <div class="align-items-center align-items-center toggle-switch input-group-append">
-            <div id="" class="input-group">
-                <a href="/ru/read.php" title="Sutta and Vinaya reading" rel="noreferrer" class="me-1">
-                    <svg fill="#979797" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="26px" viewBox="0 0 547.596 547.596" xml:space="preserve" stroke="#979797"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#CCCCCC" stroke-width="3.285576"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M540.76,254.788L294.506,38.216c-11.475-10.098-30.064-10.098-41.386,0L6.943,254.788 c-11.475,10.098-8.415,18.284,6.885,18.284h75.964v221.773c0,12.087,9.945,22.108,22.108,22.108h92.947V371.067 c0-12.087,9.945-22.108,22.109-22.108h93.865c12.239,0,22.108,9.792,22.108,22.108v145.886h92.947 c12.24,0,22.108-9.945,22.108-22.108v-221.85h75.965C549.021,272.995,552.081,264.886,540.76,254.788z"></path> </g> </g></svg>
-                </a>
+        <div class="align-items-center toggle-switch input-group-append">
+            <div id="" class="input-group align-items-center">
+                
+                <top-nav-icons type="read" show-dict></top-nav-icons>
 
-                <a href="/ru" title="Sutta and Vinaya search" rel="noreferrer" class="me-1">
-                    <img width="24px" alt="dhamma.gift icon" src="/assets/img/gray-white.png">
-                </a>
-  <a class="ms-1 toggle-dict-btn">  <img src="/assets/svg/comment.svg" class="dictIcon-sitePages"></img></a>
-
-                <div class="ms-1 form-check form-switch">
-                    <input type="checkbox" class="form-check-input" id="darkSwitch">
-                </div>
        <a class="ms-1 btn-sm btn-secondary rounded-pill text-decoration-none " href="/?q=pli-tv-bu-pm" >bu-pm</a>
       <a class="ms-1 btn-sm btn-secondary rounded-pill text-decoration-none " href="/bipm.php?expand=true" >bi-pm</a>
  
@@ -155,7 +146,9 @@ include $basedir . "/assets/texts/bupm.php";
 <script src="/assets/js/bootstrap.bundle.5.3.1.min.js"></script>
 <script src="/assets/js/pmjs.js"></script>
 <script src="/assets/js/openFdg.js"></script>
-<script src="/assets/js/dark-mode-switch/dark-mode-switch.js"></script>
+<script src="/assets/js/settings.js"></script>
+<script src="/assets/js/nav-component.js" defer></script>
+<script src="/assets/js/themeswitch.js" defer></script>
 <script>
  // save collapsed state
 $(document).ready(function () {
@@ -204,9 +197,6 @@ $(document).ready(function () {
 
   });
 </script>
-<script src="/assets/js/paliLookup.js"></script>
-<script src="/assets/js/settings.js"></script>
-<script src="/assets/js/standalone-dpd/pali-lookup-standalone.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             enablePaliLookup();
