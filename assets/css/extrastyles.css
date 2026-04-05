@@ -1708,21 +1708,33 @@ body.dark .hist-icon img { filter: invert(0.7); opacity: 1; }
 end   QUICK MODAL STYLES (Оптимизировано) end Css for settings.js 
    ========================================= */
 
-/* Индикатор загрузки словаря */
+/* Индикатор загрузки словаря (Светлая тема по умолчанию) */
 .dict-loading-indicator {
     position: fixed;
     bottom: 20px;
     left: 20px;
     padding: 10px;
-    background: rgba(0,0,0,0.7);
-    color: grey;
+    background-color: var(--bs-body-bg, #ffffff);
+    color: var(--bs-body-color, #212529);
+    border: 1px solid var(--bs-border-color, #dee2e6);
     border-radius: 12px;
     z-index: 10000;
     font-size: 14px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     opacity: 0;
     transition: opacity 0.3s ease;
 }
+
 .dict-loading-indicator.show {
     opacity: 1;
+}
+
+/* Темная тема */
+body.dark .dict-loading-indicator,
+[data-theme="dark"] .dict-loading-indicator,
+[data-bs-theme="dark"] .dict-loading-indicator {
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #E1EAED;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
