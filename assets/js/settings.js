@@ -108,14 +108,11 @@ window.addEventListener('load', () => {
             const isRu = window.location.pathname.includes('/ru/') || 
                          window.location.pathname.includes('/r/') || 
                          localStorage.getItem('siteLanguage') === 'ru';
-            
-            // Исправлено: dictType заменено на selectedDict
-            const savedDictType = typeof savedDict !== 'undefined' ? savedDict : localStorage.getItem('selectedDict') || 'standalone';
+            const savedDictType = typeof savedDict !== 'undefined' ? savedDict : localStorage.getItem('dictType') || 'standalone';
             const lang = (savedDictType === 'standaloneru' || isRu) ? 'ru' : 'en';
 
             window.dg_loadDictionaryScripts().then((scriptWasSlow) => {
-                // Добавлено условие: грузить базы только для standalone режимов
-                if ((savedDictType === 'standalone' || savedDictType === 'standaloneru') && typeof lazyLoadStandaloneScripts === 'function') {
+                if (typeof lazyLoadStandaloneScripts === 'function') {
                     
                     lazyLoadStandaloneScripts(lang).then((dbWasSlow) => {
                         // Показываем "Словарь загружен" ТОЛЬКО если до этого показывалась плашка "загружается"
@@ -144,7 +141,6 @@ window.addEventListener('load', () => {
         }
     }, 400); 
 });
-
 
 
 // === ЗАГРУЗКА TTS СТРОГО ПО КЛИКУ / ХОТКЕЮ / АВТОПЛЕЮ ===
