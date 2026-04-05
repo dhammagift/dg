@@ -633,6 +633,12 @@ if (favBtn) {
                 // 2. ФИНТ: Текст или настройки изменились (Дискета) -> Тихая перезапись
                 const oldSlug = existing.slug;
                 
+                // --- ПРОВЕРКА КАСТОМНОГО ТАЙТЛА ---
+                if (existing.hasCustomTitle) {
+                    positionData.title = existing.title;
+                    positionData.hasCustomTitle = true;
+                }
+                
                 // Очистка старого "длинного текста" из памяти браузера (чтобы не было утечки памяти)
                 if (existing.search) {
                     const oldParams = new URLSearchParams(existing.search);
@@ -666,7 +672,9 @@ if (favBtn) {
                 window.activeMemoSavedSlug = positionData.slug; // Обновляем якорь
                 window.dispatchEvent(new CustomEvent('favoritesUpdated'));
             }
-        } else {
+        }
+
+        else {
             // 3. Совершенно новая запись (ничего в базе нет)
             if (typeof toggleFavoriteGlobal === 'function') {
                 toggleFavoriteGlobal(positionData);
