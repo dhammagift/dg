@@ -3163,3 +3163,17 @@ window.initSettingsObserver = function() {
         document.head.appendChild(script);
     }
 })();
+
+
+// ==========================================
+// АВТОМАТИЧЕСКАЯ ЗАГРУЗКА AUTOPALI
+// ==========================================
+(function autoLoadAutopali() {
+    // Проверяем, не подключен ли скрипт уже напрямую в HTML
+    if (!document.querySelector('script[src*="autopali.js"]')) {
+        const script = document.createElement('script');
+        script.src = "/assets/js/autopali.js";
+        script.defer = true;
+        document.head.appendChild(script);
+    }
+})();
