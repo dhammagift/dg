@@ -601,16 +601,8 @@ async function populateVoiceSelectors(apiKey, forceRefresh = false) {
     // Важно: передаем context.storageKey
     setupVoiceSelectors(trnVoices, 'google-lang-select-trn', 'google-voice-select-trn', context.storageKey, finalDefaultConfig);
     
-    togglePaliDropdownVisibility();
 }
 
-function togglePaliDropdownVisibility() {
-    const isNative = document.getElementById('native-pali-toggle')?.checked;
-    const paliDropdowns = document.getElementById('pali-google-dropdowns');
-    if (paliDropdowns) {
-        paliDropdowns.style.display = isNative ? 'none' : 'block';
-    }
-}
 
 // --- ПОЛУЧЕНИЕ АУДИО (УЧИТЫВАЕТ КОНТЕКСТ) ---
 async function fetchGoogleAudio(text, lang, rate, apiKey) {
@@ -2139,6 +2131,80 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// --- ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ НАТИВНЫХ ГОЛОСОВ (1 СПИСОК) ---
+function setupNativeDropdown(voices, selectId, hideSelectId, storageKey, defaultLangCode) {
+    const select = document.getElementById(selectId);
+    const hideSelect = document.getElementById(hideSelectId);
+    if (!select || !hideSelect) return;
+
+    hideSelect.style.display = 'none';
+    select.style.display = 'inline-block';
+    select.style.maxWidth = '100%';
+
+    // Форматтер для красивых имен регионов (например, US вместо United States)
+    const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+    
+    const getShortName = (voiceName, langCode) => {
+        // Убираем системный мусор из имен Apple/Android
+        let cleanName = voiceName.replace(/ \((.*?)\)/g, '').replace(/ - .*$/, '').trim();
+        
+        // Пытаемся получить код региона из языка (например, "US" из "en-US")
+        const parts = langCode.replace('_', '-').split('-');
+        if (parts.length > 1) {
+            const regionCode = parts[1].toUpperCase();
+            try {
+                const fullRegion = regionNames.of(regionCode);
+                // Если имя голоса содержит полное название страны, меняем его на код
+                if (fullRegion && cleanName.includes(fullRegion)) {
+                    cleanName = cleanName.replace(fullRegion, regionCode);
+                } else if (!cleanName.includes(regionCode)) {
+                    // Иначе просто добавляем код, чтобы отличать голоса
+                    cleanName = `${cleanName} ${regionCode}`;
+                }
+            } catch (e) {}
+        }
+        return cleanName;
+    };
+
+    // Форматируем опции: Имя [lang]
+    const options = voices.map(v => {
+        const lang = v.languageCodes[0];
+        const shortName = getShortName(v.name, lang);
+        const label = `${shortName} [${lang}]`;
+        return { lang: lang, name: v.name, label: label };
+    });
+
+    let savedRaw = localStorage.getItem(storageKey);
+    let selectedName = null;
+    if (savedRaw) {
+        try { selectedName = JSON.parse(savedRaw).name; } catch(e){}
+    }
+
+    if (!selectedName || !options.find(o => o.name === selectedName)) {
+        let defaultOpt = options.find(o => o.lang.replace('_', '-').toLowerCase() === defaultLangCode.toLowerCase()) 
+                      || options.find(o => o.lang.replace('_', '-').toLowerCase().startsWith(defaultLangCode.split('-')[0].toLowerCase())) 
+                      || options[0];
+                      
+        selectedName = defaultOpt ? defaultOpt.name : '';
+        if (defaultOpt) {
+            localStorage.setItem(storageKey, JSON.stringify({ languageCode: defaultOpt.lang, name: defaultOpt.name }));
+        }
+    }
+
+    select.innerHTML = options.map(o => 
+        `<option value="${o.name}" ${o.name === selectedName ? 'selected' : ''}>${o.label}</option>`
+    ).join('');
+
+    const newSelect = select.cloneNode(true);
+    select.parentNode.replaceChild(newSelect, select);
+
+    newSelect.addEventListener('change', (e) => {
+        const chosenOpt = options.find(o => o.name === e.target.value);
+        if (chosenOpt) {
+            localStorage.setItem(storageKey, JSON.stringify({ languageCode: chosenOpt.lang, name: chosenOpt.name }));
+        }
+    });
+}
 
 // --- ОСНОВНАЯ ФУНКЦИЯ ПОПУЛЯЦИИ СПИСКОВ (ГИБРИДНАЯ: GOOGLE + NATIVE) ---
 async function refreshVoiceDropdowns(forceRefresh = false) {
@@ -2155,7 +2221,6 @@ async function refreshVoiceDropdowns(forceRefresh = false) {
         googleVoicesList = []; 
     }
 
-    // 1. Подгрузка Google Голосов (если они нужны)
     let googleVoices = [];
     if (hasGoogleKey) {
         if (googleVoicesList.length === 0) {
@@ -2166,10 +2231,9 @@ async function refreshVoiceDropdowns(forceRefresh = false) {
         googleVoices = googleVoicesList;
     }
 
-    // 2. Подгрузка Нативных Системных Голосов (Адаптация формата под Google)
     let nativeVoicesRaw = synth.getVoices();
     if (!nativeVoicesRaw || nativeVoicesRaw.length === 0) {
-        nativeVoicesRaw = []; // Могут загрузиться позже через событие
+        nativeVoicesRaw = [];
     }
     
     const nativeVoices = nativeVoicesRaw.map(v => ({
@@ -2178,33 +2242,33 @@ async function refreshVoiceDropdowns(forceRefresh = false) {
         ssmlGender: 'UNKNOWN' 
     }));
 
-    // Расширенная проверка на индийские языки
     const isIndianLang = (code) => {
-        return code.includes('-IN') || code.includes('ne-NP') || code.includes('si-LK') || 
-               code.startsWith('sa-') || code.startsWith('hi-') || code.startsWith('mr-');
+        const c = code.replace('_', '-').toLowerCase();
+        return c.includes('-in') || c.includes('ne-np') || c.includes('si-lk') || 
+               c.startsWith('sa-') || c.startsWith('hi-') || c.startsWith('mr-') || c.startsWith('pa-');
+    };
+    
+    const isEnglishLang = (code) => {
+        return code.replace('_', '-').toLowerCase().startsWith('en-');
     };
 
     // --- НАСТРОЙКА UI PALI ---
     const paliLangSelect = document.getElementById('google-lang-select-pali');
-    if (paliLangSelect) {
+    const paliVoiceSelect = document.getElementById('google-voice-select-pali');
+    
+    if (paliLangSelect && paliVoiceSelect) {
         if (isNativePali) {
-            // Фильтруем системные языки для Пали (только индийские, или английский как запасной для iOS)
             let paliNativeVoices = nativeVoices.filter(v => isIndianLang(v.languageCodes[0]));
             if (paliNativeVoices.length === 0) {
-                paliNativeVoices = nativeVoices.filter(v => v.languageCodes[0].startsWith('en-'));
-            }
-            if (paliNativeVoices.length === 0) {
-                paliNativeVoices = nativeVoices; // Полный фолбэк
+                paliNativeVoices = nativeVoices.filter(v => isEnglishLang(v.languageCodes[0]));
             }
 
-            // Ищем sa-IN, затем hi-IN, иначе берем первый доступный
-            let defPaliNativeLang = 'en-US';
-            if (paliNativeVoices.some(v => v.languageCodes[0] === 'sa-IN')) defPaliNativeLang = 'sa-IN';
-            else if (paliNativeVoices.some(v => v.languageCodes[0] === 'hi-IN')) defPaliNativeLang = 'hi-IN';
-            else if (paliNativeVoices.length > 0) defPaliNativeLang = paliNativeVoices[0].languageCodes[0];
-
-            setupVoiceSelectors(paliNativeVoices, 'google-lang-select-pali', 'google-voice-select-pali', 'tts_native_pali_custom_voice', { languageCode: defPaliNativeLang, name: '' });
+            setupNativeDropdown(paliNativeVoices, 'google-lang-select-pali', 'google-voice-select-pali', 'tts_native_pali_custom_voice', 'sa-IN');
         } else {
+            paliLangSelect.style.display = '';
+            paliLangSelect.style.maxWidth = '';
+            paliVoiceSelect.style.display = '';
+            
             const paliVoices = googleVoices.filter(v => isIndianLang(v.languageCodes[0]));
             setupVoiceSelectors(paliVoices, 'google-lang-select-pali', 'google-voice-select-pali', GOOGLE_PALI_SETTINGS_KEY, DEFAULT_PALI_CONFIG);
         }
@@ -2212,48 +2276,43 @@ async function refreshVoiceDropdowns(forceRefresh = false) {
 
     // --- НАСТРОЙКА UI TRANSLATION ---
     const trnLangSelect = document.getElementById('google-lang-select-trn');
-    if (trnLangSelect) {
+    const trnVoiceSelect = document.getElementById('google-voice-select-trn');
+    
+    if (trnLangSelect && trnVoiceSelect) {
         const context = getContextInfo();
         if (isNativeTrn) {
             let trnNativeVoices = [];
             let defTrnNativeLang = 'en-US';
 
-            // Для режима изучения (Индийский контекст для перевода)
             if (context.isIndianContext) {
                 trnNativeVoices = nativeVoices.filter(v => isIndianLang(v.languageCodes[0]));
-                if (trnNativeVoices.length === 0) trnNativeVoices = nativeVoices.filter(v => v.languageCodes[0].startsWith('en-'));
-                
-                if (trnNativeVoices.some(v => v.languageCodes[0] === 'hi-IN')) defTrnNativeLang = 'hi-IN';
-                else if (trnNativeVoices.length > 0) defTrnNativeLang = trnNativeVoices[0].languageCodes[0];
+                if (trnNativeVoices.length === 0) trnNativeVoices = nativeVoices.filter(v => isEnglishLang(v.languageCodes[0]));
+                defTrnNativeLang = 'hi-IN'; 
             } else {
-                // Строгая фильтрация по языку текущей страницы (ru, en, th)
                 const pageLang = detectTranslationLang(); 
-                trnNativeVoices = nativeVoices.filter(v => v.languageCodes[0].startsWith(pageLang));
+                trnNativeVoices = nativeVoices.filter(v => v.languageCodes[0].replace('_', '-').toLowerCase().startsWith(pageLang));
                 
-                // Если система вообще не имеет нужных языков, откатываемся к английскому
                 if (trnNativeVoices.length === 0) {
-                    trnNativeVoices = nativeVoices.filter(v => v.languageCodes[0].startsWith('en-'));
+                    trnNativeVoices = nativeVoices.filter(v => isEnglishLang(v.languageCodes[0]));
                 }
-                if (trnNativeVoices.length === 0) {
-                    trnNativeVoices = nativeVoices; // Полный фолбэк
-                }
+                if (trnNativeVoices.length === 0) trnNativeVoices = nativeVoices;
                 
-                // Установка умного дефолта
-                if (pageLang === 'ru' && trnNativeVoices.some(v => v.languageCodes[0] === 'ru-RU')) defTrnNativeLang = 'ru-RU';
-                else if (pageLang === 'th' && trnNativeVoices.some(v => v.languageCodes[0] === 'th-TH')) defTrnNativeLang = 'th-TH';
-                else if (trnNativeVoices.some(v => v.languageCodes[0] === 'en-US')) defTrnNativeLang = 'en-US';
-                else if (trnNativeVoices.some(v => v.languageCodes[0] === 'en-GB')) defTrnNativeLang = 'en-GB';
-                else if (trnNativeVoices.length > 0) defTrnNativeLang = trnNativeVoices[0].languageCodes[0];
+                if (pageLang === 'ru') defTrnNativeLang = 'ru-RU';
+                else if (pageLang === 'th') defTrnNativeLang = 'th-TH';
             }
 
-            setupVoiceSelectors(trnNativeVoices, 'google-lang-select-trn', 'google-voice-select-trn', 'tts_native_trn_custom_voice', { languageCode: defTrnNativeLang, name: '' });
+            setupNativeDropdown(trnNativeVoices, 'google-lang-select-trn', 'google-voice-select-trn', 'tts_native_trn_custom_voice', defTrnNativeLang);
         } else {
+            trnLangSelect.style.display = '';
+            trnLangSelect.style.maxWidth = '';
+            trnVoiceSelect.style.display = '';
+            
             let trnVoices = [];
             if (context.isIndianContext) {
                 trnVoices = googleVoices.filter(v => isIndianLang(v.languageCodes[0]));
             } else {
                 trnVoices = googleVoices.filter(v => {
-                    const code = v.languageCodes[0];
+                    const code = v.languageCodes[0].replace('_', '-').toLowerCase();
                     return code.startsWith('ru-') || code.startsWith('en-') || code.startsWith('th-');
                 });
             }
@@ -2261,7 +2320,7 @@ async function refreshVoiceDropdowns(forceRefresh = false) {
             let bestDefaultVoice = null;
             if (context.isIndianContext) {
                  bestDefaultVoice = trnVoices.find(v => v.name.includes('pa-IN-Standard-D')) || 
-                                    trnVoices.find(v => v.languageCodes[0] === 'pa-IN') ||
+                                    trnVoices.find(v => v.languageCodes[0].replace('_', '-').toLowerCase() === 'pa-in') ||
                                     trnVoices[0];
             } else {
                 const pageLang = detectTranslationLang(); 
@@ -2269,14 +2328,16 @@ async function refreshVoiceDropdowns(forceRefresh = false) {
                                       (pageLang === 'th') ? 'th-TH-Standard-A' : 'en-US-Standard-D';
                 
                 bestDefaultVoice = trnVoices.find(v => v.name === preferredName) || 
-                                   trnVoices.find(v => v.name.includes('Standard') && v.languageCodes[0].startsWith(pageLang)) ||
+                                   trnVoices.find(v => v.name.includes('Standard') && v.languageCodes[0].replace('_', '-').toLowerCase().startsWith(pageLang)) ||
                                    context.defaultConfig;
             }
             const finalDefaultConfig = bestDefaultVoice ? { languageCode: bestDefaultVoice.languageCodes[0], name: bestDefaultVoice.name } : context.defaultConfig;
+            
             setupVoiceSelectors(trnVoices, 'google-lang-select-trn', 'google-voice-select-trn', context.storageKey, finalDefaultConfig);
         }
     }
 }
+
 
 
 window.speechSynthesis.onvoiceschanged = () => {
