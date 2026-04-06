@@ -633,9 +633,12 @@ async function fetchGoogleAudio(text, lang, rate, apiKey) {
           text = text.replace(new RegExp(`(${C})${B}`, 'g'), '$1ा');
           text = text.replace(new RegExp(`(${C})ि${B}`, 'g'), '$1ी');
           text = text.replace(new RegExp(`(${C})ु${B}`, 'g'), '$1ू');
-text = text.replace(/न(?![ािीुूेोृॄॢॣंःँ्])/g, 'ना');
-text = text.replace(/म(?![ािीुूेोृॄॢॣंःँ्])/g, 'मा');
-text = text.replace(/ो$/g, 'ोो');
+          text = text.replace(/न(?![ािीुूेोृॄॢॣंःँ्])/g, 'ना');
+          text = text.replace(/म(?![ािीुूेोृॄॢॣंःँ्])/g, 'मा');
+          text = text.replace(/ो$/g, 'ोो');
+          
+          // Фикс для окончания ṃ (ниггахита) -> заменяем на ṅ (нг) в конце слов
+          text = text.replace(/ं(?=\s|[।,:;.?!\"]|$)/g, 'ङ्');
       }
       // ========================================================
 
@@ -670,26 +673,20 @@ text = text.replace(/ो$/g, 'ोो');
     const data = await response.json();
 
     if (data.error) {
-        // Тут мы оставляем алерт, так как если мы получили ответ от сервера, значит мы онлайн.
         const errorMsg = JSON.stringify(data.error, null, 2);
-     //   alert(`⚠️ GOOGLE TTS ERROR!\n\nTEXT SENT:\n${text}\n\nERROR:\n${errorMsg}`);
         throw new Error(data.error.message);
     }
-    // -------------------------------------
 
     return data.audioContent; 
   } catch (e) {
-    // Добавлена проверка navigator.onLine
-//    if ( !e.message.includes('Google API Error') && !e.message.includes('Synthesize failed')) {
     if (navigator.onLine && !e.message.includes('Google API Error') && !e.message.includes('Synthesize failed')) {
-    //  alert(`⚠️ ERROR:\n\nTEXT:\n${text}\n\nEXCEPTION:\n${e.message}`);
     }
-    // ------------------------------------------------
 
     console.warn('Google TTS Fetch Error:', e);
-    return null; // Возвращаем null, чтобы сработал Native Fallback
+    return null; 
   }
 }
+
 
 /*
 async function fetchGoogleAudio(text, lang, rate, apiKey) {
