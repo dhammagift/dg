@@ -146,7 +146,7 @@ include $basedir . "/assets/texts/bupm.php";
 <script src="/assets/js/bootstrap.bundle.5.3.1.min.js"></script>
 <script src="/assets/js/pmjs.js"></script>
 <script src="/assets/js/openFdg.js"></script>
-<script src="/assets/js/settings.js"></script>
+<script src="/assets/js/settings.js" defer></script>
 <script src="/assets/js/nav-component.js" defer></script>
 <script src="/assets/js/themeswitch.js" defer></script>
 <script>
