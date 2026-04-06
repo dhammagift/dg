@@ -40,8 +40,8 @@ function animatedGreyHighlight(id) {
 }
 
 // === Умная подсветка только при появлении в зоне видимости ===
-function highlightWhenVisible(idsArray) {
-    if (!Array.isArray(idsArray)) return;
+function highlightWhenVisible(idsArray, storageKey) {
+    if (!Array.isArray(idsArray) || localStorage.getItem(storageKey)) return;
 
     // Настраиваем наблюдателя
     const observer = new IntersectionObserver((entries, obs) => {
@@ -49,8 +49,9 @@ function highlightWhenVisible(idsArray) {
             // Если элемент появился в зоне видимости
             if (entry.isIntersecting) {
                 animatedGreyHighlight(entry.target.id);
-                // Прекращаем следить за этим элементом
                 obs.unobserve(entry.target);
+                // Отмечаем успех, чтобы больше никогда не подсвечивать эту группу
+                localStorage.setItem(storageKey, 'true');
             }
         });
     }, {
@@ -82,8 +83,8 @@ document.addEventListener("DOMContentLoaded", function () {
         let visitRead = parseInt(localStorage.getItem("visitRead") || "0", 10) + 1;
         localStorage.setItem("visitRead", visitRead);
 
-        if (visitRead === TARGET_READ_VISITS) {
-            highlightWhenVisible(['gearRead', 'helpsc']);
+        if (visitRead >= TARGET_READ_VISITS && !localStorage.getItem('highlighted_read')) {
+            highlightWhenVisible(['gearRead', 'helpsc'], 'highlighted_read');
         }
     }
 
@@ -93,8 +94,8 @@ document.addEventListener("DOMContentLoaded", function () {
         let visitMain = parseInt(localStorage.getItem("visitMain") || "0", 10) + 1;
         localStorage.setItem("visitMain", visitMain);
 
-        if (visitMain === TARGET_MAIN_VISITS) {
-            highlightWhenVisible(['gear', 'MenuRead', 'MenuEnglish', 'MenuRussian', 'history', 'MenuDict', 'tools', 'materials']);
+        if (visitMain >= TARGET_MAIN_VISITS && !localStorage.getItem('highlighted_main')) {
+            highlightWhenVisible(['gear', 'MenuRead', 'MenuEnglish', 'MenuRussian', 'history', 'MenuDict', 'tools', 'materials'], 'highlighted_main');
         }
     }
 
@@ -104,16 +105,15 @@ document.addEventListener("DOMContentLoaded", function () {
          let visitResult = parseInt(localStorage.getItem("visitResult") || "0", 10) + 1;
          localStorage.setItem("visitResult", visitResult);
          
-         if (visitResult === TARGET_RESULT_VISITS) {
-             // Массив включает оба варианта шестеренки, сработает тот, который есть на странице
-             highlightWhenVisible(['gearsc', 'gearSettings', 'helpResult']);
+         if (visitResult >= TARGET_RESULT_VISITS && !localStorage.getItem('highlighted_result')) {
+             highlightWhenVisible(['gearsc', 'gearSettings', 'helpResult'], 'highlighted_result');
          }
     }
 
     // 5. Окно PWA
     const infoUpdate = document.getElementById("infoUpdate");
     if (infoUpdate) {
-        if (visitGlobal === TARGET_PWA_VISITS && !localStorage.getItem("PWAinstallMessage")) {
+        if (visitGlobal >= TARGET_PWA_VISITS && !localStorage.getItem("PWAinstallMessage")) {
             infoUpdate.style.display = "block";
         }
 

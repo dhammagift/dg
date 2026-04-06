@@ -736,33 +736,6 @@ function showPali() {
   
 }
 
-function toggleThePali() {
-  const languageButton = document.getElementById("language-button");
-
-  if (!localStorage.paliToggle) localStorage.paliToggle = "pli-2nd";
-
-  const newButton = languageButton.cloneNode(true);
-  languageButton.parentNode.replaceChild(newButton, languageButton);
-
-  newButton.addEventListener("click", () => {
-    // Та же обертка, но логика внутри своя (английская)
-    runWithTransition(() => {
-        if (language === "pli") {
-          showPaliEnglish();
-          language = "pli-2nd";
-          localStorage.paliToggle = "pli-2nd";
-        } else if (language === "pli-2nd") {
-          showEnglish();
-          language = "2nd";
-          localStorage.paliToggle = "2nd";
-        } else if (language === "2nd") {
-          showPali();
-          language = "pli";
-          localStorage.paliToggle = "pli";
-        }
-    });
-  });
-}
 
 
 // clicking an abbreviation on the home page will replace the input field with that abbreviation

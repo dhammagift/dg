@@ -590,32 +590,6 @@ function showPali() {
   suttaArea.classList.remove('column-view'); 
 }
 
-function toggleThePali() {
-  const languageButton = document.getElementById("language-button");
-
-  if (!localStorage.paliToggle) localStorage.paliToggle = "pli-2nd";
-
-  const newButton = languageButton.cloneNode(true);
-  languageButton.parentNode.replaceChild(newButton, languageButton);
-
-  newButton.addEventListener("click", () => {
-    runWithTransition(() => {
-        if (language === "pli") {
-          showPaliEnglish();
-          language = "pli-2nd";
-          localStorage.paliToggle = "pli-2nd";
-        } else if (language === "pli-2nd") {
-          showEnglish();
-          language = "2nd";
-          localStorage.paliToggle = "2nd";
-        } else if (language === "2nd") {
-          showPali();
-          language = "pli";
-          localStorage.paliToggle = "pli";
-        }
-    });
-  });
-}
 
 const abbreviations = document.querySelectorAll("span.abbr");
 abbreviations.forEach(book => {

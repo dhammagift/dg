@@ -954,33 +954,6 @@ function showPali() {
   suttaArea.classList.remove('column-view'); // Отключаем двухколоночный режим
 }
 
-function toggleThePali() {
-  const languageButton = document.getElementById("language-button");
-
-// initial state
- if (!localStorage.paliToggleML) {
-    localStorage.paliToggleRu = "pli-rus";
-  }   
-
-  languageButton.addEventListener("click", () => {
-    if (language === "pli") {
-      showPaliAll();
-      language = "pli-rus";    
-      localStorage.paliToggleML = "pli-rus";
-    } else if (language === "pli-rus") {
-     showPali();
-           language = "pli";
-      localStorage.paliToggleML = "pli";
-
- /*   } else if (language === "rus") {
-     showPaliRussian();
-      language = "rus";
-      localStorage.paliToggleML = "rus"; */
-    }
-  });
-  
-}
-
 // clicking an abbreviation on the home page will replace the input field with that abbreviation
 const abbreviations = document.querySelectorAll("span.abbr");
 abbreviations.forEach(book => {

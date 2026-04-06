@@ -1087,3 +1087,77 @@ document.addEventListener("DOMContentLoaded", function() {
 
     observer.observe(suttaContainer, { childList: true, subtree: true });
 });
+
+// ==========================================================================
+// ГЛОБАЛЬНЫЙ МЕНЕДЖЕР ЯЗЫКА (АВТООПРЕДЕЛЕНИЕ РЕЖИМОВ)
+// ==========================================================================
+// Если функция уже существует в файле читалки, мы её не трогаем.
+// Как только ты удалишь её из конкретной читалки, сработает этот фоллбэк.
+window.toggleThePali = window.toggleThePali || function() {
+    // Умное автоопределение: Special (2 языка) или обычная читалка (3 языка)
+    // Если есть функция showPaliAll, значит это Special-файл
+    const isSpecial = typeof window.showPaliAll === "function";
+    
+    const storageKey = isSpecial ? "paliToggleSpecial" : "paliToggle";
+    const modes = isSpecial ? ["pli-2nd", "pli"] : ["pli-2nd", "pli", "2nd"];
+    const defaultMode = "pli-2nd";
+
+    const languageButton = document.getElementById("language-button");
+    if (!languageButton) return;
+
+    // Инициализация при первом заходе
+    if (!localStorage.getItem(storageKey)) {
+        localStorage.setItem(storageKey, defaultMode);
+    }
+    
+    window.language = localStorage.getItem(storageKey); 
+
+    // Клонируем кнопку, чтобы убить старые слушатели кликов
+    const newButton = languageButton.cloneNode(true);
+    languageButton.parentNode.replaceChild(newButton, languageButton);
+
+    newButton.addEventListener("click", () => {
+        let currentMode = localStorage.getItem(storageKey) || defaultMode;
+        let nextIndex = (modes.indexOf(currentMode) + 1) % modes.length;
+        let nextMode = modes[nextIndex];
+
+        const applyChange = () => {
+            localStorage.setItem(storageKey, nextMode);
+            window.language = nextMode;
+
+            // СТАВИМ ЛОКАЛЬНОЕ ВРЕМЯ - ЗАЩИТА ОТ ОБЛАКА
+            localStorage.setItem("dg_localSettingsTimestamp", Date.now().toString());
+
+            // Маршрутизация функций отрисовки
+            if (nextMode === "pli" && typeof window.showPali === "function") {
+                window.showPali();
+            } 
+            else if (nextMode === "2nd" && typeof window.showEnglish === "function") {
+                window.showEnglish();
+            } 
+            else if (nextMode === "pli-2nd") {
+                if (isSpecial && typeof window.showPaliAll === "function") {
+                    window.showPaliAll();
+                } else if (!isSpecial && typeof window.showPaliEnglish === "function") {
+                    window.showPaliEnglish();
+                }
+            }
+
+            // Моментальная отправка в базу
+            if (typeof window.syncSettingsToCloud === "function") {
+                window.syncSettingsToCloud().then(() => {
+                    if (typeof window.dg_settingsChanged !== 'undefined') {
+                        window.dg_settingsChanged = false;
+                    }
+                });
+            }
+        };
+
+        // Поддержка плавной анимации текста
+        if (typeof window.runWithTransition === "function") {
+            window.runWithTransition(applyChange);
+        } else {
+            applyChange();
+        }
+    });
+};

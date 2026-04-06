@@ -374,61 +374,6 @@ function showPali() {
   suttaArea.classList.remove('column-view'); 
 }
 
-function toggleThePali() {
-  const languageButton = document.getElementById("language-button");
-
-  if (!localStorage.paliToggleSpecial) {
-    localStorage.paliToggleSpecial = "pli-2nd";
-  }
-
-  const newButton = languageButton.cloneNode(true);
-  languageButton.parentNode.replaceChild(newButton, languageButton);
-
-  newButton.addEventListener("click", () => {
-    
-    // ИЩЕМ "ГЛАВНУЮ ПЕРВУЮ СТРОКУ"
-    const segments = document.querySelectorAll("#sutta span[id]");
-    const headerOffset = 70; 
-    let anchorData = null;
-
-    for (let segment of segments) {
-      const rect = segment.getBoundingClientRect();
-      if (rect.top > headerOffset) {
-        anchorData = { element: segment, topOffset: rect.top };
-        break; 
-      }
-    }
-
-    if (language === "pli") {
-      showPaliAll();
-      language = "pli-2nd";
-      localStorage.paliToggleSpecial = "pli-2nd";
-    } else if (language === "pli-2nd") {
-      showPali();
-      language = "pli";
-      localStorage.paliToggleSpecial = "pli";
-    }
-
-    if (anchorData && anchorData.element) {
-         setTimeout(() => {
-             const currentRect = anchorData.element.getBoundingClientRect();
-             const currentAbsoluteTop = window.scrollY + currentRect.top;
-             const targetPos = currentAbsoluteTop - anchorData.topOffset;
-
-             const html = document.documentElement;
-             const savedBehavior = html.style.scrollBehavior;
-             html.style.cssText += "scroll-behavior: auto !important;";
-             
-             window.scrollTo(0, targetPos);
-
-             setTimeout(() => {
-                html.style.scrollBehavior = savedBehavior;
-                html.style.removeProperty('scroll-behavior');
-             }, 50);
-         }, 0);
-    }
-  });
-}
 
 const abbreviations = document.querySelectorAll("span.abbr");
 abbreviations.forEach(book => {

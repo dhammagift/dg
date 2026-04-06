@@ -742,54 +742,6 @@ function showPali() {
   suttaArea.classList.remove('column-view'); // Отключаем двухколоночный режим
 }
 
-function toggleThePali() {
-  const languageButton = document.getElementById("language-button");
-
-  if (!localStorage.paliToggle) {
-    localStorage.paliToggle = "pli-2nd";
-  }
-
-  // Клонируем кнопку, чтобы сбросить старые слушатели
-  const newButton = languageButton.cloneNode(true);
-  languageButton.parentNode.replaceChild(newButton, languageButton);
-
-  newButton.addEventListener("click", () => {
-    // Используем плавную обертку из common.js
-    if (typeof runWithTransition === 'function') {
-        runWithTransition(() => {
-            if (language === "pli-2nd") {
-              showPali();
-              language = "pli";
-              localStorage.paliToggle = "pli";
-            } else if (language === "2nd") {
-              showPaliEnglish();
-              language = "pli-2nd";    
-              localStorage.paliToggle = "pli-2nd";
-            } else if (language === "pli") {
-              showEnglish();
-              language = "2nd";
-              localStorage.paliToggle = "2nd";  
-            }
-        });
-    } else {
-        // Фолбэк, если common.js еще не подгрузился
-        if (language === "pli-2nd") {
-          showPali();
-          language = "pli";
-          localStorage.paliToggle = "pli";
-        } else if (language === "2nd") {
-          showPaliEnglish();
-          language = "pli-2nd";    
-          localStorage.paliToggle = "pli-2nd";
-        } else if (language === "pli") {
-          showEnglish();
-          language = "2nd";
-          localStorage.paliToggle = "2nd";  
-        }
-    }
-  });
-}
-
 
 // clicking an abbreviation on the home page will replace the input field with that abbreviation
 const abbreviations = document.querySelectorAll("span.abbr");

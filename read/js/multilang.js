@@ -454,42 +454,6 @@ function showPali() {
   suttaArea.classList.remove('column-view');
 }
 
-function toggleThePali() {
-  const languageButton = document.getElementById("language-button");
-
-  if (!localStorage.paliToggleSpecial) {
-    localStorage.paliToggleSpecial = "pli-2nd"; 
-  }
-
-  const newButton = languageButton.cloneNode(true);
-  languageButton.parentNode.replaceChild(newButton, languageButton);
-
-  newButton.addEventListener("click", () => {
-    if (typeof runWithTransition === 'function') {
-        runWithTransition(() => {
-            if (language === "pli") {
-              showPaliAll();
-              language = "pli-2nd";    
-              localStorage.paliToggleSpecial = "pli-2nd";
-            } else if (language === "pli-2nd") {
-              showPali();
-              language = "pli";
-              localStorage.paliToggleSpecial = "pli";
-            }
-        });
-    } else {
-        if (language === "pli") {
-          showPaliAll();
-          language = "pli-2nd";    
-          localStorage.paliToggleSpecial = "pli-2nd";
-        } else if (language === "pli-2nd") {
-          showPali();
-          language = "pli";
-          localStorage.paliToggleSpecial = "pli";
-        }
-    }
-  });
-}
 
 const abbreviations = document.querySelectorAll("span.abbr");
 abbreviations.forEach(book => {

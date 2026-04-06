@@ -3144,18 +3144,22 @@ window.initSettingsObserver = function() {
     });
 })();
 
-
 (function checkAndLoadUiHelper() {
-    // Используем новый глобальный счетчик из uihelp.js
     const visitGlobal = parseInt(localStorage.getItem("visitGlobal") || "0", 10);
-    const targetGlobal = 13; // Максимальный таргет (для PWA окна)
+    const targetGlobal = 13; // Максимальный таргет (после него скрипт не грузится)
     
-    // Проверяем, закрыл ли пользователь тосты с подсказками
-    const hintReadShown = localStorage.getItem('hintShown_read_mode');
-    const hintResultShown = localStorage.getItem('hintShown_result_mode');
+    // Проверяем, выполнены ли уже все задачи
+    const hintRead = localStorage.getItem('hintShown_read_mode');
+    const hintResult = localStorage.getItem('hintShown_result_mode');
+    const hlMain = localStorage.getItem('highlighted_main');
+    const hlRead = localStorage.getItem('highlighted_read');
+    const hlResult = localStorage.getItem('highlighted_result');
+    const pwaShown = localStorage.getItem('PWAinstallMessage');
 
-    // Грузим скрипт, если глобальных визитов <= 13 ИЛИ какая-то из подсказок еще не закрыта
-    if (visitGlobal <= targetGlobal || !hintReadShown || !hintResultShown) {
+    const allTasksDone = hintRead && hintResult && hlMain && hlRead && hlResult && pwaShown;
+
+    // Грузим скрипт, только если лимит визитов не превышен И остались непоказанные подсказки
+    if (visitGlobal <= targetGlobal && !allTasksDone) {
         const script = document.createElement('script');
         script.src = '/assets/js/uihelp.js';
         script.defer = true;
