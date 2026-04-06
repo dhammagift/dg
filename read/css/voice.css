@@ -552,3 +552,205 @@ body[data-theme="dark"] #sutta span[id]:has(.tts-active) {
     margin-right: 4px; 
     vertical-align: text-bottom;
 }
+
+
+/* =========================================
+   ИЗВЛЕЧЕННЫЕ СТИЛИ (Из JS функции getPlayerHtml)
+   ========================================= */
+
+.tts-container-inner { text-align: center; }
+
+.tts-settings-btn { left: 15px; }
+.close-tts-btn { right: 15px; }
+
+.tts-top-btn {
+    position: static !important;
+    color: #555;
+    font-size: 24px;
+    text-decoration: none !important;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.tts-top-btn:hover { color: #000; }
+.dark .tts-top-btn { color: #bbb; }
+.dark .tts-top-btn:hover { color: #fff; }
+
+.tts-controls-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+#tts-settings-panel {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.4s ease, margin-top 0.4s ease;
+    margin-top: 0;
+}
+
+#tts-settings-panel.visible {
+    max-height: 800px;
+    opacity: 1;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #444;
+}
+
+#tts-basic-settings {
+    overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.4s ease;
+    max-height: 200px;
+    opacity: 1;
+}
+
+#tts-settings-icon { transition: transform 0.3s ease; }
+
+.tts-toggles-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 5px;
+}
+
+.tts-delay-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+.tts-delay-label img { vertical-align: text-bottom; }
+
+.tts-links-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+#audio-file-link-placeholder { display: none; }
+.tts-help-link { text-decoration: none; }
+
+/* --- Advanced Settings Styles --- */
+#tts-advanced-settings {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.4s ease;
+    margin-top: 0;
+    border-top: 1px solid #555;
+    padding-top: 0;
+}
+
+#tts-advanced-settings.visible {
+    max-height: 500px;
+    opacity: 1;
+    margin-top: 8px;
+    padding-top: 8px;
+}
+
+.extra-settings-toggle {
+    background: none;
+    border: none;
+    color: #777;
+    font-size: 11px;
+    width: 100%;
+    cursor: pointer;
+    margin-top: 8px;
+    padding: 4px 0;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.extra-settings-toggle:hover { color: #ccc; }
+
+.extra-settings-toggle.advanced-btn {
+    width: auto;
+    margin: 0;
+    padding: 0;
+    display: inline-flex;
+}
+
+.tts-icon { filter: invert(0.5); }
+.close-tts-btn { transform: translate(-5px, 0px); }
+
+#google-api-key-input {
+    width: 100px;
+    background: #eee;
+    border: 1px solid #ccc;
+    color: #333;
+    border-radius: 4px;
+    padding: 2px 4px;
+    font-size: 11px;
+    transition: background 0.3s, color 0.3s;
+}
+
+.dark #google-api-key-input {
+    background: #333;
+    border: 1px solid #555;
+    color: #ccc;
+}
+
+.refresh-api-btn, .reset-tts-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 4px;
+    transition: color 0.2s;
+    display: inline-flex;
+    align-items: center;
+}
+.refresh-api-btn { color: #999; }
+.refresh-api-btn:hover { color: #fff; }
+.reset-tts-btn { color: #777; }
+.reset-tts-btn:hover { color: #ff5555; }
+
+.api-key-row {
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+#google-voice-settings-container {
+    display: none;
+    margin-top: 8px;
+}
+
+.google-voice-select-group { margin-bottom: 8px; }
+
+.google-voice-label { font-size: 11px; color: #aaa; margin-bottom: 0; }
+.tts-native-label { margin: 0; font-size: 10px; }
+
+.google-voice-dropdown {
+    width: 100%; 
+    max-width: 150px; 
+    margin-bottom: 4px; 
+    font-size: 11px; 
+    border: 1px solid #ccc;
+    background: #eee; 
+    color: #333; 
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.dark .google-voice-dropdown {
+    background: #333; 
+    color: #ccc; 
+    border: 1px solid #555;
+}
