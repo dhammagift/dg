@@ -98,49 +98,48 @@
 // ==========================================
 // ФОНОВАЯ АКТИВАЦИЯ С РОДНОЙ ПЛАШКОЙ (СО 2-ГО ВИЗИТА)
 // ==========================================
-window.addEventListener('load', () => {
+window.addEventListener('suttaRenderedCentral', () => {
     if (localStorage.getItem('dg_dict_cached') !== 'true') return;
 
-    setTimeout(() => {
-        const preloadDictionary = () => {
-            if (typeof dictionaryVisible !== 'undefined' && !dictionaryVisible) return;
+    const preloadDictionary = () => {
+        if (typeof dictionaryVisible !== 'undefined' && !dictionaryVisible) return;
 
-            const isRu = window.location.pathname.includes('/ru/') || 
-                         window.location.pathname.includes('/r/') || 
-                         localStorage.getItem('siteLanguage') === 'ru';
-            const savedDictType = typeof savedDict !== 'undefined' ? savedDict : localStorage.getItem('dictType') || 'standalone';
-            const lang = (savedDictType === 'standaloneru' || isRu) ? 'ru' : 'en';
+        const isRu = window.location.pathname.includes('/ru/') || 
+                     window.location.pathname.includes('/r/') || 
+                     localStorage.getItem('siteLanguage') === 'ru';
+        const savedDictType = typeof savedDict !== 'undefined' ? savedDict : localStorage.getItem('dictType') || 'standalone';
+        const lang = (savedDictType === 'standaloneru' || isRu) ? 'ru' : 'en';
 
-            window.dg_loadDictionaryScripts().then((scriptWasSlow) => {
-                if (typeof lazyLoadStandaloneScripts === 'function') {
-                    
-                    lazyLoadStandaloneScripts(lang).then((dbWasSlow) => {
-                        // Показываем "Словарь загружен" ТОЛЬКО если до этого показывалась плашка "загружается"
-                        if (scriptWasSlow || dbWasSlow) {
-                            window.dg_toggleNativeLoader(true, isRu ? 'Словарь загружен.' : 'Dictionary is loaded.');
-                            
-                            // Даем 1 секунду на прочтение радостной новости, раз уж пользователь ждал
-                            setTimeout(() => {
-                                window.dg_toggleNativeLoader(false);
-                            }, 1000);
-                        }
-                    }).catch(e => {
-                        console.error("Ошибка фоновой загрузки:", e);
-                        window.dg_toggleNativeLoader(false);
-                    });
-                } else {
-                    if (scriptWasSlow) window.dg_toggleNativeLoader(false);
-                }
-            });
-        };
+        window.dg_loadDictionaryScripts().then((scriptWasSlow) => {
+            if (typeof lazyLoadStandaloneScripts === 'function') {
+                
+                lazyLoadStandaloneScripts(lang).then((dbWasSlow) => {
+                    // Показываем "Словарь загружен" ТОЛЬКО если до этого показывалась плашка "загружается"
+                    if (scriptWasSlow || dbWasSlow) {
+                        window.dg_toggleNativeLoader(true, isRu ? 'Словарь загружен.' : 'Dictionary is loaded.');
+                        
+                        // Даем 1 секунду на прочтение радостной новости, раз уж пользователь ждал
+                        setTimeout(() => {
+                            window.dg_toggleNativeLoader(false);
+                        }, 1000);
+                    }
+                }).catch(e => {
+                    console.error("Ошибка фоновой загрузки:", e);
+                    window.dg_toggleNativeLoader(false);
+                });
+            } else {
+                if (scriptWasSlow) window.dg_toggleNativeLoader(false);
+            }
+        });
+    };
 
-        if ('requestIdleCallback' in window) {
-            requestIdleCallback(() => preloadDictionary());
-        } else {
-            preloadDictionary();
-        }
-    }, 400); 
+    if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => preloadDictionary());
+    } else {
+        preloadDictionary();
+    }
 });
+
 
 
 // === ЗАГРУЗКА TTS СТРОГО ПО КЛИКУ / ХОТКЕЮ / АВТОПЛЕЮ ===

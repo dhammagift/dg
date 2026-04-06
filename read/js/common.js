@@ -1062,3 +1062,28 @@ window.addEventListener('scroll', function() {
         ttsBtn.classList.remove('shifted');
     }
 });
+
+
+// ==========================================
+// ГЛОБАЛЬНЫЙ ОТСЛЕЖИВАТЕЛЬ ОТРИСОВКИ СУТТЫ
+// ==========================================
+document.addEventListener("DOMContentLoaded", function() {
+    const suttaContainer = document.getElementById('sutta');
+    if (!suttaContainer) return;
+
+    // Если текст уже есть на момент загрузки (например, статичная страница)
+    if (suttaContainer.querySelector('.pli-lang, .rus-lang, .eng-lang, .tha-lang')) {
+        window.dispatchEvent(new Event('suttaRenderedCentral'));
+        return;
+    }
+
+    // Наблюдатель за изменениями внутри контейнера
+    const observer = new MutationObserver(function(mutations, obs) {
+        if (suttaContainer.querySelector('.pli-lang, .rus-lang, .eng-lang, .tha-lang')) {
+            obs.disconnect(); // Текст появился, прекращаем наблюдение
+            window.dispatchEvent(new Event('suttaRenderedCentral'));
+        }
+    });
+
+    observer.observe(suttaContainer, { childList: true, subtree: true });
+});
