@@ -2454,24 +2454,40 @@ window.setupCloudListeners = function(uid) {
 
     const userRef = db.collection("users").doc(uid);
 
-    // Слушатель Настроек (без капкана isDeleted)
+    // Слушатель Настроек
     unsubSettings = userRef.onSnapshot((doc) => {
         if (doc.metadata.hasPendingWrites) return; 
 
         if (doc.exists && doc.data().settings) {
             const cloudSettings = doc.data().settings;
+            
+            // Вычисляем время облака и локальное время
+            const cloudTime = doc.data().updatedAt ? doc.data().updatedAt.toMillis() : 0;
+            const localTime = parseInt(localStorage.getItem('dg_localSettingsTimestamp') || '0', 10);
+
+            // ЗАЩИТА: Если локальные настройки менялись позже, игнорируем старые данные из облака
+            if (localTime > cloudTime) {
+                return;
+            }
+
             let uiNeedsRefresh = false;
 
             for (const k in cloudSettings) {
+                // Если значение в облаке отличается от локального
                 if (localStorage.getItem(k) !== cloudSettings[k]) {
                     window.dg_ignoreNextStorageEvent = true; 
                     localStorage.setItem(k, cloudSettings[k]);
                     uiNeedsRefresh = true;
                 }
             }
-            if (uiNeedsRefresh) window.dg_settingsChanged = false; 
+            
+            // Сбрасываем флаг только если реально что-то обновили из базы
+            if (uiNeedsRefresh) {
+                window.dg_settingsChanged = false; 
+            }
         }
     });
+
 
     // Слушатель Избранного
     unsubFavs = userRef.collection("favorites").onSnapshot((snapshot) => {
