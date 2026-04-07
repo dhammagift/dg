@@ -1693,3 +1693,183 @@ document.addEventListener("DOMContentLoaded", () => {
 window.addEventListener('load', () => {
     setTimeout(updatePageTitle, 150);
 });
+
+
+async function downloadMemoAudio() {
+    const apiKey = localStorage.getItem('tts_google_key') || window.TRIAL_KEY;
+    if (!apiKey || apiKey.length < 10) {
+        alert("Для скачивания аудиофайла требуется активный API-ключ Google TTS.");
+        return;
+    }
+
+    const btn = document.getElementById('btn_download_audio');
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '...';
+    btn.disabled = true;
+
+    try {
+        const text = document.getElementById('inputText').value;
+        const delimiterInput = document.getElementById('ttsDelimiter').value || '\n';
+        const delay = parseFloat(document.getElementById('ttsDelay').value) || 2;
+        const endDelay = parseFloat(document.getElementById('ttsEndDelay').value) || 10;
+        const soundChoice = document.getElementById('ttsSound').value;
+        
+        // 1. АВТООПРЕДЕЛЕНИЕ ЯЗЫКА
+        let detectedLang = 'en'; 
+        if (/[а-яА-ЯёЁ]/.test(text)) detectedLang = 'ru'; 
+        else if (/[\u0E00-\u0E7F]/.test(text)) detectedLang = 'th'; 
+
+        const isTranslationCheckbox = document.getElementById("ttsIsTranslation").checked;
+        const isTranslation = isTranslationCheckbox || detectedLang === 'ru' || detectedLang === 'th';
+
+        let targetConfig, rate;
+
+        // 2. ПОДБОР ГОЛОСА И СКОРОСТИ
+        if (isTranslation) {
+            let storageKey, defaultConfig;
+            if (detectedLang === 'ru') {
+                storageKey = 'tts_google_trn_ru';
+                defaultConfig = { languageCode: 'ru-RU', name: 'ru-RU-Standard-D' };
+            } else if (detectedLang === 'th') {
+                storageKey = 'tts_google_trn_th';
+                defaultConfig = { languageCode: 'th-TH', name: 'th-TH-Standard-A' };
+            } else {
+                storageKey = 'tts_google_trn_en';
+                defaultConfig = { languageCode: 'en-US', name: 'en-US-Standard-D' };
+            }
+            
+            targetConfig = defaultConfig;
+            const savedTrn = localStorage.getItem(storageKey);
+            if (savedTrn) { try { targetConfig = JSON.parse(savedTrn); } catch (e) {} }
+            rate = parseFloat(localStorage.getItem('tts_rate_trn')) || 1.0;
+        } else {
+            targetConfig = { languageCode: 'pa-IN', name: 'pa-IN-Chirp3-HD-Achird' };
+            const savedPali = localStorage.getItem('tts_google_pali_custom_voice');
+            if (savedPali) { try { targetConfig = JSON.parse(savedPali); } catch (e) {} }
+            rate = parseFloat(localStorage.getItem('tts_rate_pali')) || 1.0;
+        }
+
+        const escapeXml = (unsafe) => {
+            return unsafe.replace(/[<>&'"]/g, function (c) {
+                switch (c) {
+                    case '<': return '&lt;'; case '>': return '&gt;';
+                    case '&': return '&amp;'; case '\'': return '&apos;'; case '"': return '&quot;';
+                }
+            });
+        };
+
+        const escapedDelimiter = delimiterInput.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&').replace(/\\n/g, '\n');
+        const regex = new RegExp(`[${escapedDelimiter}]+`, 'g');
+        const segments = text.split(regex).map(s => s.trim()).filter(s => s.length > 0);
+        
+        if (segments.length === 0) throw new Error("Нет текста для озвучивания.");
+
+        const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`;
+        let mp3Chunks = [];
+
+        const fetchAudioChunk = async (ssmlText) => {
+            const payload = {
+                input: { ssml: `<speak>${ssmlText}</speak>` },
+                voice: { languageCode: targetConfig.languageCode, name: targetConfig.name },
+                audioConfig: { audioEncoding: 'MP3', speakingRate: rate }
+            };
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            if (data.error) throw new Error(data.error.message);
+
+            const binaryString = window.atob(data.audioContent);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            mp3Chunks.push(bytes);
+        };
+
+        // 3. РАЗБИВКА НА ЧАНКИ (Обход лимита 5000 байт)
+        let currentSsmlInner = "";
+        
+        for (let i = 0; i < segments.length; i++) {
+            let textToSpeak = segments[i];
+            
+            if (!isTranslation) {
+                if (window.convertPaliToDevanagari) textToSpeak = window.convertPaliToDevanagari(textToSpeak);
+                
+                // --- ФИКС ПАЛИ ---
+                textToSpeak = textToSpeak.replace(/फ/g, 'प्ह'); // ph -> f
+                textToSpeak = textToSpeak.replace(/ज([िी])र/g, 'ज्ज$1र'); // jira -> zira
+                
+                const C = '[\u0915-\u0939\u0933]'; 
+                const B = '(?=\\s|[।,:;.?!\"]|$)';
+                textToSpeak = textToSpeak.replace(new RegExp(`(${C})${B}`, 'g'), '$1ा');
+                textToSpeak = textToSpeak.replace(new RegExp(`(${C})ि${B}`, 'g'), '$1ी');
+                textToSpeak = textToSpeak.replace(new RegExp(`(${C})ु${B}`, 'g'), '$1ू');
+                textToSpeak = textToSpeak.replace(/न(?![ािीुूेोृॄॢॣंःँ्])/g, 'ना');
+                textToSpeak = textToSpeak.replace(/म(?![ािीुूेोृॄॢॣंःँ्])/g, 'मा');
+                textToSpeak = textToSpeak.replace(/ो$/g, 'ोो');
+                textToSpeak = textToSpeak.replace(/ं(?=\s|[।,:;.?!\"]|$)/g, 'ङ्');
+                // -----------------
+            }
+
+            let segmentSsml = escapeXml(textToSpeak);
+            
+            if (i < segments.length - 1) {
+                segmentSsml += `<break time="${delay}s"/>`;
+            }
+
+            if (currentSsmlInner.length + segmentSsml.length > 4500) {
+                if (currentSsmlInner.length > 0) {
+                    await fetchAudioChunk(currentSsmlInner);
+                    currentSsmlInner = "";
+                }
+            }
+            
+            currentSsmlInner += segmentSsml;
+        }
+
+        // 4. ДОБАВЛЕНИЕ ГОНГА И ФИНАЛЬНОЙ ПАУЗЫ
+        if (soundChoice !== 'none') {
+            const originUrl = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') ? 'https://dhamma.gift' : window.location.origin;
+            const soundUrl = `${originUrl}/assets/sounds/${soundChoice}`;
+            currentSsmlInner += `<audio src="${soundUrl}"></audio>`;
+        }
+
+        if (endDelay > 0) {
+            currentSsmlInner += `<break time="${endDelay}s"/>`;
+        }
+
+        if (currentSsmlInner.length > 0) {
+            await fetchAudioChunk(currentSsmlInner);
+        }
+
+        // 5. ФОРМИРОВАНИЕ ИМЕНИ ФАЙЛА И СКАЧИВАНИЕ
+        const blob = new Blob(mp3Chunks, { type: 'audio/mp3' });
+        const downloadUrl = URL.createObjectURL(blob);
+        
+        let fileName = "meditation";
+        const cleanText = text.trim().replace(/[\/\\?%*:|"<>.,;!—]/g, ''); 
+        if (cleanText) {
+            fileName = cleanText.split(/\s+/).slice(0, 4).join('_');
+        }
+        
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = `${fileName}.mp3`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(downloadUrl);
+
+    } catch (e) {
+        console.error(e);
+        alert("Ошибка при создании аудиофайла: " + e.message);
+    } finally {
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+    }
+}

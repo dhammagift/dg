@@ -293,7 +293,6 @@ function cleanTextForTTS(text) {
     .replace(/[Пп]ер\./g, 'Перевод') 
     .replace(/Англ,/g, 'английского,') 
     .replace(/ [Рр]ед\./g, ' отредактировано') 
-
     .replace(/Trn:/g, 'Translated by') 
     .replace(/Pāḷi MS/g, 'पालि महासङ्गीति')
     .replace(/”/g, '')
@@ -305,8 +304,7 @@ function cleanTextForTTS(text) {
     .replace(/म[\.:, ]/g, 'मा ')
     .replace(/फस्स/g, 'प्हस्स')
     .replace(/फ/g, 'प्ह')
- // .replace(/,/g, '.')
-  //  .replace(/।/g, '।.')
+    .replace(/ज([िी])र/g, 'ज्ज$1र') // ФИКС ЗДЕСЬ: jira -> djira
     .replace(/…पे…/g, '…पेय्याल…')
     .replace(/’ति/g, 'ति')
     .replace(/\{.*?\}/g, '')
@@ -316,23 +314,16 @@ function cleanTextForTTS(text) {
     .replace(/_/g, '').trim();
 
   // --- УМНАЯ ЛОГИКА (SMART SPLIT) ---
-  
-  // Лимит "безопасности" для Google TTS без точек.
-  // Обычно 200 символов сплошного текста (без пауз) - это предел, где нейросеть начинает сбоить.
   const SAFE_LENGTH_LIMIT = 200;
 
   if (clean.length > SAFE_LENGTH_LIMIT) {
-      // Только если текст ДЛИННЫЙ, мы меняем структуру:
-      
-      // 1. Превращаем запятые и точки с запятой в "Данды" (полные остановки)
-    //  clean = clean.replace(/,/g, ' ।');
       clean = clean.replace(/;/g, ' ।');
-
       clean = clean.replace(/ होती /g, ' होती । ');
   }
 
   return clean;
 }
+
 
 function setButtonIcon(type) {
   const allImgs = document.querySelectorAll('.play-main-button img');
