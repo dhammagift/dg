@@ -119,7 +119,7 @@ const ScrollManager = {
         });
     },
 
-    async handleInitialScroll(event) {
+ async handleInitialScroll(event) {
         if (localStorage.getItem('dg_progressEnabled') === 'false') {
             window.isRestoringProgress = false;
             this.scrollToHash();
@@ -135,14 +135,25 @@ const ScrollManager = {
 
         const urlParams = new URLSearchParams(window.location.search);
         const hasHash = !!window.location.hash;
+        
+        // Получаем идентификатор текущего текста (slug) один раз для всех проверок
+        const currentSlug = this.normalizeSlug(urlParams.get('q'));
 
         // ПРИОРИТЕТ 1: Одноразовый прыжок из настроек
         const rawSettingsData = localStorage.getItem('exactScrollAnchor');
         if (rawSettingsData) {
             try {
                 const anchor = JSON.parse(rawSettingsData);
-                anchorId = anchor.id;
-                offset = anchor.offset;
+                
+                // ИСПРАВЛЕНИЕ: Жесткая сверка идентификаторов. 
+                // Прыгаем, только если якорь предназначался для этой конкретной сутты.
+                if (anchor.slug === currentSlug) {
+                    anchorId = anchor.id;
+                    offset = anchor.offset;
+                }
+                
+                // Обязательно удаляем якорь из памяти в любом случае, 
+                // чтобы предотвратить зависание старых команд
                 localStorage.removeItem('exactScrollAnchor');
             } catch(e) {}
         }
@@ -161,14 +172,13 @@ const ScrollManager = {
 
         // ПРИОРИТЕТ 3: Прогресс (Two-Key System)
         if (!anchorId && !hasHash) {
-            const slug = this.normalizeSlug(urlParams.get('q'));
-            if (slug) {
+            if (currentSlug) {
                 try {
                     const localDataRaw = JSON.parse(localStorage.getItem('dg_suttaProgress') || '{}');
                     const cloudDataRaw = JSON.parse(localStorage.getItem('dg_cloudProgress') || '{}');
                     
-                    const localData = localDataRaw[slug];
-                    const cloudData = cloudDataRaw[slug];
+                    const localData = localDataRaw[currentSlug];
+                    const cloudData = cloudDataRaw[currentSlug];
 
                     let bestData = null;
 
@@ -211,6 +221,7 @@ const ScrollManager = {
             }
         }
     },
+
 
     hideProgressNotification() {
         const existing = document.getElementById('progress-toast');

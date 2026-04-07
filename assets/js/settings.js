@@ -1859,18 +1859,14 @@ if (!document.getElementById("openQuickModalBtn")) {
 </button>
 */
 
-
 // === ФУНКЦИЯ "УМНОГО" СОХРАНЕНИЯ ПОЗИЦИИ ===
 function saveExactScrollPosition() {
     const suttaContainer = document.getElementById('sutta');
     if (!suttaContainer) return;
 
-    // Ищем все сегменты с ID (абзацы, строфы)
     const elements = suttaContainer.querySelectorAll('[id]');
     if (elements.length === 0) return;
 
-    // "Линия глаз" - точка, куда обычно смотрит пользователь (например, 120px от верха)
-    // Это позволяет игнорировать шапку сайта
     const eyeLevel = 120;
     
     let bestElement = null;
@@ -1878,8 +1874,6 @@ function saveExactScrollPosition() {
 
     for (const el of elements) {
         const rect = el.getBoundingClientRect();
-        
-        // Нам нужен элемент, который либо прямо на линии глаз, либо чуть выше/ниже
         const distance = Math.abs(rect.top - eyeLevel);
 
         if (distance < minDistance) {
@@ -1889,16 +1883,21 @@ function saveExactScrollPosition() {
     }
 
     if (bestElement) {
-        // ЗАПОМИНАЕМ:
-        // 1. ID элемента
-        // 2. offset: Где именно он находился относительно верха окна (например, "на 125-м пикселе")
+        // ДОБАВЛЕНО: Получаем текущий slug из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentSlug = urlParams.get('q') || '';
+        currentSlug = currentSlug.trim().toLowerCase();
+
         const data = {
             id: bestElement.id,
-            offset: bestElement.getBoundingClientRect().top
+            offset: bestElement.getBoundingClientRect().top,
+            slug: currentSlug // ДОБАВЛЕНО: сохраняем slug вместе с координатами
         };
         localStorage.setItem('exactScrollAnchor', JSON.stringify(data));
     }
 }
+
+
 
     // === ЛОГИКА МАСШТАБИРОВАНИЯ (С ЛОКАЛИЗАЦИЕЙ) ===
     
