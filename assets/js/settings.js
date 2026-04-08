@@ -104,21 +104,21 @@ window.addEventListener('suttaRenderedCentral', () => {
     const preloadDictionary = () => {
         if (typeof dictionaryVisible !== 'undefined' && !dictionaryVisible) return;
 
-        const isRu = window.location.pathname.includes('/ru/') || 
-                     window.location.pathname.includes('/r/') || 
-                     localStorage.getItem('siteLanguage') === 'ru';
-        const savedDictType = typeof savedDict !== 'undefined' ? savedDict : localStorage.getItem('dictType') || 'standalone';
-        const lang = (savedDictType === 'standaloneru' || isRu) ? 'ru' : 'en';
-
         window.dg_loadDictionaryScripts().then((scriptWasSlow) => {
             if (typeof lazyLoadStandaloneScripts === 'function') {
                 
+                // paliLookup.js уже загрузился и сам вычислил свой глобальный savedDict.
+                // Полностью доверяем его логике определения языка базы:
+                const isDictRu = typeof savedDict !== 'undefined' && savedDict.includes('ru');
+                const lang = isDictRu ? 'ru' : 'en';
+
+                // Для локализации самой плашки тоже берем готовую переменную из словаря, если она есть
+                const isRuInterface = typeof isRussian !== 'undefined' ? isRussian : (window.location.pathname.includes('/r') || window.location.pathname.includes('/ml/'));
+
                 lazyLoadStandaloneScripts(lang).then((dbWasSlow) => {
-                    // Показываем "Словарь загружен" ТОЛЬКО если до этого показывалась плашка "загружается"
                     if (scriptWasSlow || dbWasSlow) {
-                        window.dg_toggleNativeLoader(true, isRu ? 'Словарь загружен.' : 'Dictionary is loaded.');
+                        window.dg_toggleNativeLoader(true, isRuInterface ? 'Словарь загружен.' : 'Dictionary is loaded.');
                         
-                        // Даем 1 секунду на прочтение радостной новости, раз уж пользователь ждал
                         setTimeout(() => {
                             window.dg_toggleNativeLoader(false);
                         }, 1000);
@@ -139,7 +139,6 @@ window.addEventListener('suttaRenderedCentral', () => {
         preloadDictionary();
     }
 });
-
 
 
 // === ЗАГРУЗКА TTS СТРОГО ПО КЛИКУ / ХОТКЕЮ / АВТОПЛЕЮ ===
