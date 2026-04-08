@@ -1698,7 +1698,10 @@ window.addEventListener('load', () => {
 async function downloadMemoAudio() {
     const apiKey = localStorage.getItem('tts_google_key') || window.TRIAL_KEY;
     if (!apiKey || apiKey.length < 10) {
-        alert("Для скачивания аудиофайла требуется активный API-ключ Google TTS.");
+        const msg = window.memoLang === 'ru' 
+            ? "Для скачивания аудиофайла требуется активный API-ключ Google TTS." 
+            : "An active Google TTS API key is required to download the audio file.";
+        alert(msg);
         return;
     }
 
@@ -1714,6 +1717,15 @@ async function downloadMemoAudio() {
         const endDelay = parseFloat(document.getElementById('ttsEndDelay').value) || 10;
         const soundChoice = document.getElementById('ttsSound').value;
         
+        // Одноразовое сообщение о лимите пауз Google TTS (сохраняется в памяти браузера)
+        if (!localStorage.getItem('googleTTSAlertShown')) {
+            const limitMsg = window.memoLang === 'ru' 
+                ? "Обратите внимание: Google TTS не пропускает паузы длительностью более 10 секунд." 
+                : "Please note: Google TTS does not allow pauses longer than 10 seconds.";
+            alert(limitMsg);
+            localStorage.setItem('googleTTSAlertShown', 'true');
+        }
+
         // 1. АВТООПРЕДЕЛЕНИЕ ЯЗЫКА
         let detectedLang = 'en'; 
         if (/[а-яА-ЯёЁ]/.test(text)) detectedLang = 'ru'; 
@@ -1762,7 +1774,7 @@ async function downloadMemoAudio() {
         const regex = new RegExp(`[${escapedDelimiter}]+`, 'g');
         const segments = text.split(regex).map(s => s.trim()).filter(s => s.length > 0);
         
-        if (segments.length === 0) throw new Error("Нет текста для озвучивания.");
+        if (segments.length === 0) throw new Error(window.memoLang === 'ru' ? "Нет текста для озвучивания." : "No text to synthesize.");
 
         const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`;
         let mp3Chunks = [];
@@ -1867,7 +1879,8 @@ async function downloadMemoAudio() {
 
     } catch (e) {
         console.error(e);
-        alert("Ошибка при создании аудиофайла: " + e.message);
+        const errMsg = window.memoLang === 'ru' ? "Ошибка при создании аудиофайла: " : "Error creating audio file: ";
+        alert(errMsg + e.message);
     } finally {
         btn.innerHTML = originalContent;
         btn.disabled = false;
