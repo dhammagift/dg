@@ -733,14 +733,24 @@ async function getTranslator(texttype, slugReady, lang = "ru") {
         console.log("Файл translators.json не найден.");
     }
     
-    // 2. ПЫТАЕМСЯ НАЙТИ ЧЕРЕЗ PHP (Быстрый путь)
+    // 2. Передаем параметр lang прямо в единый скрипт
+    let phpUrl = `/read/php/translator-lookup.php?fromjs=${texttype}/${slugReady}&lang=${lang}`;
+    let defaultTr = "o";
+    
+    if (lang === "th") {
+        defaultTr = "siamrath";
+    } else if (lang === "en") {
+        defaultTr = "sujato";
+    }
+
+    // 3. ПЫТАЕМСЯ НАЙТИ ЧЕРЕЗ PHP (Быстрый путь)
     try {
-        const phpResponse = await fetch(`/read/php/translator-lookup.php?fromjs=${texttype}/${slugReady}`);
+        const phpResponse = await fetch(phpUrl);
         if (phpResponse.ok) {
             const data = await phpResponse.text();
             const trnsResp = data.split(" ");
-            // Если PHP вернул строку, берем первое слово и сразу отдаем результат
-            if (trnsResp[0] && trnsResp[0].trim() !== "") {
+            // Проверяем, что ответ не пустой и не содержит HTML-ошибок (например 404 страницы)
+            if (trnsResp[0] && trnsResp[0].trim() !== "" && !trnsResp[0].includes("<")) {
                 return trnsResp[0].trim();
             }
         }
@@ -748,14 +758,18 @@ async function getTranslator(texttype, slugReady, lang = "ru") {
         console.log("PHP поиск недоступен или вернул ошибку, переходим к запасному варианту.");
     }
 
-    // 3. ФОЛБЭК: Ищем перебором через HEAD-запросы (Если PHP упал или ничего не нашел)
+    // 4. ФОЛБЭК: Ищем перебором через HEAD-запросы (Если PHP упал или ничего не нашел)
     const currentListObj = translatorsData[lang] || {};
     const translatorIds = Object.keys(currentListObj); 
     
-    if (translatorIds.length === 0) return lang === "en" ? "sujato" : "o";
+    if (translatorIds.length === 0) return defaultTr;
     
     const fetchPromises = translatorIds.map(tr => {
-        let testPath = `/assets/texts/${lang}/${texttype}/${slugReady}_translation-${lang}-${tr}.json`;
+        // Для тайского структура папок немного отличается (добавлена папка /translation/)
+        let testPath = lang === "th" 
+            ? `/assets/texts/${lang}/translation/${texttype}/${slugReady}_translation-${lang}-${tr}.json`
+            : `/assets/texts/${lang}/${texttype}/${slugReady}_translation-${lang}-${tr}.json`;
+            
         return fetch(testPath, { method: 'HEAD' }).then(response => {
             if (response.ok) return tr;
             throw new Error('Not found');
@@ -767,9 +781,10 @@ async function getTranslator(texttype, slugReady, lang = "ru") {
         return foundTranslator.trim();
     } catch (e) {
         // Если вообще ничего не нашли, отдаем дефолтные значения
-        return lang === "en" ? "sujato" : "o"; 
+        return defaultTr; 
     }
 }
+
 
 // ==========================================================================
 // ГЛОБАЛЬНЫЕ ФУНКЦИИ ДЛЯ РАБОТЫ С ВАРИАНТАМИ ЧТЕНИЯ (VARIANTS)
