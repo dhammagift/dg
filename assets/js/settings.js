@@ -147,6 +147,16 @@ window.addEventListener('suttaRenderedCentral', () => {
     let isVoiceInitializing = false;
 
     window.loadVoiceScripts = function(callback) {
+        // === ИСКЛЮЧЕНИЕ ДЛЯ СТРАНИЦ РЕЗУЛЬТАТОВ ПОИСКА ===
+        const path = window.location.pathname;
+        const isSearchResult = (path === '/' || path === '/ru/') && window.location.search.includes('q=');
+        
+        if (isSearchResult) {
+            if (callback) callback();
+            return;
+        }
+        // ==========================================
+
         if (window.isVoiceScriptLoaded) {
             if (callback) callback();
             return;
@@ -173,9 +183,9 @@ window.addEventListener('suttaRenderedCentral', () => {
         scriptVoice.onload = () => {
             // ---> ИСПРАВЛЕНИЕ: Блокируем загрузку A-B цикла для приложения Memo <---
             // У Memo своя логика задержек и интерфейса, voice-mem.js там вызывает конфликты
-    const path = window.location.pathname;
+            const currentPath = window.location.pathname;
 
-if (path.includes('/memo/') && !path.includes('/memorize/')) {
+            if (currentPath.includes('/memo/') && !currentPath.includes('/memorize/')) {
                 window.isVoiceScriptLoaded = true;
                 isVoiceInitializing = false;
                 
@@ -221,7 +231,6 @@ if (path.includes('/memo/') && !path.includes('/memorize/')) {
         
         document.head.appendChild(scriptVoice);
     };
-
 
     // Перехват кликов
     const voiceClickHandler = function(e) {
@@ -352,6 +361,12 @@ document.addEventListener("click", function (e) {
     // Игнорируем клики по самому плееру, кнопкам настроек или кнопке Play
     if (e.target.closest('.tts-ignore') || e.target.closest('.dynamic-tts-btn')) return;
     
+    // === ИСКЛЮЧЕНИЕ ДЛЯ СТРАНИЦ РЕЗУЛЬТАТОВ ПОИСКА ===
+    const path = window.location.pathname;
+    const isSearchResult = (path === '/' || path === '/ru/') && window.location.search.includes('q=');
+    if (isSearchResult) return;
+    // ==========================================
+
     const clickedSegment = e.target.closest(".pli-lang, .rus-lang, .eng-lang, .tha-lang");
 
     if (clickedSegment) {
@@ -375,6 +390,7 @@ document.addEventListener("click", function (e) {
         window.removeAllHighlights();
     }
 });
+
 // ========================================================================
 
 
