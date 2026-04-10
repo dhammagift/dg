@@ -651,7 +651,7 @@ function renderNavigation(slug, slugReady) {
     let finder = (params.get("s") || "").replace(/ṃ/g, "ṁ");
     let sQuery = params.has("s") ? `&s=${finder}` : "";
 
-    fetch("/assets/js/textinfo.js")
+    fetch("/assets/js/textinfo.json")
         .then(response => {
             if (!response.ok) throw new Error("Файл textinfo.js не найден!");
             return response.text();

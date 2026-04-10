@@ -119,7 +119,7 @@ let textToCopy = textParts.join('\n\n')
 
   textToCopy += `\n${text}`;
 
-  console.log('Копируемый текст:', textToCopy);
+ // console.log('Копируемый текст:', textToCopy);
   showBubbleNotification(getNotificationText());
 
   if (navigator.clipboard) {
