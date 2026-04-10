@@ -645,8 +645,6 @@ input.setSelectionRange(input.value.length, input.value.length);
 
 <script src="/assets/js/themeswitch.js"></script>
 
-<script src="/assets/js/uihelp.js"></script>
-
   </div>
   
             <div id="spinner" class="justify-content-center">

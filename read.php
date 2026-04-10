@@ -22138,7 +22138,6 @@ include $basedir . "/assets/texts/bipm.php";
 Core theme JS
         <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
                 <!-- Bootstrap core JS-->
-		<script src="/assets/js/uihelp.js"></script>
 		
  <script src="/assets/js/bootstrap.bundle.5.3.1.min.js"></script>
 
