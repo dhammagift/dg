@@ -851,17 +851,28 @@ window.addEventListener("keydown", (event) => {
             }
         }
 
-        // --- 1.2. General Hint Popup ---
-        const hintElement = document.querySelector('.hint');
-        if (hintElement && hintElement.offsetParent !== null) { // проверка, что видимо
-            const closeHintButton = document.getElementById('closeHintBtn');
-            if (closeHintButton) {
-                closeHintButton.click();
-                event.preventDefault();
-                return;
+// --- 1.2. General Hint Popup ---
+        // Ищем все возможные элементы подсказок списком
+        const hintElements = document.querySelectorAll('.dg-bottom-toast, .hint');
+        
+        for (let i = 0; i < hintElements.length; i++) {
+            const hintElement = hintElements[i];
+            
+            // Проверяем, видна ли конкретно эта подсказка на экране
+            if (hintElement.offsetParent !== null) {
+                // Ищем крестик строго ВНУТРИ видимой подсказки, 
+                // чтобы избежать конфликтов одинаковых ID
+                const closeHintButton = hintElement.querySelector('#closeHintBtn, .dg-toast-close, .close-btn');
+                
+                if (closeHintButton) {
+                    closeHintButton.click();
+                    event.preventDefault();
+                    return; // Закрываем первую видимую и прерываем выполнение
+                }
             }
         }
-
+		
+		
         // ==========================================
         // ПРИОРИТЕТ 2: СЛОВАРИ (Dictionaries)
         // ==========================================
