@@ -1007,7 +1007,7 @@ async function playCurrentSegment() {
   // === ГИБРИДНЫЙ РЕЖИМ ===
   const googleKey = (localStorage.getItem(GOOGLE_KEY_STORAGE) || window.TRIAL_KEY); 
   const useNativePali = localStorage.getItem(NATIVE_PALI_KEY) === 'true';
-  const useNativeTrn  = localStorage.getItem(NATIVE_TRN_KEY) === 'true'; // <--- Читаем настройку
+  const useNativeTrn  = localStorage.getItem(NATIVE_TRN_KEY) === 'true'; 
   
   let tryGoogle = false;
 
@@ -1019,7 +1019,7 @@ async function playCurrentSegment() {
           }
       } else {
           // Если Перевод: используем Google, ТОЛЬКО если Native выключен
-          if (!useNativeTrn) { // <--- Было безусловное true, теперь проверка
+          if (!useNativeTrn) { 
               tryGoogle = true;
           }
       }
@@ -1046,8 +1046,15 @@ async function playCurrentSegment() {
               audio.onended = () => {
                   ttsState.googleAudio = null;
                   if (ttsState.speaking && !ttsState.paused) {
-                      const delay = window.TTS_SEGMENT_DELAY || 0;
+                      let delay = window.TTS_SEGMENT_DELAY || 0;
                       const isRangeEnd = ttsState.endIndex !== undefined && ttsState.currentIndex >= ttsState.endIndex;
+
+                      // Отключаем задержку внутри пары пали-перевод
+                      const currentItem = ttsState.playlist[ttsState.currentIndex];
+                      const nextItem = ttsState.playlist[ttsState.currentIndex + 1];
+                      if (currentItem && nextItem && currentItem.id === nextItem.id) {
+                          delay = 0;
+                      }
 
                       if (!isRangeEnd) {
                           ttsState.currentIndex++; // Индекс увеличивается ДО таймаута
@@ -1139,8 +1146,15 @@ function playBrowserTTS(text, langKey, rate, isPali) {
 
   utterance.onend = () => {
       if (ttsState.speaking && !ttsState.paused) {
-          const delay = window.TTS_SEGMENT_DELAY || 0;
+          let delay = window.TTS_SEGMENT_DELAY || 0;
           const isRangeEnd = ttsState.endIndex !== undefined && ttsState.currentIndex >= ttsState.endIndex;
+
+          // Отключаем задержку внутри пары пали-перевод
+          const currentItem = ttsState.playlist[ttsState.currentIndex];
+          const nextItem = ttsState.playlist[ttsState.currentIndex + 1];
+          if (currentItem && nextItem && currentItem.id === nextItem.id) {
+              delay = 0;
+          }
 
           if (!isRangeEnd) {
               ttsState.currentIndex++; 
@@ -1251,6 +1265,7 @@ function playBrowserTTS(text, langKey, rate, isPali) {
     }, 50);
   }
 }
+
 
 async function handleSuttaClick(e) {
   // === НОВОЕ: Перехват клика по мини-кнопке (после загрузки скрипта) ===
