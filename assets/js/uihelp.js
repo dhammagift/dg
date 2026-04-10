@@ -77,7 +77,8 @@ function initUiHelp() {
     // 2. Логика для читалки (/read, /r, /ml, /b, /d, /memorize)
     const isReadPage = path.includes('/read/') || path.includes('/r/') || 
                        path.includes('/ml/') || path.includes('/b/') || 
-                       path.includes('/d/') || path.includes('/memorize/');
+                       path.includes('/d/') || path.includes('/memorize/') ||
+                       path.includes('/rev/') || path.includes('/frev/');
                        
     if (isReadPage) {
         let visitRead = parseInt(localStorage.getItem("visitRead") || "0", 10) + 1;
@@ -128,21 +129,29 @@ function initUiHelp() {
 
     // === Логика всплывающих подсказок-тостов ===
     function showHint(settings) {
-        const hintText = getHintTextForCurrentPage(settings);
-        if (!hintText) return;
+        // 1. Определяем язык (по URL или настройке)
+        const isRu = path.includes('/ru/') || path.includes('/r/') || path.includes('/ml/') || localStorage.getItem('siteLanguage') === 'ru';
         
-        let hintKey;
+        // 2. Определяем тип страницы и ключ для localStorage
+        let hintKey, hintType;
         const searchParams = new URLSearchParams(window.location.search);
         
-        if (path.includes('/read/') || path.includes('/r/')) {
+        if (path.includes('/read/') || path.includes('/r/') || path.includes('/ml/') || 
+            path.includes('/b/') || path.includes('/d/') || path.includes('/memorize/') || 
+            path.includes('/rev/') || path.includes('/frev/')) {
             hintKey = 'hintShown_read_mode';
-        } else if (path.includes('/result/') || searchParams.get('q')?.trim()) {
+            hintType = 'read';
+        } else if (path.includes('/result/') || path.includes('/w.php') || searchParams.get('q')?.trim()) {
             hintKey = 'hintShown_result_mode';
+            hintType = 'result';
         } else {
-            return;
+            return; // Если это не читалка и не поиск - выходим
         }
       
+        // 3. Показываем тост, если еще не показывали
         if (!localStorage.getItem(hintKey)) {
+            const hintText = settings[hintType][isRu ? 'ru' : 'en'];
+            
             const notification = document.createElement('div');
             notification.className = 'dg-bottom-toast';
             
@@ -167,30 +176,24 @@ function initUiHelp() {
         }
     }
 
-    function getHintTextForCurrentPage(settings) {
-        for (const pattern in settings.patterns) {
-            if (path.includes(pattern)) {
-                return settings.patterns[pattern];
-            }
-        }
-        return null;
-    }
-
+    // Более чистая структура текстов без привязки к конкретным URL
     const hintSettings = {
-        patterns: {
-            '/ru/result/': {
+        result: {
+            ru: {
                 title: 'Подсказка:',
                 message: 'Чтобы открыть текст с нужного места, кликните по невидимой ссылке ✦ в начале или в конце фрагмента.'
             },
-            '/result/': {
+            en: {
                 title: 'Hint:',
                 message: 'To open the text from a specific location, click the invisible link ✦ at the beginning or end of the fragment.'
-            },
-            '/r/': {
+            }
+        },
+        read: {
+            ru: {
                 title: 'Подсказка:',
                 message: 'Чтобы скопировать цитату со ссылкой, кликните по невидимой ссылке ✦ в начале или в конце строки. Длинное нажатие или правый клик копирует только ссылку.'
             },
-            '/read/': {
+            en: {
                 title: 'Hint:',
                 message: 'To copy a quote with a link, click the invisible link ✦ at the beginning or end of the line. Long press or right-click copies only the link.'
             }
