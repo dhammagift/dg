@@ -3175,10 +3175,7 @@ window.initSettingsObserver = function() {
 })();
 
 (function checkAndLoadUiHelper() {
-    const visitGlobal = parseInt(localStorage.getItem("visitGlobal") || "0", 10);
-    const targetGlobal = 13; // Максимальный таргет (после него скрипт не грузится)
-    
-    // Проверяем, выполнены ли уже все задачи
+    // Проверяем, выполнены ли уже все задачи (подсказки, хайлайты, баннер PWA)
     const hintRead = localStorage.getItem('hintShown_read_mode');
     const hintResult = localStorage.getItem('hintShown_result_mode');
     const hlMain = localStorage.getItem('highlighted_main');
@@ -3188,15 +3185,16 @@ window.initSettingsObserver = function() {
 
     const allTasksDone = hintRead && hintResult && hlMain && hlRead && hlResult && pwaShown;
 
-    // Грузим скрипт, только если лимит визитов не превышен И остались непоказанные подсказки
-    if (visitGlobal <= targetGlobal && !allTasksDone) {
+    // Грузим скрипт, если остались непоказанные подсказки.
+    // Проверку visitGlobal <= 13 отсюда убрали, так как uihelp.js сам 
+    // проверяет нужные счетчики внутри себя перед показом элементов.
+    if (!allTasksDone) {
         const script = document.createElement('script');
         script.src = '/assets/js/uihelp.js';
         script.defer = true;
         document.head.appendChild(script);
     }
 })();
-
 
 // ==========================================
 // АВТОМАТИЧЕСКАЯ ЗАГРУЗКА AUTOPALI

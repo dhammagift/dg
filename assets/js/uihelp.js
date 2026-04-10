@@ -67,7 +67,7 @@ function highlightWhenVisible(idsArray, storageKey) {
     });
 }
 
-document.addEventListener("DOMContentLoaded", function () {
+function initUiHelp() {
     const path = window.location.pathname;
 
     // 1. Обновляем глобальный счетчик (для PWA)
@@ -198,4 +198,11 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     showHint(hintSettings);
-});
+}
+
+// Запускаем либо сразу, если DOM уже готов, либо ждем события
+if (document.readyState === 'loading') {
+    document.addEventListener("DOMContentLoaded", initUiHelp);
+} else {
+    initUiHelp();
+}
