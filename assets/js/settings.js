@@ -2720,33 +2720,20 @@ window.syncSettingsToCloud = async function() {
 
     if (!db || !getUid()) return;
     const uid = getUid();
-    const settingsToSave = {};
+    
+    // 1. Берем ТОЛЬКО те ключи, которые изменились (дифф)
+    let settingsToSave = { ...window.dg_pendingSettingsUpdates };
 
-    // ДОБАВЛЕНО: 'firestore_' и 'firebase_'
-    const ignorePrefixes = ['DataTables_', 'dg_', 'syncPhrase', 'firestore_', 'firebase_'];
-    const ignoreExact = ['localSearchHistory', 'lastSyncTime'];
-
-    // 1. Собираем живые ключи
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        const isIgnoredPrefix = ignorePrefixes.some(prefix => key.startsWith(prefix));
-        const isIgnoredExact = ignoreExact.includes(key);
-
-        if (!isIgnoredPrefix && !isIgnoredExact) {
-            settingsToSave[key] = localStorage.getItem(key);
-        }
-    }
-
-    // 2. Добавляем команды на удаление мертвых ключей
+    // 2. Добавляем команды на удаление ключей (если пользователь их удалил)
     if (window.dg_deletedKeys && window.dg_deletedKeys.size > 0) {
         window.dg_deletedKeys.forEach(key => {
-            // Двойная проверка: просим Firebase удалить ключ, только если его нет локально
             if (!settingsToSave.hasOwnProperty(key)) {
                 settingsToSave[key] = firebase.firestore.FieldValue.delete();
             }
         });
     }
 
+    // Если ничего не менялось — не дергаем базу
     if (Object.keys(settingsToSave).length === 0) return;
 
     try {
@@ -2755,13 +2742,16 @@ window.syncSettingsToCloud = async function() {
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
         
-        // 3. Очищаем очередь удалений после успешной синхронизации
+        // 3. ОЧИСТКА: Обнуляем очереди только после успешной отправки
+        window.dg_pendingSettingsUpdates = {};
         if (window.dg_deletedKeys) window.dg_deletedKeys.clear();
+        window.dg_settingsChanged = false;
         
         if (typeof refreshSyncTimeUI === 'function') refreshSyncTimeUI();
-    } catch (e) { console.error("Settings Sync Error:", e); }
+    } catch (e) { 
+        console.error("Settings Sync Error:", e); 
+    }
 };
-
 
 window.syncFavoriteItemToCloud = async function(favData, isDeleted = false) {
     // ПРОПУСКНОЙ ПУНКТ:
@@ -3032,7 +3022,8 @@ window.updateGlobalSyncButtons = function(user, phraseId) {
 // ==========================================
 window.dg_settingsChanged = false; 
 window.dg_ignoreNextStorageEvent = false;
-window.dg_deletedKeys = new Set(); // <-- Очередь ключей на удаление из облака
+window.dg_deletedKeys = new Set(); // Очередь ключей на удаление из облака
+window.dg_pendingSettingsUpdates = {}; // Очередь атомарных изменений (дифф)
 let isObserverInitialized = false;
 
 window.initSettingsObserver = function() {
@@ -3040,12 +3031,14 @@ window.initSettingsObserver = function() {
     isObserverInitialized = true;
 
     const originalSetItem = localStorage.setItem;
-    const originalRemoveItem = localStorage.removeItem; // <-- Перехватчик
-    const originalClear = localStorage.clear;           // <-- Перехватчик
+    const originalRemoveItem = localStorage.removeItem;
+    const originalClear = localStorage.clear;
     
-    const ignoreList = ['DataTables_', 'localSearchHistory', 'lastSyncTime', 'syncPhrase', 'dg_'];
+    // Добавлены firestore_ и firebase_ в исключения
+    const ignoreList = ['DataTables_', 'localSearchHistory', 'lastSyncTime', 'syncPhrase', 'dg_', 'firebase_', 'firestore_'];
 
     localStorage.setItem = function(key, value) {
+        // Если данные пришли из облака (стоит флаг), просто пишем и снимаем флаг
         if (window.dg_ignoreNextStorageEvent) {
             originalSetItem.apply(this, arguments);
             window.dg_ignoreNextStorageEvent = false; 
@@ -3056,32 +3049,38 @@ window.initSettingsObserver = function() {
         
         if (isImportant && localStorage.getItem(key) !== String(value)) {
             window.dg_settingsChanged = true;
-            window.dg_deletedKeys.delete(key); // Если ключ снова задали, убираем из очереди на удаление
+            window.dg_deletedKeys.delete(key);
+            
+            // 1. АТОМАРНОСТЬ: Собираем только измененные ключи
+            window.dg_pendingSettingsUpdates[key] = value; 
+            
+            // 2. ЗАЩИТА (Мастер): Ставим печать времени. Облако не перезапишет это старьем
+            originalSetItem.apply(this, ['dg_localSettingsTimestamp', String(Date.now())]);
         }
         
         originalSetItem.apply(this, arguments);
     };
 
-    // --- УМНЫЙ ПЕРЕХВАТ УДАЛЕНИЯ ---
     localStorage.removeItem = function(key) {
         const isImportant = !ignoreList.some(prefix => key.startsWith(prefix));
         if (isImportant && localStorage.getItem(key) !== null) {
             window.dg_settingsChanged = true;
-            window.dg_deletedKeys.add(key); // Запоминаем, что ключ нужно "убить" в облаке
+            window.dg_deletedKeys.add(key);
+            originalSetItem.apply(this, ['dg_localSettingsTimestamp', String(Date.now())]);
         }
         originalRemoveItem.apply(this, arguments);
     };
 
-    // --- УМНЫЙ ПЕРЕХВАТ ПОЛНОГО СБРОСА ---
     localStorage.clear = function() {
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
             const isImportant = !ignoreList.some(prefix => key.startsWith(prefix));
             if (isImportant) {
-                window.dg_deletedKeys.add(key); // Отправляем ВСЕ настройки на удаление
+                window.dg_deletedKeys.add(key);
             }
         }
         window.dg_settingsChanged = true;
+        originalSetItem.apply(this, ['dg_localSettingsTimestamp', String(Date.now())]);
         originalClear.apply(this, arguments);
     };
 };
