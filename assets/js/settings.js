@@ -855,27 +855,37 @@ window.addEventListener("keydown", (event) => {
             }
         }
 
-// --- 1.2. General Hint Popup ---
-        // Ищем все элементы подсказок
-        const hintElements = document.querySelectorAll('.dg-bottom-toast, .hint');
+        // --- 1.2. General Hint Popup (С логами для Павла) ---
+        // Ищем все варианты уведомлений: старые, новые тосты и баблы
+        const hintElements = document.querySelectorAll('.dg-bottom-toast, .hint, .bubble-notification');
         
         for (let i = 0; i < hintElements.length; i++) {
             const hintElement = hintElements[i];
             const style = window.getComputedStyle(hintElement);
             
-            // Проверяем реальную видимость: не скрыт ли элемент физически или через прозрачность
-            if (style.display !== 'none' && style.opacity !== '0' && hintElement.offsetParent !== null) {
+            // Проверяем наличие класса 'show' или фактическую видимость через opacity
+            const isVisible = hintElement.classList.contains('show') || 
+                              (style.display !== 'none' && style.opacity !== '0');
+            
+            if (isVisible) {
+                alert("Павел, хинт/тост найден: " + hintElement.className);
                 
-                // Ищем любую кнопку закрытия внутри этой подсказки
-                const closeHintButton = hintElement.querySelector('#closeHintBtn, .dg-toast-close, .close-btn');
+                // Ищем любую кнопку закрытия внутри
+                const closeHintButton = hintElement.querySelector('#closeHintBtn, .dg-toast-close, .close-btn, .dg-bottom-toast-close');
                 
                 if (closeHintButton) {
-                    closeHintButton.click(); // Просто имитируем клик по крестику
-                    event.preventDefault();
-                    return; // Выходим, чтобы не закрыть что-то лишнее под подсказкой
+                    alert("Кнопка закрытия найдена, имитирую клик.");
+                    closeHintButton.click();
+                } else {
+                    alert("Кнопка не найдена, принудительно удаляю класс 'show'.");
+                    hintElement.classList.remove('show');
                 }
+                
+                event.preventDefault();
+                return; 
             }
         }
+
 		
         // ==========================================
         // ПРИОРИТЕТ 2: СЛОВАРИ (Dictionaries)
