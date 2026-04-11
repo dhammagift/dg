@@ -287,7 +287,7 @@ document.addEventListener('click', function(e) {
 });
 
 // Глобальные уведомления с настраиваемым таймером
-window.showBubbleNotification = function(text, duration = 2500) {
+window.showBubbleNotification = function(text, duration = 2500, type = 'success') {
     let bubble = document.getElementById('bubbleNotification') || document.querySelector('.bubble-notification');
 
     if (!bubble) {
@@ -297,6 +297,10 @@ window.showBubbleNotification = function(text, duration = 2500) {
         document.body.appendChild(bubble);
     }
 
+    // Удаляем все возможные цветовые классы перед установкой нового
+    bubble.classList.remove('success', 'error', 'warning', 'info');
+    bubble.classList.add(type);
+    
     bubble.textContent = text;
     bubble.classList.add('show');
 
@@ -852,26 +856,26 @@ window.addEventListener("keydown", (event) => {
         }
 
 // --- 1.2. General Hint Popup ---
-        // Ищем все возможные элементы подсказок списком
+        // Ищем все элементы подсказок
         const hintElements = document.querySelectorAll('.dg-bottom-toast, .hint');
         
         for (let i = 0; i < hintElements.length; i++) {
             const hintElement = hintElements[i];
+            const style = window.getComputedStyle(hintElement);
             
-            // Проверяем, видна ли конкретно эта подсказка на экране
-            if (hintElement.offsetParent !== null) {
-                // Ищем крестик строго ВНУТРИ видимой подсказки, 
-                // чтобы избежать конфликтов одинаковых ID
+            // Проверяем реальную видимость: не скрыт ли элемент физически или через прозрачность
+            if (style.display !== 'none' && style.opacity !== '0' && hintElement.offsetParent !== null) {
+                
+                // Ищем любую кнопку закрытия внутри этой подсказки
                 const closeHintButton = hintElement.querySelector('#closeHintBtn, .dg-toast-close, .close-btn');
                 
                 if (closeHintButton) {
-                    closeHintButton.click();
+                    closeHintButton.click(); // Просто имитируем клик по крестику
                     event.preventDefault();
-                    return; // Закрываем первую видимую и прерываем выполнение
+                    return; // Выходим, чтобы не закрыть что-то лишнее под подсказкой
                 }
             }
         }
-		
 		
         // ==========================================
         // ПРИОРИТЕТ 2: СЛОВАРИ (Dictionaries)

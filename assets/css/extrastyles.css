@@ -943,6 +943,27 @@ video-container { position: relative; padding-bottom: 56.25%; padding-top: 30px;
     }
 
 
+/* Цветовые модификаторы */
+.bubble-notification.success {
+    background: #136857; /* Твой стандартный зеленый */
+}
+
+.bubble-notification.error {
+    background: #dc322f; /* Красный (Solarized Red) */
+}
+
+.bubble-notification.warning {
+    background: #cb4b16; /* Оранжевый */
+}
+
+.bubble-notification.info {
+    background: #268bd2; /* Синий */
+}
+
+.bubble-notification.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+} 
 
 /* Базовые стили баннера */
 .pwa-install {
