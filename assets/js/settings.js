@@ -868,16 +868,13 @@ window.addEventListener("keydown", (event) => {
                               (style.display !== 'none' && style.opacity !== '0');
             
             if (isVisible) {
-                alert("Павел, хинт/тост найден: " + hintElement.className);
                 
                 // Ищем любую кнопку закрытия внутри
                 const closeHintButton = hintElement.querySelector('#closeHintBtn, .dg-toast-close, .close-btn, .dg-bottom-toast-close');
                 
                 if (closeHintButton) {
-                    alert("Кнопка закрытия найдена, имитирую клик.");
                     closeHintButton.click();
                 } else {
-                    alert("Кнопка не найдена, принудительно удаляю класс 'show'.");
                     hintElement.classList.remove('show');
                 }
                 
