@@ -1720,8 +1720,8 @@ async function downloadMemoAudio() {
         // Одноразовое сообщение о лимите пауз Google TTS (сохраняется в памяти браузера)
         if (!localStorage.getItem('googleTTSAlertShown')) {
             const limitMsg = window.memoLang === 'ru' 
-                ? "Обратите внимание: Google TTS не пропускает паузы длительностью более 10 секунд." 
-                : "Please note: Google TTS does not allow pauses longer than 10 seconds.";
+                ? "Обратите внимание: При сохранении в файл Google TTS не пропускает паузы длительностью более 10 секунд." 
+                : "Please note: When exporting to audiofile Google TTS does not allow pauses longer than 10 seconds.";
             alert(limitMsg);
             localStorage.setItem('googleTTSAlertShown', 'true');
         }
