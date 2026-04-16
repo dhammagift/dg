@@ -1185,7 +1185,7 @@ if (event.altKey && event.code === "KeyR") {
 
   // Если URL содержит языковой префикс (/ru/, /r/, /ml/)
   if (currentUrl.match(/\/(ru|r|ml)\//)) {
-    const langPrefix = currentUrl.split('/')[1] + '/';
+    const langPrefix = 'ru/';
     historyPhpPath = `/${langPrefix}history.php`;
     historyHtmlPath = `/${langPrefix}assets/common/history.html`;
   } 
