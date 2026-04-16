@@ -1201,7 +1201,7 @@ window.toggleThePali = window.toggleThePali || function() {
         const pillLabel = document.getElementById('smart-toc-current');
         const tocPanel = document.getElementById('smart-toc-panel');
         const tocBtn = document.getElementById('smart-toc-btn');
-        
+
         if (!suttaContainer || !pillLabel) return;
 
         // Защита SPA: если поменялся URL (slug), сбрасываем оглавление
@@ -1216,17 +1216,17 @@ window.toggleThePali = window.toggleThePali || function() {
         }
 
         const headings = suttaContainer.querySelectorAll('h1, h2, h3, h4, h5, h6');
-        
+
         // Если заголовков нет — прячем кнопку TOC, иначе показываем
         if (headings.length === 0) {
-            if (tocBtn) tocBtn.style.display = 'none'; 
+            if (tocBtn) tocBtn.style.display = 'none';
             return;
         } else {
-            if (tocBtn) tocBtn.style.display = 'flex'; 
+            if (tocBtn) tocBtn.style.display = 'flex';
         }
 
-        let activeIndex = 0; 
-        const eyeLevel = window.innerHeight * 0.4; 
+        let activeIndex = 0;
+        const eyeLevel = window.innerHeight * 0.4;
 
         // Ищем текущий заголовок снизу вверх
         for (let i = headings.length - 1; i >= 0; i--) {
@@ -1235,7 +1235,7 @@ window.toggleThePali = window.toggleThePali || function() {
                 break;
             }
         }
-        
+
         // 1.1 Обновляем подпись на кнопке
         pillLabel.textContent = headings[activeIndex].innerText.replace(/\s+/g, ' ').trim();
 
@@ -1253,7 +1253,7 @@ window.toggleThePali = window.toggleThePali || function() {
                 const panelHeight = tocPanel.clientHeight;
                 const itemTop = newActive.offsetTop;
                 const itemHeight = newActive.clientHeight;
-                
+
                 tocPanel.scrollTo({
                     top: itemTop - (panelHeight / 2) + (itemHeight / 2),
                     behavior: 'smooth'
@@ -1269,15 +1269,15 @@ window.toggleThePali = window.toggleThePali || function() {
         if (!suttaContainer || !tocPanel) return;
 
         const headings = suttaContainer.querySelectorAll('h1, h2, h3, h4, h5, h6');
-        tocPanel.innerHTML = ''; 
+        tocPanel.innerHTML = '';
 
         headings.forEach((heading) => {
             const level = heading.tagName.substring(1);
             const item = document.createElement('div');
             item.className = `toc-item toc-h${level}`;
-            
+
             const langSpans = heading.querySelectorAll('.pli-lang, .rus-lang, .eng-lang, .tha-lang');
-            
+
             const scrollAndHighlight = (targetElement) => {
                 tocPanel.classList.remove('active');
                 const offset = 120;
@@ -1295,7 +1295,7 @@ window.toggleThePali = window.toggleThePali || function() {
                     // Очистка от мусора UI
                     clone.querySelectorAll('.copyLink, .copyLink-start, .variant, .match').forEach(el => el.remove());
                     clone.textContent = clone.textContent.replace(/\s+/g, ' ').trim();
-                    
+
                     if (clone.textContent) {
                         clone.style.cursor = 'pointer';
                         clone.onclick = (e) => {
@@ -1309,7 +1309,7 @@ window.toggleThePali = window.toggleThePali || function() {
                 item.textContent = heading.innerText.replace(/\s+/g, ' ').trim();
                 item.onclick = () => scrollAndHighlight(heading);
             }
-            
+
             // Клик по пустой области строки выбирает первый видимый язык
             item.addEventListener('click', (e) => {
                 if (e.target !== item) return;
@@ -1321,7 +1321,7 @@ window.toggleThePali = window.toggleThePali || function() {
 
             tocPanel.appendChild(item);
         });
-        
+
         syncTOC();
     }
 
@@ -1331,7 +1331,7 @@ window.toggleThePali = window.toggleThePali || function() {
         const panel = document.getElementById('smart-toc-panel');
         const sutta = document.getElementById('sutta');
         const gearPanel = document.getElementById('smart-panel');
-        
+
         if (btn) {
             e.stopPropagation();
             if (panel.innerHTML.trim() === '') buildFullTOC();
@@ -1370,7 +1370,7 @@ window.toggleThePali = window.toggleThePali || function() {
         const panel = document.getElementById('smart-toc-panel');
         const tocBtn = document.getElementById('smart-toc-btn');
         if (panel) {
-            panel.innerHTML = ''; 
+            panel.innerHTML = '';
             panel.classList.remove('active');
         }
         if (tocBtn) tocBtn.classList.remove('visible');
