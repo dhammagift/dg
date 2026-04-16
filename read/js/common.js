@@ -1192,9 +1192,9 @@ window.toggleThePali = window.toggleThePali || function() {
 };
 
 
-// Логика кнопки оглавления (TOC) - Мультиязычная версия
+// Логика кнопки оглавления (TOC) - Интеллектуальное выделение по клику на язык
 (function() {
-    // 1. Поиск ближайшего заголовка над экраном
+    // 1. Поиск ближайшего заголовка над экраном для подписи кнопки
     function updatePillLabel() {
         const suttaContainer = document.getElementById('sutta');
         const pillLabel = document.getElementById('smart-toc-current');
@@ -1213,11 +1213,10 @@ window.toggleThePali = window.toggleThePali || function() {
             }
         }
         
-        // innerText автоматически игнорирует скрытые через CSS элементы (языки)
         pillLabel.textContent = activeHeading.innerText.replace(/\s+/g, ' ').trim();
     }
 
-    // 2. Сборка DOM с сохранением HTML-структуры языков
+    // 2. Сборка оглавления с делегированием клика на конкретный язык
     function buildFullTOC() {
         const suttaContainer = document.getElementById('sutta');
         const tocPanel = document.getElementById('smart-toc-panel');
@@ -1231,42 +1230,62 @@ window.toggleThePali = window.toggleThePali || function() {
             const item = document.createElement('div');
             item.className = `toc-item toc-h${level}`;
             
-            // Ищем языковые блоки внутри текущего заголовка
             const langSpans = heading.querySelectorAll('.pli-lang, .rus-lang, .eng-lang, .tha-lang');
             
+            const scrollAndHighlight = (targetElement) => {
+                tocPanel.classList.remove('active');
+                const offset = 120;
+                const targetY = window.pageYOffset + heading.getBoundingClientRect().top - offset;
+                window.scrollTo({ top: targetY, behavior: 'smooth' });
+
+                if (typeof window.activateSegmentForTTS === 'function') {
+                    window.activateSegmentForTTS(targetElement);
+                }
+            };
+
             if (langSpans.length > 0) {
-                // Если языки разделены, клонируем их структуру
-                langSpans.forEach(span => {
-                    const clone = span.cloneNode(true);
-                    // Вычищаем элементы UI из клона (звездочки копирования, варианты)
+                langSpans.forEach(originalSpan => {
+                    const clone = originalSpan.cloneNode(true);
+                    // Очистка от мусора
                     clone.querySelectorAll('.copyLink, .copyLink-start, .variant, .match').forEach(el => el.remove());
-                    // Очищаем текст от лишних пробелов/переносов
                     clone.textContent = clone.textContent.replace(/\s+/g, ' ').trim();
+                    
                     if (clone.textContent) {
+                        // Привязываем клик конкретного клона к конкретному оригиналу
+                        clone.style.cursor = 'pointer';
+                        clone.onclick = (e) => {
+                            e.stopPropagation();
+                            scrollAndHighlight(originalSpan);
+                        };
                         item.appendChild(clone);
                     }
                 });
             } else {
-                // Фолбэк для обычных заголовков без разделения на языки
+                // Если в заголовке нет разметки по языкам (простой текст)
                 item.textContent = heading.innerText.replace(/\s+/g, ' ').trim();
+                item.onclick = () => scrollAndHighlight(heading);
             }
             
-            item.onclick = (e) => {
-                e.preventDefault();
-                const offset = 120;
-                const targetY = window.pageYOffset + heading.getBoundingClientRect().top - offset;
-                window.scrollTo({ top: targetY, behavior: 'smooth' });
+            // Клик по пустой области элемента (между строками) выберет первый видимый язык
+            item.addEventListener('click', (e) => {
+                if (e.target !== item) return;
                 
-                if (typeof window.activateSegmentForTTS === 'function') {
-                    window.activateSegmentForTTS(heading);
-                }
-                tocPanel.classList.remove('active');
-            };
+                const sutta = document.getElementById('sutta');
+                const isPaliHidden = sutta && sutta.classList.contains('hide-pali');
+                const isRusHidden = sutta && sutta.classList.contains('hide-russian');
+                
+                let fallback = langSpans[0];
+                if (isPaliHidden && langSpans.length > 1) fallback = langSpans[1];
+                if (isRusHidden && !isPaliHidden) fallback = langSpans[0];
+                
+                scrollAndHighlight(fallback || heading);
+            });
+
             tocPanel.appendChild(item);
         });
     }
 
-    // 3. Обработка кликов и СИНХРОНИЗАЦИЯ языков
+    // 3. Управление видимостью и синхронизация языков
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('#smart-toc-btn');
         const panel = document.getElementById('smart-toc-panel');
@@ -1279,7 +1298,6 @@ window.toggleThePali = window.toggleThePali || function() {
                 buildFullTOC();
             }
 
-            // Копируем классы скрытия языков из читалки в TOC прямо перед открытием
             if (sutta) {
                 ['hide-pali', 'hide-english', 'hide-russian'].forEach(cls => {
                     if (sutta.classList.contains(cls)) panel.classList.add(cls);
@@ -1288,23 +1306,20 @@ window.toggleThePali = window.toggleThePali || function() {
             }
 
             panel.classList.toggle('active');
-            
-            if (gearPanel && gearPanel.classList.contains('active')) {
-                gearPanel.classList.remove('active');
-            }
+            if (gearPanel) gearPanel.classList.remove('active');
         } else if (panel && !panel.contains(e.target)) {
             panel.classList.remove('active');
         }
     });
 
-    // 4. Очистка меню при смене сутты
+    // 4. Сброс при смене текста
     window.addEventListener('suttaRenderedCentral', () => {
         const panel = document.getElementById('smart-toc-panel');
         if (panel) panel.innerHTML = ''; 
         updatePillLabel();
     });
 
-    // 5. Обновление пилюли при скролле
+    // 5. Мониторинг скролла для кнопки
     window.addEventListener('scroll', () => {
         const tocBtn = document.getElementById('smart-toc-btn');
         if (tocBtn && tocBtn.classList.contains('visible')) {

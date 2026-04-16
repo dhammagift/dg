@@ -1244,7 +1244,6 @@
 .toc-item .eng-lang, 
 .toc-item .tha-lang {
     color: #777; /* Серый (вторичный) для перевода в светлой теме */
-    font-size: 0.85em; /* Чуть меньше основного текста */
     line-height: 1.2;
     display: block;
 }

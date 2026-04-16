@@ -1155,12 +1155,38 @@ if (event.altKey && event.code === "KeyR") {
     }
 }
 
-
-
+// Настройки Alt + S
     if (event.altKey && event.code === "KeyS") {
       // Имитируем клик по кнопке
       settingsButton.click();
     }
+
+    // === Оглавление (TOC) Alt + X ===
+    if (event.altKey && event.code === "KeyX") {
+        // Игнорируем, если фокус находится в поле ввода поиска
+        const activeTag = document.activeElement.tagName;
+        if (['INPUT', 'TEXTAREA'].includes(activeTag) || document.activeElement.isContentEditable) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const tocBtn = document.getElementById('smart-toc-btn');
+        const gearBtn = document.getElementById('smart-gear-btn');
+        
+        if (tocBtn && gearBtn) {
+            // Принудительно показываем обе кнопки
+            tocBtn.classList.add('visible');
+            gearBtn.classList.add('visible');
+
+            // Программный клик автоматически собирает оглавление и разворачивает его
+            tocBtn.click();
+        }
+    }
+    // ==================================
+	
+
+
   
 //alt + G history toggle
  function handleHistoryToggle() {
