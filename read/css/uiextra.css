@@ -1233,8 +1233,8 @@
 
 /* === Стили языков внутри оглавления === */
 .toc-item .pli-lang {
-    color: #777; /* Серый для Пали */
-    font-size: 0.85em; /* Чуть меньше основного текста */
+    color: #222; /* Темный (основной) для Пали в светлой теме */
+    font-weight: 500;
     line-height: 1.2;
     margin-bottom: 2px;
     display: block; /* Каждый язык с новой строки */
@@ -1243,21 +1243,21 @@
 .toc-item .rus-lang, 
 .toc-item .eng-lang, 
 .toc-item .tha-lang {
-    color: #222; /* Темный для перевода */
-    font-weight: 500;
+    color: #777; /* Серый (вторичный) для перевода в светлой теме */
+    font-size: 0.85em; /* Чуть меньше основного текста */
     line-height: 1.2;
     display: block;
 }
 
 /* Темная тема для оглавления */
 .dark .toc-item .pli-lang {
-    color: #999; /* Светло-серый для Пали */
+    color: #e0e0e0; /* Яркий белый для Пали в темной теме */
 }
 
 .dark .toc-item .rus-lang, 
 .dark .toc-item .eng-lang, 
 .dark .toc-item .tha-lang {
-    color: #e0e0e0; /* Почти белый для перевода */
+    color: #999; /* Светло-серый для перевода в темной теме */
 }
 
 /* === Синхронизация видимости языков в TOC === */
