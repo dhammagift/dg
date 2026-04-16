@@ -3214,6 +3214,49 @@ window.initSettingsObserver = function() {
     }
 })();
 
+
+// === Умная и легкая подсветка элементов по хешу ===
+function applyHashHighlights() {
+    const hash = window.location.hash;
+    
+    // РАННИЙ ВЫХОД: если хеша нет или в нем нет запятой — ничего не делаем (0 нагрузки)
+    if (!hash || !hash.includes(',')) return;
+
+    const ids = hash.substring(1).split(',');
+
+    ids.forEach(id => {
+        let attempts = 0;
+        // Легкий поллинг на случай, если элемент рендерится с задержкой (веб-компоненты)
+        const timer = setInterval(() => {
+            const el = document.getElementById(id);
+            if (el) {
+                // Вешаем CSS-класс с анимацией
+                el.classList.add('dg-temp-blink');
+                
+                // Снимаем класс после завершения анимации (3 цикла по 0.8с = 2.4с)
+                setTimeout(() => {
+                    el.classList.remove('dg-temp-blink');
+                }, 2500);
+                
+                clearInterval(timer); // Элемент найден, останавливаем поиск
+            }
+            
+            // Если за 4.5 секунды (15 попыток) элемента нет — сдаемся
+            if (++attempts > 15) clearInterval(timer);
+        }, 300);
+    });
+}
+
+// Запускаем при загрузке страницы
+if (document.readyState === 'loading') {
+    document.addEventListener("DOMContentLoaded", applyHashHighlights);
+} else {
+    applyHashHighlights();
+}
+
+// Запускаем при клике по ссылке без перезагрузки страницы
+window.addEventListener('hashchange', applyHashHighlights);
+
 // ==========================================
 // АВТОМАТИЧЕСКАЯ ЗАГРУЗКА AUTOPALI
 // ==========================================

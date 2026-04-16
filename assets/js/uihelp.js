@@ -4,39 +4,17 @@ const TARGET_RESULT_VISITS = 7; // На какой раз подсветить �
 const TARGET_READ_VISITS = 8;   // На какой раз подсветить шестеренку в читалке
 const TARGET_PWA_VISITS = 13;   // На какой общий визит показать окно установки
 
-// === Оригинальная серая анимация ===
+// === Легкая CSS-анимация ===
 function animatedGreyHighlight(id) {
     const el = document.getElementById(id);
     if (!el) return;
 
-    const originalTransition = el.style.transition;
-    const originalBoxShadow = el.style.boxShadow;
-    const originalBorderRadius = el.style.borderRadius;
+    el.classList.add('dg-temp-blink');
     
-    el.style.borderRadius = '6px';
-    el.style.transition = 'box-shadow 0.3s ease-in-out';
-    
-    let blinkCount = 0;
-    let isWide = false;
-    
-    const blinkInterval = setInterval(function() {
-        el.style.boxShadow = isWide ? '0 0 0 2px grey' : '0 0 0 5px rgba(128,128,128, 0.5)';
-        isWide = !isWide;
-        blinkCount++;
-        
-        // 6 смен состояния = 3 мигания. После этого убираем стили.
-        if (blinkCount >= 6) { 
-            clearInterval(blinkInterval);
-            setTimeout(() => {
-                el.style.removeProperty('box-shadow');
-                el.style.removeProperty('transition');
-                el.style.removeProperty('border-radius');
-                if (originalBoxShadow) el.style.boxShadow = originalBoxShadow;
-                if (originalTransition) el.style.transition = originalTransition;
-                if (originalBorderRadius) el.style.borderRadius = originalBorderRadius;
-            }, 300);
-        }
-    }, 400);
+    // Снимаем класс после завершения анимации (3 цикла по 0.8с = 2.4с)
+    setTimeout(() => {
+        el.classList.remove('dg-temp-blink');
+    }, 2500);
 }
 
 // === Умная подсветка только при появлении в зоне видимости ===
