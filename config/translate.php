@@ -83,7 +83,7 @@ $menucontact = 'Контакты';
 $cclink = 'https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ru';
 $cctitle = 'С указанием авторства-Некоммерческая-С сохранением условий версии 4.0 Международная';
 
-$privacy = '<a class="text-muted text-decoration-none" href="assets/common/privacy-ru.html">Политика Конфиденциальности</a>';
+$privacy = '<a class="text-muted text-decoration-none" href="https://dhamma.gift/assets/common/privacy-ru.html">Политика Конфиденциальности</a>';
 
 $copyrightnote = 'Материалы сайта распространяются по модели <a class="text-white text-decoration-none me-0" href="' . $cclink . '" title="' . $cctitle . '" target="_blank">CC BY-NC-SA 4.0</a>, но Пали тексты и Английские переводы SuttaCentra.net и работы А. Я. Сыркина и TheBuddhasWords.net подчиняются другим условиям. Для их использования уточняйте условия у правообладателей.';
 
@@ -890,7 +890,7 @@ $manifest = '/manifest.json'; // для английской версии
 $cclink = 'https://creativecommons.org/licenses/by-nc-sa/4.0';
 $cctitle = 'Attribution-NonCommercial-ShareAlike 4.0 International';
 
-$privacy = '<a class="text-muted text-decoration-none" href="assets/common/privacy.html">Privacy Policy</a>';
+$privacy = '<a class="text-muted text-decoration-none" href="https://dhamma.gift/assets/common/privacy.html">Privacy Policy</a>';
 
 $copyrightnote = 'The materials on this website are distributed under the <a class="text-white text-decoration-none me-0" href="' . $cclink . '" target="_blank" title="' . $cctitle . '">CC BY-NC-SA 4.0</a> license, but Pali texts and English Translations from SuttaCentra.net, the works of A. Y. Syrkin and TheBuddhasWords.net are subject to different terms. Please check with the copyright holders for their usage conditions.';
 
