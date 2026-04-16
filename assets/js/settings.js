@@ -1270,8 +1270,6 @@ openDictionaries(event);
 });
  
 // setup dictionary
-// Сначала получаем элемент (замени селектор на свой, если нужно)
-const dictSelect = document.querySelector('#dictSelect'); // или document.getElementById('dictSelect')
 
 // Выполняем логику только если элемент существует на странице
 if (dictSelect) {
