@@ -994,8 +994,8 @@ document.addEventListener("keydown", (event) => {
     }
  
  
- // --- 2. Оглавление (TOC) Alt + X ---
-    if (event.altKey && event.code === "KeyX") {
+ // --- 2. Оглавление (TOC) Alt + W ---
+    if (event.altKey && event.code === "KeyW") {
         event.preventDefault();
         const tocBtn = document.getElementById('smart-toc-btn');
         const gearBtn = document.getElementById('smart-gear-btn');
