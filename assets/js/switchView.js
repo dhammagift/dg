@@ -51,7 +51,7 @@ function toggleViewMode() {
       window.scrollBy(0, scrollDiff);
 
       // ДЕБАГ: Результат перемещения
-      console.log(`Скорректировано на: ${scrollDiff}px`);
+   //   console.log(`Скорректировано на: ${scrollDiff}px`);
       
       html.style.scrollBehavior = prevScrollBehavior;
     });
