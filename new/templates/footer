@@ -36,7 +36,7 @@
 $(document).ready(function() {
     // load textinfo with ajax for textnames and metaphor counts
     $.ajax({
-        url: '/assets/js/textinfo.js',
+        url: '/assets/js/textinfo.json',
         dataType: 'json',
         success: function(TextInfo) {
             // fill data in the tabke

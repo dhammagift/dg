@@ -651,7 +651,7 @@ function renderNavigation(slug, slugReady) {
     let finder = (params.get("s") || "").replace(/ṃ/g, "ṁ");
     let sQuery = params.has("s") ? `&s=${finder}` : "";
 
-    fetch("/assets/js/textinfo.js")
+    fetch("/assets/js/textinfo.json")
         .then(response => {
             if (!response.ok) throw new Error("Файл textinfo.js не найден!");
             return response.text();
@@ -733,14 +733,24 @@ async function getTranslator(texttype, slugReady, lang = "ru") {
         console.log("Файл translators.json не найден.");
     }
     
-    // 2. ПЫТАЕМСЯ НАЙТИ ЧЕРЕЗ PHP (Быстрый путь)
+    // 2. Передаем параметр lang прямо в единый скрипт
+    let phpUrl = `/read/php/translator-lookup.php?fromjs=${texttype}/${slugReady}&lang=${lang}`;
+    let defaultTr = "o";
+    
+    if (lang === "th") {
+        defaultTr = "siamrath";
+    } else if (lang === "en") {
+        defaultTr = "sujato";
+    }
+
+    // 3. ПЫТАЕМСЯ НАЙТИ ЧЕРЕЗ PHP (Быстрый путь)
     try {
-        const phpResponse = await fetch(`/read/php/translator-lookup.php?fromjs=${texttype}/${slugReady}`);
+        const phpResponse = await fetch(phpUrl);
         if (phpResponse.ok) {
             const data = await phpResponse.text();
             const trnsResp = data.split(" ");
-            // Если PHP вернул строку, берем первое слово и сразу отдаем результат
-            if (trnsResp[0] && trnsResp[0].trim() !== "") {
+            // Проверяем, что ответ не пустой и не содержит HTML-ошибок (например 404 страницы)
+            if (trnsResp[0] && trnsResp[0].trim() !== "" && !trnsResp[0].includes("<")) {
                 return trnsResp[0].trim();
             }
         }
@@ -748,14 +758,18 @@ async function getTranslator(texttype, slugReady, lang = "ru") {
         console.log("PHP поиск недоступен или вернул ошибку, переходим к запасному варианту.");
     }
 
-    // 3. ФОЛБЭК: Ищем перебором через HEAD-запросы (Если PHP упал или ничего не нашел)
+    // 4. ФОЛБЭК: Ищем перебором через HEAD-запросы (Если PHP упал или ничего не нашел)
     const currentListObj = translatorsData[lang] || {};
     const translatorIds = Object.keys(currentListObj); 
     
-    if (translatorIds.length === 0) return lang === "en" ? "sujato" : "o";
+    if (translatorIds.length === 0) return defaultTr;
     
     const fetchPromises = translatorIds.map(tr => {
-        let testPath = `/assets/texts/${lang}/${texttype}/${slugReady}_translation-${lang}-${tr}.json`;
+        // Для тайского структура папок немного отличается (добавлена папка /translation/)
+        let testPath = lang === "th" 
+            ? `/assets/texts/${lang}/translation/${texttype}/${slugReady}_translation-${lang}-${tr}.json`
+            : `/assets/texts/${lang}/${texttype}/${slugReady}_translation-${lang}-${tr}.json`;
+            
         return fetch(testPath, { method: 'HEAD' }).then(response => {
             if (response.ok) return tr;
             throw new Error('Not found');
@@ -767,9 +781,10 @@ async function getTranslator(texttype, slugReady, lang = "ru") {
         return foundTranslator.trim();
     } catch (e) {
         // Если вообще ничего не нашли, отдаем дефолтные значения
-        return lang === "en" ? "sujato" : "o"; 
+        return defaultTr; 
     }
 }
+
 
 // ==========================================================================
 // ГЛОБАЛЬНЫЕ ФУНКЦИИ ДЛЯ РАБОТЫ С ВАРИАНТАМИ ЧТЕНИЯ (VARIANTS)
@@ -1062,3 +1077,102 @@ window.addEventListener('scroll', function() {
         ttsBtn.classList.remove('shifted');
     }
 });
+
+
+// ==========================================
+// ГЛОБАЛЬНЫЙ ОТСЛЕЖИВАТЕЛЬ ОТРИСОВКИ СУТТЫ
+// ==========================================
+document.addEventListener("DOMContentLoaded", function() {
+    const suttaContainer = document.getElementById('sutta');
+    if (!suttaContainer) return;
+
+    // Если текст уже есть на момент загрузки (например, статичная страница)
+    if (suttaContainer.querySelector('.pli-lang, .rus-lang, .eng-lang, .tha-lang')) {
+        window.dispatchEvent(new Event('suttaRenderedCentral'));
+        return;
+    }
+
+    // Наблюдатель за изменениями внутри контейнера
+    const observer = new MutationObserver(function(mutations, obs) {
+        if (suttaContainer.querySelector('.pli-lang, .rus-lang, .eng-lang, .tha-lang')) {
+            obs.disconnect(); // Текст появился, прекращаем наблюдение
+            window.dispatchEvent(new Event('suttaRenderedCentral'));
+        }
+    });
+
+    observer.observe(suttaContainer, { childList: true, subtree: true });
+});
+
+// ==========================================================================
+// ГЛОБАЛЬНЫЙ МЕНЕДЖЕР ЯЗЫКА (АВТООПРЕДЕЛЕНИЕ РЕЖИМОВ)
+// ==========================================================================
+// Если функция уже существует в файле читалки, мы её не трогаем.
+// Как только ты удалишь её из конкретной читалки, сработает этот фоллбэк.
+window.toggleThePali = window.toggleThePali || function() {
+    // Умное автоопределение: Special (2 языка) или обычная читалка (3 языка)
+    // Если есть функция showPaliAll, значит это Special-файл
+    const isSpecial = typeof window.showPaliAll === "function";
+    
+    const storageKey = isSpecial ? "paliToggleSpecial" : "paliToggle";
+    const modes = isSpecial ? ["pli-2nd", "pli"] : ["pli-2nd", "pli", "2nd"];
+    const defaultMode = "pli-2nd";
+
+    const languageButton = document.getElementById("language-button");
+    if (!languageButton) return;
+
+    // Инициализация при первом заходе
+    if (!localStorage.getItem(storageKey)) {
+        localStorage.setItem(storageKey, defaultMode);
+    }
+    
+    window.language = localStorage.getItem(storageKey); 
+
+    // Клонируем кнопку, чтобы убить старые слушатели кликов
+    const newButton = languageButton.cloneNode(true);
+    languageButton.parentNode.replaceChild(newButton, languageButton);
+
+    newButton.addEventListener("click", () => {
+        let currentMode = localStorage.getItem(storageKey) || defaultMode;
+        let nextIndex = (modes.indexOf(currentMode) + 1) % modes.length;
+        let nextMode = modes[nextIndex];
+
+        const applyChange = () => {
+            localStorage.setItem(storageKey, nextMode);
+            window.language = nextMode;
+
+            // СТАВИМ ЛОКАЛЬНОЕ ВРЕМЯ - ЗАЩИТА ОТ ОБЛАКА
+            localStorage.setItem("dg_localSettingsTimestamp", Date.now().toString());
+
+            // Маршрутизация функций отрисовки
+            if (nextMode === "pli" && typeof window.showPali === "function") {
+                window.showPali();
+            } 
+            else if (nextMode === "2nd" && typeof window.showEnglish === "function") {
+                window.showEnglish();
+            } 
+            else if (nextMode === "pli-2nd") {
+                if (isSpecial && typeof window.showPaliAll === "function") {
+                    window.showPaliAll();
+                } else if (!isSpecial && typeof window.showPaliEnglish === "function") {
+                    window.showPaliEnglish();
+                }
+            }
+
+            // Моментальная отправка в базу
+            if (typeof window.syncSettingsToCloud === "function") {
+                window.syncSettingsToCloud().then(() => {
+                    if (typeof window.dg_settingsChanged !== 'undefined') {
+                        window.dg_settingsChanged = false;
+                    }
+                });
+            }
+        };
+
+        // Поддержка плавной анимации текста
+        if (typeof window.runWithTransition === "function") {
+            window.runWithTransition(applyChange);
+        } else {
+            applyChange();
+        }
+    });
+};

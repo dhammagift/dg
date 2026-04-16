@@ -1,266 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="/assets/img/favico-noglass.png" />
-    <title>Memorize & Meditate</title>
-    <link href="/assets/css/styles.css" rel="stylesheet" />
-    <link href="/assets/css/extrastyles.css" rel="stylesheet" />
-    <link href="/memo/memo.css" rel="stylesheet" />
-        <link rel="stylesheet" href="/read/css/voice.css">
-    <script src="/assets/js/dark-mode-switch/dark-mode-switch.js"></script>
 
-</head>
-<body>
-<div id="global-session-timer" style="display: none;">00:00</div>
-
-    <div class="container mt-3">
-        <div class="align-items-center toggle-switch input-group-append">
-          
-            <div id="" class="input-group align-items-center">
-<a href="/read.php" id="nav_read_link" title="Sutta and Vinaya reading" rel="noreferrer" class="me-1 top-nav-icon-link">
-    <svg fill="#979797" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="26px" viewBox="0 0 547.596 547.596" xml:space="preserve" stroke="#979797"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#CCCCCC" stroke-width="3.285576"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M540.76,254.788L294.506,38.216c-11.475-10.098-30.064-10.098-41.386,0L6.943,254.788 c-11.475,10.098-8.415,18.284,6.885,18.284h75.964v221.773c0,12.087,9.945,22.108,22.108,22.108h92.947V371.067 c0-12.087,9.945-22.108,22.109-22.108h93.865c12.239,0,22.108,9.792,22.108,22.108v145.886h92.947 c12.24,0,22.108-9.945,22.108-22.108v-221.85h75.965C549.021,272.995,552.081,264.886,540.76,254.788z"></path> </g> </g></svg>
-</a>
-
-                <a href="/" id="nav_search_link" title="Sutta and Vinaya search" rel="noreferrer" class="me-1 top-nav-icon-link" style="opacity: 1;">
-                    <img width="24px" alt="dhamma.gift icon" src="/assets/img/gray-white.png">
-                </a>
-
-                <a alt="Onclick popup dictionary" title="Onclick popup dictionary (Alt+A)" class="mx-1 toggle-dict-btn top-nav-icon-link">
-                    <img src="/assets/svg/comment.svg" class="top-nav-icon dictIcon">
-                </a>
-  
-                <a id="theme-button" title="Switch theme (Alt+T)" onclick="switchIcon(this)" class="mx-1 top-nav-icon-link">
-                    <img src="/assets/svg/circle-half-stroke.svg" alt="Switch theme" class="top-nav-icon changesvg">
-                </a>
-                
-                <a onclick="toggleQuickModal()" aria-label="Open Cattāri Ariyasaccāni" class="mx-1 top-nav-icon-link">
-                    <img src="/assets/svg/compass.svg" class="top-nav-icon">
-                </a>
-   
-
- <a href="/memorize/?q=sn56.11" title="Sutta and Vinaya search" rel="noreferrer" class="ms-4 me-2 text-decoration-none text-muted">sn56.11</a>
-                <a href="/assets/texts/dn2.9.html" title="Sutta and Vinaya search" rel="noreferrer" class="me-2 text-decoration-none text-muted">dn22</a>
-                <a href="/memorize/?q=sn12.2" title="Sutta and Vinaya search" rel="noreferrer" class="me-2 text-decoration-none text-muted">sn12.2</a>
-                
-                <div class="ms-4 me- d-inline-flex align-items-center lang-switcher" id="lang-switcher">
-                </div>
-
-
-            </div>
-        </div>
-    </div>
-
-
-    <div class="container mt-1">
-        <div class="row ">
-            <div class="col-12 text-center">
-                <h1 id="page_h1" class="mt-3 mb-4">Memorize & Meditate </h1>
-                <p class="text-muted" id="page_desc">Persist with diligence</p>
-
-<div class="input-wrapper">
-    <div id="input_action_btns" class="input-action-btns">
-        <img src="/assets/svg/copy.svg" 
-             id="copy_input_btn"
-             class="input-action-btn"
-             onclick="копироватьПолеВвода()"
-             title="Copy text">
-             
-    <svg id="clear_input_btn" 
-             class="input-action-btn"
-             onclick="очистить()" 
-             title="Clear" 
-             xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="#000">
-            <path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/>
-        </svg>
-    </div>
-     
-    <textarea id="inputText" class="form-control mb-3 inputdiv" rows="10" style="resize: vertical;" placeholder="Paste text that you want to memorize or ponder on. 
-
-Or use this page as a meditation time without entering any text">atthi imasmiṁ kāye kesā lomā nakhā dantā 
-taco maṁsaṁ nhāru aṭṭhi aṭṭhimiñjaṁ 
-vakkaṁ hadayaṁ yakanaṁ kilomakaṁ pihakaṁ papphāsaṁ antaṁ antaguṇaṁ udariyaṁ karīsaṁ 
-pittaṁ semhaṁ pubbo lohitaṁ sedo medo assu vasā kheḷo siṅghāṇikā lasikā muttanti |</textarea>
-</div>
-
-
-
-<div class="d-flex flex-wrap justify-content-center align-items-center gap-2 mt-2 memo-controls">
-
-<button class="btn btn-primary icon btn-memo-action" onclick="toggleMemoTTS()" id="btn_play_toggle" title="Play">
-    <svg id="icon_play" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-        <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
-    </svg>
-    <svg id="icon_stop" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16" class="d-none">
-        <path d="M5 3.5h6A1.5 1.5 0 0 1 12.5 5v6a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 11V5A1.5 1.5 0 0 1 5 3.5z"/>
-    </svg>
-</button>
-
-<button class="btn btn-primary text btn-memo-action" onclick="преобразоватьТекст()" id="btn_transform">
-    Transform
-</button>
-                    
-                    <button class="btn btn-warning text" onclick="expandWithAI()" id="btn_ai" style="background-color: #6f42c1; border-color: #6f42c1; color: white;">
-                   ✨ AI Expand
-                    </button>
-
-                    <button type="button" class="btn btn-secondary icon" data-bs-toggle="collapse" data-bs-target="#presetList" aria-expanded="false" id="btn_links">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                          <path d="M2 2.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm0 4a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm0 4a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5z"/>
-                          <path d="M6 3h7a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1zm0 4h7a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1zm0 4h7a.5.5 0 0 1 0 1H6a.5.5 0 0 1 0-1z"/>
-                        </svg>
-                    </button>
- 
- 
-                    
-                    <button class="btn btn-secondary icon" id="toggle-memo-favorite" title="Добавить в избранное">
-         <svg id="star-outline" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 448 512">
-        <path d="M64 32C28.7 32 0 60.7 0 96v320c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64V160L352 32H64zm16 64h224v96H80V96zm256 304H112v-96h224v96z"/>
-    </svg>
-                        <svg id="star-solid" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#f39c12" viewBox="0 0 576 512" style="display: none;">
-                            <path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/>
-                        </svg>
-                    </button>
-
-                    <button class="btn btn-secondary icon" id="btn_share_memo" title="Поделиться ссылкой">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5zm-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/>
-                        </svg>
-                    </button>
-
-
-                    <button type="button" class="btn btn-secondary icon" data-bs-toggle="collapse" data-bs-target="#ttsSettings" aria-expanded="false" id="btn_settings" title="Settings">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/>
-                        </svg>
-                    </button>
-                    
-                    <button type="button" class="btn btn-secondary icon" data-bs-toggle="collapse" data-bs-target="#linkList" aria-expanded="false" id="btn_links">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 320 512">
-                            <path d="M80 160c0-35.3 28.7-64 64-64h32c35.3 0 64 28.7 64 64v3.6c0 21.8-11.1 42.1-29.4 53.8l-42.2 27.1c-25.2 16.2-40.4 44.1-40.4 74V320c0 17.7 14.3 32 32 32s32-14.3 32-32v-1.4c0-8.2 4.2-15.8 11-20.2l42.2-27.1c36.6-23.6 58.8-64.1 58.8-107.7V160c0-70.7-57.3-128-128-128H144C73.3 32 16 89.3 16 160c0 17.7 14.3 32 32 32s32-14.3 32-32zm80 320a40 40 0 1 0 0-80 40 40 0 1 0 0 80z"/>
-                        </svg>
-                    </button>
-                    
-                </div>
-
-                <div class="collapse mt-3" id="ttsSettings">
-                    <div class="p-3 text-start mx-auto" style="background: rgba(128,128,128,0.05); border: 1px dashed #ccc; border-radius: 8px; max-width: 650px;">
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="mb-0" id="tts_header">Voice Settings (TTS)</h6>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="resetTTSSettings()" id="btn_reset_tts" title="Reset settings" style="padding: 0; border: none; background: transparent;">
-                                <img src="/assets/svg/trash-can-regular-full.svg" width="16" height="16" alt="Reset">
-                            </button>
-                        </div>
-
-                        <div class="d-flex flex-wrap align-items-end gap-2">
-                            <div>
-                                <label style="font-size: 12px; color: #888;" id="tts_delim_label">Split by:</label><br>
-                                <input type="text" id="ttsDelimiter" class="form-control form-control-sm" value=".,:;?!—…|\n" style="width: 100px;" title="Characters to split segments">
-                            </div>
-                            
-                            <div>
-                                <label style="font-size: 12px; color: #888;" id="tts_delay_label">Interval (sec):</label><br>
-                                <input type="number" id="ttsDelay" class="form-control form-control-sm" value="2" min="0" step="10" style="width: 60px;">
-                            </div>
-                            
-                            <div>
-                                <label style="font-size: 12px; color: #888;" id="tts_sound_label">End Sound:</label><br>
-                                <select id="ttsSound" class="form-select form-select-sm" style="width: 80px;">
-                                    <option value="tick.mp3">Tick</option>
-                                    <option value="gong.mp3">Gong</option>
-                                    <option value="none" id="tts_sound_none">None</option>
-                                </select>
-                            </div>
-                            
-                            <div>
-                                <label style="font-size: 12px; color: #888;" id="tts_end_delay_label">End Wait (sec):</label><br>
-                                <input type="number" id="ttsEndDelay" class="form-control form-control-sm" value="10" min="0" step="10" style="width: 60px;" title="Pause after cycle ends">
-                            </div>
-                            
-                            <div class="d-flex align-items-center gap-3 pb-1 ms-1">
-                                <div class="form-check mb-0">
-                                    <input class="form-check-input" type="checkbox" id="ttsIsTranslation">
-                                    <label class="form-check-label" for="ttsIsTranslation" style="font-size: 13px;" id="tts_trn_label">Translation</label>
-                                </div>
-                                
-                                <div class="form-check mb-0 d-flex align-items-center gap-1">
-                                    <input class="form-check-input" type="checkbox" id="ttsIsLoop" checked style="margin-top: 0;">
-                                    <label class="form-check-label" for="ttsIsLoop" style="font-size: 13px; margin-right: 2px;" id="tts_loop_label">Loop</label>
-                                    <input type="text" id="ttsLoopCount" value="∞" class="form-control form-control-sm text-center px-1" style="width: 36px; height: 22px; font-size: 12px;" title="Repetitions">
-                                    
-                                    <div class="form-check mb-0">
-                                        <input class="form-check-input" type="checkbox" id="editModeToggle" checked>
-                                        <label class="form-check-label" for="editModeToggle" id="edit_mode_label" style="font-size: 13px;" title="Places the cursor at the end of the current line on stop">Auto-cursor</label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                    </div>
-                </div>
-
-<div class="collapse mt-3" id="linkList">
-    <ul class="list-group">
-        <li class="list-group-item" id="help_text_1">
-            Reduce text to first letters to memorize faster (e.g. "Sabbaṁ taṁ" → "S t").<br>
-            <b>AI Expand</b> use AI to restore omitted repeated sections (peyyāla)<br>
-            <b>TTS:</b> <b>Split by</b> cuts text into pieces. <b>Interval</b> adds delay between them. <b>Sound</b> plays at the end. <b>Loop</b> repeats.
-        </li>
-        <li class="list-group-item" id="link_tips">Tips & Tricks for Memorizaiton
-            <a href="https://docs.google.com/document/d/1JWHEFqcaNhYwYneWBnTp9rkgWecDB4IIHX1l3AxSiWM/edit?tab=t.0#heading=h.j8yrupzfcw9i">Eng</a>
-            <a href="https://docs.google.com/document/d/12A4jNFrSQywZubM7bL2pgQK0fOtr6LEBJMjGb7nTNlw/edit?tab=t.0#heading=h.j8yrupzfcw9i">Rus</a>
-        </li>
-        <li class="list-group-item"><a href="/memorize/" id="link_open_any">Open any Sutta in this way</a></li>
-        
-        <li class="list-group-item">
-            Pātimokkha: 
-            <a href="/pm.php?expand=true">Bhikkhu</a>
-            <a href="/bipm.php?expand=true">Bhikkhunī</a>
-        </li>
-        <li class="list-group-item" id="link_pm_other">
-            Pātimokkha on Other sites: 
-            <a href="/ru/assets/materials/prat.html">Dhamma.ru</a>
-            <a href="/bw/vi/vi.html#content">TBW</a>
-            <a href="/accesstoinsight.org/tipitaka/vin/sv/index.html">ATI</a>
-        </li>
-        <li class="list-group-item" id="link_selfcheck">
-            Selfcheck: <a href="/assets/rr.html">Bhikkhu</a>
-            <a href="/assets/rrbi.html">Bhikkhuni</a>
-        </li>
-
-    </ul>
-</div>
-
-
-<div class="collapse mt-3" id="presetList">
-    <ul class="list-group" id="preset-list-container">
-        <li class="list-group-item text-muted" style="font-size: 0.9em;">Загрузка пресетов...</li>
-    </ul>
-</div>
-
-                <div class="mt-3 text-start">
-                    <div id="result_header" style="display:none; align-items:center; justify-content:center; gap:8px;">
-                        <h5 class="text-muted mb-0" id="lbl_result">Result:</h5>
-                        
-                        <img src="/assets/svg/copy.svg" 
-                             id="copy_icon_btn"
-                             style="width:18px; height:18px; cursor:pointer; opacity:0.6; transition:0.2s;"
-                             onclick="копироватьРезультат()"
-                             title="Copy result">
-                    </div>
-                    <div id="результат" class="display-7 mb-4 text-center"></div>
-                </div>
-                
-                <a href="javascript:void(0)" class="voice-link" data-slug="memo_custom" id="hiddenVoiceLink" style="display:none;"></a>
-                <div id="tts-virtual-container" class="sutta-container text-start mt-4" style="display:none; padding-bottom: 50px;"></div>
-
-            </div>
-        </div>
-    </div>
-
-    <script>
  window.activeMemoSavedSlug = null; // Якорь для отслеживания редактируемого документа
 
  
@@ -969,7 +707,7 @@ window.addEventListener('DOMContentLoaded', () => {
                             
                             const container = document.getElementById('dummy-ab-timer-container');
                             const span = document.getElementById('ab-btn-timer');
-                            if (container && container.style.display !== 'none' && span) span.innerHTML = iconSVG;
+                            if (container && !container.classList.contains('d-none') && span) span.innerHTML = iconSVG;
 
                             if (window.memoCountdownInterval) clearInterval(window.memoCountdownInterval);
                             resolve(originalPlay.apply(this));
@@ -980,7 +718,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 window.memoNextAllowedTime = 0;
                 const container = document.getElementById('dummy-ab-timer-container');
                 const span = document.getElementById('ab-btn-timer');
-                if (container && container.style.display !== 'none' && span) span.innerHTML = iconSVG;
+                if (container && !container.classList.contains('d-none') && span) span.innerHTML = iconSVG;
 
                 if (window.memoCountdownInterval) clearInterval(window.memoCountdownInterval);
                 
@@ -997,7 +735,7 @@ window.addEventListener('DOMContentLoaded', () => {
                         utterance.addEventListener('start', () => {
                             const container = document.getElementById('dummy-ab-timer-container');
                             const span = document.getElementById('ab-btn-timer');
-                            if (container && container.style.display !== 'none' && span) span.innerHTML = iconSVG;
+                            if (container && !container.classList.contains('d-none') && span) span.innerHTML = iconSVG;
 
                             if (window.memoCountdownInterval) clearInterval(window.memoCountdownInterval);
                         });
@@ -1027,8 +765,7 @@ window.startMemoVisualTimer = function(durationMs, textPrefix) {
     const span = document.getElementById('ab-btn-timer');
     
     if (container) {
-        container.style.display = 'inline-flex';
-        container.style.alignItems = 'center'; 
+        container.classList.add('active');
     }
     
     const endTime = Date.now() + durationMs;
@@ -1057,8 +794,8 @@ window.startMemoVisualTimer = function(durationMs, textPrefix) {
         const timeStrBig = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`; 
         
         if (span) {
-            const prefixHtml = textPrefix ? `<span style="margin-right:4px;">${textPrefix}</span>` : iconSVG;
-            span.innerHTML = `${prefixHtml}<span style="font-variant-numeric: tabular-nums;">${timeStr}</span>`;
+            const prefixHtml = textPrefix ? `<span class="timer-prefix-text">${textPrefix}</span>` : iconSVG;
+            span.innerHTML = `${prefixHtml}<span class="tabular-nums">${timeStr}</span>`;
         }
         
         const bigCountdown = document.getElementById('large-countdown-timer');
@@ -1470,7 +1207,7 @@ function startMemoTTS(isRestart = false) {
         if (window.memoCountdownInterval) clearInterval(window.memoCountdownInterval);
         const container = document.getElementById('dummy-ab-timer-container');
         if (container) {
-            container.style.display = 'none';
+            container.classList.remove('active');
             const span = document.getElementById('ab-btn-timer');
             if (span) span.innerHTML = '';
         }
@@ -1500,12 +1237,12 @@ function startMemoTTS(isRestart = false) {
 
         // Рисуем крупные цифры и якорь для скролла
         container.innerHTML = `
-            <div id="meditation-anchor" class="timer-mode-display" style="text-align: center; padding: 40px 20px; background: rgba(128,128,128,0.03); border-radius: 16px; max-width: 450px; margin: 0 auto; border: 1px dashed rgba(128,128,128,0.3);">
-                <div style="font-size: 1rem; color: #888; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1.5px;">${titleGlobal}</div>
-                <div id="large-global-timer" style="font-size: 4.5rem; font-weight: 300; font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 35px; " class="text-muted">${m}:${s}</div>
+            <div id="meditation-anchor" class="timer-mode-display">
+                <div class="timer-title-small">${titleGlobal}</div>
+                <div id="large-global-timer" class="text-muted">${m}:${s}</div>
                 
-                <div style="font-size: 0.9rem; color: #888; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1.5px;">${titleNext}</div>
-                <div id="large-countdown-timer" style="font-size: 3rem; font-weight: 400; color: #6f42c1; font-variant-numeric: tabular-nums; line-height: 1;">--:--</div>
+                <div class="timer-subtitle-small">${titleNext}</div>
+                <div id="large-countdown-timer">${titleNext === 'До гонга' ? '--:--' : '--:--'}</div>
             </div>
         `;
         
@@ -1515,8 +1252,7 @@ function startMemoTTS(isRestart = false) {
             if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 300);
 
-        document.body.style.transition = 'padding-bottom 0.4s ease';
-        document.body.style.paddingBottom = '120px';
+        document.body.classList.add('body-tts-active');
         
         startGlobalSessionTimer();
         runMeditationCycle();
@@ -1609,29 +1345,24 @@ function startMemoTTS(isRestart = false) {
             const id = `memo_custom:1.${index+1}`; 
             const span = document.createElement('span');
             span.id = id;
-            span.style.display = 'inline-block';
-            span.style.margin = '2px 4px';
-        
-            span.style.maxWidth = '100%';
-            span.style.overflowWrap = 'break-word';
-            span.style.wordBreak = 'break-word';
+            span.className = 'tts-word';
 
             if (index === cursorIndex) {
                 span.classList.add('active-word');
             }
             
             if (/[\u0900-\u097F]/.test(seg)) {
-                span.className = 'pli-lang';
+                span.classList.add('pli-lang');
                 span.textContent = seg;
                 window.mockPaliJson[id] = "“" + seg + "”"; 
             } else {
                 if (isTranslation) {
-                    if (detectedLang === 'ru') span.className = 'rus-lang';
-                    else if (detectedLang === 'th') span.className = 'tha-lang';
-                    else span.className = 'eng-lang';
+                    if (detectedLang === 'ru') span.classList.add('rus-lang');
+                    else if (detectedLang === 'th') span.classList.add('tha-lang');
+                    else span.classList.add('eng-lang');
                     span.textContent = seg;
                 } else {
-                    span.className = 'pli-lang';
+                    span.classList.add('pli-lang');
                     span.textContent = seg; 
                     window.mockPaliJson[id] = "“" + (window.convertPaliToDevanagari ? window.convertPaliToDevanagari(seg) : seg) + "”"; 
                 }
@@ -1679,8 +1410,7 @@ function startMemoTTS(isRestart = false) {
 
     document.getElementById('hiddenVoiceLink').click();
 
-    document.body.style.transition = 'padding-bottom 0.4s ease';
-    document.body.style.paddingBottom = '120px';
+    document.body.classList.add('body-tts-active');
 }
 
 function stopMemoTTS(fullReset = true) {
@@ -1750,7 +1480,7 @@ function stopMemoTTS(fullReset = true) {
                     container.innerHTML = '';
                     container.style.display = 'none';
                 }
-                document.body.style.paddingBottom = '0px';
+                document.body.classList.remove('body-tts-active');
 
                 localStorage.removeItem('dg_tts_last_slug');
                 localStorage.removeItem('dg_tts_last_index');
@@ -1765,7 +1495,7 @@ function stopMemoTTS(fullReset = true) {
 
             const container = document.getElementById('dummy-ab-timer-container');
             if (container) {
-                container.style.display = 'none';
+                container.classList.remove('active');
                 const span = document.getElementById('ab-btn-timer');
                 if (span) span.innerHTML = '';
             }
@@ -1918,7 +1648,7 @@ window.resetTTSSettings = function() {
                     const timerContainer = document.createElement('div');
                     timerContainer.id = 'dummy-ab-timer-container';
                     timerContainer.className = 'dummy-ab-timer-container';
-                    timerContainer.innerHTML = `<span id="ab-btn-timer" style="font-variant-numeric: tabular-nums;"></span>`;
+                    timerContainer.innerHTML = `<span id="ab-btn-timer" class="tabular-nums"></span>`;
                     mainRow.appendChild(timerContainer);
                 }
 
@@ -1964,14 +1694,195 @@ window.addEventListener('load', () => {
     setTimeout(updatePageTitle, 150);
 });
 
-    </script>
 
-<script defer src="/assets/js/themeswitch.js"></script>
-    <script src="/assets/js/settings.js" defer></script>
-    <script src="/assets/js/autopali.js" defer></script>
-    <script src="/assets/js/bootstrap.bundle.5.3.1.min.js" defer></script>
-    <script src="/read/js/voice.js" defer></script>
+async function downloadMemoAudio() {
+    const apiKey = localStorage.getItem('tts_google_key') || window.TRIAL_KEY;
+    if (!apiKey || apiKey.length < 10) {
+        const msg = window.memoLang === 'ru' 
+            ? "Для скачивания аудиофайла требуется активный API-ключ Google TTS." 
+            : "An active Google TTS API key is required to download the audio file.";
+        alert(msg);
+        return;
+    }
 
+    const btn = document.getElementById('btn_download_audio');
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '...';
+    btn.disabled = true;
 
-</body>
-</html>
+    try {
+        const text = document.getElementById('inputText').value;
+        const delimiterInput = document.getElementById('ttsDelimiter').value || '\n';
+        const delay = parseFloat(document.getElementById('ttsDelay').value) || 2;
+        const endDelay = parseFloat(document.getElementById('ttsEndDelay').value) || 10;
+        const soundChoice = document.getElementById('ttsSound').value;
+        
+        // Одноразовое сообщение о лимите пауз Google TTS (сохраняется в памяти браузера)
+        if (!localStorage.getItem('googleTTSAlertShown')) {
+            const limitMsg = window.memoLang === 'ru' 
+                ? "Обратите внимание: При сохранении в файл Google TTS не пропускает паузы длительностью более 10 секунд." 
+                : "Please note: When exporting to audiofile Google TTS does not allow pauses longer than 10 seconds.";
+            alert(limitMsg);
+            localStorage.setItem('googleTTSAlertShown', 'true');
+        }
+
+        // 1. АВТООПРЕДЕЛЕНИЕ ЯЗЫКА
+        let detectedLang = 'en'; 
+        if (/[а-яА-ЯёЁ]/.test(text)) detectedLang = 'ru'; 
+        else if (/[\u0E00-\u0E7F]/.test(text)) detectedLang = 'th'; 
+
+        const isTranslationCheckbox = document.getElementById("ttsIsTranslation").checked;
+        const isTranslation = isTranslationCheckbox || detectedLang === 'ru' || detectedLang === 'th';
+
+        let targetConfig, rate;
+
+        // 2. ПОДБОР ГОЛОСА И СКОРОСТИ
+        if (isTranslation) {
+            let storageKey, defaultConfig;
+            if (detectedLang === 'ru') {
+                storageKey = 'tts_google_trn_ru';
+                defaultConfig = { languageCode: 'ru-RU', name: 'ru-RU-Standard-D' };
+            } else if (detectedLang === 'th') {
+                storageKey = 'tts_google_trn_th';
+                defaultConfig = { languageCode: 'th-TH', name: 'th-TH-Standard-A' };
+            } else {
+                storageKey = 'tts_google_trn_en';
+                defaultConfig = { languageCode: 'en-US', name: 'en-US-Standard-D' };
+            }
+            
+            targetConfig = defaultConfig;
+            const savedTrn = localStorage.getItem(storageKey);
+            if (savedTrn) { try { targetConfig = JSON.parse(savedTrn); } catch (e) {} }
+            rate = parseFloat(localStorage.getItem('tts_rate_trn')) || 1.0;
+        } else {
+            targetConfig = { languageCode: 'pa-IN', name: 'pa-IN-Chirp3-HD-Achird' };
+            const savedPali = localStorage.getItem('tts_google_pali_custom_voice');
+            if (savedPali) { try { targetConfig = JSON.parse(savedPali); } catch (e) {} }
+            rate = parseFloat(localStorage.getItem('tts_rate_pali')) || 1.0;
+        }
+
+        const escapeXml = (unsafe) => {
+            return unsafe.replace(/[<>&'"]/g, function (c) {
+                switch (c) {
+                    case '<': return '&lt;'; case '>': return '&gt;';
+                    case '&': return '&amp;'; case '\'': return '&apos;'; case '"': return '&quot;';
+                }
+            });
+        };
+
+        const escapedDelimiter = delimiterInput.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&').replace(/\\n/g, '\n');
+        const regex = new RegExp(`[${escapedDelimiter}]+`, 'g');
+        const segments = text.split(regex).map(s => s.trim()).filter(s => s.length > 0);
+        
+        if (segments.length === 0) throw new Error(window.memoLang === 'ru' ? "Нет текста для озвучивания." : "No text to synthesize.");
+
+        const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`;
+        let mp3Chunks = [];
+
+        const fetchAudioChunk = async (ssmlText) => {
+            const payload = {
+                input: { ssml: `<speak>${ssmlText}</speak>` },
+                voice: { languageCode: targetConfig.languageCode, name: targetConfig.name },
+                audioConfig: { audioEncoding: 'MP3', speakingRate: rate }
+            };
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            if (data.error) throw new Error(data.error.message);
+
+            const binaryString = window.atob(data.audioContent);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            mp3Chunks.push(bytes);
+        };
+
+        // 3. РАЗБИВКА НА ЧАНКИ (Обход лимита 5000 байт)
+        let currentSsmlInner = "";
+        
+        for (let i = 0; i < segments.length; i++) {
+            let textToSpeak = segments[i];
+            
+            if (!isTranslation) {
+                if (window.convertPaliToDevanagari) textToSpeak = window.convertPaliToDevanagari(textToSpeak);
+                
+                // --- ФИКС ПАЛИ ---
+                textToSpeak = textToSpeak.replace(/फ/g, 'प्ह'); // ph -> f
+                textToSpeak = textToSpeak.replace(/ज([िी])र/g, 'ज्ज$1र'); // jira -> zira
+                
+                const C = '[\u0915-\u0939\u0933]'; 
+                const B = '(?=\\s|[।,:;.?!\"]|$)';
+                textToSpeak = textToSpeak.replace(new RegExp(`(${C})${B}`, 'g'), '$1ा');
+                textToSpeak = textToSpeak.replace(new RegExp(`(${C})ि${B}`, 'g'), '$1ी');
+                textToSpeak = textToSpeak.replace(new RegExp(`(${C})ु${B}`, 'g'), '$1ू');
+                textToSpeak = textToSpeak.replace(/न(?![ािीुूेोृॄॢॣंःँ्])/g, 'ना');
+                textToSpeak = textToSpeak.replace(/म(?![ािीुूेोृॄॢॣंःँ्])/g, 'मा');
+                textToSpeak = textToSpeak.replace(/ो$/g, 'ोो');
+                textToSpeak = textToSpeak.replace(/ं(?=\s|[।,:;.?!\"]|$)/g, 'ङ्');
+                // -----------------
+            }
+
+            let segmentSsml = escapeXml(textToSpeak);
+            
+            if (i < segments.length - 1) {
+                segmentSsml += `<break time="${delay}s"/>`;
+            }
+
+            if (currentSsmlInner.length + segmentSsml.length > 4500) {
+                if (currentSsmlInner.length > 0) {
+                    await fetchAudioChunk(currentSsmlInner);
+                    currentSsmlInner = "";
+                }
+            }
+            
+            currentSsmlInner += segmentSsml;
+        }
+
+        // 4. ДОБАВЛЕНИЕ ГОНГА И ФИНАЛЬНОЙ ПАУЗЫ
+        if (soundChoice !== 'none') {
+            const originUrl = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') ? 'https://dhamma.gift' : window.location.origin;
+            const soundUrl = `${originUrl}/assets/sounds/${soundChoice}`;
+            currentSsmlInner += `<audio src="${soundUrl}"></audio>`;
+        }
+
+        if (endDelay > 0) {
+            currentSsmlInner += `<break time="${endDelay}s"/>`;
+        }
+
+        if (currentSsmlInner.length > 0) {
+            await fetchAudioChunk(currentSsmlInner);
+        }
+
+        // 5. ФОРМИРОВАНИЕ ИМЕНИ ФАЙЛА И СКАЧИВАНИЕ
+        const blob = new Blob(mp3Chunks, { type: 'audio/mp3' });
+        const downloadUrl = URL.createObjectURL(blob);
+        
+        let fileName = "meditation";
+        const cleanText = text.trim().replace(/[\/\\?%*:|"<>.,;!—]/g, ''); 
+        if (cleanText) {
+            fileName = cleanText.split(/\s+/).slice(0, 4).join('_');
+        }
+        
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = `${fileName}.mp3`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(downloadUrl);
+
+    } catch (e) {
+        console.error(e);
+        const errMsg = window.memoLang === 'ru' ? "Ошибка при создании аудиофайла: " : "Error creating audio file: ";
+        alert(errMsg + e.message);
+    } finally {
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+    }
+}

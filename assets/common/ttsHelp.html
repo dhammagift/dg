@@ -17,9 +17,10 @@ function setLanguage(lang) {
     document.title = "Слушание Дхаммы";
     document.documentElement.lang = 'ru';
 
+    // Вставляем переключатель в едином стиле (ru - активен)
     document.querySelector('.lang-switcher').innerHTML = `
-      <a class="btn btn-sm btn-outline-secondary rounded-pill text-decoration-none" href="./ttsHelp.html">en</a>
-      <span class="btn btn-sm btn-primary rounded-pill ms-1">ru</span>
+      <a id="lang-en" class="btn btn-sm btn-secondary rounded-pill text-decoration-none me-2" href="#">en</a>
+      <span>ru</span>
     `;
   } else {
     document.getElementById('en-content').style.display = 'block';
@@ -27,21 +28,22 @@ function setLanguage(lang) {
     document.title = "Listening to Dhamma";
     document.documentElement.lang = 'en';
 
+    // Вставляем переключатель в едином стиле (en - активен)
     document.querySelector('.lang-switcher').innerHTML = `
-      <span class="btn btn-sm btn-primary rounded-pill">en</span>
-      <a class="btn btn-sm btn-outline-secondary rounded-pill text-decoration-none ms-1" href="./ttsHelpRu.html">ru</a>
+      <span>en</span>
+      <a id="lang-ru" class="btn btn-sm btn-secondary rounded-pill text-decoration-none ms-2" href="#">ru</a>
     `;
   }
   addSwitcherListeners();
 }
 
 function addSwitcherListeners() {
-  document.querySelector('.lang-switcher a[href="./ttsHelp.html"]')?.addEventListener('click', function(e) {
+  document.getElementById('lang-en')?.addEventListener('click', function(e) {
     e.preventDefault();
     setLanguage('en');
   });
 
-  document.querySelector('.lang-switcher a[href="./ttsHelpRu.html"]')?.addEventListener('click', function(e) {
+  document.getElementById('lang-ru')?.addEventListener('click', function(e) {
     e.preventDefault();
     setLanguage('ru');
   });
@@ -63,32 +65,18 @@ document.addEventListener('DOMContentLoaded', function() {
   setLanguage(detectLanguage());
 });
 </script>
+
 </head>
 <body>
-<div class="container mt-3">
-  <div class="d-flex align-items-center">
-    <div class="input-group">
-      <a href="/ru/read.php" title="Sutta and Vinaya reading" rel="noreferrer" class="me-1">
-        <svg fill="#979797" version="1.1" xmlns="http://www.w3.org/2000/svg" height="26px" viewBox="0 0 547.596 547.596" stroke="#979797">
-          <g> <path d="M540.76,254.788L294.506,38.216c-11.475-10.098-30.064-10.098-41.386,0L6.943,254.788 c-11.475,10.098-8.415,18.284,6.885,18.284h75.964v221.773c0,12.087,9.945,22.108,22.108,22.108h92.947V371.067 c0-12.087,9.945-22.108,22.109-22.108h93.865c12.239,0,22.108,9.792,22.108,22.108v145.886h92.947 c12.24,0,22.108-9.945,22.108-22.108v-221.85h75.965C549.021,272.995,552.081,264.886,540.76,254.788z"></path> </g>
-        </svg>
-      </a>
-
-      <a href="/ru" title="Sutta and Vinaya search" rel="noreferrer" class="me-1">
-        <img width="24px" alt="dhamma.gift icon" src="/assets/img/gray-white.png">
-      </a>
-
-      <div class="ms-1 form-check form-switch">
-        <input type="checkbox" class="form-check-input" id="darkSwitch">
-      </div>
+<div class="top-nav-bar d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center gap-2">
+        <top-nav-icons type="read" show-dict></top-nav-icons>
     </div>
-
-    <div class="ms-auto d-inline-flex align-items-center lang-switcher">
-      <a class="btn btn-sm btn-outline-secondary rounded-pill text-decoration-none" href="./ttsHelp.html">en</a>
-      <span class="btn btn-sm btn-primary rounded-pill ms-1">ru</span>
-    </div>
-  </div>
+    
+    <div class="d-flex align-items-center lang-switcher">
+        </div>
 </div>
+
 
 <div id="ru-content" style="display:none;">
   <div class="mt-2 mb-2">
@@ -97,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
   <div class="p-3 rounded bg-light">
     <p class="mt-4">
-      <em>
+      <em class="pli-lang " lang="pi">
         "Pañcime, bhikkhave, ādīnavā āyatakena gītassarena dhammaṁ bhaṇantassa."
       </em><br>
       "Эти, монахи, пять опасностей для того, кто декламирует Дхамму протяженным песенным голосом."
@@ -174,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
   <div class="p-3 rounded bg-light">
     <p class="mt-4">
-      <em>
+      <em class="pli-lang " lang="pi">
         "Pañcime, bhikkhave, ādīnavā āyatakena gītassarena dhammaṁ bhaṇantassa."
       </em>
       <br>
@@ -249,8 +237,13 @@ document.addEventListener('DOMContentLoaded', function() {
 	
   </div>
 </div>
-<script src="/assets/js/dark-mode-switch/dark-mode-switch.js"></script>
-<script src="/assets/js/uihelp.js" defer></script>
+<script src="/assets/js/settings.js" defer></script>
+<script src="/assets/js/nav-component.js" defer></script>
+<script src="/assets/js/themeswitch.js" defer></script>
+<script src="/assets/js/smoothScroll.js" defer></script>
+</body>
+</html>
+
 <script src="/assets/js/smoothScroll.js" defer></script>
 
 </body>

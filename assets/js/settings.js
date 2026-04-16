@@ -98,48 +98,46 @@
 // ==========================================
 // ФОНОВАЯ АКТИВАЦИЯ С РОДНОЙ ПЛАШКОЙ (СО 2-ГО ВИЗИТА)
 // ==========================================
-window.addEventListener('load', () => {
+window.addEventListener('suttaRenderedCentral', () => {
     if (localStorage.getItem('dg_dict_cached') !== 'true') return;
 
-    setTimeout(() => {
-        const preloadDictionary = () => {
-            if (typeof dictionaryVisible !== 'undefined' && !dictionaryVisible) return;
+    const preloadDictionary = () => {
+        if (typeof dictionaryVisible !== 'undefined' && !dictionaryVisible) return;
 
-            const isRu = window.location.pathname.includes('/ru/') || 
-                         window.location.pathname.includes('/r/') || 
-                         localStorage.getItem('siteLanguage') === 'ru';
-            const savedDictType = typeof savedDict !== 'undefined' ? savedDict : localStorage.getItem('dictType') || 'standalone';
-            const lang = (savedDictType === 'standaloneru' || isRu) ? 'ru' : 'en';
+        window.dg_loadDictionaryScripts().then((scriptWasSlow) => {
+            if (typeof lazyLoadStandaloneScripts === 'function') {
+                
+                // paliLookup.js уже загрузился и сам вычислил свой глобальный savedDict.
+                // Полностью доверяем его логике определения языка базы:
+                const isDictRu = typeof savedDict !== 'undefined' && savedDict.includes('ru');
+                const lang = isDictRu ? 'ru' : 'en';
 
-            window.dg_loadDictionaryScripts().then((scriptWasSlow) => {
-                if (typeof lazyLoadStandaloneScripts === 'function') {
-                    
-                    lazyLoadStandaloneScripts(lang).then((dbWasSlow) => {
-                        // Показываем "Словарь загружен" ТОЛЬКО если до этого показывалась плашка "загружается"
-                        if (scriptWasSlow || dbWasSlow) {
-                            window.dg_toggleNativeLoader(true, isRu ? 'Словарь загружен.' : 'Dictionary is loaded.');
-                            
-                            // Даем 1 секунду на прочтение радостной новости, раз уж пользователь ждал
-                            setTimeout(() => {
-                                window.dg_toggleNativeLoader(false);
-                            }, 1000);
-                        }
-                    }).catch(e => {
-                        console.error("Ошибка фоновой загрузки:", e);
-                        window.dg_toggleNativeLoader(false);
-                    });
-                } else {
-                    if (scriptWasSlow) window.dg_toggleNativeLoader(false);
-                }
-            });
-        };
+                // Для локализации самой плашки тоже берем готовую переменную из словаря, если она есть
+                const isRuInterface = typeof isRussian !== 'undefined' ? isRussian : (window.location.pathname.includes('/r') || window.location.pathname.includes('/ml/'));
 
-        if ('requestIdleCallback' in window) {
-            requestIdleCallback(() => preloadDictionary());
-        } else {
-            preloadDictionary();
-        }
-    }, 400); 
+                lazyLoadStandaloneScripts(lang).then((dbWasSlow) => {
+                    if (scriptWasSlow || dbWasSlow) {
+                        window.dg_toggleNativeLoader(true, isRuInterface ? 'Словарь загружен.' : 'Dictionary is loaded.');
+                        
+                        setTimeout(() => {
+                            window.dg_toggleNativeLoader(false);
+                        }, 1000);
+                    }
+                }).catch(e => {
+                    console.error("Ошибка фоновой загрузки:", e);
+                    window.dg_toggleNativeLoader(false);
+                });
+            } else {
+                if (scriptWasSlow) window.dg_toggleNativeLoader(false);
+            }
+        });
+    };
+
+    if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => preloadDictionary());
+    } else {
+        preloadDictionary();
+    }
 });
 
 
@@ -149,6 +147,16 @@ window.addEventListener('load', () => {
     let isVoiceInitializing = false;
 
     window.loadVoiceScripts = function(callback) {
+        // === ИСКЛЮЧЕНИЕ ДЛЯ СТРАНИЦ РЕЗУЛЬТАТОВ ПОИСКА ===
+        const path = window.location.pathname;
+        const isSearchResult = (path === '/' || path === '/ru/') && window.location.search.includes('q=');
+        
+        if (isSearchResult) {
+            if (callback) callback();
+            return;
+        }
+        // ==========================================
+
         if (window.isVoiceScriptLoaded) {
             if (callback) callback();
             return;
@@ -175,9 +183,9 @@ window.addEventListener('load', () => {
         scriptVoice.onload = () => {
             // ---> ИСПРАВЛЕНИЕ: Блокируем загрузку A-B цикла для приложения Memo <---
             // У Memo своя логика задержек и интерфейса, voice-mem.js там вызывает конфликты
-    const path = window.location.pathname;
+            const currentPath = window.location.pathname;
 
-if (path.includes('/memo/') && !path.includes('/memorize/')) {
+            if (currentPath.includes('/memo/') && !currentPath.includes('/memorize/')) {
                 window.isVoiceScriptLoaded = true;
                 isVoiceInitializing = false;
                 
@@ -223,7 +231,6 @@ if (path.includes('/memo/') && !path.includes('/memorize/')) {
         
         document.head.appendChild(scriptVoice);
     };
-
 
     // Перехват кликов
     const voiceClickHandler = function(e) {
@@ -280,7 +287,7 @@ document.addEventListener('click', function(e) {
 });
 
 // Глобальные уведомления с настраиваемым таймером
-window.showBubbleNotification = function(text, duration = 2500) {
+window.showBubbleNotification = function(text, duration = 2500, type = 'success') {
     let bubble = document.getElementById('bubbleNotification') || document.querySelector('.bubble-notification');
 
     if (!bubble) {
@@ -290,6 +297,10 @@ window.showBubbleNotification = function(text, duration = 2500) {
         document.body.appendChild(bubble);
     }
 
+    // Удаляем все возможные цветовые классы перед установкой нового
+    bubble.classList.remove('success', 'error', 'warning', 'info');
+    bubble.classList.add(type);
+    
     bubble.textContent = text;
     bubble.classList.add('show');
 
@@ -354,6 +365,12 @@ document.addEventListener("click", function (e) {
     // Игнорируем клики по самому плееру, кнопкам настроек или кнопке Play
     if (e.target.closest('.tts-ignore') || e.target.closest('.dynamic-tts-btn')) return;
     
+    // === ИСКЛЮЧЕНИЕ ДЛЯ СТРАНИЦ РЕЗУЛЬТАТОВ ПОИСКА ===
+    const path = window.location.pathname;
+    const isSearchResult = (path === '/' || path === '/ru/') && window.location.search.includes('q=');
+    if (isSearchResult) return;
+    // ==========================================
+
     const clickedSegment = e.target.closest(".pli-lang, .rus-lang, .eng-lang, .tha-lang");
 
     if (clickedSegment) {
@@ -377,6 +394,7 @@ document.addEventListener("click", function (e) {
         window.removeAllHighlights();
     }
 });
+
 // ========================================================================
 
 
@@ -837,17 +855,35 @@ window.addEventListener("keydown", (event) => {
             }
         }
 
-        // --- 1.2. General Hint Popup ---
-        const hintElement = document.querySelector('.hint');
-        if (hintElement && hintElement.offsetParent !== null) { // проверка, что видимо
-            const closeHintButton = document.getElementById('closeHintBtn');
-            if (closeHintButton) {
-                closeHintButton.click();
+        // --- 1.2. General Hint Popup (С логами для Павла) ---
+        // Ищем все варианты уведомлений: старые, новые тосты и баблы
+        const hintElements = document.querySelectorAll('.dg-bottom-toast, .hint, .bubble-notification');
+        
+        for (let i = 0; i < hintElements.length; i++) {
+            const hintElement = hintElements[i];
+            const style = window.getComputedStyle(hintElement);
+            
+            // Проверяем наличие класса 'show' или фактическую видимость через opacity
+            const isVisible = hintElement.classList.contains('show') || 
+                              (style.display !== 'none' && style.opacity !== '0');
+            
+            if (isVisible) {
+                
+                // Ищем любую кнопку закрытия внутри
+                const closeHintButton = hintElement.querySelector('#closeHintBtn, .dg-toast-close, .close-btn, .dg-bottom-toast-close');
+                
+                if (closeHintButton) {
+                    closeHintButton.click();
+                } else {
+                    hintElement.classList.remove('show');
+                }
+                
                 event.preventDefault();
-                return;
+                return; 
             }
         }
 
+		
         // ==========================================
         // ПРИОРИТЕТ 2: СЛОВАРИ (Dictionaries)
         // ==========================================
@@ -1233,30 +1269,27 @@ openDictionaries(event);
     }
 });
  
-  
-  
-  
-  //setup dictionary 
-  
-// Загрузка сохраненного значения из localStorage
-const savedDict = localStorage.getItem('selectedDict');
+// setup dictionary
 
-if (savedDict && [...dictSelect.options].some(opt => opt.value === savedDict)) {
-  dictSelect.value = savedDict; // Устанавливаем только если значение есть в списке
-} else {
-  
-if (window.location.href.includes('/r/') || window.location.href.includes('/ml/') || window.location.href.includes('/ru/')) {
-dictSelect.value = 'standaloneru'; // Значение по умолчанию standaloneru
-//  localStorage.setItem('selectedDict', 'dpdCompactRu');
-} else if (window.location.href.includes('/d/')) {
-dictSelect.value = 'dpdFull'; // Значение по умолчанию standaloneru
-//  localStorage.setItem('selectedDict', 'dpdCompactRu');
-} else {
-  dictSelect.value = 'standalone'; // Значение по умолчанию
-//  localStorage.setItem('selectedDict', 'standalone');
-}
-}
+// Выполняем логику только если элемент существует на странице
+if (dictSelect) {
+  // Загрузка сохраненного значения из localStorage
+  const savedDict = localStorage.getItem('selectedDict');
 
+  if (savedDict && [...dictSelect.options].some(opt => opt.value === savedDict)) {
+    dictSelect.value = savedDict; // Устанавливаем только если значение есть в списке
+  } else {
+    const currentUrl = window.location.href;
+    
+    if (currentUrl.includes('/r/') || currentUrl.includes('/ml/') || currentUrl.includes('/ru/')) {
+      dictSelect.value = 'standaloneru'; // Значение по умолчанию standaloneru
+    } else if (currentUrl.includes('/d/')) {
+      dictSelect.value = 'dpdFull'; // Значение по умолчанию dpdFull
+    } else {
+      dictSelect.value = 'standalone'; // Значение по умолчанию
+    }
+  }
+}
   
     // Загрузка сохраненного значения из localStorage
   const savedScript = localStorage.getItem('selectedScript');
@@ -1860,18 +1893,14 @@ if (!document.getElementById("openQuickModalBtn")) {
 </button>
 */
 
-
 // === ФУНКЦИЯ "УМНОГО" СОХРАНЕНИЯ ПОЗИЦИИ ===
 function saveExactScrollPosition() {
     const suttaContainer = document.getElementById('sutta');
     if (!suttaContainer) return;
 
-    // Ищем все сегменты с ID (абзацы, строфы)
     const elements = suttaContainer.querySelectorAll('[id]');
     if (elements.length === 0) return;
 
-    // "Линия глаз" - точка, куда обычно смотрит пользователь (например, 120px от верха)
-    // Это позволяет игнорировать шапку сайта
     const eyeLevel = 120;
     
     let bestElement = null;
@@ -1879,8 +1908,6 @@ function saveExactScrollPosition() {
 
     for (const el of elements) {
         const rect = el.getBoundingClientRect();
-        
-        // Нам нужен элемент, который либо прямо на линии глаз, либо чуть выше/ниже
         const distance = Math.abs(rect.top - eyeLevel);
 
         if (distance < minDistance) {
@@ -1890,16 +1917,21 @@ function saveExactScrollPosition() {
     }
 
     if (bestElement) {
-        // ЗАПОМИНАЕМ:
-        // 1. ID элемента
-        // 2. offset: Где именно он находился относительно верха окна (например, "на 125-м пикселе")
+        // ДОБАВЛЕНО: Получаем текущий slug из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentSlug = urlParams.get('q') || '';
+        currentSlug = currentSlug.trim().toLowerCase();
+
         const data = {
             id: bestElement.id,
-            offset: bestElement.getBoundingClientRect().top
+            offset: bestElement.getBoundingClientRect().top,
+            slug: currentSlug // ДОБАВЛЕНО: сохраняем slug вместе с координатами
         };
         localStorage.setItem('exactScrollAnchor', JSON.stringify(data));
     }
 }
+
+
 
     // === ЛОГИКА МАСШТАБИРОВАНИЯ (С ЛОКАЛИЗАЦИЕЙ) ===
     
@@ -2455,24 +2487,40 @@ window.setupCloudListeners = function(uid) {
 
     const userRef = db.collection("users").doc(uid);
 
-    // Слушатель Настроек (без капкана isDeleted)
+    // Слушатель Настроек
     unsubSettings = userRef.onSnapshot((doc) => {
         if (doc.metadata.hasPendingWrites) return; 
 
         if (doc.exists && doc.data().settings) {
             const cloudSettings = doc.data().settings;
+            
+            // Вычисляем время облака и локальное время
+            const cloudTime = doc.data().updatedAt ? doc.data().updatedAt.toMillis() : 0;
+            const localTime = parseInt(localStorage.getItem('dg_localSettingsTimestamp') || '0', 10);
+
+            // ЗАЩИТА: Если локальные настройки менялись позже, игнорируем старые данные из облака
+            if (localTime > cloudTime) {
+                return;
+            }
+
             let uiNeedsRefresh = false;
 
             for (const k in cloudSettings) {
+                // Если значение в облаке отличается от локального
                 if (localStorage.getItem(k) !== cloudSettings[k]) {
                     window.dg_ignoreNextStorageEvent = true; 
                     localStorage.setItem(k, cloudSettings[k]);
                     uiNeedsRefresh = true;
                 }
             }
-            if (uiNeedsRefresh) window.dg_settingsChanged = false; 
+            
+            // Сбрасываем флаг только если реально что-то обновили из базы
+            if (uiNeedsRefresh) {
+                window.dg_settingsChanged = false; 
+            }
         }
     });
+
 
     // Слушатель Избранного
     unsubFavs = userRef.collection("favorites").onSnapshot((snapshot) => {
@@ -2680,33 +2728,20 @@ window.syncSettingsToCloud = async function() {
 
     if (!db || !getUid()) return;
     const uid = getUid();
-    const settingsToSave = {};
+    
+    // 1. Берем ТОЛЬКО те ключи, которые изменились (дифф)
+    let settingsToSave = { ...window.dg_pendingSettingsUpdates };
 
-    // ДОБАВЛЕНО: 'firestore_' и 'firebase_'
-    const ignorePrefixes = ['DataTables_', 'dg_', 'syncPhrase', 'firestore_', 'firebase_'];
-    const ignoreExact = ['localSearchHistory', 'lastSyncTime'];
-
-    // 1. Собираем живые ключи
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        const isIgnoredPrefix = ignorePrefixes.some(prefix => key.startsWith(prefix));
-        const isIgnoredExact = ignoreExact.includes(key);
-
-        if (!isIgnoredPrefix && !isIgnoredExact) {
-            settingsToSave[key] = localStorage.getItem(key);
-        }
-    }
-
-    // 2. Добавляем команды на удаление мертвых ключей
+    // 2. Добавляем команды на удаление ключей (если пользователь их удалил)
     if (window.dg_deletedKeys && window.dg_deletedKeys.size > 0) {
         window.dg_deletedKeys.forEach(key => {
-            // Двойная проверка: просим Firebase удалить ключ, только если его нет локально
             if (!settingsToSave.hasOwnProperty(key)) {
                 settingsToSave[key] = firebase.firestore.FieldValue.delete();
             }
         });
     }
 
+    // Если ничего не менялось — не дергаем базу
     if (Object.keys(settingsToSave).length === 0) return;
 
     try {
@@ -2715,13 +2750,16 @@ window.syncSettingsToCloud = async function() {
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
         
-        // 3. Очищаем очередь удалений после успешной синхронизации
+        // 3. ОЧИСТКА: Обнуляем очереди только после успешной отправки
+        window.dg_pendingSettingsUpdates = {};
         if (window.dg_deletedKeys) window.dg_deletedKeys.clear();
+        window.dg_settingsChanged = false;
         
         if (typeof refreshSyncTimeUI === 'function') refreshSyncTimeUI();
-    } catch (e) { console.error("Settings Sync Error:", e); }
+    } catch (e) { 
+        console.error("Settings Sync Error:", e); 
+    }
 };
-
 
 window.syncFavoriteItemToCloud = async function(favData, isDeleted = false) {
     // ПРОПУСКНОЙ ПУНКТ:
@@ -2992,7 +3030,8 @@ window.updateGlobalSyncButtons = function(user, phraseId) {
 // ==========================================
 window.dg_settingsChanged = false; 
 window.dg_ignoreNextStorageEvent = false;
-window.dg_deletedKeys = new Set(); // <-- Очередь ключей на удаление из облака
+window.dg_deletedKeys = new Set(); // Очередь ключей на удаление из облака
+window.dg_pendingSettingsUpdates = {}; // Очередь атомарных изменений (дифф)
 let isObserverInitialized = false;
 
 window.initSettingsObserver = function() {
@@ -3000,12 +3039,14 @@ window.initSettingsObserver = function() {
     isObserverInitialized = true;
 
     const originalSetItem = localStorage.setItem;
-    const originalRemoveItem = localStorage.removeItem; // <-- Перехватчик
-    const originalClear = localStorage.clear;           // <-- Перехватчик
+    const originalRemoveItem = localStorage.removeItem;
+    const originalClear = localStorage.clear;
     
-    const ignoreList = ['DataTables_', 'localSearchHistory', 'lastSyncTime', 'syncPhrase', 'dg_'];
+    // Добавлены firestore_ и firebase_ в исключения
+    const ignoreList = ['DataTables_', 'localSearchHistory', 'lastSyncTime', 'syncPhrase', 'dg_', 'firebase_', 'firestore_'];
 
     localStorage.setItem = function(key, value) {
+        // Если данные пришли из облака (стоит флаг), просто пишем и снимаем флаг
         if (window.dg_ignoreNextStorageEvent) {
             originalSetItem.apply(this, arguments);
             window.dg_ignoreNextStorageEvent = false; 
@@ -3016,32 +3057,38 @@ window.initSettingsObserver = function() {
         
         if (isImportant && localStorage.getItem(key) !== String(value)) {
             window.dg_settingsChanged = true;
-            window.dg_deletedKeys.delete(key); // Если ключ снова задали, убираем из очереди на удаление
+            window.dg_deletedKeys.delete(key);
+            
+            // 1. АТОМАРНОСТЬ: Собираем только измененные ключи
+            window.dg_pendingSettingsUpdates[key] = value; 
+            
+            // 2. ЗАЩИТА (Мастер): Ставим печать времени. Облако не перезапишет это старьем
+            originalSetItem.apply(this, ['dg_localSettingsTimestamp', String(Date.now())]);
         }
         
         originalSetItem.apply(this, arguments);
     };
 
-    // --- УМНЫЙ ПЕРЕХВАТ УДАЛЕНИЯ ---
     localStorage.removeItem = function(key) {
         const isImportant = !ignoreList.some(prefix => key.startsWith(prefix));
         if (isImportant && localStorage.getItem(key) !== null) {
             window.dg_settingsChanged = true;
-            window.dg_deletedKeys.add(key); // Запоминаем, что ключ нужно "убить" в облаке
+            window.dg_deletedKeys.add(key);
+            originalSetItem.apply(this, ['dg_localSettingsTimestamp', String(Date.now())]);
         }
         originalRemoveItem.apply(this, arguments);
     };
 
-    // --- УМНЫЙ ПЕРЕХВАТ ПОЛНОГО СБРОСА ---
     localStorage.clear = function() {
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
             const isImportant = !ignoreList.some(prefix => key.startsWith(prefix));
             if (isImportant) {
-                window.dg_deletedKeys.add(key); // Отправляем ВСЕ настройки на удаление
+                window.dg_deletedKeys.add(key);
             }
         }
         window.dg_settingsChanged = true;
+        originalSetItem.apply(this, ['dg_localSettingsTimestamp', String(Date.now())]);
         originalClear.apply(this, arguments);
     };
 };
@@ -3145,20 +3192,36 @@ window.initSettingsObserver = function() {
     });
 })();
 
-
 (function checkAndLoadUiHelper() {
-    // Используем новый глобальный счетчик из uihelp.js
-    const visitGlobal = parseInt(localStorage.getItem("visitGlobal") || "0", 10);
-    const targetGlobal = 13; // Максимальный таргет (для PWA окна)
-    
-    // Проверяем, закрыл ли пользователь тосты с подсказками
-    const hintReadShown = localStorage.getItem('hintShown_read_mode');
-    const hintResultShown = localStorage.getItem('hintShown_result_mode');
+    // Проверяем, выполнены ли уже все задачи (подсказки, хайлайты, баннер PWA)
+    const hintRead = localStorage.getItem('hintShown_read_mode');
+    const hintResult = localStorage.getItem('hintShown_result_mode');
+    const hlMain = localStorage.getItem('highlighted_main');
+    const hlRead = localStorage.getItem('highlighted_read');
+    const hlResult = localStorage.getItem('highlighted_result');
+    const pwaShown = localStorage.getItem('PWAinstallMessage');
 
-    // Грузим скрипт, если глобальных визитов <= 13 ИЛИ какая-то из подсказок еще не закрыта
-    if (visitGlobal <= targetGlobal || !hintReadShown || !hintResultShown) {
+    const allTasksDone = hintRead && hintResult && hlMain && hlRead && hlResult && pwaShown;
+
+    // Грузим скрипт, если остались непоказанные подсказки.
+    // Проверку visitGlobal <= 13 отсюда убрали, так как uihelp.js сам 
+    // проверяет нужные счетчики внутри себя перед показом элементов.
+    if (!allTasksDone) {
         const script = document.createElement('script');
         script.src = '/assets/js/uihelp.js';
+        script.defer = true;
+        document.head.appendChild(script);
+    }
+})();
+
+// ==========================================
+// АВТОМАТИЧЕСКАЯ ЗАГРУЗКА AUTOPALI
+// ==========================================
+(function autoLoadAutopali() {
+    // Проверяем, не подключен ли скрипт уже напрямую в HTML
+    if (!document.querySelector('script[src*="autopali.js"]')) {
+        const script = document.createElement('script');
+        script.src = "/assets/js/autopali.js";
         script.defer = true;
         document.head.appendChild(script);
     }
