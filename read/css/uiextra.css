@@ -1095,7 +1095,7 @@ smart TOC
     cursor: pointer;
     padding: 0 10px;
     gap: 8px;
-    max-width: 200px;
+    max-width: 250px;
     box-shadow: none;
     
     opacity: 0;
@@ -1125,7 +1125,6 @@ smart TOC
 
 #smart-toc-current {
     font-size: 16px;
-    font-weight: bold;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

@@ -1191,7 +1191,6 @@ window.toggleThePali = window.toggleThePali || function() {
     });
 };
 
-
 // Логика кнопки оглавления (TOC) - Интеллектуальное выделение по клику на язык
 (function() {
     // 1. Поиск ближайшего заголовка над экраном для подписи кнопки
@@ -1285,7 +1284,7 @@ window.toggleThePali = window.toggleThePali || function() {
         });
     }
 
-    // 3. Управление видимостью и синхронизация языков
+    // 3. Управление видимостью, синхронизация языков и ЦЕНТРИРОВАНИЕ
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('#smart-toc-btn');
         const panel = document.getElementById('smart-toc-panel');
@@ -1305,8 +1304,45 @@ window.toggleThePali = window.toggleThePali || function() {
                 });
             }
 
+            const isOpening = !panel.classList.contains('active');
             panel.classList.toggle('active');
             if (gearPanel) gearPanel.classList.remove('active');
+
+            // --- Подсветка текущего пункта и скролл по центру ---
+            if (isOpening && sutta) {
+                const headings = sutta.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                let activeIndex = 0;
+                const eyeLevel = window.innerHeight * 0.4; 
+
+                // Находим индекс текущего заголовка
+                for (let i = headings.length - 1; i >= 0; i--) {
+                    if (headings[i].getBoundingClientRect().top <= eyeLevel) {
+                        activeIndex = i;
+                        break;
+                    }
+                }
+
+                const tocItems = panel.querySelectorAll('.toc-item');
+                
+                // Убираем старую подсветку
+                tocItems.forEach(item => item.classList.remove('active'));
+
+                if (tocItems[activeIndex]) {
+                    const activeItem = tocItems[activeIndex];
+                    activeItem.classList.add('active'); // Ставим жирный синий цвет
+
+                    // Ждем 50мс, чтобы панель стала display:block и можно было считать её высоту
+                    setTimeout(() => {
+                        const panelHeight = panel.clientHeight;
+                        const itemTop = activeItem.offsetTop;
+                        const itemHeight = activeItem.clientHeight;
+                        
+                        // Вычисляем позицию скролла, чтобы элемент был по центру
+                        panel.scrollTop = itemTop - (panelHeight / 2) + (itemHeight / 2);
+                    }, 50);
+                }
+            }
+
         } else if (panel && !panel.contains(e.target)) {
             panel.classList.remove('active');
         }
