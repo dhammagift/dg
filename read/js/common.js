@@ -165,19 +165,28 @@ window.syncSmartIcons = function() {
 document.addEventListener("DOMContentLoaded", function() {
     
     let lastScrollTop = 0;
-    let gearTimer;
+    let smartTimer; // Единый таймер для обеих панелей
     let ignoreScroll = false; 
     
     const gearBtn = document.getElementById('smart-gear-btn');
     const smartPanel = document.getElementById('smart-panel');
+    const tocBtn = document.getElementById('smart-toc-btn');
+    const tocPanel = document.getElementById('smart-toc-panel');
     const headerHeight = 90; 
 
-    function keepGearAlive() {
-        gearBtn.classList.add('visible');
-        clearTimeout(gearTimer);
-        gearTimer = setTimeout(() => {
-            if (!smartPanel.classList.contains('active')) {
-                gearBtn.classList.remove('visible');
+    function keepSmartUIAlive() {
+        if (gearBtn) gearBtn.classList.add('visible');
+        if (tocBtn) tocBtn.classList.add('visible'); // Синхронно показываем TOC
+
+        clearTimeout(smartTimer);
+        smartTimer = setTimeout(() => {
+            const isGearActive = smartPanel && smartPanel.classList.contains('active');
+            const isTocActive = tocPanel && tocPanel.classList.contains('active');
+
+            // Скрываем, только если ни одна из панелей не открыта
+            if (!isGearActive && !isTocActive) {
+                if (gearBtn) gearBtn.classList.remove('visible');
+                if (tocBtn) tocBtn.classList.remove('visible');
             }
         }, 2000);
     }
@@ -189,40 +198,53 @@ document.addEventListener("DOMContentLoaded", function() {
         if (st < 0) return; 
 
         if (st < headerHeight) {
-            gearBtn.classList.remove('visible');
-            smartPanel.classList.remove('active');
+            if (gearBtn) gearBtn.classList.remove('visible');
+            if (smartPanel) smartPanel.classList.remove('active');
+            if (tocBtn) tocBtn.classList.remove('visible');
+            if (tocPanel) tocPanel.classList.remove('active');
             return;
         }
 
         if (st < lastScrollTop) {
-            keepGearAlive(); 
+            keepSmartUIAlive(); 
         } else if (st > lastScrollTop) {
-            if (!smartPanel.classList.contains('active')) {
-                gearBtn.classList.remove('visible');
+            const isGearActive = smartPanel && smartPanel.classList.contains('active');
+            const isTocActive = tocPanel && tocPanel.classList.contains('active');
+            
+            if (!isGearActive && !isTocActive) {
+                if (gearBtn) gearBtn.classList.remove('visible');
+                if (tocBtn) tocBtn.classList.remove('visible');
             }
         }
         lastScrollTop = st <= 0 ? 0 : st;
     });
 
-    gearBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        if (!smartPanel.classList.contains('active')) window.syncSmartIcons();
-        
-        smartPanel.classList.toggle('active');
-        
-        if (smartPanel.classList.contains('active')) {
-            clearTimeout(gearTimer);
-        } else {
-            keepGearAlive();
-        }
-    });
+    if (gearBtn) {
+        gearBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (!smartPanel.classList.contains('active') && typeof window.syncSmartIcons === 'function') {
+                window.syncSmartIcons();
+            }
+            
+            smartPanel.classList.toggle('active');
+            
+            // Если открыли настройки - закрываем оглавление
+            if (tocPanel && tocPanel.classList.contains('active')) {
+                tocPanel.classList.remove('active');
+            }
+
+            if (smartPanel.classList.contains('active')) {
+                clearTimeout(smartTimer);
+            } else {
+                keepSmartUIAlive();
+            }
+        });
+    }
 
     const proxyButtons = document.querySelectorAll('.smart-btn');
-    
     proxyButtons.forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
-            
             const targetSelector = this.getAttribute('data-target');
             const originalElement = document.querySelector(targetSelector);
             
@@ -231,7 +253,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 setTimeout(() => { ignoreScroll = false; }, 1000);
 
                 if (originalElement.getAttribute('data-bs-toggle') === 'modal') {
-                    
                     const modalId = originalElement.getAttribute('data-bs-target') || originalElement.getAttribute('href');
                     const modalEl = document.querySelector(modalId);
                     
@@ -240,37 +261,30 @@ document.addEventListener("DOMContentLoaded", function() {
                         modal.show(this);
                         
                         const onHidden = () => {
-                            if (gearBtn) {
-                                gearBtn.focus({ preventScroll: true });
-                            }
+                            if (gearBtn) gearBtn.focus({ preventScroll: true });
                             modalEl.removeEventListener('hidden.bs.modal', onHidden);
                         };
                         modalEl.addEventListener('hidden.bs.modal', onHidden);
-
                     } else {
                         originalElement.click(); 
                     }
                 } else {
-                    // ПРОГРАММНЫЙ КЛИК ПО ГЛАВНОЙ КНОПКЕ
                     originalElement.click();
                 }
                 
-                smartPanel.classList.remove('active');
-                keepGearAlive();
-                setTimeout(window.syncSmartIcons, 50); 
+                if (smartPanel) smartPanel.classList.remove('active');
+                keepSmartUIAlive();
+                if (typeof window.syncSmartIcons === 'function') setTimeout(window.syncSmartIcons, 50); 
             }
         });
     });
 
     document.addEventListener('click', function(e) {
-        if (!smartPanel.contains(e.target) && !gearBtn.contains(e.target)) {
+        if (smartPanel && gearBtn && !smartPanel.contains(e.target) && !gearBtn.contains(e.target)) {
             smartPanel.classList.remove('active');
-            gearBtn.classList.remove('visible');
         }
     });
 });
-
-
 
 document.addEventListener('click', function(event) {
     // Ищем, был ли клик по элементу с нужным классом (или внутри него)
@@ -1178,50 +1192,48 @@ window.toggleThePali = window.toggleThePali || function() {
 };
 
 
-// Вот, Павел, оптимизированная функция
+// Логика кнопки оглавления (TOC) - Обратный цикл (Поиск вверх)
 (function() {
-    let headingsCache = null;
-    let tocCreated = false;
-
-    // Функция поиска текущего заголовка (без построения списка)
+    // 1. Поиск ближайшего заголовка над экраном (снизу вверх)
     function updatePillLabel() {
         const suttaContainer = document.getElementById('sutta');
-        if (!suttaContainer) return;
-
-        // Если заголовков еще нет в кеше, пробуем найти хотя бы h1
-        const h1 = suttaContainer.querySelector('h1');
         const pillLabel = document.getElementById('smart-toc-current');
-        
-        // Поиск текущего активного элемента среди всех hX
-        const allHeadings = suttaContainer.querySelectorAll('h1, h2, h3, h4, h5, h6');
-        let current = h1;
-        const eyeLevel = 140;
+        if (!suttaContainer || !pillLabel) return;
 
-        allHeadings.forEach(h => {
-            if (h.getBoundingClientRect().top <= eyeLevel) {
-                current = h;
+        // Браузер моментально фильтрует только заголовки (их мало)
+        const headings = suttaContainer.querySelectorAll('h1, h2, h3, h4, h5, h6');
+        if (headings.length === 0) return;
+
+        let activeHeading = headings[0]; // По умолчанию первый (название сутты)
+        const eyeLevel = window.innerHeight * 0.4; // Около центра экрана
+
+        // Идем по списку с конца в начало (снизу вверх от текущей позиции)
+        for (let i = headings.length - 1; i >= 0; i--) {
+            const rect = headings[i].getBoundingClientRect();
+            // Как только нашли заголовок, который выше нашего "взгляда" - берем его и останавливаемся
+            if (rect.top <= eyeLevel) {
+                activeHeading = headings[i];
+                break;
             }
-        });
-
-        if (pillLabel && current) {
-            pillLabel.textContent = current.innerText.replace(/\s+/g, ' ').trim();
         }
+
+        pillLabel.textContent = activeHeading.innerText.replace(/\s+/g, ' ').trim();
     }
 
-    // Полная сборка оглавления ТОЛЬКО при клике
+    // 2. Сборка DOM для выпадающей панели ТОЛЬКО по клику
     function buildFullTOC() {
         const suttaContainer = document.getElementById('sutta');
         const tocPanel = document.getElementById('smart-toc-panel');
         if (!suttaContainer || !tocPanel) return;
 
-        const allHeadings = suttaContainer.querySelectorAll('h1, h2, h3, h4, h5, h6');
-        tocPanel.innerHTML = ''; // Очистка
+        const headings = suttaContainer.querySelectorAll('h1, h2, h3, h4, h5, h6');
+        tocPanel.innerHTML = ''; 
 
-        allHeadings.forEach((heading, index) => {
+        headings.forEach((heading) => {
             const level = heading.tagName.substring(1);
             const item = document.createElement('div');
             item.className = `toc-item toc-h${level}`;
-            item.textContent = heading.innerText.trim();
+            item.textContent = heading.innerText.replace(/\s+/g, ' ').trim();
             
             item.onclick = (e) => {
                 e.preventDefault();
@@ -1229,44 +1241,49 @@ window.toggleThePali = window.toggleThePali || function() {
                 const targetY = window.pageYOffset + heading.getBoundingClientRect().top - offset;
                 window.scrollTo({ top: targetY, behavior: 'smooth' });
                 
-                // Подсветка активного сегмента
                 if (typeof window.activateSegmentForTTS === 'function') {
                     window.activateSegmentForTTS(heading);
                 }
-                
                 tocPanel.classList.remove('active');
             };
             tocPanel.appendChild(item);
         });
-        tocCreated = true;
     }
 
-    // Слушатель клика по кнопке оглавления
+    // 3. Обработка кликов
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('#smart-toc-btn');
+        const panel = document.getElementById('smart-toc-panel');
+        const gearPanel = document.getElementById('smart-panel');
+        
         if (btn) {
             e.stopPropagation();
-            const panel = document.getElementById('smart-toc-panel');
-            
-            // Собираем список только при первом открытии
-            if (!tocCreated) buildFullTOC();
-            
+            // Если меню пустое (первый клик) - собираем оглавление
+            if (panel.innerHTML.trim() === '') {
+                buildFullTOC();
+            }
             panel.classList.toggle('active');
+            
+            // Если открыли оглавление - закрываем настройки
+            if (gearPanel && gearPanel.classList.contains('active')) {
+                gearPanel.classList.remove('active');
+            }
+        } else if (panel && !panel.contains(e.target)) {
+            panel.classList.remove('active');
         }
     });
 
-    // Сброс кеша при загрузке новой сутты
+    // 4. Очистка меню при смене сутты
     window.addEventListener('suttaRenderedCentral', () => {
-        tocCreated = false;
-        headingsCache = null;
+        const panel = document.getElementById('smart-toc-panel');
+        if (panel) panel.innerHTML = ''; // Сбрасываем старое меню
         updatePillLabel();
     });
 
-    // Мониторинг скролла (только текст на кнопке)
+    // 5. Обновление пилюли при скролле (только если она видна)
     window.addEventListener('scroll', () => {
-        // Запускаем обновление метки только если кнопка видна (аналог логики шестеренки)
-        const gearBtn = document.getElementById('smart-gear-btn');
-        if (gearBtn && gearBtn.classList.contains('visible')) {
+        const tocBtn = document.getElementById('smart-toc-btn');
+        if (tocBtn && tocBtn.classList.contains('visible')) {
             updatePillLabel();
         }
     }, { passive: true });
