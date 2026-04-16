@@ -1269,30 +1269,29 @@ openDictionaries(event);
     }
 });
  
-  
-  
-  
-  //setup dictionary 
-  
-// Загрузка сохраненного значения из localStorage
-const savedDict = localStorage.getItem('selectedDict');
+// setup dictionary
+// Сначала получаем элемент (замени селектор на свой, если нужно)
+const dictSelect = document.querySelector('#dictSelect'); // или document.getElementById('dictSelect')
 
-if (savedDict && [...dictSelect.options].some(opt => opt.value === savedDict)) {
-  dictSelect.value = savedDict; // Устанавливаем только если значение есть в списке
-} else {
-  
-if (window.location.href.includes('/r/') || window.location.href.includes('/ml/') || window.location.href.includes('/ru/')) {
-dictSelect.value = 'standaloneru'; // Значение по умолчанию standaloneru
-//  localStorage.setItem('selectedDict', 'dpdCompactRu');
-} else if (window.location.href.includes('/d/')) {
-dictSelect.value = 'dpdFull'; // Значение по умолчанию standaloneru
-//  localStorage.setItem('selectedDict', 'dpdCompactRu');
-} else {
-  dictSelect.value = 'standalone'; // Значение по умолчанию
-//  localStorage.setItem('selectedDict', 'standalone');
-}
-}
+// Выполняем логику только если элемент существует на странице
+if (dictSelect) {
+  // Загрузка сохраненного значения из localStorage
+  const savedDict = localStorage.getItem('selectedDict');
 
+  if (savedDict && [...dictSelect.options].some(opt => opt.value === savedDict)) {
+    dictSelect.value = savedDict; // Устанавливаем только если значение есть в списке
+  } else {
+    const currentUrl = window.location.href;
+    
+    if (currentUrl.includes('/r/') || currentUrl.includes('/ml/') || currentUrl.includes('/ru/')) {
+      dictSelect.value = 'standaloneru'; // Значение по умолчанию standaloneru
+    } else if (currentUrl.includes('/d/')) {
+      dictSelect.value = 'dpdFull'; // Значение по умолчанию dpdFull
+    } else {
+      dictSelect.value = 'standalone'; // Значение по умолчанию
+    }
+  }
+}
   
     // Загрузка сохраненного значения из localStorage
   const savedScript = localStorage.getItem('selectedScript');
