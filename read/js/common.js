@@ -1191,31 +1191,78 @@ window.toggleThePali = window.toggleThePali || function() {
     });
 };
 
-// Логика кнопки оглавления (TOC) - Интеллектуальное выделение по клику на язык
+// Логика кнопки оглавления (TOC) - SPA-защита, слежение и автоцентрирование
 (function() {
-    // 1. Поиск ближайшего заголовка над экраном для подписи кнопки
-    function updatePillLabel() {
+    let activeSlug = ''; // Для отслеживания смены текста в SPA-режиме
+
+    // 1. Единая функция синхронизации: обновляет кнопку и двигает панель
+    function syncTOC() {
         const suttaContainer = document.getElementById('sutta');
         const pillLabel = document.getElementById('smart-toc-current');
+        const tocPanel = document.getElementById('smart-toc-panel');
+        const tocBtn = document.getElementById('smart-toc-btn');
+        
         if (!suttaContainer || !pillLabel) return;
 
-        const headings = suttaContainer.querySelectorAll('h1, h2, h3, h4, h5, h6');
-        if (headings.length === 0) return;
+        // Защита SPA: если поменялся URL (slug), сбрасываем оглавление
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentSlug = urlParams.get('q') || '';
+        if (activeSlug !== currentSlug) {
+            activeSlug = currentSlug;
+            if (tocPanel) {
+                tocPanel.innerHTML = '';
+                tocPanel.classList.remove('active');
+            }
+        }
 
-        let activeHeading = headings[0]; 
+        const headings = suttaContainer.querySelectorAll('h1, h2, h3, h4, h5, h6');
+        
+        // Если заголовков нет — прячем кнопку TOC, иначе показываем
+        if (headings.length === 0) {
+            if (tocBtn) tocBtn.style.display = 'none'; 
+            return;
+        } else {
+            if (tocBtn) tocBtn.style.display = 'flex'; 
+        }
+
+        let activeIndex = 0; 
         const eyeLevel = window.innerHeight * 0.4; 
 
+        // Ищем текущий заголовок снизу вверх
         for (let i = headings.length - 1; i >= 0; i--) {
             if (headings[i].getBoundingClientRect().top <= eyeLevel) {
-                activeHeading = headings[i];
+                activeIndex = i;
                 break;
             }
         }
         
-        pillLabel.textContent = activeHeading.innerText.replace(/\s+/g, ' ').trim();
+        // 1.1 Обновляем подпись на кнопке
+        pillLabel.textContent = headings[activeIndex].innerText.replace(/\s+/g, ' ').trim();
+
+        // 1.2 Синхронизируем выделение в открытой панели
+        if (tocPanel && tocPanel.classList.contains('active')) {
+            const tocItems = tocPanel.querySelectorAll('.toc-item');
+            const newActive = tocItems[activeIndex];
+            const currentActive = tocPanel.querySelector('.toc-item.active');
+
+            if (newActive && currentActive !== newActive) {
+                if (currentActive) currentActive.classList.remove('active');
+                newActive.classList.add('active');
+
+                // Плавная прокрутка панели к активному элементу (в центр)
+                const panelHeight = tocPanel.clientHeight;
+                const itemTop = newActive.offsetTop;
+                const itemHeight = newActive.clientHeight;
+                
+                tocPanel.scrollTo({
+                    top: itemTop - (panelHeight / 2) + (itemHeight / 2),
+                    behavior: 'smooth'
+                });
+            }
+        }
     }
 
-    // 2. Сборка оглавления с делегированием клика на конкретный язык
+    // 2. Сборка оглавления с сохранением структуры языков
     function buildFullTOC() {
         const suttaContainer = document.getElementById('sutta');
         const tocPanel = document.getElementById('smart-toc-panel');
@@ -1245,12 +1292,11 @@ window.toggleThePali = window.toggleThePali || function() {
             if (langSpans.length > 0) {
                 langSpans.forEach(originalSpan => {
                     const clone = originalSpan.cloneNode(true);
-                    // Очистка от мусора
+                    // Очистка от мусора UI
                     clone.querySelectorAll('.copyLink, .copyLink-start, .variant, .match').forEach(el => el.remove());
                     clone.textContent = clone.textContent.replace(/\s+/g, ' ').trim();
                     
                     if (clone.textContent) {
-                        // Привязываем клик конкретного клона к конкретному оригиналу
                         clone.style.cursor = 'pointer';
                         clone.onclick = (e) => {
                             e.stopPropagation();
@@ -1260,31 +1306,26 @@ window.toggleThePali = window.toggleThePali || function() {
                     }
                 });
             } else {
-                // Если в заголовке нет разметки по языкам (простой текст)
                 item.textContent = heading.innerText.replace(/\s+/g, ' ').trim();
                 item.onclick = () => scrollAndHighlight(heading);
             }
             
-            // Клик по пустой области элемента (между строками) выберет первый видимый язык
+            // Клик по пустой области строки выбирает первый видимый язык
             item.addEventListener('click', (e) => {
                 if (e.target !== item) return;
-                
                 const sutta = document.getElementById('sutta');
                 const isPaliHidden = sutta && sutta.classList.contains('hide-pali');
-                const isRusHidden = sutta && sutta.classList.contains('hide-russian');
-                
-                let fallback = langSpans[0];
-                if (isPaliHidden && langSpans.length > 1) fallback = langSpans[1];
-                if (isRusHidden && !isPaliHidden) fallback = langSpans[0];
-                
-                scrollAndHighlight(fallback || heading);
+                let fallback = (isPaliHidden && langSpans.length > 1) ? langSpans[1] : (langSpans[0] || heading);
+                scrollAndHighlight(fallback);
             });
 
             tocPanel.appendChild(item);
         });
+        
+        syncTOC();
     }
 
-    // 3. Управление видимостью, синхронизация языков и ЦЕНТРИРОВАНИЕ
+    // 3. Обработка кликов и управление видимостью
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('#smart-toc-btn');
         const panel = document.getElementById('smart-toc-panel');
@@ -1293,10 +1334,9 @@ window.toggleThePali = window.toggleThePali || function() {
         
         if (btn) {
             e.stopPropagation();
-            if (panel.innerHTML.trim() === '') {
-                buildFullTOC();
-            }
+            if (panel.innerHTML.trim() === '') buildFullTOC();
 
+            // Синхронизация видимости языков
             if (sutta) {
                 ['hide-pali', 'hide-english', 'hide-russian'].forEach(cls => {
                     if (sutta.classList.contains(cls)) panel.classList.add(cls);
@@ -1308,58 +1348,46 @@ window.toggleThePali = window.toggleThePali || function() {
             panel.classList.toggle('active');
             if (gearPanel) gearPanel.classList.remove('active');
 
-            // --- Подсветка текущего пункта и скролл по центру ---
-            if (isOpening && sutta) {
-                const headings = sutta.querySelectorAll('h1, h2, h3, h4, h5, h6');
-                let activeIndex = 0;
-                const eyeLevel = window.innerHeight * 0.4; 
-
-                // Находим индекс текущего заголовка
-                for (let i = headings.length - 1; i >= 0; i--) {
-                    if (headings[i].getBoundingClientRect().top <= eyeLevel) {
-                        activeIndex = i;
-                        break;
-                    }
-                }
-
-                const tocItems = panel.querySelectorAll('.toc-item');
-                
-                // Убираем старую подсветку
-                tocItems.forEach(item => item.classList.remove('active'));
-
-                if (tocItems[activeIndex]) {
-                    const activeItem = tocItems[activeIndex];
-                    activeItem.classList.add('active'); // Ставим жирный синий цвет
-
-                    // Ждем 50мс, чтобы панель стала display:block и можно было считать её высоту
-                    setTimeout(() => {
+            if (isOpening) {
+                syncTOC();
+                setTimeout(() => {
+                    const activeItem = panel.querySelector('.toc-item.active');
+                    if (activeItem) {
                         const panelHeight = panel.clientHeight;
                         const itemTop = activeItem.offsetTop;
                         const itemHeight = activeItem.clientHeight;
-                        
-                        // Вычисляем позицию скролла, чтобы элемент был по центру
                         panel.scrollTop = itemTop - (panelHeight / 2) + (itemHeight / 2);
-                    }, 50);
-                }
+                    }
+                }, 50);
             }
-
         } else if (panel && !panel.contains(e.target)) {
             panel.classList.remove('active');
         }
     });
 
-    // 4. Сброс при смене текста
-    window.addEventListener('suttaRenderedCentral', () => {
+    // 4. Глобальные события сброса и отрисовки
+    const resetTOC = () => {
         const panel = document.getElementById('smart-toc-panel');
-        if (panel) panel.innerHTML = ''; 
-        updatePillLabel();
-    });
+        const tocBtn = document.getElementById('smart-toc-btn');
+        if (panel) {
+            panel.innerHTML = ''; 
+            panel.classList.remove('active');
+        }
+        if (tocBtn) tocBtn.classList.remove('visible');
 
-    // 5. Мониторинг скролла для кнопки
+        const urlParams = new URLSearchParams(window.location.search);
+        activeSlug = urlParams.get('q') || '';
+        syncTOC();
+    };
+
+    window.addEventListener('suttaLoaded', resetTOC);
+    window.addEventListener('dgSuttaRendered', resetTOC);
+
+    // 5. Мониторинг скролла
     window.addEventListener('scroll', () => {
         const tocBtn = document.getElementById('smart-toc-btn');
         if (tocBtn && tocBtn.classList.contains('visible')) {
-            updatePillLabel();
+            syncTOC();
         }
     }, { passive: true });
 })();
