@@ -1192,35 +1192,32 @@ window.toggleThePali = window.toggleThePali || function() {
 };
 
 
-// Логика кнопки оглавления (TOC) - Обратный цикл (Поиск вверх)
+// Логика кнопки оглавления (TOC) - Мультиязычная версия
 (function() {
-    // 1. Поиск ближайшего заголовка над экраном (снизу вверх)
+    // 1. Поиск ближайшего заголовка над экраном
     function updatePillLabel() {
         const suttaContainer = document.getElementById('sutta');
         const pillLabel = document.getElementById('smart-toc-current');
         if (!suttaContainer || !pillLabel) return;
 
-        // Браузер моментально фильтрует только заголовки (их мало)
         const headings = suttaContainer.querySelectorAll('h1, h2, h3, h4, h5, h6');
         if (headings.length === 0) return;
 
-        let activeHeading = headings[0]; // По умолчанию первый (название сутты)
-        const eyeLevel = window.innerHeight * 0.4; // Около центра экрана
+        let activeHeading = headings[0]; 
+        const eyeLevel = window.innerHeight * 0.4; 
 
-        // Идем по списку с конца в начало (снизу вверх от текущей позиции)
         for (let i = headings.length - 1; i >= 0; i--) {
-            const rect = headings[i].getBoundingClientRect();
-            // Как только нашли заголовок, который выше нашего "взгляда" - берем его и останавливаемся
-            if (rect.top <= eyeLevel) {
+            if (headings[i].getBoundingClientRect().top <= eyeLevel) {
                 activeHeading = headings[i];
                 break;
             }
         }
-
+        
+        // innerText автоматически игнорирует скрытые через CSS элементы (языки)
         pillLabel.textContent = activeHeading.innerText.replace(/\s+/g, ' ').trim();
     }
 
-    // 2. Сборка DOM для выпадающей панели ТОЛЬКО по клику
+    // 2. Сборка DOM с сохранением HTML-структуры языков
     function buildFullTOC() {
         const suttaContainer = document.getElementById('sutta');
         const tocPanel = document.getElementById('smart-toc-panel');
@@ -1233,7 +1230,26 @@ window.toggleThePali = window.toggleThePali || function() {
             const level = heading.tagName.substring(1);
             const item = document.createElement('div');
             item.className = `toc-item toc-h${level}`;
-            item.textContent = heading.innerText.replace(/\s+/g, ' ').trim();
+            
+            // Ищем языковые блоки внутри текущего заголовка
+            const langSpans = heading.querySelectorAll('.pli-lang, .rus-lang, .eng-lang, .tha-lang');
+            
+            if (langSpans.length > 0) {
+                // Если языки разделены, клонируем их структуру
+                langSpans.forEach(span => {
+                    const clone = span.cloneNode(true);
+                    // Вычищаем элементы UI из клона (звездочки копирования, варианты)
+                    clone.querySelectorAll('.copyLink, .copyLink-start, .variant, .match').forEach(el => el.remove());
+                    // Очищаем текст от лишних пробелов/переносов
+                    clone.textContent = clone.textContent.replace(/\s+/g, ' ').trim();
+                    if (clone.textContent) {
+                        item.appendChild(clone);
+                    }
+                });
+            } else {
+                // Фолбэк для обычных заголовков без разделения на языки
+                item.textContent = heading.innerText.replace(/\s+/g, ' ').trim();
+            }
             
             item.onclick = (e) => {
                 e.preventDefault();
@@ -1250,21 +1266,29 @@ window.toggleThePali = window.toggleThePali || function() {
         });
     }
 
-    // 3. Обработка кликов
+    // 3. Обработка кликов и СИНХРОНИЗАЦИЯ языков
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('#smart-toc-btn');
         const panel = document.getElementById('smart-toc-panel');
+        const sutta = document.getElementById('sutta');
         const gearPanel = document.getElementById('smart-panel');
         
         if (btn) {
             e.stopPropagation();
-            // Если меню пустое (первый клик) - собираем оглавление
             if (panel.innerHTML.trim() === '') {
                 buildFullTOC();
             }
+
+            // Копируем классы скрытия языков из читалки в TOC прямо перед открытием
+            if (sutta) {
+                ['hide-pali', 'hide-english', 'hide-russian'].forEach(cls => {
+                    if (sutta.classList.contains(cls)) panel.classList.add(cls);
+                    else panel.classList.remove(cls);
+                });
+            }
+
             panel.classList.toggle('active');
             
-            // Если открыли оглавление - закрываем настройки
             if (gearPanel && gearPanel.classList.contains('active')) {
                 gearPanel.classList.remove('active');
             }
@@ -1276,11 +1300,11 @@ window.toggleThePali = window.toggleThePali || function() {
     // 4. Очистка меню при смене сутты
     window.addEventListener('suttaRenderedCentral', () => {
         const panel = document.getElementById('smart-toc-panel');
-        if (panel) panel.innerHTML = ''; // Сбрасываем старое меню
+        if (panel) panel.innerHTML = ''; 
         updatePillLabel();
     });
 
-    // 5. Обновление пилюли при скролле (только если она видна)
+    // 5. Обновление пилюли при скролле
     window.addEventListener('scroll', () => {
         const tocBtn = document.getElementById('smart-toc-btn');
         if (tocBtn && tocBtn.classList.contains('visible')) {

@@ -1230,3 +1230,39 @@
         max-height: calc(100vh - 64px);
     }
 }
+
+/* === Стили языков внутри оглавления === */
+.toc-item .pli-lang {
+    color: #777; /* Серый для Пали */
+    font-size: 0.85em; /* Чуть меньше основного текста */
+    line-height: 1.2;
+    margin-bottom: 2px;
+    display: block; /* Каждый язык с новой строки */
+}
+
+.toc-item .rus-lang, 
+.toc-item .eng-lang, 
+.toc-item .tha-lang {
+    color: #222; /* Темный для перевода */
+    font-weight: 500;
+    line-height: 1.2;
+    display: block;
+}
+
+/* Темная тема для оглавления */
+.dark .toc-item .pli-lang {
+    color: #999; /* Светло-серый для Пали */
+}
+
+.dark .toc-item .rus-lang, 
+.dark .toc-item .eng-lang, 
+.dark .toc-item .tha-lang {
+    color: #e0e0e0; /* Почти белый для перевода */
+}
+
+/* === Синхронизация видимости языков в TOC === */
+#smart-toc-panel.hide-pali .pli-lang,
+#smart-toc-panel.hide-russian .rus-lang,
+#smart-toc-panel.hide-english .eng-lang {
+    display: none !important;
+}
