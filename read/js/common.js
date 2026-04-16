@@ -1176,3 +1176,98 @@ window.toggleThePali = window.toggleThePali || function() {
         }
     });
 };
+
+
+// Вот, Павел, оптимизированная функция
+(function() {
+    let headingsCache = null;
+    let tocCreated = false;
+
+    // Функция поиска текущего заголовка (без построения списка)
+    function updatePillLabel() {
+        const suttaContainer = document.getElementById('sutta');
+        if (!suttaContainer) return;
+
+        // Если заголовков еще нет в кеше, пробуем найти хотя бы h1
+        const h1 = suttaContainer.querySelector('h1');
+        const pillLabel = document.getElementById('smart-toc-current');
+        
+        // Поиск текущего активного элемента среди всех hX
+        const allHeadings = suttaContainer.querySelectorAll('h1, h2, h3, h4, h5, h6');
+        let current = h1;
+        const eyeLevel = 140;
+
+        allHeadings.forEach(h => {
+            if (h.getBoundingClientRect().top <= eyeLevel) {
+                current = h;
+            }
+        });
+
+        if (pillLabel && current) {
+            pillLabel.textContent = current.innerText.replace(/\s+/g, ' ').trim();
+        }
+    }
+
+    // Полная сборка оглавления ТОЛЬКО при клике
+    function buildFullTOC() {
+        const suttaContainer = document.getElementById('sutta');
+        const tocPanel = document.getElementById('smart-toc-panel');
+        if (!suttaContainer || !tocPanel) return;
+
+        const allHeadings = suttaContainer.querySelectorAll('h1, h2, h3, h4, h5, h6');
+        tocPanel.innerHTML = ''; // Очистка
+
+        allHeadings.forEach((heading, index) => {
+            const level = heading.tagName.substring(1);
+            const item = document.createElement('div');
+            item.className = `toc-item toc-h${level}`;
+            item.textContent = heading.innerText.trim();
+            
+            item.onclick = (e) => {
+                e.preventDefault();
+                const offset = 120;
+                const targetY = window.pageYOffset + heading.getBoundingClientRect().top - offset;
+                window.scrollTo({ top: targetY, behavior: 'smooth' });
+                
+                // Подсветка активного сегмента
+                if (typeof window.activateSegmentForTTS === 'function') {
+                    window.activateSegmentForTTS(heading);
+                }
+                
+                tocPanel.classList.remove('active');
+            };
+            tocPanel.appendChild(item);
+        });
+        tocCreated = true;
+    }
+
+    // Слушатель клика по кнопке оглавления
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('#smart-toc-btn');
+        if (btn) {
+            e.stopPropagation();
+            const panel = document.getElementById('smart-toc-panel');
+            
+            // Собираем список только при первом открытии
+            if (!tocCreated) buildFullTOC();
+            
+            panel.classList.toggle('active');
+        }
+    });
+
+    // Сброс кеша при загрузке новой сутты
+    window.addEventListener('suttaRenderedCentral', () => {
+        tocCreated = false;
+        headingsCache = null;
+        updatePillLabel();
+    });
+
+    // Мониторинг скролла (только текст на кнопке)
+    window.addEventListener('scroll', () => {
+        // Запускаем обновление метки только если кнопка видна (аналог логики шестеренки)
+        const gearBtn = document.getElementById('smart-gear-btn');
+        if (gearBtn && gearBtn.classList.contains('visible')) {
+            updatePillLabel();
+        }
+    }, { passive: true });
+})();
