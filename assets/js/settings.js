@@ -993,22 +993,6 @@ document.addEventListener("keydown", (event) => {
       }
     }
  
- 
- // --- 2. Оглавление (TOC) Alt + W ---
-    if (event.altKey && event.code === "KeyW") {
-        event.preventDefault();
-        const tocBtn = document.getElementById('smart-toc-btn');
-        const gearBtn = document.getElementById('smart-gear-btn');
-        
-        if (tocBtn && gearBtn) {
-            // Делаем кнопки физически видимыми
-            tocBtn.classList.add('visible');
-            gearBtn.classList.add('visible');
-            // Эмулируем клик для открытия оглавления
-            tocBtn.click();
-        }
-    }
- 
     // Обработчик для Alt+P в любой раскладке
   // Проверяем Alt и физическое расположение клавиши P (код KeyP)
   if (event.altKey && event.code === "KeyP") {
@@ -1170,6 +1154,29 @@ if (event.altKey && event.code === "KeyR") {
         voiceLink.click();
     }
 }
+
+
+
+    if (event.altKey && event.code === "KeyS") {
+      // Имитируем клик по кнопке
+      settingsButton.click();
+    }
+
+
+ // --- 2. Оглавление (TOC) Alt + W ---
+    if (event.altKey && event.code === "KeyW") {
+        event.preventDefault();
+        const tocBtn = document.getElementById('smart-toc-btn');
+        const gearBtn = document.getElementById('smart-gear-btn');
+        
+        if (tocBtn && gearBtn) {
+            // Делаем кнопки физически видимыми
+            tocBtn.classList.add('visible');
+            gearBtn.classList.add('visible');
+            // Эмулируем клик для открытия оглавления
+            tocBtn.click();
+        }
+    }
   
 //alt + G history toggle
  function handleHistoryToggle() {
