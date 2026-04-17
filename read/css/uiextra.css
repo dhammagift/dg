@@ -1123,6 +1123,18 @@ smart TOC
     flex-shrink: 0;
 }
 
+
+/* Состояние только с иконкой (в самом верху страницы) */
+#smart-toc-btn.icon-only {
+    max-width: 30px; 
+    padding: 5px;
+    justify-content: center;
+}
+
+#smart-toc-btn.icon-only span {
+    display: none;
+}
+
 #smart-toc-current {
     font-size: 16px;
     white-space: nowrap;
