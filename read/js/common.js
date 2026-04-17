@@ -1230,29 +1230,13 @@ window.toggleThePali = window.toggleThePali || function() {
 
 // Логика кнопки оглавления (TOC) - SPA-защита, слежение и автоцентрирование
 (function() {
-    let activeSlug = ''; // Для отслеживания смены текста в SPA-режиме
+    let activeSlug = ''; 
 
-    // Вспомогательная функция для заглавной первой буквы
     const capitalize = (str) => {
         if (!str) return '';
         return str.charAt(0).toUpperCase() + str.slice(1);
     };
 
-    // Очистка от знаков ТОЛЬКО по краям слова (сохраняет дефисы внутри, как "какой-то")
-    const cleanWordEdges = (str) => {
-        return str.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
-    };
-    
-    // Очистка целой строки (применяется к именам спикеров)
-    const cleanString = (str) => {
-        if (!str) return '';
-        return str.split(/\s+/)
-                  .map(w => cleanWordEdges(w))
-                  .filter(w => w.length > 0)
-                  .join(' ');
-    };
-
-    // Универсальная функция для синхронизации видимости языков между текстом и оглавлением
     window.syncTOCLanguageVisibility = function() {
         const sutta = document.getElementById('sutta');
         const panel = document.getElementById('smart-toc-panel');
@@ -1269,7 +1253,6 @@ window.toggleThePali = window.toggleThePali || function() {
         });
     };
 
-    // 1. Единая функция синхронизации: обновляет кнопку и двигает панель
     function syncTOC() {
         const suttaContainer = document.getElementById('sutta');
         const pillLabel = document.getElementById('smart-toc-current');
@@ -1278,7 +1261,6 @@ window.toggleThePali = window.toggleThePali || function() {
 
         if (!suttaContainer || !pillLabel) return;
 
-        // ЛОГИКА: Прячем текст кнопки в зоне шапки (до 90px), оставляя только иконку
         let st = window.pageYOffset || document.documentElement.scrollTop;
         if (st <= 90) {
             if (tocBtn) tocBtn.classList.add('icon-only');
@@ -1286,7 +1268,6 @@ window.toggleThePali = window.toggleThePali || function() {
             if (tocBtn) tocBtn.classList.remove('icon-only');
         }
 
-        // Защита SPA: если поменялся URL (slug), сбрасываем оглавление
         const urlParams = new URLSearchParams(window.location.search);
         const currentSlug = urlParams.get('q') || '';
         if (activeSlug !== currentSlug) {
@@ -1297,7 +1278,6 @@ window.toggleThePali = window.toggleThePali || function() {
             }
         }
 
-        // Синхронизируем с текущим селектором элементов в TOC
         const hasInternalHeaders = suttaContainer.querySelector('h3, h4, h5, h6') !== null;
         let selector = 'h1, h2'; 
         if (hasInternalHeaders) {
@@ -1333,14 +1313,20 @@ window.toggleThePali = window.toggleThePali || function() {
             }
         }
 
-        // Обновляем подпись на кнопке
         if (headings[activeIndex].tagName.startsWith('H')) {
-            pillLabel.textContent = capitalize(headings[activeIndex].innerText.replace(/\s+/g, ' ').trim());
+            let labelText = headings[activeIndex].innerText.replace(/\s+/g, ' ').trim();
+            // Если это Виная, берем текст конкретного языка для кнопки
+            if (headings[activeIndex].classList.contains('inserted-heading')) {
+               const isRu = window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/');
+               const isTh = window.location.pathname.includes('/th/');
+               let tSpan = headings[activeIndex].querySelector(isRu ? '.rus-lang' : (isTh ? '.tha-lang' : '.eng-lang')) || headings[activeIndex].querySelector('.eng-lang');
+               if (tSpan) labelText = tSpan.textContent.trim();
+            }
+            pillLabel.textContent = capitalize(labelText);
         } else {
             pillLabel.textContent = "Оглавление";
         }
 
-        // Синхронизируем выделение в открытой панели
         if (tocPanel && tocPanel.classList.contains('active')) {
             const tocItems = tocPanel.querySelectorAll('.toc-item');
             const newActive = tocItems[activeIndex];
@@ -1362,7 +1348,6 @@ window.toggleThePali = window.toggleThePali || function() {
         }
     }
 
-    // 2. Сборка оглавления с сохранением структуры языков
     function buildFullTOC() {
         const suttaContainer = document.getElementById('sutta');
         const tocPanel = document.getElementById('smart-toc-panel');
@@ -1385,31 +1370,54 @@ window.toggleThePali = window.toggleThePali || function() {
 
         const firstContentBlock = suttaContainer.querySelector('p, blockquote, .rule');
 
-        const vinayaDict = [
-            { match: /final ruling/i, pli: 'Paññatti', rus: 'Окончательное правило', eng: 'Final ruling', tha: 'บัญญัติ' },
-            { match: /preliminary ruling/i, pli: 'Mūlapaññatti', rus: 'Предварительное правило', eng: 'Preliminary ruling', tha: 'มูลบัญญัติ' },
-            { match: /origin story/i, pli: 'Nidāna', rus: 'История происхождения', eng: 'Origin story', tha: 'นิทาน' },
-            { match: /word commentary/i, pli: 'Padabhājaniya', rus: 'Комментарий к словам', eng: 'Word commentary', tha: 'ปทภาชนีย์' }
-        ];
-
         elements.forEach((el) => {
             let tocClassType = 'h6'; 
             let text = el.innerText.replace(/\s+/g, ' ').trim();
 
             if (!text) return;
 
+            // === ИДЕАЛЬНО ЧИСТАЯ ЛОГИКА ДЛЯ ВИНАИ ===
+            if (el.classList.contains('inserted-heading')) {
+                const isRuPath = window.location.pathname.includes('/r/') || window.location.pathname.includes('/ru/') || window.location.pathname.includes('/ml/');
+                const isThPath = window.location.pathname.includes('/th/');
+                
+                let targetLangClass = isRuPath ? '.rus-lang' : (isThPath ? '.tha-lang' : '.eng-lang');
+                let span = el.querySelector(targetLangClass) || el.querySelector('.eng-lang');
+                
+                let displayText = span ? span.textContent.replace(/\s+/g, ' ').trim() : text;
+
+                if (el.tagName.startsWith('H')) {
+                    tocClassType = 'h' + el.tagName.substring(1); 
+                }
+
+                const item = document.createElement('div');
+                item.className = `toc-item toc-${tocClassType}`;
+                item.textContent = capitalize(displayText); 
+                
+                item.style.cursor = 'pointer';
+                item.onclick = (e) => {
+                    e.stopPropagation();
+                    tocPanel.classList.remove('active');
+                    const offset = 120;
+                    const targetY = window.pageYOffset + el.getBoundingClientRect().top - offset;
+                    window.scrollTo({ top: targetY, behavior: 'smooth' });
+                    if (typeof window.activateSegmentForTTS === 'function') {
+                        window.activateSegmentForTTS(el);
+                    }
+                };
+                tocPanel.appendChild(item);
+                return; // Полностью пропускаем этот элемент дальше
+            }
+            // ===========================================
+
             let isCustomMultiLang = false;
             let customLangData = {};
-
-            let matchedVinayaTerm = vinayaDict.find(item => item.match.test(text));
 
             if (el.tagName.startsWith('H')) {
                 tocClassType = 'h' + el.tagName.substring(1); 
             } else if (el.classList.contains('speaker')) {
-                // Чистим имя спикера аккуратно по краям слов
-                let cleanSpeaker = capitalize(cleanString(text));
-                if (cleanSpeaker === lastSpeakerText) return; 
-                lastSpeakerText = cleanSpeaker;
+                if (text === lastSpeakerText) return; 
+                lastSpeakerText = text;
                 tocClassType = 'speaker';
             } else if (el.classList.contains('verse-line')) {
                 const parentBlock = el.closest('blockquote, section');
@@ -1423,40 +1431,26 @@ window.toggleThePali = window.toggleThePali || function() {
                 tocClassType = 'v-line';
                 isCustomMultiLang = true;
 
-                const getLabelWords = (langClass) => {
+                const getFirstWord = (langClass) => {
                     const span = el.querySelector('.' + langClass);
                     if (span) {
-                        const words = span.textContent.trim().split(/\s+/)
-                                          .map(w => cleanWordEdges(w))
-                                          .filter(w => w.length > 0);
-                        
-                        if (words.length === 0) return '';
-                        
-                        let label = words[0];
+                        let cleanText = span.textContent.replace(/["“”«»'‘’]/g, '').replace(/\s+/g, ' ').trim();
+                        const words = cleanText.split(/[\s,.;:!?]/);
+                        let label = words[0] || '';
                         if (label.length <= 3 && words.length > 1) {
                             label += ' ' + words[1];
                         }
-                        return capitalize(label);
+                        return label;
                     }
                     return '';
                 };
 
-                const pliFirst = getLabelWords('pli-lang');
-                const rusFirst = getLabelWords('rus-lang');
-                const engFirst = getLabelWords('eng-lang');
-                const thaFirst = getLabelWords('tha-lang');
+                const pliFirst = getFirstWord('pli-lang');
+                const rusFirst = getFirstWord('rus-lang');
+                const engFirst = getFirstWord('eng-lang');
+                const thaFirst = getFirstWord('tha-lang');
 
-                let fallbackFirst = '';
-                const fallbackWords = text.trim().split(/\s+/)
-                                          .map(w => cleanWordEdges(w))
-                                          .filter(w => w.length > 0);
-                if (fallbackWords.length > 0) {
-                    fallbackFirst = fallbackWords[0];
-                    if (fallbackFirst.length <= 3 && fallbackWords.length > 1) {
-                        fallbackFirst += ' ' + fallbackWords[1];
-                    }
-                    fallbackFirst = capitalize(fallbackFirst);
-                }
+                const fallbackFirst = text.replace(/["“”«»'‘’]/g, '').split(/[\s,.;:!?]/)[0] || '';
 
                 customLangData = {
                     pli: 'Gāthā' + (pliFirst ? ` ${pliFirst}...` : (fallbackFirst ? ` ${fallbackFirst}...` : '')),
@@ -1474,19 +1468,6 @@ window.toggleThePali = window.toggleThePali || function() {
                     rus: 'Без вины',
                     eng: 'Non-offense',
                     tha: 'อนาปัตติ'
-                };
-            }
-
-            if (matchedVinayaTerm) {
-                isCustomMultiLang = true;
-                customLangData = matchedVinayaTerm;
-            } else if ((tocClassType === 'rule' || tocClassType === 'h3' || tocClassType === 'h4') && !el.querySelector('.pli-lang') && el.querySelector('.eng-lang')) {
-                isCustomMultiLang = true;
-                customLangData = {
-                    pli: 'Sikkhāpada', 
-                    rus: capitalize(text), 
-                    eng: capitalize(text),
-                    tha: capitalize(text)
                 };
             }
 
@@ -1544,27 +1525,18 @@ window.toggleThePali = window.toggleThePali || function() {
                         let cleanText = clone.textContent.replace(/\s+/g, ' ').trim();
 
                         if (cleanText) {
-                            if (tocClassType === 'speaker') {
-                                cleanText = cleanString(cleanText);
-                            }
-                            if (cleanText) {
-                                clone.textContent = capitalize(cleanText) + ' '; 
-                                clone.style.cursor = 'pointer';
-                                clone.onclick = (e) => {
-                                    e.stopPropagation();
-                                    scrollAndHighlight(originalSpan);
-                                };
-                                item.appendChild(clone);
-                            }
+                            clone.textContent = capitalize(cleanText) + ' '; 
+                            clone.style.cursor = 'pointer';
+                            clone.onclick = (e) => {
+                                e.stopPropagation();
+                                scrollAndHighlight(originalSpan);
+                            };
+                            item.appendChild(clone);
                         }
                     });
                 } else {
-                    let displayString = text;
-                    if (tocClassType === 'speaker') {
-                        displayString = cleanString(displayString);
-                    }
-                    if (displayString) {
-                        item.textContent = capitalize(displayString);
+                    if (text) {
+                        item.textContent = capitalize(text);
                         item.onclick = () => scrollAndHighlight(el);
                     }
                 }
@@ -1581,7 +1553,6 @@ window.toggleThePali = window.toggleThePali || function() {
         syncTOC();
     }
 
-    // 3. Обработка кликов и управление видимостью
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('#smart-toc-btn');
         const panel = document.getElementById('smart-toc-panel');
@@ -1617,7 +1588,6 @@ window.toggleThePali = window.toggleThePali || function() {
         }
     });
 
-    // 4. Глобальные события сброса и отрисовки
     const resetTOC = () => {
         const panel = document.getElementById('smart-toc-panel');
         const tocBtn = document.getElementById('smart-toc-btn');
@@ -1635,7 +1605,6 @@ window.toggleThePali = window.toggleThePali || function() {
     window.addEventListener('suttaLoaded', resetTOC);
     window.addEventListener('dgSuttaRendered', resetTOC);
 
-    // 5. Мониторинг скролла
     window.addEventListener('scroll', () => {
         const tocBtn = document.getElementById('smart-toc-btn');
         if (tocBtn && tocBtn.classList.contains('visible')) {
