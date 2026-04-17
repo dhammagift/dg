@@ -1280,3 +1280,14 @@ smart TOC
 #smart-toc-panel.hide-english .eng-lang {
     display: none !important;
 }
+
+
+/* Адаптация оглавления для мобильных экранов по ширине (портретный режим) */
+@media (max-width: 600px) {
+    #smart-toc-panel {
+        position: fixed; /* Отвязываем от контейнера */
+        top: 60px; /* Отступ сверху под кнопкой */
+        right: max(20px, env(safe-area-inset-right, 0px)); /* Прижимаем вплотную к правому краю экрана */
+        max-width: calc(100vw - 40px); /* Гарантируем, что панель уместится по ширине с аккуратными отступами */
+    }
+}
