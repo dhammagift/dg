@@ -1346,184 +1346,103 @@ window.toggleThePali = window.toggleThePali || function() {
         }
     }
 
+    function syncTOC() {
+        const suttaContainer = document.getElementById('sutta');
+        const pillLabel = document.getElementById('smart-toc-current');
+        const tocPanel = document.getElementById('smart-toc-panel');
+        const tocBtn = document.getElementById('smart-toc-btn');
 
-function buildFullTOC() {
-    const suttaContainer = document.getElementById('sutta');
-    const tocPanel = document.getElementById('smart-toc-panel');
-    if (!suttaContainer || !tocPanel) return;
+        if (!suttaContainer || !pillLabel) return;
 
-    // Определяем, относится ли текущий текст к Винае по URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const currentSlug = urlParams.get('q') || '';
-    const isVinaya = /bu-|bi-|kd|pvr|pli-tv/.test(currentSlug);
-
-    const hasInternalHeaders = suttaContainer.querySelector('h3, h4, h5, h6') !== null;
-    
-    let selector = 'h1, h2'; 
-    if (hasInternalHeaders) {
-        selector += ', h3';
-        // Если это не Виная, разрешаем собирать глубокие уровни заголовков
-        if (!isVinaya) {
-            selector += ', h4, h5, h6';
-        }
-    } else {
-        selector += ', .speaker, .verse-line, .uddana-intro';
-    }
-
-    const elements = suttaContainer.querySelectorAll(selector);
-    tocPanel.innerHTML = '';
-
-    let lastSpeakerText = '';
-    let lastPoemBlock = null;
-    let currentLevel = 2; 
-
-    const firstContentBlock = suttaContainer.querySelector('p, blockquote, .rule');
-
-    elements.forEach((el) => {
-        let text = el.innerText.replace(/[()\[\]"“”«»'‘’]/g, '').replace(/\s+/g, ' ').trim();
-        if (!text) return;
-
-        if (el.tagName.startsWith('H')) {
-            currentLevel = parseInt(el.tagName.substring(1));
-        }
-
-        let tocClassType = 'h' + currentLevel;
-        let extraClass = '';
-
-        const isRuPath = window.location.pathname.includes('/r/') || window.location.pathname.includes('/ru/') || window.location.pathname.includes('/ml/');
-        const isThPath = window.location.pathname.includes('/th/');
-        const targetLang = isRuPath ? 'rus-lang' : (isThPath ? 'tha-lang' : 'eng-lang');
-
-        if (el.classList.contains('inserted-heading')) {
-            let span = el.querySelector('.' + targetLang) || el.querySelector('.eng-lang');
-            let displayText = span ? span.textContent.replace(/[()\[\]"“”«»'‘’]/g, '').replace(/\s+/g, ' ').trim() : text;
-
-            const item = document.createElement('div');
-            item.className = `toc-item toc-${tocClassType}`;
-            item.textContent = capitalize(displayText); 
-            item.style.cursor = 'pointer';
-            item.onclick = (e) => {
-                e.stopPropagation();
-                tocPanel.classList.remove('active');
-                const offset = 120;
-                const targetY = window.pageYOffset + el.getBoundingClientRect().top - offset;
-                window.scrollTo({ top: targetY, behavior: 'smooth' });
-                
-                // Восстановленный вызов TTS и подсветки
-                if (typeof window.activateSegmentForTTS === 'function') {
-                    window.activateSegmentForTTS(el);
-                }
-            };
-            tocPanel.appendChild(item);
-            return;
-        }
-
-        let isCustomMultiLang = false;
-        let customLangData = {};
-
-        if (el.classList.contains('speaker')) {
-            if (text === lastSpeakerText) return; 
-            lastSpeakerText = text;
-            extraClass = ' toc-speaker';
-        } else if (el.classList.contains('verse-line')) {
-            const parentBlock = el.closest('blockquote, section');
-            if (parentBlock && (parentBlock.querySelector('.uddana-intro') || parentBlock.previousElementSibling?.classList.contains('uddana-intro'))) return;
-
-            if (parentBlock && parentBlock === lastPoemBlock) return;
-            lastPoemBlock = parentBlock;
-            if (firstContentBlock && (firstContentBlock === parentBlock || firstContentBlock.contains(el))) return;
-            
-            extraClass = ' toc-v-line';
-            isCustomMultiLang = true;
-            
-            const getFirstWord = (langClass) => {
-                const span = el.querySelector('.' + langClass);
-                if (span) {
-                    let cleanText = span.textContent.replace(/[()\[\]"“”«»'‘’:;]/g, '').replace(/\s+/g, ' ').trim();
-                    const words = cleanText.split(/[\s,.;:!?]/);
-                    let label = words[0] || '';
-                    if (label.length <= 3 && words.length > 1) label += ' ' + words[1];
-                    return label;
-                }
-                return '';
-            };
-            customLangData = {
-                pli: 'Gāthā' + (getFirstWord('pli-lang') ? ` ${getFirstWord('pli-lang')}...` : ''),
-                rus: 'Гатха' + (getFirstWord('rus-lang') ? ` ${getFirstWord('rus-lang')}...` : ''),
-                eng: 'Gatha' + (getFirstWord('eng-lang') ? ` ${getFirstWord('eng-lang')}...` : ''),
-                tha: 'คาถา' + (getFirstWord('tha-lang') ? ` ${getFirstWord('tha-lang')}...` : '')
-            };
-        } else if (el.classList.contains('uddana-intro')) {
-            extraClass = ' toc-uddana';
-            isCustomMultiLang = true;
-            customLangData = {
-                pli: 'Tassuddānaṁ',
-                rus: 'Оглавление',
-                eng: 'Summary',
-                tha: 'สรุป'
-            };
-        }
-
-        const item = document.createElement('div');
-        item.className = `toc-item toc-${tocClassType}${extraClass}`;
-
-        const scrollAndHighlight = (targetElement) => {
-            tocPanel.classList.remove('active');
-            const offset = 120;
-            const targetY = window.pageYOffset + targetElement.getBoundingClientRect().top - offset;
-            window.scrollTo({ top: targetY, behavior: 'smooth' });
-            
-            // Восстановленный вызов TTS и подсветки
-            if (typeof window.activateSegmentForTTS === 'function') {
-                window.activateSegmentForTTS(targetElement);
-            }
-        };
-
-        if (isCustomMultiLang) {
-            let targetLangText = isRuPath ? customLangData.rus : (isThPath ? customLangData.tha : customLangData.eng);
-            const langs = [
-                { cls: 'pli-lang', txt: customLangData.pli },
-                { cls: targetLang, txt: targetLangText }
-            ];
-            langs.forEach(l => {
-                const span = document.createElement('span');
-                span.className = l.cls;
-                span.textContent = capitalize(l.txt) + ' '; 
-                span.style.cursor = 'pointer';
-                span.onclick = (e) => {
-                    e.stopPropagation();
-                    scrollAndHighlight(el);
-                };
-                item.appendChild(span);
-            });
+        let st = window.pageYOffset || document.documentElement.scrollTop;
+        if (st <= 90) {
+            if (tocBtn) tocBtn.classList.add('icon-only');
         } else {
-            const langSpans = el.querySelectorAll('.pli-lang, .rus-lang, .eng-lang, .tha-lang');
-            if (langSpans.length > 0) {
-                langSpans.forEach(originalSpan => {
-                    const clone = originalSpan.cloneNode(true);
-                    clone.querySelectorAll('.copyLink, .copyLink-start, .variant').forEach(child => child.remove());
-                    let cleanText = clone.textContent.replace(/[()\[\]"“”«»'‘’]/g, '').replace(/\s+/g, ' ').trim();
-                    if (cleanText) {
-                        clone.textContent = capitalize(cleanText) + ' '; 
-                        clone.style.cursor = 'pointer';
-                        clone.onclick = (e) => {
-                            e.stopPropagation();
-                            scrollAndHighlight(originalSpan);
-                        };
-                        item.appendChild(clone);
-                    }
-                });
-            } else {
-                item.textContent = capitalize(text);
-                item.onclick = () => scrollAndHighlight(el);
+            if (tocBtn) tocBtn.classList.remove('icon-only');
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentSlug = urlParams.get('q') || '';
+        if (activeSlug !== currentSlug) {
+            activeSlug = currentSlug;
+            if (tocPanel) {
+                tocPanel.innerHTML = '';
+                tocPanel.classList.remove('active');
             }
         }
-        if (item.innerHTML.trim() !== '' || item.textContent.trim() !== '') tocPanel.appendChild(item);
-    });
 
-    if (typeof window.syncTOCLanguageVisibility === 'function') window.syncTOCLanguageVisibility();
-    syncTOC();
-}
+        const hasInternalHeaders = suttaContainer.querySelector('h3, h4, h5, h6') !== null;
+        let selector = 'h1, h2'; 
+        if (hasInternalHeaders) {
+            selector += ', h3, h4, h5, h6';
+        } else {
+            selector += ', .speaker, .rule, .subrule, .verse-line, .anapatti, .uddana-intro';
+        }
+        
+        const headings = Array.from(suttaContainer.querySelectorAll(selector)).filter(el => {
+            if (el.classList.contains('verse-line')) {
+                const parentBlock = el.closest('blockquote, section');
+                if (parentBlock && (parentBlock.querySelector('.uddana-intro') || parentBlock.previousElementSibling?.classList.contains('uddana-intro'))) return false;
+
+                const firstContentBlock = suttaContainer.querySelector('p, blockquote, .rule');
+                if (firstContentBlock && (firstContentBlock === parentBlock || firstContentBlock.contains(el))) return false;
+                if (el !== parentBlock?.querySelector('.verse-line')) return false; 
+            }
+            return el.innerText.trim().length > 0;
+        });
+
+        if (headings.length === 0) {
+            if (tocBtn) tocBtn.style.display = 'none';
+            return;
+        } else {
+            if (tocBtn) tocBtn.style.display = 'flex';
+        }
+
+        let activeIndex = 0;
+        const eyeLevel = window.innerHeight * 0.4;
+
+        for (let i = headings.length - 1; i >= 0; i--) {
+            if (headings[i].getBoundingClientRect().top <= eyeLevel) {
+                activeIndex = i;
+                break;
+            }
+        }
+
+        if (headings[activeIndex].tagName.startsWith('H')) {
+            let labelText = headings[activeIndex].innerText.replace(/\s+/g, ' ').trim();
+            if (headings[activeIndex].classList.contains('inserted-heading')) {
+               const isRu = window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/');
+               const isTh = window.location.pathname.includes('/th/');
+               let tSpan = headings[activeIndex].querySelector(isRu ? '.rus-lang' : (isTh ? '.tha-lang' : '.eng-lang')) || headings[activeIndex].querySelector('.eng-lang');
+               if (tSpan) labelText = tSpan.textContent.trim();
+            }
+            pillLabel.textContent = capitalize(labelText);
+        } else if (headings[activeIndex].classList.contains('uddana-intro')) {
+            pillLabel.textContent = "Содержание"; 
+        } else {
+            pillLabel.textContent = "Оглавление";
+        }
+
+        if (tocPanel && tocPanel.classList.contains('active')) {
+            const tocItems = tocPanel.querySelectorAll('.toc-item');
+            const newActive = tocItems[activeIndex];
+            const currentActive = tocPanel.querySelector('.toc-item.active');
+
+            if (newActive && currentActive !== newActive) {
+                if (currentActive) currentActive.classList.remove('active');
+                newActive.classList.add('active');
+
+                const panelHeight = tocPanel.clientHeight;
+                const itemTop = newActive.offsetTop;
+                const itemHeight = newActive.clientHeight;
+
+                tocPanel.scrollTo({
+                    top: itemTop - (panelHeight / 2) + (itemHeight / 2),
+                    behavior: 'smooth'
+                });
+            }
+        }
+    }
 
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('#smart-toc-btn');
