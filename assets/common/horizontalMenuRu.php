@@ -156,8 +156,8 @@ DG
          
     href="?rp=true&tts=true&sacca=true"-->     
 <li>
-         <div class="dropdown-item ">DG
- <a class="text-reset" target="_blank"   href="/assets/common/o.html">Принципы Перевода</a>
+         <div class="dropdown-item ">Dhamma.gift
+ <a class="text-reset" target="_blank"   href="/assets/common/o.html">Принципы</a>
    <a class="text-reset" target="" href="/assets/common/rationale.html">Проблематика</a>  
        </div>
          </li> 
