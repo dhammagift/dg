@@ -100,8 +100,14 @@ include 'scripts/search-handler.php';
 
 <!--  Core theme CSS (includes Bootstrap)-->
 <!-- -->
+
+
 <link href="/assets/css/styles.css" rel="stylesheet" />
 <link href="/assets/css/extrastyles.css" rel="stylesheet" />
+
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.googleapis.com" crossorigin>
+
 <script src="/assets/js/loadCssJsMain.js"></script>
 
 <script src="/assets/js/jquery-3.7.0.min.js"></script>

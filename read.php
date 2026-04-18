@@ -88,9 +88,13 @@ if (isset($_GET['ml']) && $_GET['ml'] === 'on') {
 
 <!--  Core theme CSS (includes Bootstrap)-->
 <link href="/assets/css/styles.css" rel="stylesheet" />
-<script src="/assets/js/loadCssJsMain.js"></script>
+
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.googleapis.com" crossorigin>
+
 <link href="/assets/css/extrastyles.css" rel="stylesheet" />
 
+<script src="/assets/js/loadCssJsMain.js"></script>
 <script src="/assets/js/jquery-3.7.0.min.js"></script>
 <script>
 // Получаем текущие параметры URL

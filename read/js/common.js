@@ -1346,6 +1346,7 @@ window.toggleThePali = window.toggleThePali || function() {
         }
     }
 
+
 function buildFullTOC() {
     const suttaContainer = document.getElementById('sutta');
     const tocPanel = document.getElementById('smart-toc-panel');
@@ -1407,6 +1408,11 @@ function buildFullTOC() {
                 const offset = 120;
                 const targetY = window.pageYOffset + el.getBoundingClientRect().top - offset;
                 window.scrollTo({ top: targetY, behavior: 'smooth' });
+                
+                // Восстановленный вызов TTS и подсветки
+                if (typeof window.activateSegmentForTTS === 'function') {
+                    window.activateSegmentForTTS(el);
+                }
             };
             tocPanel.appendChild(item);
             return;
@@ -1466,6 +1472,11 @@ function buildFullTOC() {
             const offset = 120;
             const targetY = window.pageYOffset + targetElement.getBoundingClientRect().top - offset;
             window.scrollTo({ top: targetY, behavior: 'smooth' });
+            
+            // Восстановленный вызов TTS и подсветки
+            if (typeof window.activateSegmentForTTS === 'function') {
+                window.activateSegmentForTTS(targetElement);
+            }
         };
 
         if (isCustomMultiLang) {
