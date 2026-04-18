@@ -147,10 +147,9 @@ echo '<!--
          <div class="dropdown-item ">
 DG
             <a class="text-reset" target="" href="/ru/read.php#dhamma">Сутты</a>    
-      <a class="text-reset" target="" 
-    href="javascript:void(0)"   
- onclick="toggleQuickModal();"     
-      >Ссылки</a> 
+    
+	            <a class="text-reset" target="" href="/ru/read.php#vinaya">Виная</a>    
+
          </div>
          </li>
              <li>
