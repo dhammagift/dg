@@ -177,29 +177,13 @@ echo '<!--
 <li>
   <div class="dropdown-item">
     <i class="' . $iconimportant . '"></i>
-    <a class="text-reset" target="_blank" title="open Dict.Dhamma.Gift in extra window (Alt + N)" href="javascript:void(0)" onclick="openWithQuery(event, \'https://dict.dhamma.gift/?silent&source=pwa&q={{q}}\')">Digital Pāḷi Dict</a>
+    <a class="text-reset" target="_blank" title="open Dict.Dhamma.Gift in extra window (Alt + N)" href="javascript:void(0)" onclick="openWithQuery(event, \'https://dict.dhamma.gift/?silent&theme={{theme}}&source=pwa&q={{q}}\')">Digital Pāḷi Dict</a>
 
     <a class="text-reset" title="download DPD for offline usage" target="_blank" href="https://digitalpalidictionary.github.io/">Offline</a>
     <a class="text-reset" target="_blank" title="Browser Extentions" href="#links">Extentions</a>
   </div>
 </li>
 
-<li>
-  <div class="dropdown-item">
-    <i class="' . $iconimportant . '"></i>
-    <a class="text-reset" target="" title="open Dict.Dhamma.Gift in extra window (Alt + N)" href="javascript:void(0)" onclick="
-      const q = document.getElementById(\'paliauto\')?.value || \'\';
-      const url = q.trim() ? 
-        \'https://dict.dhamma.gift/?silent&source=pwa&q=\' + encodeURIComponent(q) : 
-        \'https://dict.dhamma.gift/\';
-      openDictionaryWindow(url);
-    ">Digital Pāḷi Dict</a>
-
-
-    <a class="text-reset" title="download DPD for offline usage" target="_blank" href="https://digitalpalidictionary.github.io/">Offline</a>
-    <a class="text-reset" target="_blank"  title="Browser Extentions" href="#links">Extentions</a>
-  </div>
-</li>
 
        <li>
          <div class="dropdown-item ">

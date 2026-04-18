@@ -209,9 +209,10 @@ DG
 <li>
   <div class="dropdown-item">
     <i class="' . $iconimportant . '"></i>
-    <a class="text-reset" target="_blank" title="open Dict.Dhamma.Gift in extra window (Alt + N)" href="javascript:void(0)" onclick="openWithQuery(event, \'https://dict.dhamma.gift/?silent&source=pwa&q={{q}}\')">Digital Pāḷi Dict</a>
-    <a class="text-reset" title="download DPD for offline usage" target="_blank" href="https://digitalpalidictionary.github.io/">Offline</a>
-    <a class="text-reset" target="_blank" title="Browser Extentions" href="#links">Extentions</a>
+    <a class="text-reset" target="_blank" title="открыть Dict.Dhamma.Gift в новом окне (Alt + N)" href="javascript:void(0)" onclick="openWithQuery(event, \'https://dict.dhamma.gift/ru/?silent&theme={{theme}}&source=pwa&q={{q}}\')">Digital Pāḷi Dict</a>
+
+    <a class="text-reset" target="_blank" title="Скачать DPD для использования оффлайн" href="https://digitalpalidictionary.github.io/">Оффлайн</a>
+    <a class="text-reset" target="" title="Расширения для браузеров" href="#links">Расширения</a>
   </div>
 </li>
           <li>
