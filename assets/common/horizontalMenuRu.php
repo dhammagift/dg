@@ -143,15 +143,8 @@ echo '<!--
   <ul class="dropdown-menu" aria-labelledby="MenuRussian">
        
   
-           <li>
-         <div class="dropdown-item ">
-DG
-            <a class="text-reset" target="" href="/ru/read.php#dhamma">Сутты</a>    
-    
-	            <a class="text-reset" target="" href="/ru/read.php#vinaya">Виная</a>    
+  <li><a class="dropdown-item" href="/ru/read.php#dhamma">Dhamma.gift Сутты</a></li>
 
-         </div>
-         </li>
              <li>
          <div class="dropdown-item ">
 DG
