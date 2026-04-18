@@ -1351,12 +1351,22 @@ function buildFullTOC() {
     const tocPanel = document.getElementById('smart-toc-panel');
     if (!suttaContainer || !tocPanel) return;
 
+    // Определяем, относится ли текущий текст к Винае по URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentSlug = urlParams.get('q') || '';
+    const isVinaya = /bu-|bi-|kd|pvr|pli-tv/.test(currentSlug);
+
     const hasInternalHeaders = suttaContainer.querySelector('h3, h4, h5, h6') !== null;
+    
     let selector = 'h1, h2'; 
     if (hasInternalHeaders) {
-        selector += ', h3, h4, h5, h6';
+        selector += ', h3';
+        // Если это не Виная, разрешаем собирать глубокие уровни заголовков
+        if (!isVinaya) {
+            selector += ', h4, h5, h6';
+        }
     } else {
-        selector += ', .speaker, .rule, .subrule, .verse-line, .anapatti, .uddana-intro';
+        selector += ', .speaker, .verse-line, .uddana-intro';
     }
 
     const elements = suttaContainer.querySelectorAll(selector);
@@ -1369,7 +1379,6 @@ function buildFullTOC() {
     const firstContentBlock = suttaContainer.querySelector('p, blockquote, .rule');
 
     elements.forEach((el) => {
-        // Очистка основного текста от скобок и кавычек
         let text = el.innerText.replace(/[()\[\]"“”«»'‘’]/g, '').replace(/\s+/g, ' ').trim();
         if (!text) return;
 
@@ -1417,13 +1426,13 @@ function buildFullTOC() {
             if (parentBlock && parentBlock === lastPoemBlock) return;
             lastPoemBlock = parentBlock;
             if (firstContentBlock && (firstContentBlock === parentBlock || firstContentBlock.contains(el))) return;
+            
             extraClass = ' toc-v-line';
             isCustomMultiLang = true;
             
             const getFirstWord = (langClass) => {
                 const span = el.querySelector('.' + langClass);
                 if (span) {
-                    // Очистка от скобок и кавычек для первых слов гатх
                     let cleanText = span.textContent.replace(/[()\[\]"“”«»'‘’:;]/g, '').replace(/\s+/g, ' ').trim();
                     const words = cleanText.split(/[\s,.;:!?]/);
                     let label = words[0] || '';
@@ -1438,12 +1447,6 @@ function buildFullTOC() {
                 eng: 'Gatha' + (getFirstWord('eng-lang') ? ` ${getFirstWord('eng-lang')}...` : ''),
                 tha: 'คาถา' + (getFirstWord('tha-lang') ? ` ${getFirstWord('tha-lang')}...` : '')
             };
-        } else if (el.classList.contains('rule') || el.classList.contains('subrule')) {
-            extraClass = ' toc-rule';
-        } else if (el.classList.contains('anapatti')) {
-            extraClass = ' toc-anapatti';
-            isCustomMultiLang = true;
-            customLangData = { pli: 'Anāpatti', rus: 'Без вины', eng: 'Non-offense', tha: 'อนาปัตติ' };
         } else if (el.classList.contains('uddana-intro')) {
             extraClass = ' toc-uddana';
             isCustomMultiLang = true;
@@ -1488,7 +1491,6 @@ function buildFullTOC() {
                 langSpans.forEach(originalSpan => {
                     const clone = originalSpan.cloneNode(true);
                     clone.querySelectorAll('.copyLink, .copyLink-start, .variant').forEach(child => child.remove());
-                    // Очистка текста клона от скобок и кавычек
                     let cleanText = clone.textContent.replace(/[()\[\]"“”«»'‘’]/g, '').replace(/\s+/g, ' ').trim();
                     if (cleanText) {
                         clone.textContent = capitalize(cleanText) + ' '; 
@@ -1511,7 +1513,6 @@ function buildFullTOC() {
     if (typeof window.syncTOCLanguageVisibility === 'function') window.syncTOCLanguageVisibility();
     syncTOC();
 }
-
 
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('#smart-toc-btn');
