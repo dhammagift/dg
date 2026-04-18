@@ -145,7 +145,8 @@ echo '<!--
   
   <li><a class="dropdown-item" href="/ru/read.php#dhamma">Dhamma.gift Сутты</a></li>
 
-             <li>
+<li><a class="dropdown-item" href="/ru/read.php#vinaya">Dhamma.gift Патимоккха</a></li>
+     <!--            <li>
          <div class="dropdown-item ">
 DG
       <a class="text-reset" target="" href="/ru/pm.php?expand=true">Бхиккху Патимоккха</a>        
@@ -153,7 +154,7 @@ DG
          </div>
          </li>
          
-  <!--      href="?rp=true&tts=true&sacca=true"-->     
+    href="?rp=true&tts=true&sacca=true"-->     
 <li>
          <div class="dropdown-item ">DG
  <a class="text-reset" target="_blank"   href="/assets/common/o.html">Принципы Перевода</a>
