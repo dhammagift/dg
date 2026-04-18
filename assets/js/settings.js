@@ -1319,7 +1319,7 @@ localStorage.setItem('selectedScript', 'ISOPali');
 }
 
 if (applyButton) {
-  applyButton.addEventListener('click', function() {
+  applyButton.addEventListener('click', async function() {
     localStorage.setItem('selectedScript', scriptSelect.value);
     localStorage.setItem('selectedDict', dictSelect.value);
     
@@ -1331,13 +1331,14 @@ if (applyButton) {
     localStorage.setItem("firstVisitShowSettingsClosed", "true");
     saveExactScrollPosition(); 
     
-    // --- ИЗМЕНЕНО: Атомарная отправка настроек ---
-    if (typeof syncSettingsToCloud === 'function') syncSettingsToCloud();  
+    // Ждем завершения синхронизации перед релоадом
+    if (typeof syncSettingsToCloud === 'function') {
+        await syncSettingsToCloud();  
+    }
     
     location.reload();
   });
 }
-
 
   // Функция для применения сохраненного значения
 function applySavedDict(dict) {
@@ -2705,18 +2706,13 @@ window.triggerSelfDestruct = async function(reason = "terminated") {
 };
 
 // === АТОМАРНЫЕ ЗАПИСИ В ОБЛАКО ===
-
 window.syncSettingsToCloud = async function() {
-    // ПРОПУСКНОЙ ПУНКТ:
     if (!(await verifySessionActive())) return;
-
     if (!db || !getUid()) return;
     const uid = getUid();
     
-    // 1. Берем ТОЛЬКО те ключи, которые изменились (дифф)
     let settingsToSave = { ...window.dg_pendingSettingsUpdates };
 
-    // 2. Добавляем команды на удаление ключей (если пользователь их удалил)
     if (window.dg_deletedKeys && window.dg_deletedKeys.size > 0) {
         window.dg_deletedKeys.forEach(key => {
             if (!settingsToSave.hasOwnProperty(key)) {
@@ -2725,8 +2721,11 @@ window.syncSettingsToCloud = async function() {
         });
     }
 
-    // Если ничего не менялось — не дергаем базу
-    if (Object.keys(settingsToSave).length === 0) return;
+    // Если изменений нет, просто обновляем локальный штамп времени и выходим
+    if (Object.keys(settingsToSave).length === 0) {
+        if (typeof refreshSyncTimeUI === 'function') refreshSyncTimeUI();
+        return;
+    }
 
     try {
         await db.collection("users").doc(uid).set({
@@ -2734,7 +2733,6 @@ window.syncSettingsToCloud = async function() {
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
         
-        // 3. ОЧИСТКА: Обнуляем очереди только после успешной отправки
         window.dg_pendingSettingsUpdates = {};
         if (window.dg_deletedKeys) window.dg_deletedKeys.clear();
         window.dg_settingsChanged = false;
@@ -2843,31 +2841,33 @@ window.clearCloudHistory = async function() {
 
 // === УТИЛИТЫ И АВТОРИЗАЦИЯ ===
 window.forceSyncNow = async function() {
-    const uid = getUid();
-    if (!uid || !db) return; 
+    if (!(await verifySessionActive())) return;
+    if (!db || !getUid()) return;
 
     document.querySelectorAll('.fa-rotate').forEach(icon => icon.classList.add('fa-spin'));
     document.querySelectorAll('#btn-sync-now img').forEach(icon => icon.classList.add('custom-spin'));
 
     try {
-        // 1. Настройки
+        // Синхронизируем настройки, если они были изменены
         if (window.dg_settingsChanged) {
             await syncSettingsToCloud();
-            window.dg_settingsChanged = false; 
         }
 
-        // 2. Прогресс текущей страницы
+        // Прогресс текущей страницы
         const urlParams = new URLSearchParams(window.location.search);
         const qParam = urlParams.get('q');
         if (qParam) {
             let currentSlug = String(qParam).trim().toLowerCase();
             if (String(qParam).trim().startsWith('memo_')) currentSlug = String(qParam).trim();
-            if (typeof window.syncProgressItemToCloud === 'function') {
-                await window.syncProgressItemToCloud(currentSlug);
-            }
+            await window.syncProgressItemToCloud(currentSlug);
         }
 
-        await new Promise(res => setTimeout(res, 800));
+        // Ждем немного для визуального эффекта и гарантированного завершения
+        await new Promise(res => setTimeout(res, 500));
+        
+        // ОБЯЗАТЕЛЬНО обновляем время в конце, чтобы пользователь видел успех
+        if (typeof refreshSyncTimeUI === 'function') refreshSyncTimeUI();
+
     } catch (error) { 
         console.error("Sync error:", error); 
     } finally {
