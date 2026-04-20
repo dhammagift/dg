@@ -1,12 +1,25 @@
 #install Termux
 #open it 
 #then run: 
-pkg install -y git
-mkdir -p $PREFIX/share/apache2/default-site/htdocs
-cd $PREFIX/share/apache2/default-site/htdocs
-git clone https://github.com/o28o/dg.git ./
 
-bash ./scripts/install-android.sh
+# Обработка аргументов
+SKIP_INIT=false
+while getopts "s" opt; do
+  case $opt in
+    s) SKIP_INIT=true ;;
+  esac
+done
+
+# Эту часть пропускаем, если передан флаг -s
+if [ "$SKIP_INIT" = false ]; then
+    pkg install -y git
+    mkdir -p $PREFIX/share/apache2/default-site/htdocs
+    cd $PREFIX/share/apache2/default-site/htdocs
+    git clone https://github.com/o28o/dg.git ./
+    # Вызываем этот же скрипт уже из папки проекта с флагом -s
+    bash ./scripts/install-android.sh -s
+    exit 0
+fi
 #for offline audio also clone fdg.audio repo
 # mkdir assets/audio
 # cd assets/audio 
