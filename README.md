@@ -54,7 +54,7 @@ Copy+paste into terminal the contents of [`scripts/install-linux.sh`](./scripts/
     mkdir -p $PREFIX/share/apache2/default-site/htdocs
     cd $PREFIX/share/apache2/default-site/htdocs
     git clone https://github.com/o28o/dg.git ./
-    bash ./scripts/install-android.sh
+    bash ./scripts/install-android.sh -s
     ```
 
 1. If you want to add offline audio files, clone this repo to `./assets/audio`:
