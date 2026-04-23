@@ -1273,7 +1273,7 @@ window.toggleThePali = window.toggleThePali || function() {
         }
 
         const hasInternalHeaders = suttaContainer.querySelector('h3, h4, h5, h6') !== null;
-        let selector = 'h1, h2'; 
+        let selector = 'h1, h2, .endsutta'; 
         if (hasInternalHeaders) {
             selector += ', h3, h4, h5, h6';
         } else {
@@ -1283,9 +1283,7 @@ window.toggleThePali = window.toggleThePali || function() {
         const headings = Array.from(suttaContainer.querySelectorAll(selector)).filter(el => {
             if (el.classList.contains('verse-line')) {
                 const parentBlock = el.closest('blockquote, section');
-                // Исключаем гатхи, если они относятся к оглавлению (Uddana)
                 if (parentBlock && (parentBlock.querySelector('.uddana-intro') || parentBlock.previousElementSibling?.classList.contains('uddana-intro'))) return false;
-
                 const firstContentBlock = suttaContainer.querySelector('p, blockquote, .rule');
                 if (firstContentBlock && (firstContentBlock === parentBlock || firstContentBlock.contains(el))) return false;
                 if (el !== parentBlock?.querySelector('.verse-line')) return false; 
@@ -1310,17 +1308,21 @@ window.toggleThePali = window.toggleThePali || function() {
             }
         }
 
+        const isRu = window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/');
+        const isTh = window.location.pathname.includes('/th/');
+        const langClass = isRu ? '.rus-lang' : (isTh ? '.tha-lang' : '.eng-lang');
+
         if (headings[activeIndex].tagName.startsWith('H')) {
             let labelText = headings[activeIndex].innerText.replace(/\s+/g, ' ').trim();
             if (headings[activeIndex].classList.contains('inserted-heading')) {
-               const isRu = window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/');
-               const isTh = window.location.pathname.includes('/th/');
-               let tSpan = headings[activeIndex].querySelector(isRu ? '.rus-lang' : (isTh ? '.tha-lang' : '.eng-lang')) || headings[activeIndex].querySelector('.eng-lang');
+               let tSpan = headings[activeIndex].querySelector(langClass) || headings[activeIndex].querySelector('.eng-lang');
                if (tSpan) labelText = tSpan.textContent.trim();
             }
             pillLabel.textContent = capitalize(labelText);
-        } else if (headings[activeIndex].classList.contains('uddana-intro')) {
-            pillLabel.textContent = "Оглавление"; 
+        } else if (headings[activeIndex].classList.contains('endsutta') || headings[activeIndex].classList.contains('uddana-intro')) {
+            let tSpan = headings[activeIndex].querySelector(langClass) || headings[activeIndex].querySelector('.eng-lang') || headings[activeIndex].querySelector('.pli-lang');
+            let labelText = tSpan ? tSpan.textContent.replace(/[()\[\]"“”«»'‘’]/g, '').trim() : headings[activeIndex].innerText.replace(/[()\[\]"“”«»'‘’]/g, '').trim();
+            pillLabel.textContent = capitalize(labelText);
         } else {
             pillLabel.textContent = "Оглавление";
         }
@@ -1346,14 +1348,13 @@ window.toggleThePali = window.toggleThePali || function() {
         }
     }
 
-
 function buildFullTOC() {
     const suttaContainer = document.getElementById('sutta');
     const tocPanel = document.getElementById('smart-toc-panel');
     if (!suttaContainer || !tocPanel) return;
 
     const hasInternalHeaders = suttaContainer.querySelector('h3, h4, h5, h6') !== null;
-    let selector = 'h1, h2'; 
+    let selector = 'h1, h2, .endsutta'; 
     if (hasInternalHeaders) {
         selector += ', h3, h4, h5, h6';
     } else {
@@ -1370,7 +1371,6 @@ function buildFullTOC() {
     const firstContentBlock = suttaContainer.querySelector('p, blockquote, .rule');
 
     elements.forEach((el) => {
-        // Очистка основного текста от скобок и кавычек
         let text = el.innerText.replace(/[()\[\]"“”«»'‘’]/g, '').replace(/\s+/g, ' ').trim();
         if (!text) return;
 
@@ -1399,11 +1399,7 @@ function buildFullTOC() {
                 const offset = 120;
                 const targetY = window.pageYOffset + el.getBoundingClientRect().top - offset;
                 window.scrollTo({ top: targetY, behavior: 'smooth' });
-                
-                // ВОССТАНОВЛЕНО: вызов TTS и подсветки
-                if (typeof window.activateSegmentForTTS === 'function') {
-                    window.activateSegmentForTTS(el);
-                }
+                if (typeof window.activateSegmentForTTS === 'function') window.activateSegmentForTTS(el);
             };
             tocPanel.appendChild(item);
             return;
@@ -1419,7 +1415,6 @@ function buildFullTOC() {
         } else if (el.classList.contains('verse-line')) {
             const parentBlock = el.closest('blockquote, section');
             if (parentBlock && (parentBlock.querySelector('.uddana-intro') || parentBlock.previousElementSibling?.classList.contains('uddana-intro'))) return;
-
             if (parentBlock && parentBlock === lastPoemBlock) return;
             lastPoemBlock = parentBlock;
             if (firstContentBlock && (firstContentBlock === parentBlock || firstContentBlock.contains(el))) return;
@@ -1429,7 +1424,6 @@ function buildFullTOC() {
             const getFirstWord = (langClass) => {
                 const span = el.querySelector('.' + langClass);
                 if (span) {
-                    // Очистка от скобок и кавычек для первых слов гатх
                     let cleanText = span.textContent.replace(/[()\[\]"“”«»'‘’:;]/g, '').replace(/\s+/g, ' ').trim();
                     const words = cleanText.split(/[\s,.;:!?]/);
                     let label = words[0] || '';
@@ -1449,16 +1443,15 @@ function buildFullTOC() {
         } else if (el.classList.contains('anapatti')) {
             extraClass = ' toc-anapatti';
             isCustomMultiLang = true;
-            customLangData = { pli: 'Anāpatti', rus: 'Без вины', eng: 'Non-offense', tha: 'อนาปัตติ' };
+            customLangData = { pli: 'Anāpatti', rus: 'Без вины', eng: 'Non-offense', tha: 'อนาปัตти' };
         } else if (el.classList.contains('uddana-intro')) {
+            tocClassType = 'h1'; // ПРИНУДИТЕЛЬНО H1 для выравнивания
             extraClass = ' toc-uddana';
             isCustomMultiLang = true;
-            customLangData = {
-                pli: 'Tassuddānaṁ',
-                rus: 'Сожержание',
-                eng: 'Summary',
-                tha: 'สรุป'
-            };
+            customLangData = { pli: 'Tassuddānaṁ', rus: 'Содержание', eng: 'Summary', tha: 'สรุป' };
+        } else if (el.classList.contains('endsutta')) {
+            tocClassType = 'h1'; // ПРИНУДИТЕЛЬНО H1 для выравнивания
+            extraClass = ' toc-endsutta';
         }
 
         const item = document.createElement('div');
@@ -1469,28 +1462,18 @@ function buildFullTOC() {
             const offset = 120;
             const targetY = window.pageYOffset + targetElement.getBoundingClientRect().top - offset;
             window.scrollTo({ top: targetY, behavior: 'smooth' });
-            
-            // ВОССТАНОВЛЕНО: вызов TTS и подсветки
-            if (typeof window.activateSegmentForTTS === 'function') {
-                window.activateSegmentForTTS(targetElement);
-            }
+            if (typeof window.activateSegmentForTTS === 'function') window.activateSegmentForTTS(targetElement);
         };
 
         if (isCustomMultiLang) {
             let targetLangText = isRuPath ? customLangData.rus : (isThPath ? customLangData.tha : customLangData.eng);
-            const langs = [
-                { cls: 'pli-lang', txt: customLangData.pli },
-                { cls: targetLang, txt: targetLangText }
-            ];
+            const langs = [{ cls: 'pli-lang', txt: customLangData.pli }, { cls: targetLang, txt: targetLangText }];
             langs.forEach(l => {
                 const span = document.createElement('span');
                 span.className = l.cls;
                 span.textContent = capitalize(l.txt) + ' '; 
                 span.style.cursor = 'pointer';
-                span.onclick = (e) => {
-                    e.stopPropagation();
-                    scrollAndHighlight(el);
-                };
+                span.onclick = (e) => { e.stopPropagation(); scrollAndHighlight(el); };
                 item.appendChild(span);
             });
         } else {
@@ -1499,15 +1482,11 @@ function buildFullTOC() {
                 langSpans.forEach(originalSpan => {
                     const clone = originalSpan.cloneNode(true);
                     clone.querySelectorAll('.copyLink, .copyLink-start, .variant').forEach(child => child.remove());
-                    // Очистка текста клона от скобок и кавычек
                     let cleanText = clone.textContent.replace(/[()\[\]"“”«»'‘’]/g, '').replace(/\s+/g, ' ').trim();
                     if (cleanText) {
                         clone.textContent = capitalize(cleanText) + ' '; 
                         clone.style.cursor = 'pointer';
-                        clone.onclick = (e) => {
-                            e.stopPropagation();
-                            scrollAndHighlight(originalSpan);
-                        };
+                        clone.onclick = (e) => { e.stopPropagation(); scrollAndHighlight(originalSpan); };
                         item.appendChild(clone);
                     }
                 });
