@@ -437,17 +437,6 @@ const ScrollManager = {
         const element = this.findFallbackElement(elementId);
         if (!element) return;
 
-        if (typeof window.activateSegmentForTTS === 'function') {
-            if (element.matches('.pli-lang, .rus-lang, .eng-lang')) {
-                 window.activateSegmentForTTS(element);
-            } else {
-                const childLang = element.querySelector('.pli-lang, .rus-lang, .eng-lang');
-                window.activateSegmentForTTS(childLang || element);
-            }
-        } else {
-            element.classList.add('active-word');
-        }
-
         const originalPosition = element.style.position;
         if (getComputedStyle(element).position === 'static') {
             element.style.position = 'relative';
@@ -476,17 +465,29 @@ const ScrollManager = {
                 }, 450);
             }
         }, 450);
+
+        // Искусственная задержка для инициализации плеера и DOM в iframe
+        setTimeout(() => {
+            if (typeof window.activateSegmentForTTS === 'function') {
+                if (element.matches('.pli-lang, .rus-lang, .eng-lang, .tha-lang')) {
+                     window.activateSegmentForTTS(element);
+                } else {
+                    const childLang = element.querySelector('.pli-lang, .rus-lang, .eng-lang, .tha-lang');
+                    if (childLang) {
+                        window.activateSegmentForTTS(childLang);
+                    } else {
+                        window.activateSegmentForTTS(element);
+                    }
+                }
+            } else {
+                element.classList.add('active-word');
+            }
+        }, 400);
     },
 
     highlightById(elementId) {
         const element = this.findFallbackElement(elementId);
         if (!element) return;
-
-        if (typeof window.activateSegmentForTTS === 'function') {
-            window.activateSegmentForTTS(element);
-        } else {
-            element.classList.add('active-word');
-        }
 
         const originalTransition = element.style.transition;
         const originalBoxShadow = element.style.boxShadow;
@@ -513,7 +514,17 @@ const ScrollManager = {
                 }, 300);
             }
         }, 400);
+
+        // Искусственная задержка для инициализации плеера и DOM в iframe
+        setTimeout(() => {
+            if (typeof window.activateSegmentForTTS === 'function') {
+                window.activateSegmentForTTS(element);
+            } else {
+                element.classList.add('active-word');
+            }
+        }, 400);
     },
+
 
     setupScrollToTop() {
         const scrollToTopBtn = document.createElement('button');
