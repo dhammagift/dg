@@ -770,6 +770,26 @@ $(document).ready(function() {
     }
   });
 
+  // Функция для динамического переключения классов TTS
+  function updateTtsLangClasses() {
+    var isRuVisible = table.column(3).visible();
+    if (isRuVisible) {
+      $('.en-text').removeClass('eng-lang');
+    } else {
+      $('.en-text').addClass('eng-lang');
+    }
+
+    // Если сейчас идет озвучка, останавливаем её при смене языка
+    if (typeof stopPlayback === 'function' && typeof ttsAPI !== 'undefined') {
+        if (ttsAPI.getState().speaking) stopPlayback();
+    }
+
+    // Обновляем выпадающие списки плеера для новых языковых ключей
+    if (typeof refreshVoiceDropdowns === 'function') {
+        refreshVoiceDropdowns();
+    }
+  }
+
   table.on('column-visibility.dt', function() {
     var visibleColumns = table.columns().visible().reduce(function(a, b) {
       return a + (b ? 1 : 0);
@@ -782,7 +802,13 @@ $(document).ready(function() {
     } else if (visibleColumns === 3) {
       table.columns([1, 2, 3]).visible().nodes().to$().css('width', '31.66%');
     }
+    
+    // Вызываем обновление TTS при изменении колонок
+    updateTtsLangClasses();
   });
+  
+  // Применяем логику при первой загрузке
+  updateTtsLangClasses();
   
   $('#custom-search-filter').on('keyup input', function() {
     table.search(this.value).draw();
@@ -820,6 +846,41 @@ $(document).ready(function() {
   }
   scrollToHash();
 });
+
+// --- ПЕРЕХВАТ ФУНКЦИЙ VOICE.JS ---
+// Используем load, чтобы гарантированно переопределить функции после загрузки defer-скриптов
+$(window).on('load', function() {
+    window.detectTranslationLang = function() {
+        var table = $('#sutta-table').DataTable();
+        // Если русская колонка отключена, возвращаем английский
+        if (table && table.column && !table.column(3).visible()) {
+            return 'en';
+        }
+        return 'ru';
+    };
+
+    window.getContextInfo = function() {
+        var table = $('#sutta-table').DataTable();
+        var isEn = table && table.column && !table.column(3).visible();
+
+        if (isEn) {
+            return {
+                type: 'en',
+                storageKey: 'tts_google_trn_en',
+                defaultConfig: { languageCode: 'en-US', name: 'en-US-Standard-D' },
+                isIndianContext: false
+            };
+        } else {
+            return {
+                type: 'ru',
+                storageKey: 'tts_google_trn_ru',
+                defaultConfig: { languageCode: 'ru-RU', name: 'ru-RU-Standard-D' },
+                isIndianContext: false
+            };
+        }
+    };
+});
+
 </script>
 </body>
 </html>
