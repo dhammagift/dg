@@ -244,7 +244,7 @@ function updateURL(params) {
 <script>
 function openLoginWindow() {
     const match = window.location.pathname.match(/^\/(ru|r|ml)\b/);
-    const lang = match ? match[1] : 'ru';
+    const langPrefix = match ? `/${match[1]}` : '';
 
     const width = 420;
     const height = 520;
@@ -253,12 +253,13 @@ function openLoginWindow() {
     const top = (window.screen.height / 2) - (height / 2);
 
     window.open(
-        `/${lang}/login`,
+        `${langPrefix}/login`,
         'LoginWindow',
         `width=${width},height=${height},top=${top},left=${left},resizable=no`
     );
 }
 </script>
+
 
 </li>
        </ul>
