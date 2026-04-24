@@ -180,6 +180,9 @@ async function buildSutta(slug) {
       if (tContainer) tContainer.innerHTML = scLink;
       if (bContainer) bContainer.innerHTML = scLink;
 
+      // Инициализируем кнопку переключения языка
+      toggleThePali();
+
       window.dispatchEvent(new Event('suttaLoaded'));
       if (typeof window.setupVariantVisibility === 'function') window.setupVariantVisibility();
       if (typeof renderNavigation === 'function') renderNavigation(slug, slugReady);
@@ -187,7 +190,6 @@ async function buildSutta(slug) {
 
   }).catch(error => { /* логика фолбэка */ });
 }
-
 
 if (document.location.search) {
   let params = new URLSearchParams(document.location.search);
@@ -222,49 +224,23 @@ if (document.location.search) {
 
 function setLanguage(language) {
   if (language === "pli-2nd" || language === "2nd") {
-    showPaliRussian();
+    showPaliAll();
   } else if (language === "pli") {
     showPali();
   }
 }
 
 function showPaliAll() {
-  suttaArea.classList.remove("hide-pali");
-  suttaArea.classList.remove("hide-english");
-  suttaArea.classList.remove("hide-russian");
+  suttaArea.classList.remove("hide-pali", "hide-english", "hide-russian");
   const savedMode = localStorage.getItem('viewMode') || 'alternate';
   if (savedMode === 'columns') suttaArea.classList.add('column-view');
-}
-
-function showPaliRussian() {
-  suttaArea.classList.remove("hide-pali");
-  suttaArea.classList.add("hide-english");
-  suttaArea.classList.remove("hide-russian");
-  const savedMode = localStorage.getItem('viewMode') || 'alternate';
-  if (savedMode === 'columns') suttaArea.classList.add('column-view');
-}
-
-function showEnglish() {
-  suttaArea.classList.add("hide-pali");
-  suttaArea.classList.add("hide-russian");
-  suttaArea.classList.remove("hide-english");
-  suttaArea.classList.remove('column-view');
-}
-
-function showRussian() {
-  suttaArea.classList.add("hide-pali");
-  suttaArea.classList.add("hide-english");
-  suttaArea.classList.remove("hide-russian");
-  suttaArea.classList.remove('column-view');
 }
 
 function showPali() {
   suttaArea.classList.remove("hide-pali");
-  suttaArea.classList.add("hide-english");
-  suttaArea.classList.add("hide-russian");
+  suttaArea.classList.add("hide-english", "hide-russian");
   suttaArea.classList.remove('column-view');
 }
-
 
 const abbreviations = document.querySelectorAll("span.abbr");
 abbreviations.forEach(book => {
