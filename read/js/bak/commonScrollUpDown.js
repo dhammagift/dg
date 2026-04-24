@@ -176,13 +176,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const headerHeight = 90; 
 
     // Фиксация физического взаимодействия (мышь, тач, клавиатура)
-    const recordManualAction = (e) => { 
-        // Игнорируем нажатия на элементы плеера, чтобы они не будили панели
-        if (e && e.target && typeof e.target.closest === 'function') {
-            if (e.target.closest('#voice-player-container, .dynamic-tts-btn')) {
-                return;
-            }
-        }
+    const recordManualAction = () => { 
         lastManualInteraction = Date.now(); 
     };
 
@@ -231,7 +225,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const triggerSize = 100; 
         if (clientX > window.innerWidth - triggerSize && clientY < triggerSize) {
             // Принудительно обновляем время взаимодействия, чтобы перебить блокировку TTS
-            lastManualInteraction = Date.now();
+            recordManualAction();
             keepSmartUIAlive();
         }
     }
@@ -251,7 +245,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const isGearActive = smartPanel && smartPanel.classList.contains('active');
         const isTocActive = tocPanel && tocPanel.classList.contains('active');
 
-        // 1. Если это автоскролл плеера (без участия рук) — жестко прячем кнопки
+        // Если это автоскролл плеера (без участия рук) — прячем кнопки
         if (isTTSAutoScrolling()) {
             if (!isGearActive && !isTocActive) {
                 if (gearBtn) gearBtn.classList.remove('visible');
@@ -261,42 +255,30 @@ document.addEventListener("DOMContentLoaded", function() {
             return;
         }
 
-        // 2. Обычный режим или ручной скролл
+        // В обычном режиме или при ручном скролле во время TTS
         if (st <= headerHeight) {
-            // В зоне шапки прячем ВСЕГДА для чистоты
             if (!isGearActive && !isTocActive) {
                 if (gearBtn) gearBtn.classList.remove('visible');
                 if (tocBtn) tocBtn.classList.remove('visible');
             }
-        } else if (st < lastScrollTop) {
-            // === ИЗМЕНЕНО: Показываем кнопки ТОЛЬКО при скролле ВВЕРХ ===
+        } else {
             keepSmartUIAlive(); 
         }
-        // Скролл ВНИЗ игнорируется: таймер просто дотикает и скроет кнопки сам
-        
         lastScrollTop = st <= 0 ? 0 : st;
     });
 
-    // ОБРАБОТЧИКИ КЛИКОВ И МОДАЛЬНЫХ ОКОН
+    // ОБРАБОТЧИКИ КЛИКОВ
     if (gearBtn) {
         gearBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            lastManualInteraction = Date.now(); 
+            recordManualAction(); // Важно для SPA
             if (!smartPanel.classList.contains('active') && typeof window.syncSmartIcons === 'function') {
                 window.syncSmartIcons();
             }
-            
             smartPanel.classList.toggle('active');
-            
-            if (tocPanel && tocPanel.classList.contains('active')) {
-                tocPanel.classList.remove('active');
-            }
-
-            if (smartPanel.classList.contains('active')) {
-                clearTimeout(smartTimer);
-            } else {
-                keepSmartUIAlive();
-            }
+            if (tocPanel) tocPanel.classList.remove('active');
+            if (smartPanel.classList.contains('active')) clearTimeout(smartTimer);
+            else keepSmartUIAlive();
         });
     }
 
@@ -304,7 +286,7 @@ document.addEventListener("DOMContentLoaded", function() {
     proxyButtons.forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
-            lastManualInteraction = Date.now();
+            recordManualAction();
             const targetSelector = this.getAttribute('data-target');
             const originalElement = document.querySelector(targetSelector);
             
@@ -343,6 +325,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 });
+
 
 
 document.addEventListener('click', function(event) {

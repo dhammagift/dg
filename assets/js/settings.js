@@ -1161,6 +1161,22 @@ if (event.altKey && event.code === "KeyR") {
       // Имитируем клик по кнопке
       settingsButton.click();
     }
+
+
+ // --- 2. Оглавление (TOC) Alt + W ---
+    if (event.altKey && event.code === "KeyW") {
+        event.preventDefault();
+        const tocBtn = document.getElementById('smart-toc-btn');
+        const gearBtn = document.getElementById('smart-gear-btn');
+        
+        if (tocBtn && gearBtn) {
+            // Делаем кнопки физически видимыми
+            tocBtn.classList.add('visible');
+            gearBtn.classList.add('visible');
+            // Эмулируем клик для открытия оглавления
+            tocBtn.click();
+        }
+    }
   
 //alt + G history toggle
  function handleHistoryToggle() {
@@ -1169,7 +1185,7 @@ if (event.altKey && event.code === "KeyR") {
 
   // Если URL содержит языковой префикс (/ru/, /r/, /ml/)
   if (currentUrl.match(/\/(ru|r|ml)\//)) {
-    const langPrefix = currentUrl.split('/')[1] + '/';
+    const langPrefix = 'ru/';
     historyPhpPath = `/${langPrefix}history.php`;
     historyHtmlPath = `/${langPrefix}assets/common/history.html`;
   } 
@@ -1303,7 +1319,7 @@ localStorage.setItem('selectedScript', 'ISOPali');
 }
 
 if (applyButton) {
-  applyButton.addEventListener('click', function() {
+  applyButton.addEventListener('click', async function() {
     localStorage.setItem('selectedScript', scriptSelect.value);
     localStorage.setItem('selectedDict', dictSelect.value);
     
@@ -1315,13 +1331,14 @@ if (applyButton) {
     localStorage.setItem("firstVisitShowSettingsClosed", "true");
     saveExactScrollPosition(); 
     
-    // --- ИЗМЕНЕНО: Атомарная отправка настроек ---
-    if (typeof syncSettingsToCloud === 'function') syncSettingsToCloud();  
+    // Ждем завершения синхронизации перед релоадом
+    if (typeof syncSettingsToCloud === 'function') {
+        await syncSettingsToCloud();  
+    }
     
     location.reload();
   });
 }
-
 
   // Функция для применения сохраненного значения
 function applySavedDict(dict) {
@@ -2480,6 +2497,19 @@ function refreshSyncTimeUI() {
 window.setupCloudListeners = function(uid) {
     if (!db || !uid) return;
 
+    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Очищаем локальные данные ДО активации слушателей,
+    // если пользователь выбрал режим Overwrite в модальном окне.
+    if (window.pendingOverwrite === true) {
+        localStorage.removeItem('localSearchHistory');
+        localStorage.removeItem('dg_favorites');
+        localStorage.removeItem('dg_deleted_history');
+        
+        // Сбрасываем флаг сразу после удаления
+        window.pendingOverwrite = false;
+        
+        if (typeof window.refreshQuickModalData === 'function') window.refreshQuickModalData();
+    }
+
     if (unsubSettings) unsubSettings();
     if (unsubFavs) unsubFavs();
     if (unsubHist) unsubHist();
@@ -2493,53 +2523,37 @@ window.setupCloudListeners = function(uid) {
 
         if (doc.exists && doc.data().settings) {
             const cloudSettings = doc.data().settings;
-            
-            // Вычисляем время облака и локальное время
             const cloudTime = doc.data().updatedAt ? doc.data().updatedAt.toMillis() : 0;
             const localTime = parseInt(localStorage.getItem('dg_localSettingsTimestamp') || '0', 10);
 
-            // ЗАЩИТА: Если локальные настройки менялись позже, игнорируем старые данные из облака
-            if (localTime > cloudTime) {
-                return;
-            }
+            if (localTime > cloudTime) return;
 
             let uiNeedsRefresh = false;
-
             for (const k in cloudSettings) {
-                // Если значение в облаке отличается от локального
                 if (localStorage.getItem(k) !== cloudSettings[k]) {
                     window.dg_ignoreNextStorageEvent = true; 
                     localStorage.setItem(k, cloudSettings[k]);
                     uiNeedsRefresh = true;
                 }
             }
-            
-            // Сбрасываем флаг только если реально что-то обновили из базы
-            if (uiNeedsRefresh) {
-                window.dg_settingsChanged = false; 
-            }
+            if (uiNeedsRefresh) window.dg_settingsChanged = false; 
         }
     });
-
 
     // Слушатель Избранного
     unsubFavs = userRef.collection("favorites").onSnapshot((snapshot) => {
         if (snapshot.metadata.hasPendingWrites) return;
-
         let localFavs = JSON.parse(localStorage.getItem('dg_favorites')) || [];
         let favMap = new Map();
         localFavs.forEach(f => favMap.set(f.slug, f)); 
 
         snapshot.docChanges().forEach((change) => {
             let cloudFav = change.doc.data();
-            
             if (change.type === "added" || change.type === "modified") {
                 if (cloudFav.fullText && cloudFav.search) {
                     const params = new URLSearchParams(cloudFav.search);
                     const savedId = params.get('saved_id');
-                    if (savedId) {
-                        localStorage.setItem(savedId, cloudFav.fullText);
-                    }
+                    if (savedId) localStorage.setItem(savedId, cloudFav.fullText);
                     delete cloudFav.fullText;
                 }
                 favMap.set(cloudFav.slug, cloudFav);
@@ -2553,22 +2567,16 @@ window.setupCloudListeners = function(uid) {
                 favMap.delete(cloudFav.slug);
             }
         });
-
         const finalFavs = Array.from(favMap.values()).sort((a, b) => b.timestamp - a.timestamp);
         localStorage.setItem('dg_favorites', JSON.stringify(finalFavs));
-
-        if (typeof window.refreshQuickModalData === 'function' && window.quickModalIsOpen) {
-            window.refreshQuickModalData();
-        }
+        if (typeof window.refreshQuickModalData === 'function' && window.quickModalIsOpen) window.refreshQuickModalData();
     });
 
     // Слушатель Истории
     unsubHist = userRef.collection("history").onSnapshot((snapshot) => {
         if (snapshot.metadata.hasPendingWrites) return;
-
         let localHist = JSON.parse(localStorage.getItem('localSearchHistory')) || [];
         let histMap = new Map();
-
         localHist.forEach(h => {
             const baseKey = /\d/.test(h[0]) ? h[0].split(/\s+/)[0] : h[0];
             histMap.set(baseKey, { key: h[0], url: h[1], timestamp: new Date(h[2]).getTime() });
@@ -2577,41 +2585,31 @@ window.setupCloudListeners = function(uid) {
         snapshot.docChanges().forEach((change) => {
             const cloudHist = change.doc.data();
             const baseKey = /\d/.test(cloudHist.key) ? cloudHist.key.split(/\s+/)[0] : cloudHist.key;
-
             if (change.type === "added" || change.type === "modified") {
                 const cloudTime = cloudHist.updatedAt && cloudHist.updatedAt.toDate 
                     ? cloudHist.updatedAt.toDate().getTime() 
                     : (new Date(cloudHist.timestamp).getTime() || Date.now());
                 histMap.set(baseKey, { ...cloudHist, timestamp: cloudTime });
             }
-            if (change.type === "removed") {
-                histMap.delete(baseKey);
-            }
+            if (change.type === "removed") histMap.delete(baseKey);
         });
 
         const finalHist = Array.from(histMap.values())
             .sort((a, b) => b.timestamp - a.timestamp)
             .map(h => [h.key, h.url, new Date(h.timestamp).toISOString()])
             .slice(0, 8400);
-
         localStorage.setItem('localSearchHistory', JSON.stringify(finalHist));
-
-        if (typeof window.refreshQuickModalData === 'function' && window.quickModalIsOpen) {
-            window.refreshQuickModalData();
-        }
+        if (typeof window.refreshQuickModalData === 'function' && window.quickModalIsOpen) window.refreshQuickModalData();
     });
 
-    // Слушатель Прогресса чтения
+    // Слушатель Прогресса
     unsubProgress = userRef.collection("progress").onSnapshot((snapshot) => {
         if (snapshot.metadata.hasPendingWrites) return;
-
         let cloudProgressData = JSON.parse(localStorage.getItem('dg_cloudProgress')) || {};
         let hasChanges = false;
-
         snapshot.docChanges().forEach((change) => {
             const cloudProg = change.doc.data();
             const slug = cloudProg.slug || change.doc.id;
-
             if (change.type === "added" || change.type === "modified") {
                 cloudProgressData[slug] = cloudProg;
                 hasChanges = true;
@@ -2621,41 +2619,28 @@ window.setupCloudListeners = function(uid) {
                 hasChanges = true;
             }
         });
-
-        if (hasChanges) {
-            localStorage.setItem('dg_cloudProgress', JSON.stringify(cloudProgressData));
-        }
+        if (hasChanges) localStorage.setItem('dg_cloudProgress', JSON.stringify(cloudProgressData));
     });
 
-    // === ЛОГИКА СЕССИЙ (УСТРОЙСТВ) ===
-    
+    // Сессии
     let localSessionId = localStorage.getItem('dg_session_id');
     if (!localSessionId) {
         localSessionId = 'sess_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
         localStorage.setItem('dg_session_id', localSessionId);
     }
-
     const mySessionRef = userRef.collection("sessions").doc(localSessionId);
     const deviceData = window.getAnonymousDeviceName();
-    
-    // Пишем анонимные данные в базу при входе/перезагрузке
     mySessionRef.set({
         deviceName: deviceData.displayName,
         deviceMeta: deviceData,
         lastActive: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
 
-    // Слушаем СВОЮ сессию. Если её удалили, мы должны уйти.
     if (typeof unsubMySession !== 'undefined' && unsubMySession) unsubMySession();
     unsubMySession = mySessionRef.onSnapshot((doc) => {
         if (doc.metadata.hasPendingWrites) return;
-        
         if (!doc.exists && localStorage.getItem('dg_cloud_session') === 'true') {
-            if (typeof showBubbleNotification === 'function') {
-                const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
-                showBubbleNotification(isRu ? "Сессия завершена удаленно" : "Session terminated remotely", 5000);
-            }
-            if (typeof triggerSelfDestruct === 'function') triggerSelfDestruct(); 
+            triggerSelfDestruct(); 
         }
     });
 };
@@ -2721,18 +2706,13 @@ window.triggerSelfDestruct = async function(reason = "terminated") {
 };
 
 // === АТОМАРНЫЕ ЗАПИСИ В ОБЛАКО ===
-
 window.syncSettingsToCloud = async function() {
-    // ПРОПУСКНОЙ ПУНКТ:
     if (!(await verifySessionActive())) return;
-
     if (!db || !getUid()) return;
     const uid = getUid();
     
-    // 1. Берем ТОЛЬКО те ключи, которые изменились (дифф)
     let settingsToSave = { ...window.dg_pendingSettingsUpdates };
 
-    // 2. Добавляем команды на удаление ключей (если пользователь их удалил)
     if (window.dg_deletedKeys && window.dg_deletedKeys.size > 0) {
         window.dg_deletedKeys.forEach(key => {
             if (!settingsToSave.hasOwnProperty(key)) {
@@ -2741,8 +2721,11 @@ window.syncSettingsToCloud = async function() {
         });
     }
 
-    // Если ничего не менялось — не дергаем базу
-    if (Object.keys(settingsToSave).length === 0) return;
+    // Если изменений нет, просто обновляем локальный штамп времени и выходим
+    if (Object.keys(settingsToSave).length === 0) {
+        if (typeof refreshSyncTimeUI === 'function') refreshSyncTimeUI();
+        return;
+    }
 
     try {
         await db.collection("users").doc(uid).set({
@@ -2750,7 +2733,6 @@ window.syncSettingsToCloud = async function() {
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
         
-        // 3. ОЧИСТКА: Обнуляем очереди только после успешной отправки
         window.dg_pendingSettingsUpdates = {};
         if (window.dg_deletedKeys) window.dg_deletedKeys.clear();
         window.dg_settingsChanged = false;
@@ -2859,31 +2841,33 @@ window.clearCloudHistory = async function() {
 
 // === УТИЛИТЫ И АВТОРИЗАЦИЯ ===
 window.forceSyncNow = async function() {
-    const uid = getUid();
-    if (!uid || !db) return; 
+    if (!(await verifySessionActive())) return;
+    if (!db || !getUid()) return;
 
     document.querySelectorAll('.fa-rotate').forEach(icon => icon.classList.add('fa-spin'));
     document.querySelectorAll('#btn-sync-now img').forEach(icon => icon.classList.add('custom-spin'));
 
     try {
-        // 1. Настройки
+        // Синхронизируем настройки, если они были изменены
         if (window.dg_settingsChanged) {
             await syncSettingsToCloud();
-            window.dg_settingsChanged = false; 
         }
 
-        // 2. Прогресс текущей страницы
+        // Прогресс текущей страницы
         const urlParams = new URLSearchParams(window.location.search);
         const qParam = urlParams.get('q');
         if (qParam) {
             let currentSlug = String(qParam).trim().toLowerCase();
             if (String(qParam).trim().startsWith('memo_')) currentSlug = String(qParam).trim();
-            if (typeof window.syncProgressItemToCloud === 'function') {
-                await window.syncProgressItemToCloud(currentSlug);
-            }
+            await window.syncProgressItemToCloud(currentSlug);
         }
 
-        await new Promise(res => setTimeout(res, 800));
+        // Ждем немного для визуального эффекта и гарантированного завершения
+        await new Promise(res => setTimeout(res, 500));
+        
+        // ОБЯЗАТЕЛЬНО обновляем время в конце, чтобы пользователь видел успех
+        if (typeof refreshSyncTimeUI === 'function') refreshSyncTimeUI();
+
     } catch (error) { 
         console.error("Sync error:", error); 
     } finally {

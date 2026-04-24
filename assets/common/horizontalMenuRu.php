@@ -143,17 +143,10 @@ echo '<!--
   <ul class="dropdown-menu" aria-labelledby="MenuRussian">
        
   
-           <li>
-         <div class="dropdown-item ">
-DG
-            <a class="text-reset" target="" href="/ru/read.php#dhamma">Сутты</a>    
-      <a class="text-reset" target="" 
-    href="javascript:void(0)"   
- onclick="toggleQuickModal();"     
-      >Ссылки</a> 
-         </div>
-         </li>
-             <li>
+  <li><a class="dropdown-item" href="/ru/read.php#dhamma">Dhamma.gift Сутты</a></li>
+
+<li><a class="dropdown-item" href="/ru/read.php#vinaya">Dhamma.gift Патимоккха</a></li>
+     <!--            <li>
          <div class="dropdown-item ">
 DG
       <a class="text-reset" target="" href="/ru/pm.php?expand=true">Бхиккху Патимоккха</a>        
@@ -161,10 +154,10 @@ DG
          </div>
          </li>
          
-  <!--      href="?rp=true&tts=true&sacca=true"-->     
+    href="?rp=true&tts=true&sacca=true"-->     
 <li>
-         <div class="dropdown-item ">DG
- <a class="text-reset" target="_blank"   href="/assets/common/o.html">Принципы Перевода</a>
+         <div class="dropdown-item ">Dhamma.gift
+ <a class="text-reset" target="_blank"   href="/assets/common/o.html">Принципы</a>
    <a class="text-reset" target="" href="/assets/common/rationale.html">Проблематика</a>  
        </div>
          </li> 
@@ -212,22 +205,16 @@ DG
 </a>
 
 <ul class="dropdown-menu" aria-labelledby="MenuDict">
+
 <li>
   <div class="dropdown-item">
     <i class="' . $iconimportant . '"></i>
-    <a class="text-reset" target=""  title="открыть Dict.Dhamma.Gift в новом окне (Alt + N)" href="javascript:void(0)" onclick="
-      const q = document.getElementById(\'paliauto\')?.value || \'\';
-      const url = q.trim() ? 
-        \'https://dict.dhamma.gift/ru/?silent&source=pwa&q=\' + encodeURIComponent(q) : 
-        \'https://dict.dhamma.gift/ru/\';
-      openDictionaryWindow(url);
-    ">Digital Pāḷi Dict</a>
+    <a class="text-reset" target="_blank" title="открыть Dict.Dhamma.Gift в новом окне (Alt + N)" href="javascript:void(0)" onclick="openWithQuery(event, \'https://dict.dhamma.gift/ru/?theme={{theme}}&source=pwa&q={{q}}\')">Digital Pāḷi Dict</a>
 
-    <a class="text-reset" target="_blank"   title="Скачать DPD для использования оффлайн" href="https://digitalpalidictionary.github.io/">Оффлайн</a>
+    <a class="text-reset" target="_blank" title="Скачать DPD для использования оффлайн" href="https://digitalpalidictionary.github.io/">Оффлайн</a>
     <a class="text-reset" target="" title="Расширения для браузеров" href="#links">Расширения</a>
   </div>
 </li>
-
           <li>
          <div class="dropdown-item ">
          ✨ <a class="text-reset" target="_blank" href="https://chatgpt.com">ChatGPT</a>

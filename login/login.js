@@ -114,11 +114,14 @@ function showMergeModal() {
     }
 }
 
+// login.js
+
 function executePendingLogin(mode) {
+    // Вместо удаления данных здесь, просто запоминаем выбор
     if (mode === 'overwrite') {
-        localStorage.removeItem('localSearchHistory');
-        localStorage.removeItem('dg_favorites');
-        localStorage.removeItem('dg_deleted_history');
+        window.pendingOverwrite = true;
+    } else {
+        window.pendingOverwrite = false;
     }
     
     if (window.pendingLoginType === 'google') {
@@ -249,15 +252,18 @@ function getFormattedTime() {
     });
 }
 
+
+
 // Эта функция по-прежнему будет дергаться извне при обновлении статуса логина
 window.renderLoginPageUI = function(user, phraseId) {
     const el = (id) => document.getElementById(id);
     if (!el('sync-logged-out')) return;
 
-    // Дублируем вызов локализации на случай, если DOM обновился непредсказуемо
     applyLocalization();
 
     if (user || phraseId) {
+        // Очистка localStorage отсюда удалена, она теперь в setupCloudListeners (settings.js)
+        
         el('sync-logged-out').classList.add('d-none');
         el('sync-logged-in').classList.remove('d-none');
 
@@ -286,28 +292,23 @@ window.renderLoginPageUI = function(user, phraseId) {
 
         if (listEl && window.firebase && currentDb && currentUid) {
             const localSessionId = localStorage.getItem('dg_session_id');
-            
             if (window.unsubSessionList) window.unsubSessionList();
             window.unsubSessionList = currentDb.collection("users").doc(currentUid).collection("sessions")
                 .orderBy("lastActive", "desc").onSnapshot((snap) => {
                     listEl.innerHTML = '';
-                    
                     snap.docs.forEach(doc => {
                         const data = doc.data();
                         const sid = doc.id;
                         const isCurrent = sid === localSessionId;
-                        
                         const dateRaw = data.lastActive ? data.lastActive.toDate() : new Date();
                         const dateStr = dateRaw.toLocaleString(isRu ? 'ru-RU' : 'en-US', { 
                             month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
                         });
-
                         const currentBadgeText = isRu ? 'Текущее' : 'Current';
                         const terminateHint = isRu ? 'Завершить сессию удаленно' : 'Terminate session';
 
                         const div = document.createElement('div');
                         div.className = "d-flex justify-content-between align-items-center p-2 rounded session-item";
-                        
                         div.innerHTML = `
                             <div class="session-text-container">
                                 <div class="session-device-name">
@@ -326,7 +327,6 @@ window.renderLoginPageUI = function(user, phraseId) {
             window.isInitialSyncing = true;
             el('sync-last-time').textContent = isRu ? "Синхронизация..." : "Syncing...";
             el('sync-last-time').classList.add('text-primary');
-            
             if (typeof forceSyncNow === 'function') {
                 forceSyncNow().then(() => {
                     localStorage.setItem('lastSyncTime', Date.now());
@@ -334,12 +334,8 @@ window.renderLoginPageUI = function(user, phraseId) {
                     el('sync-last-time').classList.remove('text-primary');
                     window.isInitialSyncing = false;
                 });
-            } else {
-                localStorage.setItem('lastSyncTime', Date.now());
-                el('sync-last-time').textContent = getFormattedTime();
-                window.isInitialSyncing = false;
             }
-        } else if (!window.isInitialSyncing) {
+        } else {
             el('sync-last-time').textContent = getFormattedTime();
         }
 

@@ -17,8 +17,7 @@ homeButton.addEventListener("click", () => {
   document.location.search = "";
 });
 
-
-function buildSutta(slug) {
+async function buildSutta(slug) {
   let translator = "";
   let texttype = "sutta";
   let slugArray = slug.split("&");
@@ -55,396 +54,251 @@ function buildSutta(slug) {
     }
   }
 
-// console.log('texttype ' + texttype + ' translator ' + translator);
-
   let html = `<div class="button-area"><button title="Switch language (Atl+Z or Alt+Space)" id="language-button" class="hide-button">Pāḷi Eng</button></div>`;
-  
   const slugReady = parseSlug(slug);
- // console.log("slugReady is " + slugReady + " slug is " + slug); 
 
-let params = new URLSearchParams(document.location.search);
- let script = params.get("script");
- 
-   const savedScript = localStorage.getItem('selectedScript');
+  let params = new URLSearchParams(document.location.search);
+  let script = params.get("script");
+  const savedScript = localStorage.getItem('selectedScript');
 
- if (( script === "devanagari" ) || ( savedScript === "Devanagari" ) ) {
-var rootpath = `/assets/texts/devanagari/root/pli/ms/${texttype}/${slugReady}_rootd-pli-ms.json`
- } 
- else if (( script === "thai" ) || ( savedScript === "Thai" ) ) {
-var rootpath = `/assets/texts/th/root/pli/ms/${texttype}/${slugReady}_rootth-pli-ms.json`
- } 
-else {
-var rootpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slugReady}_root-pli-ms.json`
- }
-
-   var htmlpath = `${Sccopy}/sc-data/sc_bilara_data/html/pli/ms/${texttype}/${slugReady}_html.json`;
- 
-   //  //  let otrnranges = ['sn56.11', 'sn12.2'];
-  
-  if (slug.match(/ja/)) {
-  let language = "pli";
-  let slugNumber = parseInt(slug.replace(/\D/g, ''), 10); // Извлекаем число из slug
-
-  if (slugNumber >= 1 && slugNumber <= 75) {
-    var trnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/${translator}/${texttype}/${slugReady}_translation-en-sujato.json`;
-  } else if (slugNumber > 70) {
-    var trnpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slugReady}_root-pli-ms.json`;
+  // Определение rootpath (Pali)
+  let rootpath = "";
+  if (( script === "devanagari" ) || ( savedScript === "Devanagari" ) ) {
+    rootpath = `/assets/texts/devanagari/root/pli/ms/${texttype}/${slugReady}_rootd-pli-ms.json`
+  } else if (( script === "thai" ) || ( savedScript === "Thai" ) ) {
+    rootpath = `/assets/texts/th/root/pli/ms/${texttype}/${slugReady}_rootth-pli-ms.json`
+  } else {
+    rootpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slugReady}_root-pli-ms.json`
   }
-  // console.log('ja case ', rootpath, trnpath, htmlpath);
-} else if (slug.match(/bu-pm|bi-pm/)) {
-    //let translator = "thanissaro+o";
-   // let translator = "thanissaro";
-    let translator = "brahmali";
-    texttype === "vinaya";
-      let language = "pli";
 
- if (( script === "devanagari" ) || ( savedScript === "Devanagari" ) ) {
-//	     var rootpath = `/assets/texts/${texttype}/${slug}_root-pli-ms.json`;
-var rootpath = `/assets/texts/devanagari/root/pli/ms/${texttype}/${slug}_rootd-pli-ms.json`
- } 
- else if (( script === "thai" ) || ( savedScript === "Thai" ) ) {
-var rootpath = `/assets/texts/th/root/pli/ms/${texttype}/${slugReady}_rootth-pli-ms.json`
- } 
-else {
-var rootpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slug}_root-pli-ms.json`
- }
-    var trnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/brahmali/${texttype}/${slug}_translation-en-brahmali.json`;
-    var htmlpath = `/assets/html/${texttype}/${slug}_html.json`;
-  //  console.log(rootpath, trnpath, htmlpath);
-} 
+  let htmlpath = `${Sccopy}/sc-data/sc_bilara_data/html/pli/ms/${texttype}/${slugReady}_html.json`;
+  let trnpath = "";
 
-else if (otrnranges.indexOf(slug) !== -1) { 
-    var trnpath = `/assets/texts/en/o/${texttype}/${slugReady}_translation-en-o.json`;
-        translator = "o";
-}
-
-else {
-  var trnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/${pathLang}/${translator}/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`;
-}
-
-var varpath = `${Sccopy}/sc-data/sc_bilara_data/variant/pli/ms/${texttype}/${slugReady}_variant-pli-ms.json`
-var varpathLocal = `/assets/texts/variant/${texttype}/${slugReady}_variant-pli-ms.json`
-
-const rootResponse = fetch(rootpath)
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('Root file not found');
+  // ВОССТАНОВЛЕННАЯ ЛОГИКА ПУТЕЙ ПЕРЕВОДА
+  if (slug.match(/ja/)) {
+    let slugNumber = parseInt(slug.replace(/\D/g, ''), 10);
+    if (slugNumber >= 1 && slugNumber <= 75) {
+      trnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/${translator}/${texttype}/${slugReady}_translation-en-sujato.json`;
+    } else if (slugNumber > 70) {
+      trnpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slugReady}_root-pli-ms.json`;
     }
-    return response.json();
-  })
-  .catch(error => {
-  console.log('note: no root found, trying alternative path');
-    // Переключаем на второй путь
-    rootpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slugReady}_root-pli-ms.json`;
-    // Делаем новый запрос по второму пути
-    return fetch(rootpath)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Alternative root file not found');
-        }
-        return response.json();
-      })
-      .catch(error => {
-       console.log('note: no alternative root found either');
-        return {}; // Возвращаем пустой объект, если оба пути недоступны
-      });
-  });
+  } else if (slug.match(/bu-pm|bi-pm/)) {
+    translator = "brahmali";
+    if (( script === "devanagari" ) || ( savedScript === "Devanagari" ) ) {
+      rootpath = `/assets/texts/devanagari/root/pli/ms/${texttype}/${slug}_rootd-pli-ms.json`
+    } else if (( script === "thai" ) || ( savedScript === "Thai" ) ) {
+      rootpath = `/assets/texts/th/root/pli/ms/${texttype}/${slugReady}_rootth-pli-ms.json`
+    } else {
+      rootpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slug}_root-pli-ms.json`
+    }
+    trnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/brahmali/${texttype}/${slug}_translation-en-brahmali.json`;
+    htmlpath = `/assets/html/${texttype}/${slug}_html.json`;
+  } else if (typeof otrnranges !== 'undefined' && otrnranges.indexOf(slug) !== -1) { 
+    trnpath = `/assets/texts/en/o/${texttype}/${slugReady}_translation-en-o.json`;
+    translator = "o";
+  } else {
+    trnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/${pathLang}/${translator}/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`;
+  }
 
-  const translationResponse = fetch(trnpath).then(response => response.json());
-  const htmlResponse = fetch(htmlpath).then(response => response.json());
+  var varpath = `${Sccopy}/sc-data/sc_bilara_data/variant/pli/ms/${texttype}/${slugReady}_variant-pli-ms.json`
+  var varpathLocal = `/assets/texts/variant/${texttype}/${slugReady}_variant-pli-ms.json`
 
-const varResponse = window.fetchVariantData(varpathLocal, varpath);
+  const rootResponse = fetch(rootpath)
+    .then(response => {
+      if (!response.ok) throw new Error('Root not found');
+      return response.json();
+    })
+    .catch(() => {
+      rootpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slugReady}_root-pli-ms.json`;
+      return fetch(rootpath).then(res => res.ok ? res.json() : {});
+    });
+
+  const translationResponse = fetch(trnpath).then(res => res.ok ? res.json() : {});
+  const htmlResponse = fetch(htmlpath).then(res => res.ok ? res.json() : {});
+  const varResponse = window.fetchVariantData ? window.fetchVariantData(varpathLocal, varpath) : Promise.resolve({});
 
   Promise.all([rootResponse, translationResponse, htmlResponse, varResponse]).then(responses => {
     const [paliData, transData, htmlData, varData] = responses;
 
-	
-// === НАЧАЛО ИЗМЕНЕНИЙ: Логика объединения Гатх ===
-    const segments = Object.keys(htmlData);
-    
-    for (let i = 0; i < segments.length; i++) {
-      let segment = segments[i];
+    // ПРОВЕРКА: Если данные отсутствуют, вызываем ошибку для перехода в catch
+    if (!htmlData || Object.keys(htmlData).length === 0) {
+        throw new Error("Text not found - triggering catch block");
+    }
 
-      // Проверки на undefined (как в оригинале)
-      if (transData[segment] === undefined) transData[segment] = "";
-      if (transData[segment] === "") transData[segment] = "";
-
-      // ЛОГИКА ОБЪЕДИНЕНИЯ (MERGE):
-      // Проверяем, является ли текущий сегмент частью стиха (verse-line)
-      // и есть ли следующий сегмент, который тоже часть стиха.
-      let nextSegment = segments[i + 1];
-      
-      if (htmlData[segment] && htmlData[segment].includes('verse-line') &&
-          nextSegment && htmlData[nextSegment] && htmlData[nextSegment].includes('verse-line')) {
-          
-          
-          let [nextOpen, nextClose] = htmlData[nextSegment].split(/{}/);
-          
-          // Проверяем, что следующий сегмент не начинает новый абзац
-          if (!nextOpen.includes('<p>')) {
-              
-              const toLower = (str) => {
-                  if (!str) return "";
-                  
-                  // Если строка начинается с I, I' (I'm, I'll) или O (возможно после кавычки) — не трогаем
-                  if (str.match(/^["“'‘]?(I\b|I'|O\b)/)) return str;
-                  
-                  // В остальных случаях просто делаем маленьким первый символ 
-                  return str.charAt(0).toLowerCase() + str.slice(1);
-              };
-
-    
-
-              // 1. Объединяем ПАЛИ
-              if (paliData[nextSegment]) {
-                  paliData[segment] = (paliData[segment] || "").trim() + " " + toLower(paliData[nextSegment].trim());
-              }
-
-              // 2. Объединяем ПЕРЕВОД (Английский)
-              if (transData[nextSegment]) {
-                  transData[segment] = (transData[segment] || "").trim() + " " + toLower(transData[nextSegment].trim());
-              }
-
-              // 3. Объединяем ВАРИАНТЫ (если есть)
-              if (varData[nextSegment]) {
-                  varData[segment] = (varData[segment] || "").trim() + " " + toLower(varData[nextSegment].trim());
-              }
-
-              // 4. Склеиваем HTML (оставляем обертку)
-              let [currOpen, currClose] = htmlData[segment].split(/{}/);
-              
-              // Переписываем htmlData текущего сегмента: начало от первого, конец от второго
-              htmlData[segment] = (currOpen || '') + "{}" + (nextClose || '');
-              
-              // 5. Пропускаем следующий сегмент (мы его только что приклеили)
-              i++; 
-          }
-      }
-      // === КОНЕЦ ЛОГИКИ ОБЪЕДИНЕНИЯ ===
-
-      
-      
-      let [openHtml, closeHtml] = htmlData[segment].split(/{}/);
-   openHtml = openHtml || ''; 
-   closeHtml = closeHtml || ''; 
-      
-      
-let startIndex = segment.indexOf(':') + 1;
-let anchor = segment.substring(startIndex);
-
-if (slug.includes('-') && (slug.includes('an') || slug.includes('sn') || slug.includes('dhp'))) {
-anchor = segment;
-}
-
-var fullUrlWithAnchor = window.location.href.split('#')[0] + '#' + anchor;
-
-  let finder = (params.get("s") || "").replace(/ṃ/g, "ṁ");
-
-if (localStorage.getItem("removePunct") === "true" && paliData[segment] !== undefined) {
-    paliData[segment] = paliData[segment].replace(/[-—–]/g, ' ');  
-    paliData[segment] = paliData[segment].replace(/[:;“”‘’,"']/g, '');  
-    paliData[segment] = paliData[segment].replace(/[.?!]/g, ' | '); 
-}
-
-if (finder && finder.trim() !== "") {
-  let regex = new RegExp(finder, 'gi'); 
-
-  try {
-    paliData[segment] = paliData[segment]?.replace(regex, match => `<b class='match finder'>${match}</b>`);
-  } catch (error) {}
-
-  try {
-    transData[segment] = transData[segment]?.replace(regex, match => `<b class="match finder">${match}</b>`);
-  } catch (error) {}
-
-  if (varData[segment] !== undefined) {  
-    try {
-      varData[segment] = varData[segment].replace(regex, match => `<b class="match finder">${match}</b>`);
-    } catch (error) {}
-  }
-}
-
-const linkToCopyStart = `<a class="text-decoration-none copyLink copyLink-start" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;
-let linkToCopy = `<a class="text-decoration-none copyLink" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`
-
-if (paliData[segment] !== undefined && transData[segment] !== undefined && varData[segment] !== undefined) {
-              html += `${openHtml}<span id="${anchor}">
-            <span class="pli-lang " lang="pi">${linkToCopyStart}${paliData[segment].trim()}${linkToCopy}
-      <font class="variant">
-	  <br>
-      ${linkToCopyStart}${varData[segment].trim()}${linkToCopy}   
-      </font>     
-            </span>
-            <span class="eng-lang" lang="en">${linkToCopyStart}${transData[segment].trim()}${linkToCopy}
-      </span>
-            </span>${closeHtml}\n\n`;
-      } else if (paliData[segment] !== undefined && transData[segment] !== undefined ) {
-              html += `${openHtml}<span id="${anchor}">
-            <span class="pli-lang " lang="pi">${linkToCopyStart}${paliData[segment].trim()}${linkToCopy}</span>
-            <span class="eng-lang" lang="en">${linkToCopyStart}${transData[segment].trim()}${linkToCopy}</span>
-            </span>${closeHtml}\n\n`;
-      } else if (paliData[segment] !== undefined) {
-        html += openHtml + '<span id="' + anchor + '"><span class="pli-lang inputscript-ISOPali" lang="pi">' + linkToCopyStart + paliData[segment].trim() + linkToCopy + '</span></span>' + closeHtml + '\n\n';
-      } else if (transData[segment] !== undefined) {
-        html += openHtml + '<span id="' + anchor + '"><span class="eng-lang" lang="en">' + linkToCopyStart + transData[segment].trim() + linkToCopy + '</span></span>' + closeHtml + '\n\n';
-      }
-}
-
-
-if (translator === "o") {
-  translatorforuser = '<a href=/assets/common/o-en.html>o</a> from Pali';
-} else if (translator === "sv") {
-  translatorforuser = 'SV theravada.ru from Eng';
-} else if ((translator === "" && texttype === "sutta" ) || (translator === "sujato" )) {
-  translatorforuser = 'Bhikkhu Sujato';
-} else if ((translator === "" && texttype === "vinaya") || (translator === "brahmali" ))  {
-  translatorforuser = 'Bhikkhu Brahmali';
-} else if (translator === "syrkin" ) {
-  translatorforuser = 'A.Y. Syrkin from Pali';
-} else if (translator === "syrkin+edited+o" ) {
-  translatorforuser = 'A.Y. Syrkin from Pali, edited by <a href=/assets/common/o-en.html>o</a>';
-} else if (translator === "sv+edited+o" ) {
-  translatorforuser = 'SV theravada.ru from Eng, ed. <a href=/assets/common/o-en.html>o</a>';
-} else if (translator === "o+in+progress" ) {
-  translatorforuser = '<a href=/assets/common/o-en.html>o</a>, in progress';
-} else {
-	translatorforuser = translator ;
-}
-
-
-     const translatorByline = `<div id="trn" class="byline">
-     <p>
-    <span class="pli-lang" lang="pi">Pāḷi <a class="text-decoration-none text-reset" href="/assets/texts/abbr.html?s=ms" title="Mahāsaṅgīti Pāḷi">MS</a> </span> <span class="eng-lang" lang="en">Trn: ${translatorforuser}</span>
-     </p>
-     </div>`;
-     
-         const enUrl = window.location.href;
-      const ruUrl = enUrl.replace("/read/", "/r/");
-
-      let scLink = `<p class="sc-link"><a title="Russian (Alt+1)" href="${ruUrl}">Ru</a>&nbsp;`;
-
-      // === 1. МГНОВЕННЫЙ ВЫВОД ТЕКСТА НА ЭКРАН ===
-      const origUrl = window.location.href;
-      let rvUrl = origUrl.replace("/r/", "/read/");
-      rvUrl = rvUrl.replace("/ml/", "");
-      rvUrl = rvUrl.replace("/read/", "/memorize/");
-      let thUrl = origUrl.replace("/read/", "/th/read/");
-      let dUrl = origUrl.replace("/read/", "/d/");
-
-      const SHOW_CLOSE_AFTER = 10;
-      let viewCount = parseInt(localStorage.getItem('warningViewCount')) || 0;
-      viewCount++;
-      localStorage.setItem('warningViewCount', viewCount);
-      const canShowClose = viewCount >= SHOW_CLOSE_AFTER;
-      const isWarningClosed = localStorage.getItem('warningClosed');
-
-      const warning = `
-        <div class="warning-container warning-box">
-          <p class='warning'>
-            <strong>Note:</strong><a class='text-decoration-none cursor-pointer' target='' href='${dUrl}'>&nbsp;</a>Translations, dictionaries and commentaries were not made by the Blessed One.<a class='text-decoration-none cursor-pointer' target='' href='${thUrl}'>&nbsp;</a>Cross-check with Pali in 4 main nikayas.
-                 ${canShowClose && !isWarningClosed ? `<span class="close-warning">×</span>` : ''} 
-          </p>
-        </div>
-      `;
-
-      // Выводим текст СРАЗУ
-      suttaArea.innerHTML = 
-          `<div id="top-links-container" class="min-h-24"></div><br>` + 
-          (!isWarningClosed ? warning : '') + 
-          translatorByline + 
-          html + 
-          translatorByline + 
-          (!isWarningClosed ? warning : '') + 
-          `<div id="bottom-links-container" class="min-h-24"></div>`;
-window.dispatchEvent(new Event('suttaLoaded'));
-if (typeof window.setupVariantVisibility === 'function') {
-          window.setupVariantVisibility();
-      }
-
-      // === 2. НАСТРОЙКА ИНТЕРФЕЙСА ===
-      if (canShowClose && !isWarningClosed) {
-        document.querySelectorAll('.close-warning').forEach(btn => {
-          btn.addEventListener('click', function() {
-            localStorage.setItem('warningClosed', 'true');
-            document.querySelectorAll('.warning-container').forEach(el => el.remove());
-          });
-        });
-      }
-
-      const pageTitleElement = document.querySelector("h1.sutta-title");
-      let pageTitle = '';
-      if (pageTitleElement) {
-        let text = pageTitleElement.textContent;
-        const paliLettersRegex = /[a-zāīūṭḍñṃṁṅṇśṣ\s]/gi;
-        const filtered = text.match(paliLettersRegex);
-        if (filtered) pageTitle = filtered.join('');
-      }
-      let cleanSlug = slug.replace(/pli-tv-|vb-/g, '');
-      document.title = `${cleanSlug} ${pageTitle}`;
-          
-      var metaDescription = document.createElement('meta');
-      metaDescription.name = 'description';
-      metaDescription.content = document.title;
-      document.head.appendChild(metaDescription);
-
-      var ogDescriptionMeta = document.createElement('meta');
-      ogDescriptionMeta.property = 'og:description';
-      ogDescriptionMeta.content = document.title;
-      document.head.appendChild(ogDescriptionMeta);
-
-      toggleThePali();
-
-      scLink += generateThirdPartyLinks(slug, slugReady, texttype, translator);
-      scLink += "</p>";
-
-      const topContainer = document.getElementById('top-links-container');
-      const bottomContainer = document.getElementById('bottom-links-container');
-      if (topContainer) topContainer.innerHTML = scLink;
-      if (bottomContainer) bottomContainer.innerHTML = scLink;
-
-      renderNavigation(slug, slugReady);
-   
-	     addToSearchHistory(); 
-
-    })
-.catch(error => {
-  console.log('error: not found');
-  const redirectKey = `redirect_${slug}`;
-  const redirectCount = localStorage.getItem(redirectKey) || 0;
-  
-  if (redirectCount >= 3) {
-        suttaArea.innerHTML = `<p>Search for "${decodeURIComponent(slug)}" failed. Please try another slug.</p>
-              <div class="spinner-border" role="status">
-                <span class="visually-hidden">Loading...</span>
-                  </div>
-    <br><br>
-  <p>  Note: <br>
-More search options available from the main page.</p>`;
-    
-    localStorage.removeItem(redirectKey);
-    return;
-  }
-
-  localStorage.setItem(redirectKey, parseInt(redirectCount) + 1);
-
-var xhr = new XMLHttpRequest();
-xhr.open("GET", "/?p=-kn&q=" + encodeURIComponent(slug), true);
-xhr.send();
-
-xhr.onreadystatechange = function() {
-  if (xhr.readyState == 4) {
-    if (xhr.status == 200) {
-      if (!xhr.responseText.includes("Page not found") && 
-          !xhr.responseText.includes("404") &&
-          xhr.responseText.trim().length > 0) {
-        window.location.href = "/?p=-kn&q=" + encodeURIComponent(slug);
+    // Логика Final Ruling
+    let finalRulingAnchor = "";
+    if (slug.includes("bu-") || slug.includes("bi-")) {
+      for (let seg in htmlData) {
+        if (htmlData[seg] && htmlData[seg].includes("patimokkha")) {
+          finalRulingAnchor = seg.substring(seg.indexOf(':') + 1);
+          break;
+        }
       }
     }
-  }
-};
 
-});
+    // Обработка сегментов с объединением гатх
+    const segments = (typeof window.mergeGathas === 'function') ? 
+          window.mergeGathas(htmlData, paliData, transData, varData) : Object.keys(htmlData);
+
+    for (let i = 0; i < segments.length; i++) {
+      let segment = segments[i];
+      let [openHtml, closeHtml] = htmlData[segment].split(/{}/);
+      openHtml = openHtml || ''; 
+      closeHtml = closeHtml || ''; 
+
+      let startIndex = segment.indexOf(':') + 1;
+      let anchor = segment.substring(startIndex);
+      if (slug.includes('-') && (slug.includes('an') || slug.includes('sn') || slug.includes('dhp'))) {
+        anchor = segment;
+      }
+
+      var fullUrlWithAnchor = window.location.href.split('#')[0] + '#' + anchor;
+      let finder = (params.get("s") || "").replace(/ṃ/g, "ṁ");
+
+      if (localStorage.getItem("removePunct") === "true" && paliData[segment] !== undefined) {
+          paliData[segment] = paliData[segment].replace(/[-—–]/g, ' ').replace(/[:;“”‘’,"']/g, '').replace(/[.?!]/g, ' | '); 
+      }
+
+      if (finder && finder.trim() !== "") {
+        let regex = new RegExp(finder, 'gi'); 
+        const highlight = match => `<b class='match finder'>${match}</b>`;
+        if (paliData[segment]) paliData[segment] = paliData[segment].replace(regex, highlight);
+        if (transData[segment]) transData[segment] = transData[segment].replace(regex, highlight);
+        if (varData[segment]) varData[segment] = varData[segment].replace(regex, highlight);
+      }
+
+      const linkToCopyStart = `<a class="text-decoration-none copyLink copyLink-start" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;
+      let linkToCopy = `<a class="text-decoration-none copyLink" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;
+
+      html += `${openHtml}<span id="${anchor}">`;
+      if (paliData[segment] !== undefined) {
+        html += `<span class="pli-lang" lang="pi">${linkToCopyStart}${paliData[segment].trim()}${linkToCopy}`;
+        if (varData[segment] !== undefined) {
+          html += `<font class="variant"><br>${linkToCopyStart}${varData[segment].trim()}${linkToCopy}</font>`;
+        }
+        html += `</span>`;
+      }
+      if (transData[segment] !== undefined) {
+        html += `<span class="eng-lang" lang="en">${linkToCopyStart}${transData[segment].trim()}${linkToCopy}</span>`;
+      }
+      html += `</span>${closeHtml}\n\n`;
+    }
+
+    // Подготовка Byline
+    let translatorforuser = translator;
+    if (translator === "o") {
+      translatorforuser = '<a href=/assets/common/o-en.html>o</a> from Pali';
+    } else if (translator === "sujato") {
+      translatorforuser = 'Bhikkhu Sujato';
+    } else if (translator === "brahmali") {
+      translatorforuser = 'Bhikkhu Brahmali';
+    }
+
+    const translatorByline = `<div id="trn" class="byline">
+      <p><span class="pli-lang" lang="pi">Pāḷi <a class="text-decoration-none text-reset" href="/assets/texts/abbr.html?s=ms" title="Mahāsaṅgīti Pāḷi">MS</a></span> <span class="eng-lang" lang="en">Trn: ${translatorforuser}</span></p>
+    </div>`;
+
+    const ruUrl = window.location.href.replace("/read/", "/r/");
+    let scLink = `<p class="sc-link"><a title="Russian (Alt+1)" href="${ruUrl}">Ru</a>&nbsp;`;
+
+    // Интерфейсные элементы
+    const origUrl = window.location.href;
+    let dUrl = origUrl.replace("/read/", "/d/");
+    let thUrl = origUrl.replace("/read/", "/th/read/");
+    const isWarningClosed = localStorage.getItem('warningClosed');
+    const canShowClose = (parseInt(localStorage.getItem('warningViewCount')) || 0) >= 10;
+
+    const warning = `
+      <div class="warning-container warning-box">
+        <p class='warning'>
+          <strong>Note:</strong><a class='text-decoration-none cursor-pointer' target='' href='${dUrl}'>&nbsp;</a>Translations, dictionaries and commentaries were not made by the Blessed One.<a class='text-decoration-none cursor-pointer' target='' href='${thUrl}'>&nbsp;</a>Cross-check with Pali in 4 main nikayas.
+          ${canShowClose && !isWarningClosed ? `<span class="close-warning">×</span>` : ''} 
+        </p>
+      </div>
+    `;
+
+    suttaArea.innerHTML = `<div id="top-links-container" class="min-h-24"></div><br>` + 
+        (!isWarningClosed ? warning : '') + translatorByline + html + translatorByline + 
+        (!isWarningClosed ? warning : '') + `<div id="bottom-links-container" class="min-h-24"></div>`;
+
+    window.dispatchEvent(new Event('suttaLoaded'));
+    if (typeof window.setupVariantVisibility === 'function') window.setupVariantVisibility();
+
+    // Заголовки и мета
+    let cleanSlug = slug.replace(/pli-tv-|vb-/g, '');
+    document.title = `${cleanSlug}`;
+    
+    toggleThePali();
+    if (typeof generateThirdPartyLinks === 'function') {
+      scLink += generateThirdPartyLinks(slug, slugReady, texttype, translator);
+    }
+    if (finalRulingAnchor) scLink += `&nbsp;<a href="#${finalRulingAnchor}" title="To final rule">Final</a>`;
+    scLink += "</p>";
+
+    const tContainer = document.getElementById('top-links-container');
+    const bContainer = document.getElementById('bottom-links-container');
+    if (tContainer) tContainer.innerHTML = scLink;
+    if (bContainer) bContainer.innerHTML = scLink;
+
+    renderNavigation(slug, slugReady);
+    addToSearchHistory(); 
+
+  }).catch(error => {
+    console.log('error: not found');
+    console.log('Slug:', slug, 'SlugReady:', slugReady);
+    
+    // Защита от бесконечных редиректов
+    const redirectKey = `redirect_${slug}`;
+    const redirectCount = localStorage.getItem(redirectKey) || 0;
+    
+    if (redirectCount >= 3) {
+      console.error('Exceeded maximum redirects for slug:', slug);
+      suttaArea.innerHTML = `<p>Search for "${decodeURIComponent(slug)}" failed. Please try another slug.</p>
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <br><br>
+            <p>Note: <br>More search options available from the main page.</p>`;
+      localStorage.removeItem(redirectKey);
+      return;
+    }
+
+    localStorage.setItem(redirectKey, parseInt(redirectCount) + 1);
+
+    // Фолбэк-поиск через XHR
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "/?p=-kn&q=" + encodeURIComponent(slug), true);
+    xhr.send();
+
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState == 4) {
+        if (xhr.status == 200) {
+          if (!xhr.responseText.includes("Page not found") && 
+              !xhr.responseText.includes("404") &&
+              xhr.responseText.trim().length > 0) {
+            window.location.href = "/?p=-kn&q=" + encodeURIComponent(slug);
+          } else {
+            console.log('Page not found or empty response');
+          }
+        } else if (xhr.status == 404) {
+            console.log('Error 404: Page not found');
+        } else {
+            console.log('Error sending request. Status:', xhr.status);
+        }
+      }
+    };
+    
+    suttaArea.innerHTML = `<p>Searching for "${decodeURIComponent(slug)}". Please wait.</p>
+                        <div class="spinner-border" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                    </div>
+  <p>Hint: <br>
+      More search options are available from the main page.
+  <br></p>`;
+  });
 }
+
+
 
 // initialize the whole app
 if (document.location.search) {

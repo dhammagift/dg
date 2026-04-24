@@ -422,6 +422,10 @@ if (translator === "o") {
           (!isWarningClosed ? warning : '') + 
           `<div id="bottom-links-container" style="min-height: 24px;"></div>`;
 
+
+            window.dispatchEvent(new Event('suttaLoaded'));
+
+
       // === 2. НАСТРОЙКА ИНТЕРФЕЙСА (ПОКА ТЕКСТ УЖЕ МОЖНО ЧИТАТЬ) ===
       if (canShowClose && !isWarningClosed) {
         document.querySelectorAll('.close-warning').forEach(btn => {

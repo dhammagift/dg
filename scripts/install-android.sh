@@ -1,3 +1,5 @@
+
+
 #install Termux
 #open it 
 #then run: 
@@ -20,6 +22,7 @@ if [ "$SKIP_INIT" = false ]; then
     bash ./scripts/install-android.sh -s
     exit 0
 fi
+
 #for offline audio also clone fdg.audio repo
 # mkdir assets/audio
 # cd assets/audio 

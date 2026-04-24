@@ -59,7 +59,6 @@ async function buildSutta(slug) {
   let html = `<div class="button-area"><button title="Переключить язык (Atl+Z или Alt+Space)" id="language-button" class="hide-button">Pāḷi Рус</button></div>`;
   const slugReady = parseSlug(slug);
 
-  // === ИЗБАВЛЯЕМСЯ ОТ PHP ===
   // Запрашиваем переводчика напрямую через JS функцию из common.js
   if (translator === "") {
       translator = await getTranslator(texttype, slugReady, pathLang);
@@ -89,7 +88,7 @@ async function buildSutta(slug) {
 
   var trnpath = rustrnpath;
 
-  // === ЛОГИКА ПУТЕЙ И ПЕРЕВОДЧИКОВ БЕЗ ОШИБКИ "LET TRANSLATOR" ===
+  // ЛОГИКА ПУТЕЙ И ПЕРЕВОДЧИКОВ
   if (slug.includes("mn"))  {
       trnpath = rustrnpath; 
       language = "pli-2nd";
@@ -163,6 +162,17 @@ async function buildSutta(slug) {
   Promise.all([rootResponse, translationResponse, htmlResponse, varResponse]).then(responses => {
       const [paliData, transData, htmlData, varData] = responses;
       
+      // ПОИСК ОКОНЧАТЕЛЬНОГО ПРАВИЛА СТРОГО ПО HTML КЛАССУ
+      let finalRulingAnchor = "";
+      if (slug.includes("bu-") || slug.includes("bi-")) {
+          for (let seg in htmlData) {
+              if (htmlData[seg] && htmlData[seg].includes("patimokkha")) {
+                  finalRulingAnchor = seg.substring(seg.indexOf(':') + 1);
+                  break;
+              }
+          }
+      }
+
       const segments = (typeof window.mergeGathas === 'function') ? 
           window.mergeGathas(htmlData, paliData, transData, varData) : Object.keys(htmlData);
       
@@ -266,7 +276,7 @@ async function buildSutta(slug) {
           (!isWarningClosed ? warning : '') + 
           `<div id="bottom-links-container" class="min-h-24"></div>`;
      
-            window.dispatchEvent(new Event('suttaLoaded'));
+      window.dispatchEvent(new Event('suttaLoaded'));
       if (typeof window.setupVariantVisibility === 'function') {
           window.setupVariantVisibility();
       }
@@ -306,6 +316,12 @@ async function buildSutta(slug) {
       if (typeof generateThirdPartyLinks === 'function') {
           scLink += generateThirdPartyLinks(slug, slugReady, texttype, translator);
       }
+      
+      // ВЫВОД ССЫЛКИ FINAL
+      if (finalRulingAnchor) {
+          scLink += `&nbsp;<a href="#${finalRulingAnchor}" title="К окончательному правилу">Final</a>`;
+      }
+      
       scLink += "</p>";
 
       const topContainer = document.getElementById('top-links-container');
