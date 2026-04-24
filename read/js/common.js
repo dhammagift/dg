@@ -223,18 +223,34 @@ document.addEventListener("DOMContentLoaded", function() {
         }, 2000);
     }
 
-    // ЛОГИКА ТРИГГЕРА В УГЛУ (Тап/Наведение всегда вызывают кнопки)
-    function checkTriggerZone(clientX, clientY, isTap) {
-        let st = window.pageYOffset || document.documentElement.scrollTop;
-        if (!isTap && st > 100) return; 
-
+// ЛОГИКА ТРИГГЕРА В УГЛУ (Тап/Клик/Наведение всегда вызывают кнопки)
+    function checkTriggerZone(clientX, clientY) {
         const triggerSize = 100; 
+        // Проверяем верхний правый угол
         if (clientX > window.innerWidth - triggerSize && clientY < triggerSize) {
             // Принудительно обновляем время взаимодействия, чтобы перебить блокировку TTS
             lastManualInteraction = Date.now();
             keepSmartUIAlive();
         }
     }
+
+    // 1. Срабатывание по наведению мыши
+    document.addEventListener('mousemove', (e) => {
+        checkTriggerZone(e.clientX, e.clientY);
+    }, { passive: true });
+
+    // 2. Срабатывание по клику мыши (дублирует логику тапа)
+    document.addEventListener('mousedown', (e) => {
+        checkTriggerZone(e.clientX, e.clientY);
+    }, { passive: true });
+
+    // 3. Срабатывание по касанию пальцем
+    document.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 0) {
+            checkTriggerZone(e.touches[0].clientX, e.touches[0].clientY);
+        }
+    }, { passive: true });
+	
 
     document.addEventListener('mousemove', (e) => checkTriggerZone(e.clientX, e.clientY, false));
     document.addEventListener('touchstart', (e) => {
