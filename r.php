@@ -138,7 +138,7 @@ function load_all_languages_interleaved($slug, $is_dev) {
   usort($all_keys, 'strnatcmp');
 
   // --- ГЕНЕРАЦИЯ HTML ТАБЛИЦЫ ---
-  $html_output = '<div class=""><table id="sutta-table" class="table table-striped table-bordered" style="width:100%">';
+  $html_output = '<div class="sutta-container"><table id="sutta-table" class="table table-striped table-bordered" style="width:100%">';
   $html_output .= '<thead><tr><th>ID</th><th>Pali</th><th>English</th><th>Russian</th></tr></thead>';
   $html_output .= '<tbody>';
   
@@ -177,9 +177,9 @@ function load_all_languages_interleaved($slug, $is_dev) {
       
       $html_output .= "<tr id='{$row_id}'>";
       $html_output .= "<td data-column='ID'>" . htmlspecialchars($key) . "</td>";
-      $html_output .= "<td data-column='Pali' class='pali-text copyLink' lang='pi'>{$pali_col_html}</td>";
+      $html_output .= "<td data-column='Pali' class='pali-text copyLink pli-lang' lang='pi'>{$pali_col_html}</td>";
       $html_output .= "<td data-column='English' class='en-text copyLink' lang='en'>{$en_col_html}</td>";
-      $html_output .= "<td data-column='Russian' class='ru-text copyLink' lang='ru'>{$ru_col_html}</td>";
+      $html_output .= "<td data-column='Russian' class='ru-text copyLink rus-lang' lang='ru'>{$ru_col_html}</td>";
       $html_output .= "</tr>";
     }
   }
@@ -559,7 +559,7 @@ body.dark .dt-button-background {
     <button type="submit" id="searchbtn" class="btn btn-sm btn-outline-secondary rounded-circle p-1 ms-1 flex-shrink-0" style="width:30px; height:30px;">Go</button>
    </form>
    
-   <a id="ttsLink" href="/tts.php" class="mode-switch text-decoration-none text-dark me-2" title="Text-to-Speech Mode">
+   <a id="ttsLink" href="javascript:void(0)" data-slug="<?= htmlspecialchars($slug) ?>" class="mode-switch text-decoration-none text-dark me-2 voice-link" title="Text-to-Speech Mode">
       <img src="/assets/svg/volume-high.svg" style="width: 25px; height: 25px;">
    </a>
   </div>
@@ -593,6 +593,7 @@ body.dark .dt-button-background {
  <script src="/assets/js/paliLookup.js" defer></script>
  <script src="/assets/js/settings.js"></script>
  <script src="/assets/js/smoothScroll.js" defer></script>
+ <script src="/assets/js/voice.js" defer></script>
  
 <script>
 // Функция поиска (Go)
