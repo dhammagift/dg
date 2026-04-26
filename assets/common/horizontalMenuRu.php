@@ -227,7 +227,7 @@ DG
     <li>
          <div class="dropdown-item ">
          <i class="' . $iconimportant . '"></i>
-         <a class="text-reset" target="_blank" href="javascript:void(0)" onclick="openWithQuery(event, \'https://dharmamitra.org/?target_lang=english-explained&input_sentence={{q}}\')">Mitra Translator</a>
+         <a class="text-reset" target="_blank" href="javascript:void(0)" onclick="openWithQuery(event, \'https://dharmamitra.org/translate?input_sentence={{q}}\')">Mitra Translator</a>
          + <a class="text-reset" target="_blank" href="https://dharmamitra.org/nexus/db/pa
 ">Nexus</a>
            </div>
