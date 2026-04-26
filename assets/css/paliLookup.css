@@ -141,28 +141,41 @@ img[data-size="large"] {
   height: 48px;
 }
 
-
+/* Скроллбары для WebKit (Chrome, Safari, Edge) */
         ::-webkit-scrollbar {
-        background: #E1EBED; /* Светлый фон */
+          width: 6px;
+          height: 6px;
+          background: transparent;
+        }
+
+        ::-webkit-scrollbar-track {
+          background: transparent;
         }
 
         ::-webkit-scrollbar-thumb {
-       background: #E1EBED; /* Светлый фон */
+          background: rgba(136, 136, 136, 0.5);
+          border-radius: 10px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-          background: #E1EBED; /* Более тёмный скроллбар при наведении */
+          background: rgba(136, 136, 136, 0.8);
         }
 
         /* Темная тема */
-        [data-theme="dark"] ::-webkit-scrollbar {
-          background: #07021D; /* Темный фон скроллбара */
+        [data-theme="dark"] ::-webkit-scrollbar-thumb,
+        .dark ::-webkit-scrollbar-thumb {
+          background: rgba(150, 150, 150, 0.4);
         }
 
-        [data-theme="dark"] ::-webkit-scrollbar-thumb {
-          background: #07021D; /* Светлый скроллбар для темной темы */
+        [data-theme="dark"] ::-webkit-scrollbar-thumb:hover,
+        .dark ::-webkit-scrollbar-thumb:hover {
+          background: rgba(150, 150, 150, 0.7);
         }
-        
+
+        /* Тонкий скроллбар для Firefox */
+        html {
+          scrollbar-width: thin;
+        }   
         
                 .resize-handle {
             position: absolute;
@@ -419,3 +432,67 @@ img[data-size="large"] {
     visibility: hidden;
     width: calc(100% - 20px);
 }
+
+/* =========================================
+   ИЗОЛИРОВАННЫЕ СТИЛИ ДЛЯ IFRAME СЛОВАРЯ
+   ========================================= */
+html.dict-iframe-html {
+  scrollbar-width: thin;
+}
+
+body.dict-iframe-body {
+  font-family: Arial, sans-serif;
+  padding: 10px;
+  margin: 0;
+  overflow-y: auto;
+}
+
+/* Наследование темы для тела iframe */
+body.dict-iframe-body.dark {
+  background: #07021D !important;
+  color: #E1EAED !important;
+}
+
+.dict-iframe-body strong {
+  font-size: 1.2em;
+}
+
+.dict-iframe-body ul {
+  list-style-type: none;
+  padding-left: 15px;
+  line-height: 1.2em;
+  margin-top: 5px;
+}
+
+.dict-iframe-body li {
+  margin-bottom: 10px;
+}
+
+/* WebKit Скроллбары (Chrome, Safari, Edge) для iframe */
+html.dict-iframe-html::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  background: transparent;
+}
+
+html.dict-iframe-html::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html.dict-iframe-html::-webkit-scrollbar-thumb {
+  background: rgba(136, 136, 136, 0.5);
+  border-radius: 10px;
+}
+
+html.dict-iframe-html::-webkit-scrollbar-thumb:hover {
+  background: rgba(136, 136, 136, 0.8);
+}
+
+html.dict-iframe-html.dark::-webkit-scrollbar-thumb {
+  background: rgba(150, 150, 150, 0.4);
+}
+
+html.dict-iframe-html.dark::-webkit-scrollbar-thumb:hover {
+  background: rgba(150, 150, 150, 0.7);
+}
+

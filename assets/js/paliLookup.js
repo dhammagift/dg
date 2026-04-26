@@ -208,10 +208,9 @@ function loadDictCSS() {
     });
 }
 
-
 async function handleWordLookup(word, event) {
     if (!dictionaryVisible) return;
-await loadDictCSS();
+    await loadDictCSS();
     const currentTheme = getEffectiveTheme();
     
     if (savedDict.includes("full")) {
@@ -328,38 +327,16 @@ await loadDictCSS();
 
         let finalHeight = Math.min(Math.max(contentHeight + 20, minHeight), maxHeight);
 
+        // Вставляем чистый HTML и линкуем внешний CSS файл
         iframe.srcdoc = `
             <!DOCTYPE html>
-            <html lang="en" class="${themeClass}">
+            <html lang="en" class="dict-iframe-html ${themeClass}">
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        padding: 10px;
-                        margin: 0;
-                        overflow: auto;
-                    }
-                    body.dark {
-                        background: #07021D !important;
-                        color: #E1EAED !important;
-                    }
-                    strong {
-                        font-size: 1.2em;
-                    }
-                    ul {
-                        list-style-type: none;
-                        padding-left: 15px;
-                        line-height: 1.2em;
-                        margin-top: 5px;
-                    }
-                    li {
-                        margin-bottom: 10px;
-                    }
-                </style>
+                <link rel="stylesheet" href="/assets/css/paliLookup.css">
             </head>
-            <body class="${themeClass}">
+            <body class="dict-iframe-body ${themeClass}">
                 ${translation}
             </body>
             </html>
