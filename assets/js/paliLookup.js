@@ -184,7 +184,7 @@ else if (savedDict === "standaloneru") {
 
 if (savedDict === "machinetranslation") {
     inNewWindow = true;
-  dictUrl = "https://dharmamitra.org/?target_lang=english-explained&input_sentence="; 
+  dictUrl = "https://dharmamitra.org/translate?input_sentence="; 
 }
 
 const scriptCache = new Map();
