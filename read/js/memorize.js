@@ -12,6 +12,11 @@ style.textContent = `
     bottom: 0em !important;
     right: -0.6em !important;
   }
+  
+  .byline .pli-lang {
+  font-size: 1em !important;
+}
+  
 `;
 document.head.appendChild(style);
 
