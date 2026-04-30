@@ -461,15 +461,15 @@ DG
      
               <li>
          <div class="dropdown-item "> 
-         <a class="text-reset" target="_blank"   href="https://readingfaithfully.org/">ReadingFaithfully.org</a>
+         <a class="text-reset" target="_blank"   href="https://index.readingfaithfully.org/">ReadingFaithfully Индекс Сутт</a>
                    <a class="text-reset" target="" href="/assets/br/">Кратко</a>  
-       <a class="text-reset" target="_blank"  href="https://index.readingfaithfully.org/">Темы</a>
        </div>
          </li>   
      
          <li>
          <div class="dropdown-item "> 
-         <a class="text-reset" target="_blank" href="/assets/repeat-timer/">Loop Timer</a>
+         <a class="text-reset" target="_blank" href="/ru/memo/?delay=300&end=10&trn=0&loop=1&lc=%E2%88%9E&snd=gong.mp3">Loop Timer</a>
+         <a class="text-reset" target="_blank" href="/assets/repeat-timer/">#2</a>
          <a class="text-reset" target="_blank" href="/assets/pomodoro-timer/">Pomodoro Timer</a>  
        </div>
     </li>  

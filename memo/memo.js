@@ -427,23 +427,45 @@ if (favBtn) {
                     e.preventDefault();
                     const currentText = textInput.value.trim();
                     
-                    if (!currentText) {
-                        alert(window.memoLang === 'ru' ? 'Сначала введите текст!' : 'Please enter text first!');
-                        return;
-                    }
+                    let textParamStr = "";
 
-                    let textToShare = currentText;
+                    if (currentText) {
+                        let textToShare = currentText;
 
-                    // Предлагаем обрезать длинный текст для ссылки
-                    if (textToShare.length > 1900) {
-                        const msg = window.memoLang === 'ru' 
-                            ? 'Текст слишком длинный для создания ссылки (лимит 1900 символов).\nХотите сократить его, чтобы поделиться?' 
-                            : 'The text is too long for a link (limit 1900 characters).\nTruncate it to share?';
-                        
-                        if (confirm(msg)) {
-                            textToShare = textToShare.substring(0, 1900);
-                        } else {
-                            return; // Пользователь отказался обрезать
+                        // Предлагаем обрезать длинный текст для ссылки
+                        if (textToShare.length > 1900) {
+                            const msg = window.memoLang === 'ru' 
+                                ? 'Текст слишком длинный для создания ссылки (лимит 1900 символов).\nХотите сократить его, чтобы поделиться?' 
+                                : 'The text is too long for a link (limit 1900 characters).\nTruncate it to share?';
+                            
+                            if (confirm(msg)) {
+                                textToShare = textToShare.substring(0, 1900);
+                            } else {
+                                return; // Пользователь отказался обрезать
+                            }
+                        }
+
+                        // Текст обрабатываем вручную: оставляем кириллицу и пали как есть, 
+                        // прячем только пробелы, переносы и системные символы
+                        let safeText = textToShare
+                            .replace(/%/g, '%25')
+                            .replace(/&/g, '%26')
+                            .replace(/=/g, '%3D')
+                            .replace(/\+/g, '%2B')
+                            .replace(/#/g, '%23')
+                            .replace(/\?/g, '%3F')
+                            .replace(/ /g, '%20')
+                            .replace(/\n/g, '%0A')
+                            .replace(/\r/g, '%0D');
+
+                        textParamStr = "text=" + safeText + "&";
+                    } else {
+                        // Если текста нет, проверим, чтобы таймеры не были по нулям
+                        const delaySec = parseFloat(document.getElementById("ttsDelay").value) || 0;
+                        const endDelaySec = parseFloat(document.getElementById("ttsEndDelay").value) || 0;
+                        if (delaySec === 0 && endDelaySec === 0) {
+                            alert(window.memoLang === 'ru' ? 'Введите текст или установите время таймера!' : 'Please enter text or set timer duration!');
+                            return;
                         }
                     }
 
@@ -459,23 +481,10 @@ if (favBtn) {
                     params.set('snd', document.getElementById("ttsSound").value || "none");
                     params.set('sep', document.getElementById("ttsDelimiter").value || "");
 
-                    // Текст обрабатываем вручную: оставляем кириллицу и пали как есть, 
-                    // прячем только пробелы, переносы и системные символы (&, =, #, ?), чтобы ссылка была кликабельной
-                    let safeText = textToShare
-                        .replace(/%/g, '%25')
-                        .replace(/&/g, '%26')
-                        .replace(/=/g, '%3D')
-                        .replace(/\+/g, '%2B')
-                        .replace(/#/g, '%23')
-                        .replace(/\?/g, '%3F')
-                        .replace(/ /g, '%20')
-                        .replace(/\n/g, '%0A')
-                        .replace(/\r/g, '%0D');
-
                     let origin = window.location.origin;
                     
-                    // Склеиваем красивый текст и закодированные настройки
-                    const fullUrl = origin + window.location.pathname + "?text=" + safeText + "&" + params.toString();
+                    // Склеиваем красивый текст (если он есть) и закодированные настройки
+                    const fullUrl = origin + window.location.pathname + "?" + textParamStr + params.toString();
 
                     navigator.clipboard.writeText(fullUrl).then(() => {
                         if (typeof showBubbleNotification === 'function') {
@@ -486,8 +495,6 @@ if (favBtn) {
                     }).catch(err => console.error('Ошибка копирования: ', err));
                 });
             }
-
-            
         });
 
         if (window.MediaMetadata) {
