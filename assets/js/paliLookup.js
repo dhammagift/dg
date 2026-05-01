@@ -93,10 +93,7 @@ window.addEventListener('message', function(event) {
         }
         
         if (newDict !== currentSavedDict) {
-            localStorage.setItem('selectedDict', newDict);
-            if (typeof savedDict !== 'undefined') {
-                savedDict = newDict; 
-            }
+            applyDictConfig(newDict);
         }
     }
 });
@@ -157,6 +154,50 @@ let dictUrl;
 
 let externalDict = false;
 let inNewWindow = false;
+
+function applyDictConfig(newDict) {
+    savedDict = newDict;
+    localStorage.setItem('selectedDict', newDict);
+
+    externalDict = false;
+    inNewWindow = false;
+
+    const theme = getEffectiveTheme();
+
+    if (savedDict.includes("dpd")) {
+        dictUrl = "https://dict.dhamma.gift";
+        if (savedDict.includes("ru")) {
+            dictUrl += "/ru";
+        }
+        if (savedDict.includes("full")) {
+            dictUrl += `/?silent&theme=${theme}&q=`;
+        } else if (savedDict.includes("compact")) {
+            dictUrl += "/gd?search=";
+        }
+    } else if (savedDict === "dicttango") {
+        externalDict = true;
+        dictUrl = "dttp://app.dicttango/WordLookup?word=";
+    } else if (savedDict === "goldenpc") {
+        externalDict = true;
+        dictUrl = "goldendict://";
+    } else if (savedDict === "mdict") {
+        externalDict = true;
+        dictUrl = "mdict://mdict.cn/search?text=";
+    } else if (savedDict === "newwindow") {
+        dictUrl = `https://dict.dhamma.gift/?silent&theme=${theme}&q=`;
+    } else if (savedDict === "newwindowru") {
+        dictUrl = `https://dict.dhamma.gift/ru/?silent&theme=${theme}&q=`;
+    } else if (savedDict === "standaloneru") {
+        dictUrl = "standaloneru"; 
+    } else if (savedDict === "standalone") {
+        dictUrl = "standalone"; 
+    } else if (savedDict === "machinetranslation") {
+        inNewWindow = true;
+        dictUrl = "https://dharmamitra.org/translate?input_sentence="; 
+    } else {
+        dictUrl = "searchonly";
+    }
+}
 
 dhammaGift = '';
 if (isLocalhost) {
@@ -895,12 +936,8 @@ document.addEventListener("keydown", (event) => {
                 `Dictionary: ${newDict === modes.newWindow ? "New Window" : "Standalone"}`;
         }
 
-        localStorage.setItem('selectedDict', newDict);
+        applyDictConfig(newDict);
         showBubbleNotification(notificationText);
-
-        setTimeout(() => {
-            window.location.reload();
-        }, 300);
     }
 });
 
