@@ -162,6 +162,39 @@ function applyDictConfig(newDict) {
     externalDict = false;
     inNewWindow = false;
 
+    // Принудительно меняем сохраненный словарь в зависимости от текущего языка
+    if (savedDict === "standalone" || savedDict === "standaloneru") {
+        savedDict = isRussian ? "standaloneru" : "standalone";
+        localStorage.setItem('selectedDict', savedDict);
+    } else if (savedDict === "newwindow" || savedDict === "newwindowru") {
+        savedDict = isRussian ? "newwindowru" : "newwindow";
+        localStorage.setItem('selectedDict', savedDict);
+    } else if (savedDict === "machinetranslation") {
+        inNewWindow = true;
+    }
+
+    // --- МАГИЯ ОЧИСТКИ ДЛЯ КОРРЕКТНОГО ПЕРЕКЛЮЧЕНИЯ ---
+    // Определяем путь скрипта, который нам БОЛЬШЕ НЕ НУЖЕН
+    const oldLangScriptUrl = isRussian 
+        ? '/assets/js/standalone-dpd/dpd_ebts.js' 
+        : '/assets/js/standalone-dpd/ru/dpd_ebts.js';
+    
+    // Удаляем старый тег из DOM, чтобы загрузчик не считал, что база уже готова
+    const oldScriptElement = document.querySelector(`script[src="${oldLangScriptUrl}"]`);
+    if (oldScriptElement) {
+        oldScriptElement.remove();
+    }
+    
+    // Удаляем из нашего внутреннего кэша загруженных скриптов
+    if (typeof scriptCache !== 'undefined') {
+        scriptCache.delete(oldLangScriptUrl);
+    }
+    
+    // Сбрасываем промис. При следующем клике браузер мгновенно 
+    // достанет нужный файл из своего HTTP-кэша и обновит базу.
+    dbLoadPromise = null; 
+    // ----------------------------------------------------
+
     const theme = getEffectiveTheme();
 
     if (savedDict.includes("dpd")) {
@@ -183,21 +216,19 @@ function applyDictConfig(newDict) {
     } else if (savedDict === "mdict") {
         externalDict = true;
         dictUrl = "mdict://mdict.cn/search?text=";
-    } else if (savedDict === "newwindow") {
-        dictUrl = `https://dict.dhamma.gift/?silent&theme=${theme}&q=`;
-    } else if (savedDict === "newwindowru") {
-        dictUrl = `https://dict.dhamma.gift/ru/?silent&theme=${theme}&q=`;
+    } else if (savedDict === "newwindow" || savedDict === "newwindowru") {
+        dictUrl = `https://dict.dhamma.gift/${isRussian ? "ru/" : ""}?silent&theme=${theme}&q=`;
     } else if (savedDict === "standaloneru") {
         dictUrl = "standaloneru"; 
     } else if (savedDict === "standalone") {
         dictUrl = "standalone"; 
     } else if (savedDict === "machinetranslation") {
-        inNewWindow = true;
         dictUrl = "https://dharmamitra.org/translate?input_sentence="; 
     } else {
         dictUrl = "searchonly";
     }
 }
+
 
 dhammaGift = '';
 if (isLocalhost) {
