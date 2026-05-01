@@ -75,6 +75,32 @@ if (typeof showBubbleNotification === 'undefined') {
 const siteLanguage = localStorage.getItem('siteLanguage');
 let savedDict = localStorage.getItem('selectedDict');
 
+// СЛУШАТЕЛЬ СМЕНЫ ЯЗЫКА ИЗ IFRAME
+window.addEventListener('message', function(event) {
+    if (event.origin !== 'https://dict.dhamma.gift') return;
+
+    if (event.data && event.data.action === 'dg_language_changed') {
+        const newLang = event.data.lang; 
+        let currentSavedDict = localStorage.getItem('selectedDict') || "standalone";
+        let newDict = currentSavedDict;
+
+        if (newLang === 'ru') {
+            if (currentSavedDict === 'standalone') newDict = 'standaloneru';
+            else if (currentSavedDict === 'newwindow') newDict = 'newwindowru';
+            else if (currentSavedDict === 'dpdfull') newDict = 'dpdfullru'; 
+        } else if (newLang === 'en') {
+            if (currentSavedDict === 'standaloneru') newDict = 'standalone';
+            else if (currentSavedDict === 'newwindowru') newDict = 'newwindow';
+            else if (currentSavedDict === 'dpdfullru') newDict = 'dpdfull'; 
+        }
+        
+        if (newDict !== currentSavedDict) {
+            localStorage.setItem('selectedDict', newDict);
+            savedDict = newDict; 
+        }
+    }
+});
+
 function getSelectedText() {
     const selection = window.getSelection();
     return selection ? selection.toString().trim() : '';
