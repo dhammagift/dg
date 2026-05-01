@@ -2081,6 +2081,8 @@ window.handleBubbleLeave = function(element, event) {
 
 window.removeBubbles = function() {
     const bubbles = document.querySelectorAll('.mem-bubble');
+    const hadBubbles = bubbles.length > 0;
+    
     bubbles.forEach(el => el.remove());
 
     const activeTriggers = document.querySelectorAll('.mem-trigger.mem-active');
@@ -2089,8 +2091,17 @@ window.removeBubbles = function() {
         el.removeAttribute('data-opened-at');
     });
     
-    const selection = window.getSelection();
-    if (selection) selection.removeAllRanges();
+    // Сбрасываем выделение только если баблы реально были на экране
+    // Игнорируем сброс, если пользователь кликнул в поле ввода
+    if (hadBubbles) {
+        const activeEl = document.activeElement;
+        const isInputFocus = activeEl && (activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'INPUT');
+        
+        if (!isInputFocus) {
+            const selection = window.getSelection();
+            if (selection) selection.removeAllRanges();
+        }
+    }
 };
 
 document.addEventListener('click', function(event) {
