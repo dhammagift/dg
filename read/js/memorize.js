@@ -390,37 +390,45 @@ abbreviations.forEach(book => {
 
 // --- ЛОГИКА ДЛЯ ВСПЛЫВАЮЩИХ ПОДСКАЗОК (BUBBLES) ---
 let hoverTimeout;
+let lastMemoTouchTime = 0;
+
+// Глобальный перехват тапов (работает везде: смартфоны, планшеты, ПК с тачскрином)
+document.addEventListener('touchstart', () => {
+    lastMemoTouchTime = Date.now();
+}, { capture: true, passive: true });
 
 window.showBubble = function(element, event, isHover = false) {
     if (event) event.stopPropagation();
+
+    const now = Date.now();
+    // Считаем, что устройство сенсорное, если касание было менее 500мс назад
+    const isTouch = (now - lastMemoTouchTime < 500);
 
     if (element.classList.contains('mem-active')) {
         if (isHover) {
             clearTimeout(hoverTimeout);
             return; 
         } else {
+            // Если бабл уже активен и мы по нему кликаем/тапаем:
+            // Защита от системных двойных кликов (игнорируем, если бабл открыт только что)
+            const openedAt = parseInt(element.dataset.openedAt || '0', 10);
+            if (isTouch && (now - openedAt < 300)) {
+                return; 
+            }
+
             const existingBubble = document.querySelector('.mem-bubble');
             if (existingBubble) {
                 existingBubble.dataset.pinned = "true";
                 
-                // Программное выделение текста в бабле для расширения-словаря
+                // Программное выделение текста и вызов словаря
                 const range = document.createRange();
                 range.selectNodeContents(existingBubble);
                 const selection = window.getSelection();
                 selection.removeAllRanges();
                 selection.addRange(range);
 
-                // Симуляция клика по баблу для вызова словаря
-                const mouseUpEvent = new MouseEvent('mouseup', {
-                    bubbles: true,
-                    cancelable: true,
-                    view: window
-                });
-                const clickEvent = new MouseEvent('click', {
-                    bubbles: true,
-                    cancelable: true,
-                    view: window
-                });
+                const mouseUpEvent = new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window });
+                const clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true, view: window });
                 
                 existingBubble.dispatchEvent(mouseUpEvent);
                 existingBubble.dispatchEvent(clickEvent);
@@ -430,18 +438,23 @@ window.showBubble = function(element, event, isHover = false) {
         }
     }
 
+    // Блокируем фантомный hover (onmouseenter) от тачскрина
+    if (isHover && isTouch) {
+        return;
+    }
+
     window.removeBubbles(); 
 
     const word = element.getAttribute('data-word');
     if (!word) return;
 
     element.classList.add('mem-active');
+    element.dataset.openedAt = now.toString();
 
     const bubble = document.createElement('div');
-    bubble.className = 'mem-bubble tts-ignore';
+    bubble.className = 'mem-bubble tts-ignore pli-lang';
     bubble.dataset.pinned = isHover ? "false" : "true";
     bubble.setAttribute('lang', 'pi');
-    bubble.classList.add('pli-lang');
 
     const parentSegment = element.closest('[id]');
     if (parentSegment) {
@@ -484,32 +497,34 @@ window.showBubble = function(element, event, isHover = false) {
     });
 };
 
-window.removeBubbles = function() {
-    const bubbles = document.querySelectorAll('.mem-bubble');
-    bubbles.forEach(el => el.remove());
-
-    const activeTriggers = document.querySelectorAll('.mem-trigger.mem-active');
-    activeTriggers.forEach(el => el.classList.remove('mem-active'));
-    
-    // Снимаем выделение, чтобы оно не оставалось на экране после закрытия бабла
-    const selection = window.getSelection();
-    if (selection) selection.removeAllRanges();
-};
-
 window.handleBubbleHover = function(element, event) {
-    if (!window.matchMedia('(hover: hover)').matches) return;
-    clearTimeout(hoverTimeout);
-    if (element.classList.contains('mem-active')) return;
     window.showBubble(element, event, true);
 };
 
 window.handleBubbleLeave = function(element, event) {
-    if (!window.matchMedia('(hover: hover)').matches) return;
+    const isTouch = (Date.now() - lastMemoTouchTime < 500);
+    // Игнорируем фантомный уход мыши от тачскрина
+    if (isTouch) return;
+
     hoverTimeout = setTimeout(() => {
         const bubble = document.querySelector('.mem-bubble');
         if (bubble && bubble.dataset.pinned === "true") return;
         window.removeBubbles();
     }, 200); 
+};
+
+window.removeBubbles = function() {
+    const bubbles = document.querySelectorAll('.mem-bubble');
+    bubbles.forEach(el => el.remove());
+
+    const activeTriggers = document.querySelectorAll('.mem-trigger.mem-active');
+    activeTriggers.forEach(el => {
+        el.classList.remove('mem-active');
+        el.removeAttribute('data-opened-at');
+    });
+    
+    const selection = window.getSelection();
+    if (selection) selection.removeAllRanges();
 };
 
 document.addEventListener('click', function(event) {
