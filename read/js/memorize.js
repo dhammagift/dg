@@ -402,6 +402,29 @@ window.showBubble = function(element, event, isHover = false) {
             const existingBubble = document.querySelector('.mem-bubble');
             if (existingBubble) {
                 existingBubble.dataset.pinned = "true";
+                
+                // Программное выделение текста в бабле для расширения-словаря
+                const range = document.createRange();
+                range.selectNodeContents(existingBubble);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+
+                // Симуляция клика по баблу для вызова словаря
+                const mouseUpEvent = new MouseEvent('mouseup', {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window
+                });
+                const clickEvent = new MouseEvent('click', {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window
+                });
+                
+                existingBubble.dispatchEvent(mouseUpEvent);
+                existingBubble.dispatchEvent(clickEvent);
+
                 return; 
             }
         }
@@ -461,6 +484,18 @@ window.showBubble = function(element, event, isHover = false) {
     });
 };
 
+window.removeBubbles = function() {
+    const bubbles = document.querySelectorAll('.mem-bubble');
+    bubbles.forEach(el => el.remove());
+
+    const activeTriggers = document.querySelectorAll('.mem-trigger.mem-active');
+    activeTriggers.forEach(el => el.classList.remove('mem-active'));
+    
+    // Снимаем выделение, чтобы оно не оставалось на экране после закрытия бабла
+    const selection = window.getSelection();
+    if (selection) selection.removeAllRanges();
+};
+
 window.handleBubbleHover = function(element, event) {
     if (!window.matchMedia('(hover: hover)').matches) return;
     clearTimeout(hoverTimeout);
@@ -476,14 +511,6 @@ window.handleBubbleLeave = function(element, event) {
         window.removeBubbles();
     }, 200); 
 };
-
-window.removeBubbles = function() {
-    const bubbles = document.querySelectorAll('.mem-bubble');
-    bubbles.forEach(el => el.remove());
-
-    const activeTriggers = document.querySelectorAll('.mem-trigger.mem-active');
-    activeTriggers.forEach(el => el.classList.remove('mem-active'));
-}
 
 document.addEventListener('click', function(event) {
     if (event.target.closest('.mem-bubble')) return; 
