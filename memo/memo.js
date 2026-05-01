@@ -859,6 +859,9 @@ function injectBubbleStylesIfNeeded() {
           transform: translateY(-100%) translateY(-8px);
           box-shadow: 0 4px 6px rgba(0,0,0,0.3);
       }
+      .mem-bubble::selection {
+          background: transparent;
+      }
       .mem-bubble.visible {
           opacity: 1;
       }

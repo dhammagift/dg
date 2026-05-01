@@ -14,9 +14,12 @@ style.textContent = `
   }
   
   .byline .pli-lang {
-  font-size: 1em !important;
-}
+    font-size: 1em !important;
+  }
   
+  .mem-bubble::selection {
+      background: transparent;
+  }
 `;
 document.head.appendChild(style);
 
