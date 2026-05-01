@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#wget https://raw.githubusercontent.com/digitalpalidictionary/dpd-db/refs/heads/main/db/backup_tsv/sutta_info.tsv
+
 # Очищаем или создаем файл и записываем начало массива
 echo "var bjtLinksData = [" > linksbjt.js
 
