@@ -838,30 +838,88 @@ window.startMemoVisualTimer = function(durationMs, textPrefix) {
             }
         }
 
-        function преобразоватьТекст() {
-            добавитьПробелыВКонцеСтрок();
-            const currentMemoText = document.getElementById("inputText").value;
-            localStorage.setItem("currentMemoText", currentMemoText);
-            const строкиСКавычками = currentMemoText.split('\n');
-            const строки = строкиСКавычками.map(строка => {
-                return строка.replace(/"/g, ' " ').replace(/—/g, ' — ').replace(/“/g, ' “ ').replace(/‘/g, " ‘ ").replace(/\?/g, " ? ").replace(/,/g, " , ").replace(/\./g, " . ").replace(/:/g, " : ").replace(/;/g, " ; ");
-            });
-            const результат = строки.map(строка => {
-                const слова = строка.split(/\s+/);
-                const преобразованныеСлова = слова.map(word => {
-                    const перваяБуква = word.match(/^\p{L}/u); 
-                    if (перваяБуква) return перваяБуква[0];
-                    else {
-                        const диакритическиеСимволы = word.match(/^[\p{M}\p{N}\p{S}\p{P}]/u);
-                        return диакритическиеСимволы ? диакритическиеСимволы[0] : '';
-                    }
-                });
-                return преобразованныеСлова.join(' ').replace(/ \?/g, "?").replace(/“ /g, '').replace(/ ,/g, ", ").replace(/ \. /g, ". ").replace(/ : /g, ": ").replace(/ ; /g, "; ").replace(/ ‘ /g, " ");
-            }).join('\n'); 
-            document.getElementById("результат").innerText = результат;
-            document.getElementById("result_header").style.display = 'flex';
-            localStorage.setItem("результат", результат);
-        }
+function injectBubbleStylesIfNeeded() {
+    if (document.getElementById('memo-bubble-styles')) return;
+    
+    const bubbleStyles = document.createElement('style');
+    bubbleStyles.id = 'memo-bubble-styles';
+    bubbleStyles.textContent = `
+      .mem-bubble {
+          position: absolute;
+          background: #333;
+          color: #fff;
+          padding: 5px 10px;
+          border-radius: 6px;
+          font-size: 1rem; 
+          pointer-events: auto; 
+          opacity: 0;
+          transition: opacity 0.2s ease;
+          z-index: 1050;
+          white-space: nowrap;
+          transform: translateY(-100%) translateY(-8px);
+          box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      }
+      .mem-bubble.visible {
+          opacity: 1;
+      }
+      .mem-bubble::after {
+          content: '';
+          position: absolute;
+          bottom: -5px;
+          left: var(--arrow-x, 50%);
+          transform: translateX(-50%);
+          border-width: 5px 5px 0;
+          border-style: solid;
+          border-color: #333 transparent transparent transparent;
+      }
+      .mem-trigger {
+          cursor: pointer;
+          display: inline-block;
+          position: relative;
+          font-size: 1.4rem; 
+          color: inherit; 
+          text-decoration: none;
+          border-bottom: 2px solid transparent; 
+      }
+      .mem-trigger.mem-active {
+          color: #20c997; 
+          border-bottom-color: #20c997; 
+      }
+    `;
+    document.head.appendChild(bubbleStyles);
+}
+
+function преобразоватьТекст() {
+    injectBubbleStylesIfNeeded();
+    
+    добавитьПробелыВКонцеСтрок();
+    const currentMemoText = document.getElementById("inputText").value;
+    localStorage.setItem("currentMemoText", currentMemoText);
+    const строкиСКавычками = currentMemoText.split('\n');
+    const строки = строкиСКавычками.map(строка => {
+        return строка.replace(/"/g, ' " ').replace(/—/g, ' — ').replace(/“/g, ' “ ').replace(/‘/g, " ‘ ").replace(/\?/g, " ? ").replace(/,/g, " , ").replace(/\./g, " . ").replace(/:/g, " : ").replace(/;/g, " ; ");
+    });
+    const результат = строки.map(строка => {
+        const слова = строка.split(/\s+/);
+        const преобразованныеСлова = слова.map(word => {
+            const перваяБуква = word.match(/^\p{L}/u); 
+            if (перваяБуква) {
+                const cleanWord = word.replace(/['"“‘.,!?;:—\-]/g, "");
+                // Полное совпадение с логикой memorize
+                return `<span class="mem-trigger pli-lang" lang="pi" data-word="${cleanWord}" onclick="showBubble(this, event)" onmouseenter="handleBubbleHover(this, event)" onmouseleave="handleBubbleLeave(this, event)">${перваяБуква[0]}</span>`;
+            } else {
+                const диакритическиеСимволы = word.match(/^[\p{M}\p{N}\p{S}\p{P}]/u);
+                return диакритическиеСимволы ? диакритическиеСимволы[0] : '';
+            }
+        });
+        return преобразованныеСлова.join(' ').replace(/ \?/g, "?").replace(/“ /g, '').replace(/ ,/g, ", ").replace(/ \. /g, ". ").replace(/ : /g, ": ").replace(/ ; /g, "; ").replace(/ ‘ /g, " ");
+    }).join('<br>'); 
+
+    document.getElementById("результат").innerHTML = результат;
+    document.getElementById("result_header").style.display = 'flex';
+    localStorage.setItem("результат", результат);
+}
+
 
 function очистить() {
     const msg = window.memoLang === 'ru' ? 'Это удалит текст. Уверены?' : 'This will erase the text. Sure?';
@@ -993,13 +1051,13 @@ window.addEventListener('load', function() {
         ta.value = textParam;
         ta.setSelectionRange(0, 0); 
         localStorage.setItem("currentMemoText", textParam); 
-        document.getElementById("результат").innerText = "";
+        document.getElementById("результат").innerHTML = "";
         document.getElementById("result_header").style.display = 'none';
         if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
     } else if (isMeditationPreset) {
         document.getElementById("inputText").value = "";
         localStorage.removeItem("currentMemoText");
-        document.getElementById("результат").innerText = "";
+        document.getElementById("результат").innerHTML = "";
         document.getElementById("result_header").style.display = 'none';
         if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
     } else {
@@ -1008,14 +1066,14 @@ window.addEventListener('load', function() {
         
         if (currentMemoText) {
             const ta = document.getElementById("inputText");
-            // ИСПРАВЛЕНО: Теперь вставляем найденный текст, а не пустой textParam
             ta.value = currentMemoText;
             ta.setSelectionRange(0, 0); 
             if (typeof обновитьКнопкиВвода === 'function') обновитьКнопкиВвода();
         }
         if (результат && результат.trim() !== "") {
-            document.getElementById("результат").innerText = результат;
-            document.getElementById("result_header").style.display = 'none';
+            injectBubbleStylesIfNeeded(); // Внедряем стили для восстановленного текста
+            document.getElementById("результат").innerHTML = результат;
+            document.getElementById("result_header").style.display = 'flex'; // Показываем заголовок Result
         }
     }
 
@@ -1893,3 +1951,150 @@ async function downloadMemoAudio() {
         btn.disabled = false;
     }
 }
+
+let hoverTimeout;
+
+window.showBubble = function(element, event, isHover = false) {
+    if (event) event.stopPropagation();
+
+    if (element.classList.contains('mem-active')) {
+        if (isHover) {
+            clearTimeout(hoverTimeout);
+            return; 
+        } else {
+            const existingBubble = document.querySelector('.mem-bubble');
+            if (existingBubble) {
+                existingBubble.dataset.pinned = "true";
+                
+                // Программное выделение текста в бабле (многие словари реагируют на выделение)
+                const range = document.createRange();
+                range.selectNodeContents(existingBubble);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+
+                // Симуляция клика по самому баблу для вызова словаря
+                const mouseUpEvent = new MouseEvent('mouseup', {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window
+                });
+                const clickEvent = new MouseEvent('click', {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window
+                });
+                
+                existingBubble.dispatchEvent(mouseUpEvent);
+                existingBubble.dispatchEvent(clickEvent);
+
+                return; 
+            }
+        }
+    }
+
+    window.removeBubbles(); 
+
+    const word = element.getAttribute('data-word');
+    if (!word) return;
+
+    element.classList.add('mem-active');
+
+    const bubble = document.createElement('div');
+    bubble.className = 'mem-bubble tts-ignore pli-lang';
+    bubble.dataset.pinned = isHover ? "false" : "true";
+    bubble.setAttribute('lang', 'pi');
+
+    const parentSegment = element.closest('[id]');
+    if (parentSegment) {
+        bubble.dataset.segmentId = parentSegment.id;
+    }
+
+    bubble.innerText = word;
+
+    bubble.addEventListener('mouseenter', () => { clearTimeout(hoverTimeout); });
+    bubble.addEventListener('mouseleave', () => {
+        if (bubble.dataset.pinned === "false") {
+            window.removeBubbles();
+        }
+    });
+
+    document.body.appendChild(bubble);
+
+    const rect = element.getBoundingClientRect();
+    const bubbleRect = bubble.getBoundingClientRect(); 
+    const scrollX = window.scrollX || window.pageXOffset;
+    const scrollY = window.scrollY || window.pageYOffset;
+    const windowWidth = window.innerWidth;
+    
+    const triggerCenter = rect.left + (rect.width / 2);
+    let leftPos = triggerCenter - (bubbleRect.width / 2);
+    
+    const padding = 10; 
+
+    if (leftPos < padding) leftPos = padding;
+    if (leftPos + bubbleRect.width > windowWidth - padding) leftPos = windowWidth - bubbleRect.width - padding;
+
+    bubble.style.left = (leftPos + scrollX) + 'px';
+    bubble.style.top = (rect.top + scrollY) + 'px';
+
+    const arrowX = triggerCenter - leftPos;
+    bubble.style.setProperty('--arrow-x', arrowX + 'px');
+
+    requestAnimationFrame(() => {
+        bubble.classList.add('visible');
+    });
+};
+
+window.handleBubbleHover = function(element, event) {
+    if (!window.matchMedia('(hover: hover)').matches) return;
+    clearTimeout(hoverTimeout);
+    if (element.classList.contains('mem-active')) return;
+    window.showBubble(element, event, true);
+};
+
+window.handleBubbleLeave = function(element, event) {
+    if (!window.matchMedia('(hover: hover)').matches) return;
+    hoverTimeout = setTimeout(() => {
+        const bubble = document.querySelector('.mem-bubble');
+        if (bubble && bubble.dataset.pinned === "true") return;
+        window.removeBubbles();
+    }, 200); 
+};
+
+window.removeBubbles = function() {
+    const bubbles = document.querySelectorAll('.mem-bubble');
+    bubbles.forEach(el => el.remove());
+
+    const activeTriggers = document.querySelectorAll('.mem-trigger.mem-active');
+    activeTriggers.forEach(el => el.classList.remove('mem-active'));
+    
+    // Снимаем выделение, чтобы оно не оставалось на экране после закрытия бабла
+    const selection = window.getSelection();
+    if (selection) selection.removeAllRanges();
+};
+
+// Делегирование событий
+document.addEventListener('click', function(event) {
+    const trigger = event.target.closest('.mem-trigger');
+    if (trigger) {
+        window.showBubble(trigger, event);
+        return;
+    }
+    if (event.target.closest('.mem-bubble')) return; 
+    window.removeBubbles();
+});
+
+document.addEventListener('mouseover', function(event) {
+    const trigger = event.target.closest('.mem-trigger');
+    if (trigger) window.handleBubbleHover(trigger, event);
+});
+
+document.addEventListener('mouseout', function(event) {
+    const trigger = event.target.closest('.mem-trigger');
+    if (trigger) window.handleBubbleLeave(trigger, event);
+});
+
+document.addEventListener('scroll', function() {
+    window.removeBubbles();
+}, true);
