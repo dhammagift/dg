@@ -101,6 +101,11 @@ window.addEventListener('message', function(event) {
     }
 });
 
+function getSelectedText() {
+    const selection = window.getSelection();
+    return selection ? selection.toString().trim() : '';
+}
+
 function isSelectionWithinElement(element) {
     const selection = window.getSelection();
     if (!selection.rangeCount) return false;
