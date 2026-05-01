@@ -4,7 +4,7 @@ const isMobileLike = (
         );
 const isLocalhost = window.location.href.includes('localhost') || window.location.href.includes('127.0.0.1');
 
-const isRussian = window.location.pathname.includes('/ru/') ||
+let isRussian = window.location.pathname.includes('/ru/') ||
                          window.location.pathname.includes('/r/') ||
                          window.location.pathname.includes('/ml/') ||
                          localStorage.getItem('siteLanguage') === 'ru';
@@ -75,12 +75,18 @@ if (typeof showBubbleNotification === 'undefined') {
 const siteLanguage = localStorage.getItem('siteLanguage');
 let savedDict = localStorage.getItem('selectedDict');
 
+// СЛУШАТЕЛЬ СМЕНЫ ЯЗЫКА 
 // СЛУШАТЕЛЬ СМЕНЫ ЯЗЫКА ИЗ IFRAME
 window.addEventListener('message', function(event) {
     if (event.origin !== 'https://dict.dhamma.gift') return;
 
     if (event.data && event.data.action === 'dg_language_changed') {
         const newLang = event.data.lang; 
+        
+        // ВАЖНО: Обновляем язык на лету
+        isRussian = (newLang === 'ru');
+        localStorage.setItem('siteLanguage', newLang);
+
         let currentSavedDict = localStorage.getItem('selectedDict') || "standalone";
         let newDict = currentSavedDict;
 
@@ -92,11 +98,11 @@ window.addEventListener('message', function(event) {
             else if (currentSavedDict === 'newwindowru') newDict = 'newwindow';
         }
         
-        if (newDict !== currentSavedDict) {
-            applyDictConfig(newDict);
-        }
+        // Вызываем функцию всегда, чтобы сбросить кэш и применить новые URL
+        applyDictConfig(newDict);
     }
 });
+
 
 function getSelectedText() {
     const selection = window.getSelection();
@@ -311,12 +317,10 @@ async function handleWordLookup(word, event) {
     await loadDictCSS();
     const currentTheme = getEffectiveTheme();
     
-    if (savedDict.includes("full")) {
-        dictUrl = `https://dict.dhamma.gift/${savedDict.includes("ru") ? "ru/" : ""}?silent&theme=${currentTheme}&q=`;
-    } else if (savedDict === "newwindow") {
-        dictUrl = `https://dict.dhamma.gift/?silent&theme=${currentTheme}&q=`;
-    } else if (savedDict === "newwindowru") {
-        dictUrl = `https://dict.dhamma.gift/ru/?silent&theme=${currentTheme}&q=`;
+if (savedDict.includes("full")) {
+        dictUrl = `https://dict.dhamma.gift/${isRussian ? "ru/" : ""}?silent&theme=${currentTheme}&q=`;
+    } else if (savedDict === "newwindow" || savedDict === "newwindowru") {
+        dictUrl = `https://dict.dhamma.gift/${isRussian ? "ru/" : ""}?silent&theme=${currentTheme}&q=`;
     }
 
     const { popup, overlay, iframe } = getPopup();
@@ -325,8 +329,8 @@ async function handleWordLookup(word, event) {
     let translation = "";
 
     // --- Ждем базы перед поиском ---
-    if (dictUrl === "standalone" || dictUrl === "standaloneru") {
-        const lang = dictUrl === "standaloneru" ? "ru" : "en";
+    if (dictUrl === "standalone" || dictUrl === "standaloneru" || savedDict === "standalone" || savedDict === "standaloneru") {
+        const lang = isRussian ? "ru" : "en";
         await lazyLoadStandaloneScripts(lang);
     }
     // -------------------------------
