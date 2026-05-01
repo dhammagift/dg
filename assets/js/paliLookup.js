@@ -87,24 +87,19 @@ window.addEventListener('message', function(event) {
         if (newLang === 'ru') {
             if (currentSavedDict === 'standalone') newDict = 'standaloneru';
             else if (currentSavedDict === 'newwindow') newDict = 'newwindowru';
-            else if (currentSavedDict === 'dpdfull') newDict = 'dpdfullru'; 
         } else if (newLang === 'en') {
             if (currentSavedDict === 'standaloneru') newDict = 'standalone';
             else if (currentSavedDict === 'newwindowru') newDict = 'newwindow';
-            else if (currentSavedDict === 'dpdfullru') newDict = 'dpdfull'; 
         }
         
         if (newDict !== currentSavedDict) {
             localStorage.setItem('selectedDict', newDict);
-            savedDict = newDict; 
+            if (typeof savedDict !== 'undefined') {
+                savedDict = newDict; 
+            }
         }
     }
 });
-
-function getSelectedText() {
-    const selection = window.getSelection();
-    return selection ? selection.toString().trim() : '';
-}
 
 function isSelectionWithinElement(element) {
     const selection = window.getSelection();
