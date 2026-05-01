@@ -1,4 +1,4 @@
-let dpd_deconstructor = {
+var dpd_deconstructor = {
   "akacchoti": "akaccho + iti",
   "akaṭayūsanti": "akaṭayūsaṃ + iti",
   "akaṭṭhapākimaṃ": "akaṭṭhapāka + imaṃ",

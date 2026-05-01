@@ -1,4 +1,4 @@
-let dpd_ebts = {
+var dpd_ebts = {
   "a 2.1": "prefix. <b>ā prefix shortened before double consonant</b> [ā]",
   "a 2.2": "prefix. <b>augment added to some aorist, imperfect and conditional verbs</b>",
   "a 2.3": "prefix. <b>not; un-; im-; negative prefix</b> [na]",
