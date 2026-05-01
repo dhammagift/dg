@@ -875,15 +875,14 @@ function injectBubbleStylesIfNeeded() {
           border-style: solid;
           border-color: #333 transparent transparent transparent;
       }
-      .mem-trigger {
-          cursor: pointer;
-          display: inline-block;
-          position: relative;
-          font-size: 1.4rem; 
-          color: inherit; 
-          text-decoration: none;
-          border-bottom: 2px solid transparent; 
-      }
+.mem-trigger {
+    cursor: pointer !important; 
+    font-size: 1.4rem; 
+    color: inherit; 
+    text-decoration: none;
+    border-bottom: 2px solid transparent; 
+}
+
       .mem-trigger.mem-active {
           color: #20c997; 
           border-bottom-color: #20c997; 
