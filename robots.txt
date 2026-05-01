@@ -15,6 +15,18 @@ Allow: /index.php
 Allow: /read.php
 Allow: /ru/read.php
 
+Allow: /read/?q=
+Allow: /r/?q=
+Allow: /ml/?q=
+Allow: /memorize/?q=
+Allow: /b/?q=
+
+
+Disallow: /?q=
+Disallow: /ru/?q=
+Disallow: /history.php
+Disallow: /ru/history.php
+
 Disallow: /result/
 Disallow: /ru/result/
 Disallow: /scripts/
@@ -39,8 +51,3 @@ Disallow: /assets/br/
 Disallow: /assets/materials/
 Disallow: /assets/apk/
 Disallow: /assets/diff/
-Disallow: /read/
-Disallow: /r/
-Disallow: /ml/
-Disallow: /d/
-Disallow: /m/

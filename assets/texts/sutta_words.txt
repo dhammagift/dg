@@ -88189,7 +88189,7 @@ ud3.8 Piṇḍapātikasutta
 ud3.9 Sippasutta
 ud3.10 Lokasutta
 ud4.1 Meghiyasutta
-ud4.2uddhatasutta
+ud4.2 Uddhatasutta
 ud4.3 Gopālakasutta
 ud4.4 Yakkhapahārasutta
 ud4.5 Nāgasutta
@@ -88226,7 +88226,7 @@ ud7.5 Aparalakuṇḍakabhaddiyasutta
 ud7.6 Taṇhāsaṅkhayasutta
 ud7.7 Papañcakhayasutta
 ud7.8 Kaccānasutta
-ud7.9udapānasutta
+ud7.9 Udapānasutta
 ud7.10 Utenasutta
 ud8.1 Paṭhamanibbānapaṭisaṁyuttasutta
 ud8.2 Dutiyanibbānapaṭisaṁyuttasutta
