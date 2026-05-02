@@ -314,10 +314,19 @@ function loadDictCSS() {
 
 async function handleWordLookup(word, event) {
     if (!dictionaryVisible) return;
+
+    // 1. Быстрая защита до очистки: игнорируем, если кликнули чисто на цифры или знаки
+    if (!word || /^[\d\-.,:; ]+$/.test(word.trim())) return;
+
+    let cleanedWord = cleanWord(word);
+    
+    // 2. Вторая защита: если после очистки осталась пустая строка, прерываем
+    if (!cleanedWord) return;
+
     await loadDictCSS();
     const currentTheme = getEffectiveTheme();
     
-if (savedDict.includes("full")) {
+    if (savedDict.includes("full")) {
         dictUrl = `https://dict.dhamma.gift/${isRussian ? "ru/" : ""}?silent&theme=${currentTheme}&q=`;
     } else if (savedDict === "newwindow" || savedDict === "newwindowru") {
         dictUrl = `https://dict.dhamma.gift/${isRussian ? "ru/" : ""}?silent&theme=${currentTheme}&q=`;
@@ -325,7 +334,6 @@ if (savedDict.includes("full")) {
 
     const { popup, overlay, iframe } = getPopup();
 
-    let cleanedWord = cleanWord(word);
     let translation = "";
 
     // --- Ждем базы перед поиском ---
@@ -596,7 +604,11 @@ function createClickableLink(wordToLink) {
     return `<a href="${wordSearchUrl}" onclick="${clickAction}" style="text-decoration: none; color: inherit;">${wordToLink}</a>`;
 } 
 
+
 function lookupWordInStandaloneDict(word) {
+   // Защита от пустых строк и чисел (игнорируем 1, 2, 11-19 и т.д.)
+    if (!word || /^[\d\-]+$/.test(word)) return ""; 
+  
     let out = "";
     word = word.replace(/[’”'"]/g, "").replace(/ṁ/g, "ṃ");
   

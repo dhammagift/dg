@@ -1269,6 +1269,7 @@ window.toggleThePali = window.toggleThePali || function() {
 // Логика кнопки оглавления (TOC) - SPA-защита, слежение и автоцентрирование
 (function() {
     let activeSlug = ''; 
+    const isMemoPath = window.location.pathname.includes('/memorize/');
 
     const capitalize = (str) => {
         if (!str) return '';
@@ -1279,6 +1280,13 @@ window.toggleThePali = window.toggleThePali || function() {
         const sutta = document.getElementById('sutta');
         const panel = document.getElementById('smart-toc-panel');
         if (!sutta || !panel) return;
+
+        // В режиме memorize оглавление ВСЕГДА должно показывать полный текст (обычно это .rus-lang или .eng-lang)
+        // Поэтому мы выходим из функции и не добавляем классы hide-..., чтобы текст в TOC не исчез.
+        if (isMemoPath) {
+            panel.classList.remove('hide-pali', 'hide-english', 'hide-russian', 'hide-thai');
+            return;
+        }
 
         const langClasses = ['hide-pali', 'hide-english', 'hide-russian', 'hide-thai'];
         
@@ -1356,8 +1364,17 @@ window.toggleThePali = window.toggleThePali || function() {
         const isTh = window.location.pathname.includes('/th/');
         const langClass = isRu ? '.rus-lang' : (isTh ? '.tha-lang' : '.eng-lang');
 
+        let labelText = '';
+        if (isMemoPath) {
+            // В режиме мемо для ярлыка берем только полный текст (игнорируя первобуквы .pli-lang)
+            const fullSpan = headings[activeIndex].querySelector('.rus-lang, .eng-lang, .tha-lang');
+            labelText = fullSpan ? fullSpan.textContent : headings[activeIndex].innerText;
+        } else {
+            labelText = headings[activeIndex].innerText;
+        }
+
         if (headings[activeIndex].tagName.startsWith('H')) {
-            let labelText = headings[activeIndex].innerText.replace(/\s+/g, ' ').trim();
+            labelText = labelText.replace(/\s+/g, ' ').trim();
             if (headings[activeIndex].classList.contains('inserted-heading')) {
                let tSpan = headings[activeIndex].querySelector(langClass) || headings[activeIndex].querySelector('.eng-lang');
                if (tSpan) labelText = tSpan.textContent.trim();
@@ -1365,10 +1382,10 @@ window.toggleThePali = window.toggleThePali || function() {
             pillLabel.textContent = capitalize(labelText);
         } else if (headings[activeIndex].classList.contains('endsutta') || headings[activeIndex].classList.contains('uddana-intro')) {
             let tSpan = headings[activeIndex].querySelector(langClass) || headings[activeIndex].querySelector('.eng-lang') || headings[activeIndex].querySelector('.pli-lang');
-            let labelText = tSpan ? tSpan.textContent.replace(/[()\[\]"“”«»'‘’]/g, '').trim() : headings[activeIndex].innerText.replace(/[()\[\]"“”«»'‘’]/g, '').trim();
+            labelText = tSpan ? tSpan.textContent.replace(/[()\[\]"“”«»'‘’]/g, '').trim() : labelText.replace(/[()\[\]"“”«»'‘’]/g, '').trim();
             pillLabel.textContent = capitalize(labelText);
         } else {
-            pillLabel.textContent = "Оглавление";
+            pillLabel.textContent = capitalize(labelText.split('\n')[0].trim());
         }
 
         if (tocPanel && tocPanel.classList.contains('active')) {
@@ -1392,159 +1409,173 @@ window.toggleThePali = window.toggleThePali || function() {
         }
     }
 
-function buildFullTOC() {
-    const suttaContainer = document.getElementById('sutta');
-    const tocPanel = document.getElementById('smart-toc-panel');
-    if (!suttaContainer || !tocPanel) return;
+    function buildFullTOC() {
+        const suttaContainer = document.getElementById('sutta');
+        const tocPanel = document.getElementById('smart-toc-panel');
+        if (!suttaContainer || !tocPanel) return;
 
-    const hasInternalHeaders = suttaContainer.querySelector('h3, h4, h5, h6') !== null;
-    let selector = 'h1, h2, .endsutta'; 
-    if (hasInternalHeaders) {
-        selector += ', h3, h4, h5, h6';
-    } else {
-        selector += ', .speaker, .rule, .subrule, .verse-line, .anapatti, .uddana-intro';
-    }
-
-    const elements = suttaContainer.querySelectorAll(selector);
-    tocPanel.innerHTML = '';
-
-    let lastSpeakerText = '';
-    let lastPoemBlock = null;
-    let currentLevel = 2; 
-
-    const firstContentBlock = suttaContainer.querySelector('p, blockquote, .rule');
-
-    elements.forEach((el) => {
-        let text = el.innerText.replace(/[()\[\]"“”«»'‘’]/g, '').replace(/\s+/g, ' ').trim();
-        if (!text) return;
-
-        if (el.tagName.startsWith('H')) {
-            currentLevel = parseInt(el.tagName.substring(1));
+        const hasInternalHeaders = suttaContainer.querySelector('h3, h4, h5, h6') !== null;
+        let selector = 'h1, h2, .endsutta'; 
+        if (hasInternalHeaders) {
+            selector += ', h3, h4, h5, h6';
+        } else {
+            selector += ', .speaker, .rule, .subrule, .verse-line, .anapatti, .uddana-intro';
         }
 
-        let tocClassType = 'h' + currentLevel;
-        let extraClass = '';
+        const elements = suttaContainer.querySelectorAll(selector);
+        tocPanel.innerHTML = '';
 
-        const isRuPath = window.location.pathname.includes('/r/') || window.location.pathname.includes('/ru/') || window.location.pathname.includes('/ml/');
-        const isThPath = window.location.pathname.includes('/th/');
-        const targetLang = isRuPath ? 'rus-lang' : (isThPath ? 'tha-lang' : 'eng-lang');
+        let lastSpeakerText = '';
+        let lastPoemBlock = null;
+        let currentLevel = 2; 
 
-        if (el.classList.contains('inserted-heading')) {
-            let span = el.querySelector('.' + targetLang) || el.querySelector('.eng-lang');
-            let displayText = span ? span.textContent.replace(/[()\[\]"“”«»'‘’]/g, '').replace(/\s+/g, ' ').trim() : text;
+        const firstContentBlock = suttaContainer.querySelector('p, blockquote, .rule');
+
+        elements.forEach((el) => {
+            let text = el.innerText.replace(/[()\[\]"“”«»'‘’]/g, '').replace(/\s+/g, ' ').trim();
+            if (!text) return;
+
+            if (el.tagName.startsWith('H')) {
+                currentLevel = parseInt(el.tagName.substring(1));
+            }
+
+            let tocClassType = 'h' + currentLevel;
+            let extraClass = '';
+
+            const isRuPath = window.location.pathname.includes('/r/') || window.location.pathname.includes('/ru/') || window.location.pathname.includes('/ml/');
+            const isThPath = window.location.pathname.includes('/th/');
+            const targetLang = isRuPath ? 'rus-lang' : (isThPath ? 'tha-lang' : 'eng-lang');
+
+            if (el.classList.contains('inserted-heading')) {
+                let span = el.querySelector('.' + targetLang) || el.querySelector('.eng-lang');
+                let displayText = span ? span.textContent.replace(/[()\[\]"“”«»'‘’]/g, '').replace(/\s+/g, ' ').trim() : text;
+
+                const item = document.createElement('div');
+                item.className = `toc-item toc-${tocClassType}`;
+                item.textContent = capitalize(displayText); 
+                item.style.cursor = 'pointer';
+                item.onclick = (e) => {
+                    e.stopPropagation();
+                    tocPanel.classList.remove('active');
+                    const offset = 120;
+                    const targetY = window.pageYOffset + el.getBoundingClientRect().top - offset;
+                    window.scrollTo({ top: targetY, behavior: 'smooth' });
+                    if (typeof window.activateSegmentForTTS === 'function') window.activateSegmentForTTS(el);
+                };
+                tocPanel.appendChild(item);
+                return;
+            }
+
+            let isCustomMultiLang = false;
+            let customLangData = {};
+
+            if (el.classList.contains('speaker')) {
+                if (text === lastSpeakerText) return; 
+                lastSpeakerText = text;
+                extraClass = ' toc-speaker';
+            } else if (el.classList.contains('verse-line')) {
+                const parentBlock = el.closest('blockquote, section');
+                if (parentBlock && (parentBlock.querySelector('.uddana-intro') || parentBlock.previousElementSibling?.classList.contains('uddana-intro'))) return;
+                if (parentBlock && parentBlock === lastPoemBlock) return;
+                lastPoemBlock = parentBlock;
+                if (firstContentBlock && (firstContentBlock === parentBlock || firstContentBlock.contains(el))) return;
+                extraClass = ' toc-v-line';
+                if (!isMemoPath) {
+                    isCustomMultiLang = true;
+                    const getFirstWord = (langClass) => {
+                        const span = el.querySelector('.' + langClass);
+                        if (span) {
+                            let cleanText = span.textContent.replace(/[()\[\]"“”«»'‘’:;]/g, '').replace(/\s+/g, ' ').trim();
+                            const words = cleanText.split(/[\s,.;:!?]/);
+                            let label = words[0] || '';
+                            if (label.length <= 3 && words.length > 1) label += ' ' + words[1];
+                            return label;
+                        }
+                        return '';
+                    };
+                    customLangData = {
+                        pli: 'Gāthā' + (getFirstWord('pli-lang') ? ` ${getFirstWord('pli-lang')}...` : ''),
+                        rus: 'Гатха' + (getFirstWord('rus-lang') ? ` ${getFirstWord('rus-lang')}...` : ''),
+                        eng: 'Gatha' + (getFirstWord('eng-lang') ? ` ${getFirstWord('eng-lang')}...` : ''),
+                        tha: 'คาถา' + (getFirstWord('tha-lang') ? ` ${getFirstWord('tha-lang')}...` : '')
+                    };
+                }
+            } else if (el.classList.contains('rule') || el.classList.contains('subrule')) {
+                extraClass = ' toc-rule';
+            } else if (el.classList.contains('anapatti')) {
+                extraClass = ' toc-anapatti';
+                if (!isMemoPath) {
+                    isCustomMultiLang = true;
+                    customLangData = { pli: 'Anāpatti', rus: 'Без вины', eng: 'Non-offense', tha: 'อนาปัตти' };
+                }
+            } else if (el.classList.contains('uddana-intro')) {
+                tocClassType = 'h1';
+                extraClass = ' toc-uddana';
+                if (!isMemoPath) {
+                    isCustomMultiLang = true;
+                    customLangData = { pli: 'Tassuddānaṁ', rus: 'Содержание', eng: 'Summary', tha: 'สรุป' };
+                }
+            } else if (el.classList.contains('endsutta')) {
+                tocClassType = 'h1';
+                extraClass = ' toc-endsutta';
+            }
 
             const item = document.createElement('div');
-            item.className = `toc-item toc-${tocClassType}`;
-            item.textContent = capitalize(displayText); 
-            item.style.cursor = 'pointer';
-            item.onclick = (e) => {
-                e.stopPropagation();
+            item.className = `toc-item toc-${tocClassType}${extraClass}`;
+
+            const scrollAndHighlight = (targetElement) => {
                 tocPanel.classList.remove('active');
                 const offset = 120;
-                const targetY = window.pageYOffset + el.getBoundingClientRect().top - offset;
-                window.scrollTo({ top: targetY, behavior: 'smooth' });
-                if (typeof window.activateSegmentForTTS === 'function') window.activateSegmentForTTS(el);
-            };
-            tocPanel.appendChild(item);
-            return;
-        }
-
-        let isCustomMultiLang = false;
-        let customLangData = {};
-
-        if (el.classList.contains('speaker')) {
-            if (text === lastSpeakerText) return; 
-            lastSpeakerText = text;
-            extraClass = ' toc-speaker';
-        } else if (el.classList.contains('verse-line')) {
-            const parentBlock = el.closest('blockquote, section');
-            if (parentBlock && (parentBlock.querySelector('.uddana-intro') || parentBlock.previousElementSibling?.classList.contains('uddana-intro'))) return;
-            if (parentBlock && parentBlock === lastPoemBlock) return;
-            lastPoemBlock = parentBlock;
-            if (firstContentBlock && (firstContentBlock === parentBlock || firstContentBlock.contains(el))) return;
-            extraClass = ' toc-v-line';
-            isCustomMultiLang = true;
-            
-            const getFirstWord = (langClass) => {
-                const span = el.querySelector('.' + langClass);
-                if (span) {
-                    let cleanText = span.textContent.replace(/[()\[\]"“”«»'‘’:;]/g, '').replace(/\s+/g, ' ').trim();
-                    const words = cleanText.split(/[\s,.;:!?]/);
-                    let label = words[0] || '';
-                    if (label.length <= 3 && words.length > 1) label += ' ' + words[1];
-                    return label;
+                
+                // Если элемент скрыт (координаты = 0), ищем его видимого родителя (например, блок с ID)
+                let scrollTarget = targetElement;
+                if (!scrollTarget.offsetParent || scrollTarget.getBoundingClientRect().height === 0) {
+                    scrollTarget = scrollTarget.closest('[id]') || scrollTarget.parentElement || scrollTarget;
                 }
-                return '';
+
+                const targetY = window.pageYOffset + scrollTarget.getBoundingClientRect().top - offset;
+                window.scrollTo({ top: targetY, behavior: 'smooth' });
+                if (typeof window.activateSegmentForTTS === 'function') window.activateSegmentForTTS(targetElement);
             };
-            customLangData = {
-                pli: 'Gāthā' + (getFirstWord('pli-lang') ? ` ${getFirstWord('pli-lang')}...` : ''),
-                rus: 'Гатха' + (getFirstWord('rus-lang') ? ` ${getFirstWord('rus-lang')}...` : ''),
-                eng: 'Gatha' + (getFirstWord('eng-lang') ? ` ${getFirstWord('eng-lang')}...` : ''),
-                tha: 'คาถา' + (getFirstWord('tha-lang') ? ` ${getFirstWord('tha-lang')}...` : '')
-            };
-        } else if (el.classList.contains('rule') || el.classList.contains('subrule')) {
-            extraClass = ' toc-rule';
-        } else if (el.classList.contains('anapatti')) {
-            extraClass = ' toc-anapatti';
-            isCustomMultiLang = true;
-            customLangData = { pli: 'Anāpatti', rus: 'Без вины', eng: 'Non-offense', tha: 'อนาปัตти' };
-        } else if (el.classList.contains('uddana-intro')) {
-            tocClassType = 'h1'; // ПРИНУДИТЕЛЬНО H1 для выравнивания
-            extraClass = ' toc-uddana';
-            isCustomMultiLang = true;
-            customLangData = { pli: 'Tassuddānaṁ', rus: 'Содержание', eng: 'Summary', tha: 'สรุป' };
-        } else if (el.classList.contains('endsutta')) {
-            tocClassType = 'h1'; // ПРИНУДИТЕЛЬНО H1 для выравнивания
-            extraClass = ' toc-endsutta';
-        }
 
-        const item = document.createElement('div');
-        item.className = `toc-item toc-${tocClassType}${extraClass}`;
-
-        const scrollAndHighlight = (targetElement) => {
-            tocPanel.classList.remove('active');
-            const offset = 120;
-            const targetY = window.pageYOffset + targetElement.getBoundingClientRect().top - offset;
-            window.scrollTo({ top: targetY, behavior: 'smooth' });
-            if (typeof window.activateSegmentForTTS === 'function') window.activateSegmentForTTS(targetElement);
-        };
-
-        if (isCustomMultiLang) {
-            let targetLangText = isRuPath ? customLangData.rus : (isThPath ? customLangData.tha : customLangData.eng);
-            const langs = [{ cls: 'pli-lang', txt: customLangData.pli }, { cls: targetLang, txt: targetLangText }];
-            langs.forEach(l => {
-                const span = document.createElement('span');
-                span.className = l.cls;
-                span.textContent = capitalize(l.txt) + ' '; 
-                span.style.cursor = 'pointer';
-                span.onclick = (e) => { e.stopPropagation(); scrollAndHighlight(el); };
-                item.appendChild(span);
-            });
-        } else {
-            const langSpans = el.querySelectorAll('.pli-lang, .rus-lang, .eng-lang, .tha-lang');
-            if (langSpans.length > 0) {
-                langSpans.forEach(originalSpan => {
-                    const clone = originalSpan.cloneNode(true);
-                    clone.querySelectorAll('.copyLink, .copyLink-start, .variant').forEach(child => child.remove());
-                    let cleanText = clone.textContent.replace(/[()\[\]"“”«»'‘’]/g, '').replace(/\s+/g, ' ').trim();
-                    if (cleanText) {
-                        clone.textContent = capitalize(cleanText) + ' '; 
-                        clone.style.cursor = 'pointer';
-                        clone.onclick = (e) => { e.stopPropagation(); scrollAndHighlight(originalSpan); };
-                        item.appendChild(clone);
-                    }
+            if (isCustomMultiLang) {
+                let targetLangText = isRuPath ? customLangData.rus : (isThPath ? customLangData.tha : customLangData.eng);
+                const langs = [{ cls: 'pli-lang', txt: customLangData.pli }, { cls: targetLang, txt: targetLangText }];
+                langs.forEach(l => {
+                    const span = document.createElement('span');
+                    span.className = l.cls;
+                    span.textContent = capitalize(l.txt) + ' '; 
+                    span.style.cursor = 'pointer';
+                    span.onclick = (e) => { e.stopPropagation(); scrollAndHighlight(el); };
+                    item.appendChild(span);
                 });
             } else {
-                item.textContent = capitalize(text);
-                item.onclick = () => scrollAndHighlight(el);
-            }
-        }
-        if (item.innerHTML.trim() !== '' || item.textContent.trim() !== '') tocPanel.appendChild(item);
-    });
+                const langSpans = el.querySelectorAll('.pli-lang, .rus-lang, .eng-lang, .tha-lang');
+                if (langSpans.length > 0) {
+                    langSpans.forEach(originalSpan => {
+                        if (isMemoPath && originalSpan.classList.contains('pli-lang')) return;
 
-    if (typeof window.syncTOCLanguageVisibility === 'function') window.syncTOCLanguageVisibility();
-    syncTOC();
-}
+                        const clone = originalSpan.cloneNode(true);
+                        clone.querySelectorAll('.copyLink, .copyLink-start, .variant').forEach(child => child.remove());
+                        let cleanText = clone.textContent.replace(/[()\[\]"“”«»'‘’]/g, '').replace(/\s+/g, ' ').trim();
+                        if (cleanText) {
+                            clone.textContent = capitalize(cleanText) + ' '; 
+                            clone.style.cursor = 'pointer';
+                            clone.onclick = (e) => { e.stopPropagation(); scrollAndHighlight(originalSpan); };
+                            item.appendChild(clone);
+                        }
+                    });
+                } else {
+                    item.textContent = capitalize(text);
+                    item.onclick = () => scrollAndHighlight(el);
+                }
+            }
+            if (item.innerHTML.trim() !== '' || item.textContent.trim() !== '') tocPanel.appendChild(item);
+        });
+
+        if (typeof window.syncTOCLanguageVisibility === 'function') window.syncTOCLanguageVisibility();
+        syncTOC();
+    }
 
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('#smart-toc-btn');

@@ -167,6 +167,11 @@ async function buildSutta(slug) {
                 let слова = строка.split(/\s+/);
                 
                 let преобразованныеСлова = слова.map(word => {
+                    // Исключение для чисел: возвращаем целиком, оставляя цифры и дефисы (для 11-19)
+                    if (word.match(/\p{N}/u)) {
+                        return word.replace(/[^\p{N}\-]/gu, ''); 
+                    }
+
                     let перваяБуква = word.match(/^\p{L}/u); 
                     
                     if (перваяБуква) {
@@ -181,7 +186,19 @@ async function buildSutta(slug) {
                         return диакритическиеСимволы ? диакритическиеСимволы[0] : '';
                     }
                 });
-                return преобразованныеСлова.join(' ').replace(/ \?/g, "?" ).replace(/“ /g, '').replace(/ ,/g, ", " ).replace(/ \. /g, ". " ).replace(/ : /g, ": " ).replace(/ ; /g, "; " ).replace(/ ‘ /g, " " );
+                
+                let финальнаяСтрока = преобразованныеСлова.join(' ')
+                    .replace(/ \?/g, "?")
+                    .replace(/“ /g, '')
+                    .replace(/ ,/g, ", ")
+                    .replace(/ \. /g, ". ")
+                    .replace(/ : /g, ": ")
+                    .replace(/ ; /g, "; ")
+                    .replace(/ ‘ /g, " ");
+                
+                // Удаляем знаки препинания (точки, запятые и т.д.) сразу после чисел
+                return финальнаяСтрока.replace(/(\d+)[.,;:]/g, '$1');
+                
             }).join('\n'); 
 
             return результат;
@@ -517,6 +534,20 @@ window.handleBubbleLeave = function(element, event) {
 };
 
 window.removeBubbles = function() {
+    const selection = window.getSelection();
+    let shouldClearSelection = false;
+
+    // Проверяем, находится ли текущее выделение внутри бабла, ДО его удаления
+    if (selection && selection.rangeCount > 0) {
+        let node = selection.anchorNode;
+        if (node && node.nodeType === 3) {
+            node = node.parentNode; // Получаем элемент из текстового узла
+        }
+        if (node && node.closest('.mem-bubble')) {
+            shouldClearSelection = true;
+        }
+    }
+
     const bubbles = document.querySelectorAll('.mem-bubble');
     bubbles.forEach(el => el.remove());
 
@@ -526,8 +557,10 @@ window.removeBubbles = function() {
         el.removeAttribute('data-opened-at');
     });
     
-    const selection = window.getSelection();
-    if (selection) selection.removeAllRanges();
+    // Очищаем выделение только если оно принадлежало баблу
+    if (shouldClearSelection) {
+        selection.removeAllRanges();
+    }
 };
 
 document.addEventListener('click', function(event) {

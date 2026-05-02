@@ -904,24 +904,40 @@ function преобразоватьТекст() {
     const результат = строки.map(строка => {
         const слова = строка.split(/\s+/);
         const преобразованныеСлова = слова.map(word => {
+            // Исключение для чисел: оборачиваем в span для увеличения размера (как у букв)
+            if (word.match(/\p{N}/u)) {
+                const num = word.replace(/[^\p{N}\-]/gu, ''); 
+                return `<span class="pli-lang" style="font-size: 1.4rem;">${num}</span>`; 
+            }
+
             const перваяБуква = word.match(/^\p{L}/u); 
             if (перваяБуква) {
                 const cleanWord = word.replace(/['"“‘.,!?;:—\-]/g, "");
-                // Полное совпадение с логикой memorize
                 return `<span class="mem-trigger pli-lang" lang="pi" data-word="${cleanWord}" onclick="showBubble(this, event)" onmouseenter="handleBubbleHover(this, event)" onmouseleave="handleBubbleLeave(this, event)">${перваяБуква[0]}</span>`;
             } else {
                 const диакритическиеСимволы = word.match(/^[\p{M}\p{N}\p{S}\p{P}]/u);
                 return диакритическиеСимволы ? диакритическиеСимволы[0] : '';
             }
         });
-        return преобразованныеСлова.join(' ').replace(/ \?/g, "?").replace(/“ /g, '').replace(/ ,/g, ", ").replace(/ \. /g, ". ").replace(/ : /g, ": ").replace(/ ; /g, "; ").replace(/ ‘ /g, " ");
+        
+        let финальнаяСтрока = преобразованныеСлова.join(' ')
+            .replace(/ \?/g, "?")
+            .replace(/“ /g, '')
+            .replace(/ ,/g, ", ")
+            .replace(/ \. /g, ". ")
+            .replace(/ : /g, ": ")
+            .replace(/ ; /g, "; ")
+            .replace(/ ‘ /g, " ");
+            
+        // Удаляем знаки препинания (точки, запятые и т.д.) сразу после чисел 
+        // (учитываем, что теперь цифра находится внутри тега </span>)
+        return финальнаяСтрока.replace(/>([\d\-]+)<\/span>[.,;:]/g, '>$1</span>');
     }).join('<br>'); 
 
     document.getElementById("результат").innerHTML = результат;
     document.getElementById("result_header").style.display = 'flex';
     localStorage.setItem("результат", результат);
 }
-
 
 function очистить() {
     const msg = window.memoLang === 'ru' ? 'Это удалит текст. Уверены?' : 'This will erase the text. Sure?';
