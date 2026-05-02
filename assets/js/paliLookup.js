@@ -1042,6 +1042,25 @@ document.addEventListener('click', (e) => {
         
         updateMultiSelectUI();
         
+        // Если режим включили — проверяем текущее выделение
+        if (isMultiSelectMode) {
+            const selection = window.getSelection();
+            const selectedText = selection.toString().trim();
+
+            if (selectedText.length > 0 && selection.rangeCount > 0) {
+                const rect = selection.getRangeAt(0).getBoundingClientRect();
+                
+                // Сразу отправляем выделенный текст в функцию словаря
+                // Передаем координаты центра выделения для позиционирования окна
+                if (typeof handleWordLookup === 'function') {
+                    handleWordLookup(selectedText, {
+                        clientX: rect.left + (rect.width / 2),
+                        clientY: rect.top + (rect.height / 2)
+                    });
+                }
+            }
+        }
+        
         if (typeof showBubbleNotification !== 'undefined') {
             showBubbleNotification(isMultiSelectMode ? "Multi-select On" : "Multi-select Off");
         }

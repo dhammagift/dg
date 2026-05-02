@@ -1162,6 +1162,20 @@ if (event.altKey && event.code === "KeyR") {
       settingsButton.click();
     }
 
+// Мультиселект Alt + J (физическая клавиша J)
+if (event.altKey && event.code === "KeyJ") {
+    // Пропускаем, если фокус в поле ввода (используем твою функцию)
+    if (typeof shouldIgnoreKeyEvent === 'function' && shouldIgnoreKeyEvent()) return;
+
+    const multiSelectBtn = document.getElementById('toggle-multiselect');
+    
+    // Проверяем наличие кнопки на странице, чтобы код не падал
+    if (multiSelectBtn) {
+        event.preventDefault();
+        multiSelectBtn.click();
+    }
+}
+
 
  // --- 2. Оглавление (TOC) Alt + W ---
     if (event.altKey && event.code === "KeyW") {
