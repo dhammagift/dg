@@ -1,3 +1,6 @@
+// Конфигурация нового бэкенда на SQLite
+window.CF_WORKER_URL = "https://dg-do.agiftofdhamma.workers.dev";
+
 // === ЗАГРУЗКА СЛОВАРЯ (УМНАЯ ФОНОВАЯ ИЛИ ПО КЛИКУ) ===
 (function() {
     window.isDictScriptLoaded = false;
@@ -2705,100 +2708,70 @@ window.triggerSelfDestruct = async function(reason = "terminated") {
     }, 1500);
 };
 
-// === АТОМАРНЫЕ ЗАПИСИ В ОБЛАКО ===
-window.syncSettingsToCloud = async function() {
-    if (!(await verifySessionActive())) return;
-    if (!db || !getUid()) return;
-    const uid = getUid();
-    
-    let settingsToSave = { ...window.dg_pendingSettingsUpdates };
-
-    if (window.dg_deletedKeys && window.dg_deletedKeys.size > 0) {
-        window.dg_deletedKeys.forEach(key => {
-            if (!settingsToSave.hasOwnProperty(key)) {
-                settingsToSave[key] = firebase.firestore.FieldValue.delete();
-            }
-        });
-    }
-
-    // Если изменений нет, просто обновляем локальный штамп времени и выходим
-    if (Object.keys(settingsToSave).length === 0) {
-        if (typeof refreshSyncTimeUI === 'function') refreshSyncTimeUI();
-        return;
-    }
+// === НОВЫЙ ДВИЖОК СИНХРОНИЗАЦИИ (Cloudflare SQLite) ===
+async function cfFetch(path, body = {}) {
+    const uid = typeof getUid === 'function' ? getUid() : localStorage.getItem('syncPhraseId');
+    if (!uid) return null;
 
     try {
-        await db.collection("users").doc(uid).set({
-            settings: settingsToSave,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-        
+        const response = await fetch(window.CF_WORKER_URL + path, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-Id': uid
+            },
+            body: JSON.stringify(body)
+        });
+        return await response.json();
+    } catch (e) {
+        console.error("Worker Sync Error:", e);
+        return null;
+    }
+}
+
+window.syncSettingsToCloud = async function() {
+    // Собираем измененные настройки
+    let settingsToSave = { ...window.dg_pendingSettingsUpdates };
+    if (Object.keys(settingsToSave).length === 0) return;
+
+    const result = await cfFetch("/sync/settings", { settings: settingsToSave });
+    if (result && result.success) {
         window.dg_pendingSettingsUpdates = {};
-        if (window.dg_deletedKeys) window.dg_deletedKeys.clear();
         window.dg_settingsChanged = false;
-        
         if (typeof refreshSyncTimeUI === 'function') refreshSyncTimeUI();
-    } catch (e) { 
-        console.error("Settings Sync Error:", e); 
     }
 };
 
 window.syncFavoriteItemToCloud = async function(favData, isDeleted = false) {
-    // ПРОПУСКНОЙ ПУНКТ:
-    if (!(await verifySessionActive())) return;
-
-    if (!db || !getUid()) return;
-    const uid = getUid();
-    const docId = sanitizeId(favData.slug);
-    const docRef = db.collection("users").doc(uid).collection("favorites").doc(docId);
-
-    try {
-        if (isDeleted) {
-            await docRef.delete();
-        } else {
-            let cloudData = { ...favData };
-            
-            // АТОМАРНОСТЬ: Если есть сохраненный длинный текст, прикрепляем его к документу
-            if (cloudData.search && cloudData.search.includes('saved_id=')) {
-                const params = new URLSearchParams(cloudData.search);
-                const savedId = params.get('saved_id');
-                if (savedId) {
-                    const localText = localStorage.getItem(savedId);
-                    if (localText) cloudData.fullText = localText; // Текст летит вместе с Избранным
-                }
-            }
-
-            await docRef.set({ 
-                ...cloudData, 
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
-            }, { merge: true });
-        }
-        if (typeof refreshSyncTimeUI === 'function') refreshSyncTimeUI();
-    } catch (e) { console.error("Fav Sync Error:", e); }
+    const result = await cfFetch("/sync/favorite", { 
+        itemData: favData, 
+        isDeleted: isDeleted 
+    });
+    if (result && result.success && typeof refreshSyncTimeUI === 'function') {
+        refreshSyncTimeUI();
+    }
 };
 
-
 window.syncHistoryItemToCloud = async function(key, url, timestamp, isDeleted = false) {
-    // ПРОПУСКНОЙ ПУНКТ:
-    if (!(await verifySessionActive())) return;
+    // В текущем воркере таблица history создана, но метод /sync/history еще не прописан.
+    // Пока используем заглушку, чтобы не сыпать ошибками.
+    console.log("History sync to DO is pending implementation in worker.js");
+};
 
-    if (!db || !getUid()) return;
-    const uid = getUid();
-    const baseKey = /\d/.test(key) ? key.split(/\s+/)[0] : key;
-    const docId = sanitizeId(baseKey);
-    const docRef = db.collection("users").doc(uid).collection("history").doc(docId);
-
-    try {
-        if (isDeleted) {
-            await docRef.delete();
-        } else {
-            await docRef.set({ 
-                key, url, timestamp,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
-        }
-        if (typeof refreshSyncTimeUI === 'function') refreshSyncTimeUI();
-    } catch (e) { console.error("History Sync Error:", e); }
+window.loadAllDataFromCloud = async function() {
+    const data = await cfFetch("/sync/get_all");
+    if (data && data.success) {
+        // Применяем настройки
+        data.settings.forEach(item => {
+            window.dg_ignoreNextStorageEvent = true;
+            localStorage.setItem(item.key, JSON.parse(item.value));
+        });
+        // Применяем избранное
+        const favorites = data.favorites.map(f => JSON.parse(f.data));
+        localStorage.setItem('dg_favorites', JSON.stringify(favorites));
+        
+        if (typeof window.refreshQuickModalData === 'function') window.refreshQuickModalData();
+    }
 };
 
 // Функция отправки Прогресса чтения
