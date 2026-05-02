@@ -1656,7 +1656,14 @@ body.dark .quick-tabs-wrapper { border-bottom-color: #444; }
 .quick-iframe { width: 100%; height: 100%; border: none; border-radius: 8px; background: transparent; }
 
 /* Списки Истории и Избранного */
-#quick-favorites-container, #quick-history-container { max-height: 520px; overflow-y: hidden; padding-right: 5px; }
+/* Избранное: расширяется на всю длину, используя общий скролл вкладки */
+#quick-favorites-container { 
+    max-height: none !important; 
+    overflow: visible !important; 
+}
+
+#quick-history-container { max-height: 520px; overflow-y: hidden; padding-right: 5px; }
+
 
 .header-title { cursor: pointer; transition: color 0.2s; display: flex; align-items: center; }
 .header-title::before { content: '▼'; display: inline-block; margin-right: 6px; font-size: 0.75rem; transition: transform 0.2s; }
