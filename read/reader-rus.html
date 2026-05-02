@@ -1,6 +1,26 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+<script>
+  (function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const q = urlParams.get('q');
+    // Формируем базовый URL без параметров и домена f.
+    let canonicalUrl = 'https://dhamma.gift' + window.location.pathname;
+    
+    if (q) {
+      canonicalUrl += '?q=' + encodeURIComponent(q);
+    }
+
+    let link = document.querySelector("link[rel='canonical']");
+    if (!link) {
+      link = document.createElement('link');
+      link.setAttribute('rel', 'canonical');
+      document.head.appendChild(link);
+    }
+    link.setAttribute('href', canonicalUrl);
+  })();
+</script>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta http-equiv="Cache-control" content="public">
