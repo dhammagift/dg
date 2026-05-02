@@ -21673,7 +21673,7 @@ include $basedir . "/assets/texts/bipm.php";
       } else {
 
       echo '
-  <a href="https://github.com/o28o/fdg" target=_blank style="z-index:1" class="list-group-item list-group-item-action active">
+  <a href="https://github.com/dhammagift/dg" target=_blank style="z-index:1" class="list-group-item list-group-item-action active">
     <div class="d-flex w-100 justify-content-between">
       <h5 class="mb-1">' . $header5fdgoffline . '</h5>
       <small class="text-muted">' . $detailoffline . '</small>
@@ -21925,7 +21925,7 @@ include $basedir . "/assets/texts/bipm.php";
 <p class="lead mb-4">
 <?php echo $contaccalltoaction; ?>
 </p>
-<a  target="_blank"  class="btn btn-outline-light btn-social mx-1" href="https://github.com/o28o/fdg#readme"><i class="fa-brands fa-github"></i></a>
+<a  target="_blank"  class="btn btn-outline-light btn-social mx-1" href="https://github.com/dhammagift/dg#readme"><i class="fa-brands fa-github"></i></a>
 <a  target="_blank"  class="btn btn-outline-light btn-social mx-1" href="mailto:agiftofdhamma@gmail.com"><i class="fa-solid fa-at"></i></a>
 <a href="https://m.youtube.com/channel/UCoyL5T0wMubqrj4OnKVOlMw" class="btn btn-outline-light btn-social mx-1" title="YouTube" target="_blank" rel="nofollow"><i class="fa-brands fa-youtube"></i></a>
 <a href="https://t.me/dhamma_gift" class="btn btn-outline-light btn-social mx-1" title="Telegram" target="_blank" rel="nofollow"><i class="fa-brands fa-telegram"></i></a>
