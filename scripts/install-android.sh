@@ -99,15 +99,25 @@ echo "downloading offline data"
 cd ..
 #git clone git@github.com:dhammagift/offline-data.git offline-data
 git clone  https://github.com/dhammagift/offline-data.git offline-data
-echo "optionally you can donwload pali audio sc-voice data
-cd to the dhamma.gift project folder (apache default folder)
-run
+
+echo
+echo 
+echo 
+echo "#############"
+echo "Congratulations! All done!"
+
+echo "Optionally you can donwload pali audio sc-voice data. If you need that run:
+
+cd $PREFIX/share/apache2/default-site/htdocs
 git clone https://github.com/dhammagift/audio ./assets/audio
 "
 
 #test run
-echo "test run"
+echo 
+echo 
+echo "testing the installation run"
 echo
+cd $PREFIX/share/apache2/default-site/htdocs
 bash ./scripts/finddhamma.sh adhivacanasamphasso 
 
 echo "apachectl start" >> ~/.profile
@@ -120,12 +130,11 @@ it will open dhamma.gift offline automatically
 
 echo 'termux-open-url http://localhost:8080/' >> ~/.profile
 
-
-if localhost:8080 is unavailable. you may run 
+if localhost:8080 is unavailable. You can simply restart Termux. 
+Or you may run:
 
 apachectl stop && apachectl start
 
-without restarting Termux
 press anykey to finish the setup
 "
 read 
