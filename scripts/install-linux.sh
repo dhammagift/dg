@@ -25,9 +25,9 @@ cd /var/www/html
 git clone https://github.com/dhammagift/audio ./assets/audio
 
 "
-
-chown -R apache:apache /var/www/suttacentral.net
-chown -R www-data:www-data /var/www/suttacentral.net
+cd ..
+chown -R apache:apache /var/www/*  
+chown -R www-data:www-data /var/www/* 
 
 sudo systemctl restart apache2
 
