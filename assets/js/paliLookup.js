@@ -482,7 +482,12 @@ async function handleWordLookup(word, event) {
       };
     }
 
-    function showSearchButton() {
+function showSearchButton() {
+        const existingBtn = document.querySelector('.quick-search-float-btn');
+        if (existingBtn) {
+            existingBtn.remove();
+        }
+
         const wordForSearch = cleanedWord.replace(/'ti/, '');
         const searchBtn = document.createElement('a');
         searchBtn.href = `${dhammaGift}${encodeURIComponent(wordForSearch)}${dgParams}`;
@@ -496,11 +501,28 @@ async function handleWordLookup(word, event) {
             </svg>
         `;
         document.body.appendChild(searchBtn);
+
+        // Плавное появление (fade-in)
+        setTimeout(() => {
+            searchBtn.classList.add('show');
+        }, 10);
+        
         searchBtn.addEventListener('click', () => {
             searchBtn.remove();
         });
+        
+        // Плавное исчезновение (fade-out)
         setTimeout(() => {
-            searchBtn.remove();
+            if (document.body.contains(searchBtn)) {
+                searchBtn.classList.remove('show');
+                
+                // Ждем окончания CSS-анимации перед удалением из DOM
+                setTimeout(() => {
+                    if (document.body.contains(searchBtn)) {
+                        searchBtn.remove();
+                    }
+                }, 300); 
+            }
         }, 1500);
     }
 

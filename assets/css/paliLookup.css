@@ -346,7 +346,19 @@ img[data-size="large"] {
     justify-content: center;
     text-decoration: none;
     z-index: 10000;
+    
+    /* Начальное невидимое состояние и скорость ИСЧЕЗНОВЕНИЯ (0.3s) */
+    opacity: 0; 
+    transition: opacity 0.3s ease-out;
 }
+
+/* Класс для активного (видимого) состояния */
+.quick-search-float-btn.show {
+    opacity: 1;
+    /* Скорость ПОЯВЛЕНИЯ (0.1s) */
+    transition: opacity 0.1s ease-out;
+}
+
 
 /* Шапка попапа (зона захвата для перемещения) */
 .popup-header {
