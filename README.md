@@ -30,7 +30,13 @@ This instruction is only for Android devices. Check possible options for IOS in 
 
 #### For Linux with apt
 
-Copy+paste into terminal the contents of [`scripts/install-linux.sh`](./scripts/install-linux.sh) (requires root)
+Copy+paste into terminal
+
+```bash
+sudo bash 
+wget https://raw.githubusercontent.com/dhammagift/dg/refs/heads/main/scripts/install-linux.sh
+bash install-linux.sh
+```
 
 #### For Windows 10+ (WSL)
 
@@ -46,6 +52,12 @@ Copy+paste into terminal the contents of [`scripts/install-linux.sh`](./scripts/
 1. Run Termux
 
 1. Copy-paste following commands:
+
+   ```bash
+   wget https://raw.githubusercontent.com/dhammagift/dg/refs/heads/main/scripts/install-android.sh
+   bash install-android.sh
+   ```
+    or other variant    
 
     ```bash
     pkg update
