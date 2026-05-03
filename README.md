@@ -61,7 +61,7 @@ bash install-linux.sh
    wget https://raw.githubusercontent.com/dhammagift/dg/refs/heads/main/scripts/install-android.sh
    bash install-android.sh
    ```
-    or other variant    
+    or older variant    
 
     ```bash
     pkg update
