@@ -5,7 +5,7 @@ sudo apt install -y apache2 php zip pv wget git jq
 sudo apt install -y php-{common,xml,xmlrpc,curl,gd,imagick,cli,dev,imap,mbstring,opcache,soap,zip,intl}
 rm /var/www/html/index.html
 cd /var/www/html
-git clone https://github.com/o28o/dg.git ./
+git clone https://github.com/dhammagift/dg.git ./
 mkdir result
 cd ru && ln -s ../result ./ && cd ..
 cd ..
@@ -18,11 +18,11 @@ git clone https://github.com/suttacentral/sc-data.git
 
 echo "downloading offline data"
 cd ..
-git clone git@github.com:o28o/dg-offline-data.git offline-data
+git clone git@github.com:dhammagift/offline-data.git offline-data
 
 echo "optionally you can donwload pali audio sc-voice data
 cd to the dhamma.gift project folder (apache default folder)
-git clone https://github.com/o28o/dg.audio ./assets/audio
+git clone https://github.com/dhammagift/audio ./assets/audio
 "
 
 

@@ -53,7 +53,7 @@ Copy+paste into terminal the contents of [`scripts/install-linux.sh`](./scripts/
     pkg install -y git
     mkdir -p $PREFIX/share/apache2/default-site/htdocs
     cd $PREFIX/share/apache2/default-site/htdocs
-    git clone https://github.com/o28o/dg.git ./
+    git clone https://github.com/dhammagift/dg.git ./
     bash ./scripts/install-android.sh -s
     ```
 
@@ -62,7 +62,7 @@ Copy+paste into terminal the contents of [`scripts/install-linux.sh`](./scripts/
     ```bash
     mkdir -p $PREFIX/share/apache2/default-site/htdocs/assets/audio
     cd $PREFIX/share/apache2/default-site/htdocs/assets/audio
-    git clone https://github.com/o28o/dg.audio ./
+    git clone https://github.com/dhammagift/audio ./
     ```
 
 ### Option #2 - manual installation
@@ -120,7 +120,7 @@ Now, download offline resources:
 1. Clone this repo:
 
    ```bash
-   git clone https://github.com/o28o/dg.git ./
+   git clone https://github.com/dhammagift/dg.git ./
    ````
 
 1. Clone the current https://suttacentral.net data:

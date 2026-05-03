@@ -8,7 +8,7 @@ sed -i '/id="summary-toggle"/ s/ checked//' ru_templates/home.html templates/hom
 exit 0
 
 cd /var/www/
-git clone https://github.com/o28o/dpd-db
+git clone https://github.com/dhammagift/dpd-db
 cd dpd-db
 wget latest dpd.db.tar.bz  from https://github.com/digitalpalidictionary/dpd-db/releases
 tar -xvjf dpd.db.tar.bz2

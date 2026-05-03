@@ -17,7 +17,7 @@ if [ "$SKIP_INIT" = false ]; then
     pkg install -y git
     mkdir -p $PREFIX/share/apache2/default-site/htdocs
     cd $PREFIX/share/apache2/default-site/htdocs
-    git clone https://github.com/o28o/dg.git ./
+    git clone https://github.com/dhammagift/dg.git ./
     # Вызываем этот же скрипт уже из папки проекта с флагом -s
     bash ./scripts/install-android.sh -s
     exit 0
@@ -26,7 +26,7 @@ fi
 #for offline audio also clone fdg.audio repo
 # mkdir assets/audio
 # cd assets/audio 
-# git clone https://github.com/o28o/audio.git ./
+# git clone https://github.com/dhammagift/audio.git ./
 #PREFIX=/data/data/com.termux/files/usr/
 httpdconf=$PREFIX/etc/apache2/httpd.conf
 httpdtdir=$PREFIX/share/apache2/default-site/htdocs
@@ -97,12 +97,12 @@ git clone https://github.com/suttacentral/sc-data.git
 
 echo "downloading offline data"
 cd ..
-#git clone git@github.com:o28o/dg-offline-data.git offline-data
-git clone  https://github.com/o28o/dg-offline-data.git offline-data
+#git clone git@github.com:dhammagift/offline-data.git offline-data
+git clone  https://github.com/dhammagift/offline-data.git offline-data
 echo "optionally you can donwload pali audio sc-voice data
 cd to the dhamma.gift project folder (apache default folder)
 run
-git clone https://github.com/o28o/dg.audio ./assets/audio
+git clone https://github.com/dhammagift/audio ./assets/audio
 "
 
 #test run
