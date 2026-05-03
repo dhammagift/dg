@@ -43,8 +43,12 @@ bash install-linux.sh
 1. [Activate](https://learn.microsoft.com/en-us/windows/wsl/install) Windows Subsystem for Linux
 1. Install Ubuntu of your choice from Windows store
 1. Finalize the setup: set username and password
-1. Copy+paste into terminal the contents of [`scripts/install-linux.sh`](./scripts/install-linux.sh) (requires root)
-
+1. ```bash
+   sudo bash 
+    wget https://raw.githubusercontent.com/dhammagift/dg/refs/heads/main/scripts/install-linux.sh
+    bash install-linux.sh
+   ```
+   
 #### For Android
 
 1. Install Termux from [F-Droid](https://f-droid.org/packages/com.termux/) or [GitHub](https://github.com/termux/termux-app)
