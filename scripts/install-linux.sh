@@ -4,14 +4,11 @@ sudo apt update && sudo apt -y upgrade
 sudo apt install -y apache2 php zip pv wget git jq
 sudo apt install -y php-{common,xml,xmlrpc,curl,gd,imagick,cli,dev,imap,mbstring,opcache,soap,zip,intl}
 rm /var/www/html/index.html
-cd /var/www/html
+cd /var/www/html || mkdir -p /var/www/html
 git clone https://github.com/dhammagift/dg.git ./
 mkdir result
 cd ru && ln -s ../result ./ && cd ..
 cd ..
-
-chown -R apache:apache /var/www/html 
-chown -R www-data:www-data /var/www/html 
 
 mkdir suttacentral.net && cd suttacentral.net
 git clone https://github.com/suttacentral/sc-data.git 
@@ -20,17 +17,17 @@ echo "downloading offline data"
 cd ..
 git clone git@github.com:dhammagift/offline-data.git offline-data
 
-echo "optionally you can donwload pali audio sc-voice data
-cd to the dhamma.gift project folder (apache default folder)
-git clone https://github.com/dhammagift/audio ./assets/audio
-"
+echo "optionally you can donwload pali audio data. Run:
 
+cd /var/www/html 
+git clone https://github.com/dhammagift/audio ./assets/audio
+
+"
 
 chown -R apache:apache /var/www/suttacentral.net
 chown -R www-data:www-data /var/www/suttacentral.net
 
 sudo systemctl restart apache2
-
 
 #check this or similar article for "how to check apache and php installation"
 # https://www.vultr.com/docs/install-linux-apache-mysql-and-php-lamp-on-ubuntu-20-04-lts/
