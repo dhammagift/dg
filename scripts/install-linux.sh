@@ -3,8 +3,10 @@
 sudo apt update && sudo apt -y upgrade
 sudo apt install -y apache2 php zip pv wget git jq
 sudo apt install -y php-{common,xml,xmlrpc,curl,gd,imagick,cli,dev,imap,mbstring,opcache,soap,zip,intl}
+mkdir -p /var/www/html
+cd /var/www/html 
 rm /var/www/html/index.html
-cd /var/www/html || mkdir -p /var/www/html
+
 git clone https://github.com/dhammagift/dg.git ./
 mkdir result
 cd ru && ln -s ../result ./ && cd ..
