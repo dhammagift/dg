@@ -40,7 +40,7 @@ $ctaButtons =' <div class="d-flex flex-wrap flex-column flex-sm-row justify-cont
         <img src="/assets/img/buttons/google-play-cta.png" class="cta-img" title="Скачать с Google Play">
     </a>
     
-    <a class="ms-2 mb-2" href="/assets/apk/dhamma.gift.ru-latest.apk">
+    <a class="ms-2 mb-2" href="https://github.com/dhammagift/dg-twa/releases">
         <img src="/assets/img/buttons/apk-cta.png" class="cta-img" title="Скачать APK. В нем будет встроенный поиск и опция поделиться, как в браузере. По неизвесным причинам Google скрывает их в версии на Play Market">
     </a>
 
@@ -1304,7 +1304,7 @@ $ctaButtons =' <div class="d-flex flex-wrap flex-column flex-sm-row justify-cont
         <img src="/assets/img/buttons/google-play-cta.png" class="cta-img" title="Download from Google Play">
     </a>
 
-    <a class="ms-2 mb-2" href="/assets/apk/dhamma.gift-latest.apk">
+    <a class="ms-2 mb-2" href="https://github.com/dhammagift/dg-twa/releases">
         <img src="/assets/img/buttons/apk-cta.png" class="cta-img" title="Download APK. If you need build-in browser search and share functions, which Google removes from Play Market version">
     </a>
     
