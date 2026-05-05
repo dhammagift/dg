@@ -1,0 +1,43 @@
+{
+  "name": "Simple Counter",
+  "short_name": "Simple Counter",
+  "description": "A simple tool for counting things and keeping track of numbers.",
+  "default_locale": "en",
+  "start_url": "./",
+  "scope": "./",
+  "background_color": "#000",
+  "theme_color": "#000",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "./icons/simple-counter-icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icons/simple-counter-icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "./images/simple-counter-app.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Application"
+    },
+    {
+      "src": "./images/simple-counter-app-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "label": "Application"
+    }
+  ],
+  "developer": {
+    "name": "Henry Egloff",
+    "url": "https://henryegloff.com"
+  },
+  "installs_allowed_from": ["*"]
+}

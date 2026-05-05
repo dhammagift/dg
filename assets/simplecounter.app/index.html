@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en" screen="intro">
+    <head>
+        <title>Simple Counter</title>
+        <meta
+            name="description"
+            content="A simple tool for counting things and keeping track of numbers."
+        />
+        <meta charset="UTF-8" />
+        <meta content="width=device-width, initial-scale=1" name="viewport" />
+        <meta content="yes" name="mobile-web-app-capable" />
+        <meta content="yes" name="apple-mobile-web-app-capable" />
+        <meta content="#000" name="theme-color" />
+        <meta content="#000" name="msapplication-TileColor" />
+        <meta content="#000" name="apple-mobile-web-app-status-bar-style" />
+        <meta content="Simple Counter" name="apple-mobile-web-app-title" />
+        <meta name="keywords" content="Counter app, tally counter app" />
+        <link rel="manifest" href="manifest.json" />
+        <link rel="icon" href="icons/favicon.svg" type="image/x-icon" />
+        <link rel="canonical" href="index.html" />
+
+        <link
+            rel="apple-touch-icon"
+            href="icons/simple-counter-icon-192x192.png"
+        />
+
+        <meta property="og:title" content="Simple Counter" />
+        <meta property="og:site_name" content="Simple Counter" />
+        <meta property="og:url" content="./" />
+        <meta
+            property="og:description"
+            content="A simple tool for counting things and keeping track of numbers."
+        />
+        <meta property="og:type" content="website" />
+        <meta
+            property="og:image"
+            content="./images/simple-counter-app.png"
+        />
+
+        <script type="application/ld+json">
+            {
+                "@context": "http://schema.org",
+                "@type": "SoftwareApplication",
+                "name": "Simple Counter",
+                "image": "./images/simple-counter-app.png",
+                "author": {
+                    "@type": "Person",
+                    "name": "Henry Egloff"
+                },
+                "downloadUrl": "./"
+            }
+        </script>
+        <style></style>
+        <script
+            type="module"
+            crossorigin
+            src="./assets/index-C5kEgciF.js"
+        ></script>
+        <link rel="stylesheet" crossorigin href="./assets/index-CupmoUiK.css" />
+    </head>
+    <body>
+        <header class="screen intro">
+            <div class="content">
+                <h1>Simple Counter</h1>
+                <h2>
+                    A simple tool for counting things and keeping track of
+                    numbers.
+                </h2>
+            </div>
+        </header>
+
+        <main class="screen">
+            <div id="count"></div>
+            <div id="spaces-container">
+                <div id="spaces-available"></div>
+                <div id="spaces-notice"></div>
+            </div>
+            <div class="add-subtract-buttons">
+                <button id="add-button" aria-label="Add">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path
+                            d="M20.8,10.46v3.08H13.54V20.8H10.46V13.54H3.2V10.46h7.26V3.2h3.08v7.26Z"
+                        />
+                    </svg>
+                </button>
+                <button id="subtract-button" aria-label="Subtract">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path
+                            d="M20.8,10.5v3.1h-7.3h-3.1H3.2v-3.1h7.3h3.1H20.8z"
+                        />
+                    </svg>
+                </button>
+            </div>
+        </main>
+
+        <nav>
+            <button id="info-button" aria-label="Info">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 -960 960 960"
+                >
+                    <path
+                        d="M436.41-276.41h87.18V-520h-87.18v243.59ZM480-595.22q19.03 0 31.91-12.87 12.87-12.88 12.87-31.91t-12.87-31.91q-12.88-12.87-31.91-12.87t-31.91 12.87q-12.87 12.88-12.87 31.91t12.87 31.91q12.88 12.87 31.91 12.87Zm0 523.35q-84.91 0-159.34-32.12-74.44-32.12-129.5-87.17-55.05-55.06-87.17-129.5Q71.87-395.09 71.87-480t32.12-159.34q32.12-74.44 87.17-129.5 55.06-55.05 129.5-87.17 74.43-32.12 159.34-32.12t159.34 32.12q74.44 32.12 129.5 87.17 55.05 55.06 87.17 129.5 32.12 74.43 32.12 159.34t-32.12 159.34q-32.12 74.44-87.17 129.5-55.06 55.05-129.5 87.17Q564.91-71.87 480-71.87Z"
+                    />
+                </svg>
+            </button>
+            <button id="settings-button" aria-label="Settings">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 -960 960 960"
+                >
+                    <path
+                        d="m387.69-100-15.23-121.85q-16.07-5.38-32.96-15.07-16.88-9.7-30.19-20.77L196.46-210l-92.3-160 97.61-73.77q-1.38-8.92-1.96-17.92-.58-9-.58-17.93 0-8.53.58-17.34t1.96-19.27L104.16-590l92.3-159.23 112.46 47.31q14.47-11.46 30.89-20.96t32.27-15.27L387.69-860h184.62l15.23 122.23q18 6.54 32.57 15.27 14.58 8.73 29.43 20.58l114-47.31L855.84-590l-99.15 74.92q2.15 9.69 2.35 18.12.19 8.42.19 16.96 0 8.15-.39 16.58-.38 8.42-2.76 19.27L854.46-370l-92.31 160-112.61-48.08q-14.85 11.85-30.31 20.96-15.46 9.12-31.69 14.89L572.31-100H387.69Zm92.77-260q49.92 0 84.96-35.04 35.04-35.04 35.04-84.96 0-49.92-35.04-84.96Q530.38-600 480.46-600q-50.54 0-85.27 35.04T360.46-480q0 49.92 34.73 84.96Q429.92-360 480.46-360Z"
+                    />
+                </svg>
+            </button>
+            <button id="reset-button" aria-label="Reset">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 -960 960 960"
+                >
+                    <path
+                        d="M479.04-151.87q-137.11 0-232.62-95.51-95.51-95.51-95.51-232.62t95.51-232.62q95.51-95.51 232.62-95.51 71.16 0 135.71 29.22 64.55 29.21 110.51 83.89v-113.11h83.83v291.72H517.13V-600H683.7q-32-54.57-86.43-85.85-54.42-31.28-118.23-31.28-98.8 0-167.96 69.16Q241.91-578.8 241.91-480t69.17 167.97q69.16 69.16 167.96 69.16 75.57 0 136.73-43.28T702.17-400h95.24q-28.24 109.35-116.63 178.74-88.39 69.39-201.74 69.39Z"
+                    />
+                </svg>
+            </button>
+        </nav>
+
+        <div id="close-screen-background"></div>
+
+        <section id="info" class="screen">
+            <div class="content">
+                <header>
+                    <h1>Simple Counter</h1>
+                    <div class="sub-heading-details">
+                        <h2>
+                            A simple tool for counting things and keeping track
+                            of numbers.
+                        </h2>
+                        <a href="https://henryegloff.com/simple-counter/">
+                            Learn more
+                            <span class="visually-hidden"
+                                >about Simple Counter</span
+                            ></a
+                        >
+                    </div>
+                </header>
+                <footer>
+                    <a
+                        href="https://www.buymeacoffee.com/henryegloff"
+                        class="coffee"
+                    >
+                        Buy me a coffee
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                            />
+                        </svg>
+                    </a>
+                    <p>
+                        By
+                        <a href="https://henryegloff.com/">Henry Egloff</a> 😊
+                    </p>
+
+                    <style>
+                        a.dice-link {
+                            border: 1px solid #fff;
+                            padding: 0.75em 1.25em;
+                            border-radius: 0.5em;
+                            text-decoration: none;
+                            margin-top: 1em;
+                            font-weight: 700;
+                            display: inline-block;
+                            transition: transform 0.3s;
+                        }
+                        a.dice-link:hover {
+                            transform: scale(1.125);
+                        }
+                    </style>
+                    <p>Please check out my latest app...</p>
+                    <a href="https://dice3d.app/" class="dice-link">Dice 3D</a>
+                    
+                    <button class="close-button" aria-label="Close">
+                        <svg>
+                            <use xlink:href="#icon-close"></use>
+                        </svg>
+                    </button>
+                </footer>
+            </div>
+        </section>
+
+        <section id="settings" class="screen">
+            <div class="content">
+                <h2 class="visually-hidden">Settings</h2>
+                <section>
+                    <h3>Set count =</h3>
+                    <input
+                        id="set-count-input"
+                        type="number"
+                        min="0"
+                        max="9999"
+                    />
+                    <label for="set-count-input" class="visually-hidden"
+                        >Set Count</label
+                    >
+                </section>
+                <section>
+                    <div class="custom-row">
+                        <h3>
+                            Limits
+                            <span class="toggle-off-text">Off</span> /
+                            <span class="toggle-on-text">On</span>
+                        </h3>
+                        <button
+                            id="limit-settings-button"
+                            class="toggle-button"
+                            aria-label="Toggle Limit Setting"
+                        >
+                            <span></span>
+                        </button>
+                    </div>
+
+                    <div id="set-limit-container">
+                        <h3>Maximum =</h3>
+                        <input
+                            id="set-limit-input"
+                            type="number"
+                            min="1"
+                            max="9999"
+                        />
+                        <label for="set-limit-input" class="visually-hidden"
+                            >Set Limit</label
+                        >
+                    </div>
+                </section>
+
+                <section>
+                    <h4 class="visually-hidden">Theme</h4>
+                    <div class="theme-menu">
+                        <button
+                            id="theme-button-black"
+                            aria-label="Black theme"
+                        ></button>
+                        <button
+                            id="theme-button-white"
+                            aria-label="White theme"
+                        ></button>
+                        <button
+                            id="theme-button-deep-pink"
+                            aria-label="Deep Pink theme"
+                        ></button>
+
+                        <button
+                            id="theme-button-medium-orchid"
+                            aria-label="Medium Orchid theme"
+                        ></button>
+
+                        <button
+                            id="theme-button-blue-violet"
+                            aria-label="Blue Violet theme"
+                        ></button>
+
+                        <button
+                            id="theme-button-slate-gray"
+                            aria-label="Slate Gray theme"
+                        ></button>
+
+                        <button
+                            id="theme-button-dark-turquoise"
+                            aria-label="Turquoise theme"
+                        ></button>
+
+                        <button
+                            id="theme-button-light-sea-green"
+                            aria-label="Light Sea Green theme"
+                        ></button>
+
+                        <button
+                            id="theme-button-royal-blue"
+                            aria-label="Royal Blue theme"
+                        ></button>
+
+                        <button
+                            id="theme-button-dodger-blue"
+                            aria-label="Dodger Blue theme"
+                        ></button>
+
+                        <button
+                            id="theme-button-deep-sky-blue"
+                            aria-label="Deep Sky Blue theme"
+                        ></button>
+
+                        <button
+                            id="theme-button-steel-blue"
+                            aria-label="Steel Blue theme"
+                        ></button>
+                    </div>
+                </section>
+            </div>
+            <button class="close-button" aria-label="Close">
+                <svg>
+                    <use xlink:href="#icon-close"></use>
+                </svg>
+            </button>
+        </section>
+
+        <section id="reset" class="screen">
+            <div class="content">
+                <h2>Reset Counter?</h2>
+                <button id="reset-confirm-button" aria-label="Yes">Yes</button>
+                <br />
+                <button id="reset-cancel-button" aria-label="Cancel">
+                    Cancel
+                </button>
+            </div>
+            <button class="close-button" aria-label="Close">
+                <svg>
+                    <use xlink:href="#icon-close"></use>
+                </svg>
+            </button>
+        </section>
+
+        <svg
+            version="1.1"
+            xmlns="http://www.w3.org/2000/svg"
+            style="position: absolute; width: 0; height: 0"
+            width="0"
+            height="0"
+        >
+            <defs>
+                <symbol id="icon-close" viewBox="0 -960 960 960">
+                    <title>Close</title>
+                    <path
+                        d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"
+                    />
+                </symbol>
+            </defs>
+        </svg>
+    </body>
+</html>
