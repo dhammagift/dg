@@ -190,51 +190,6 @@ du -hs ./suttacentral.net
 #apache config backup
 cp /data/data/com.termux/files/usr/etc/apache2/httpd.conf /data/data/com.termux/files/usr/share/apache2/default-site/htdocs/config/
 
-#to refresh theravada.ru run
-mkdir theravada.ru && cd theravada.ru
-wget -r --no-check-certificate -P ./ --no-parent https://theravada.ru/Teaching/canon.htm
-cd theravada.ru/Teaching/Canon/Suttanta   
-for i in `find . -name  "*htm*" -type f | sort -V`; do  
-    echo $i; 
-    iconv -f windows-1251 $i > ../tmp
-    mv -f ../tmp $i
-    sed -i 's@windows-1251@utf-8@g' $i
-    done
-
-apa
-diff -qr theravada.ruold theravada.ru | grep -i suttanta
-
-for i in `find . -type f | sort -V | grep -lri "&#1645;</span>" theravada.ru/Teaching/Canon/Suttanta/Texts/`
-do 
-#echo $i
-textindex=`echo $i | awk -F'/' '{print $NF}' | awk -F'-' '{print $1}'  | sed 's/.htm.*//g' | sed 's@_@.@g' | sed 's@dhm@dhp@g' | sed 's@\.volovsky@@g' | sed 's@\.sv@@g'`
-
-echo $textindex
-sed -i \
-    '/&#1645;<\/span>/s|<\/span>|<\/span> <a href="/ru/?q='"$textindex"'">DG<\/a> <a href="https://suttacentral.net/'"$textindex"'">SC<\/a> <a href="https://'"$i"'">Th.ru<\/a>|' \
-    "$i"
-done 
-
-
-#fix links 
-
-cd /data/data/com.termux/files/usr/share/apache2/default-site/htdocs/theravada.ru/Teaching/Canon/Suttanta/Texts 
-
-sed -i 's@href="../AN/anguttara-@href="/theravada.ru/Teaching/Canon/Suttanta/AN/anguttara-@g; s@href="../SN/samyutta-@href="/theravada.ru/Teaching/Canon/Suttanta/SN/samyutta-@g' *
-
-#fix favico and img
-cd /data/data/com.termux/files/usr/share/apache2/default-site/htdocs/theravada.ru/
-
-find . -type f -name "*.htm"| xargs sed -E -i 's@(\.\./)*Index/Navigate/nav12b.gif@/assets/img/th.ru/nav12b.gif@g; s@href="/favicon.ico"@href="/assets/img/th.ru/favicon.ico"@g; s@(\.\./)*Index/Navigate/nav12a.gif@/assets/img/th.ru/nav12b.gif@g; s@(\.\./)*Index/Navigate/nav1a.gif@/assets/img/th.ru/nav1b.gif@g;  s@(\.\./)*Index/head_left_[0-9]*.gif@/assets/img/headerlogo.png@g; s@(\.\./)*Index/Razdel_img/head_right[0-9]*.jpg@/assets/img/headerlogo.png@g; s@(\.\./)*Index/menu_background_fade.jpg@/assets/img/headerlogo.png@g'
-
-#доделать $textindex
-for i in `grep -lri ';">.</' theravada.ru/Teaching/Canon/`
-do 
-echo $i
-textindex=`echo $i | awk -F'/' '{print $NF}'  | sed 's/.html//g'`
-sed -i '/>.<\/font>/s/.<\/font>/.<\/font> <a href="\/ru\/sc\/?q='$textindex'">fdg<\/a> <a href="https:\/\/suttacentral.net\/'$textindex'">sc<\/a>/' $i
-done 
-
 
     #count metaphorcount 
 metaphorkeys="seyyathāpi|adhivacan|ūpama|opama|opamma"
@@ -394,3 +349,10 @@ git sparse-checkout set \
 # 4. Загружаем только эти каталоги
 git checkout
 
+diff theravada.ru/Teaching/Canon/Suttanta/Texts/mn1-mulapariyyaya-sutta-sv.htm thru/Teaching/Canon/Suttanta/Texts/mn1-mulapariyyaya-sutta-sv.htm
+diff theravada.ru/Teaching/Canon/Suttanta/Texts/mn22-alagaddupama-sutta-sv.htm  thru/Teaching/Canon/Suttanta/Texts/mn22-alagaddupama-sutta-sv.htm
+
+diff <(find theravada.ru -type f | sed 's#^theravada.ru/##' | sort) <(find thru -type f | sed 's#^thru/##' | sort)
+
+diff -rq theravada.ru thru
+diff -r theravada.ru thru
