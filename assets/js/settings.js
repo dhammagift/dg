@@ -1,3 +1,32 @@
+
+    // Проверяем, ГДЕ мы находимся. 
+    // Запускаем логику редиректа ТОЛЬКО если мы НЕ на локальном сервере.
+    if (window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost') {
+        
+        function tryLocalServer() {
+            fetch('http://127.0.0.1:8080/', { mode: 'no-cors', cache: 'no-store' })
+                .then(() => {
+                    // Сервер ответил! Делаем редирект с сохранением пути, параметров и якоря.
+                    const currentPath = window.location.pathname + window.location.search + window.location.hash;
+                    window.location.replace('http://127.0.0.1:8080' + currentPath);
+                })
+                .catch(() => {
+                    // Сервера нет. Остаемся в PWA.
+                    console.log('Локальный сервер не запущен. Остаемся на закэшированной PWA версии.');
+                });
+        }
+
+        window.addEventListener('load', () => {
+            if (!navigator.onLine) {
+                tryLocalServer();
+            }
+        });
+
+        window.addEventListener('offline', () => {
+            tryLocalServer();
+        });
+    }
+
 // === ЗАГРУЗКА СЛОВАРЯ (УМНАЯ ФОНОВАЯ ИЛИ ПО КЛИКУ) ===
 (function() {
     window.isDictScriptLoaded = false;
