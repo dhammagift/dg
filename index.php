@@ -1521,8 +1521,9 @@ var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         function tryLocalServer() {
             fetch('http://127.0.0.1:8080/', { mode: 'no-cors', cache: 'no-store' })
                 .then(() => {
-                    // Сервер ответил! Делаем редирект.
-                    window.location.replace('http://127.0.0.1:8080');
+                    // Сервер ответил! Делаем редирект с сохранением пути, параметров и якоря.
+                    const currentPath = window.location.pathname + window.location.search + window.location.hash;
+                    window.location.replace('http://127.0.0.1:8080' + currentPath);
                 })
                 .catch(() => {
                     // Сервера нет. Остаемся в PWA.
@@ -1539,8 +1540,9 @@ var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         window.addEventListener('offline', () => {
             tryLocalServer();
         });
-        }
+    }
 </script>
+
 
 </body>
 
