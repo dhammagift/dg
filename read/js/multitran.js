@@ -71,13 +71,6 @@ async function buildSutta(slug) {
   }
 
   var rustrnpath = `/assets/texts/ru/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`;
-  var engtrnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/ru/sv/${texttype}/${slugReady}_translation-ru-sv.json`;
-
-  if (texttype === "vinaya") {
-      engtrnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/brahmali/${texttype}/${slugReady}_translation-en-brahmali.json`;
-  } else if (typeof otrnranges !== 'undefined' && otrnranges.indexOf(slug) !== -1) { 
-      engtrnpath = `/assets/texts/en/o/${texttype}/${slugReady}_translation-en-o.json`;
-  }
 
   var htmlpath = `${Sccopy}/sc-data/sc_bilara_data/html/pli/ms/${texttype}/${slugReady}_html.json`;
 
@@ -118,8 +111,43 @@ async function buildSutta(slug) {
       return {}; 
   }
 
+  async function fetchSecondTranslation() {
+      let engtrnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/sujato/${texttype}/${slugReady}_translation-en-sujato.json`;
+      if (texttype === "vinaya") {
+          engtrnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/brahmali/${texttype}/${slugReady}_translation-en-brahmali.json`;
+      } else if (typeof otrnranges !== 'undefined' && otrnranges.indexOf(slug) !== -1) { 
+          engtrnpath = `/assets/texts/en/o/${texttype}/${slugReady}_translation-en-o.json`;
+      }
+
+      var svtrnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/ru/sv/${texttype}/${slugReady}_translation-ru-sv.json`;
+      if (slug.match(/ja/)) {
+          let slugNumber = parseInt(slug.replace(/\D/g, ''), 10);
+          if (slugNumber >= 1 && slugNumber <= 75) {
+              svtrnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/ru/sv/sutta/${slugReady}_translation-ru-sv.json`;
+          }
+      }
+
+      let pathsToTry = [];
+      if (texttype === "vinaya" || (typeof otrnranges !== 'undefined' && otrnranges.indexOf(slug) !== -1)) {
+          pathsToTry = [engtrnpath];
+      } else {
+          pathsToTry = [svtrnpath, engtrnpath];
+      }
+
+      for (const path of pathsToTry) {
+          try {
+              const response = await fetch(path);
+              if (response.ok) {
+                  const data = await response.json();
+                  if (data && Object.keys(data).length > 0) return data;
+              }
+          } catch (error) {}
+      }
+      return {};
+  }
+
   const translationResponse = fetchTranslation(); 
-  const engtranslationResponse = fetch(engtrnpath).then(res => res.ok ? res.json() : {}).catch(() => ({}));
+  const engtranslationResponse = fetchSecondTranslation();
   const htmlResponse = fetch(htmlpath).then(res => res.ok ? res.json() : {});
   const varResponse = window.fetchVariantData ? window.fetchVariantData(varpathLocal, varpath) : Promise.resolve({});
 
@@ -206,7 +234,6 @@ if (document.location.search) {
     setLanguage(language);
   }
 } else {
-  // Используем глобальную функцию для вывода инструкций
   if (typeof window.getInstructionHTML === 'function') {
       suttaArea.innerHTML = window.getInstructionHTML(pathLang);
       
