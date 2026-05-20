@@ -111,28 +111,13 @@ async function buildSutta(slug) {
       return {}; 
   }
 
-  async function fetchSecondTranslation() {
-      let engtrnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/sujato/${texttype}/${slugReady}_translation-en-sujato.json`;
-      if (texttype === "vinaya") {
-          engtrnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/brahmali/${texttype}/${slugReady}_translation-en-brahmali.json`;
-      } else if (typeof otrnranges !== 'undefined' && otrnranges.indexOf(slug) !== -1) { 
-          engtrnpath = `/assets/texts/en/o/${texttype}/${slugReady}_translation-en-o.json`;
-      }
+    async function fetchSecondTranslation() {
+      const otherRuPath = "/assets/texts/ru_other";
+      
+      const svtrnpath = `${otherRuPath}/${texttype}/${slugReady}_translation-ru-sv.json`;
+      const syrkinpath = `${otherRuPath}/${texttype}/${slugReady}_translation-ru-syrkin.json`;
 
-      var svtrnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/ru/sv/${texttype}/${slugReady}_translation-ru-sv.json`;
-      if (slug.match(/ja/)) {
-          let slugNumber = parseInt(slug.replace(/\D/g, ''), 10);
-          if (slugNumber >= 1 && slugNumber <= 75) {
-              svtrnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/ru/sv/sutta/${slugReady}_translation-ru-sv.json`;
-          }
-      }
-
-      let pathsToTry = [];
-      if (texttype === "vinaya" || (typeof otrnranges !== 'undefined' && otrnranges.indexOf(slug) !== -1)) {
-          pathsToTry = [engtrnpath];
-      } else {
-          pathsToTry = [svtrnpath, engtrnpath];
-      }
+      const pathsToTry = [svtrnpath, syrkinpath];
 
       for (const path of pathsToTry) {
           try {
@@ -143,8 +128,9 @@ async function buildSutta(slug) {
               }
           } catch (error) {}
       }
-      return {};
+      return null; // Возвращаем null, если ничего не нашли
   }
+
 
   const translationResponse = fetchTranslation(); 
   const engtranslationResponse = fetchSecondTranslation();
@@ -180,6 +166,9 @@ async function buildSutta(slug) {
           const linkToCopyStart = `<a class="text-decoration-none copyLink copyLink-start" style="cursor: pointer;" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;
           let linkToCopy = `<a class="text-decoration-none copyLink" style="cursor: pointer;" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;
 
+          const hasSecondTrn = engTransData && engTransData[segment];
+          const secondTrnStyle = hasSecondTrn ? "display: block; margin-top: 4px; color: #666; font-size: 0.9em;" : "display: none;";
+
           html += `${openHtml}<span id="${anchor}">
               <span class="pli-lang inputscript-ISOPali" lang="pi">
                   ${linkToCopyStart}${(paliData[segment] || "").trim()}${linkToCopy}
@@ -187,7 +176,9 @@ async function buildSutta(slug) {
               </span>
               <span class="right-column">
                   <span class="rus-lang" lang="ru">${linkToCopyStart}${(transData[segment] || "").trim()}${linkToCopy}</span> 
-                  <span class="eng-lang" lang="en"><font>${linkToCopyStart}${(engTransData[segment] || "").trim()}${linkToCopy}</font></span>
+                  <span class="eng-lang second-translation-row" lang="ru" style="${secondTrnStyle}">
+                      <font>${linkToCopyStart}${(hasSecondTrn ? engTransData[segment].trim() : "")}${linkToCopy}</font>
+                  </span>
               </span>
           </span>${closeHtml}\n\n`;
       }
