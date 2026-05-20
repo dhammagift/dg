@@ -1612,3 +1612,51 @@ window.toggleThePali = window.toggleThePali || function() {
     window.addEventListener('dgSuttaRendered', () => { activeSlug = ''; syncTOC(); });
     window.addEventListener('scroll', () => syncTOC(), { passive: true });
 })();
+
+function generateLanguageLinks(modes = ['ru', 'en']) {
+    const labels = {
+        'ru': { text: 'Ru', title: 'Русский' },
+        'en': { text: 'En', title: 'Английский' },
+        'th': { text: 'Th', title: 'Тайский' },
+        'ml': { text: 'R+E', title: 'Русский + Английский' },
+        'rev': { text: 'R+R', title: 'Два русских перевода' }
+    };
+    
+    let html = '';
+    for (let mode of modes) {
+        if (labels[mode]) {
+            html += `<a href="#" class="btn-language" data-lang="${mode}" title="${labels[mode].title} (Alt+1)">${labels[mode].text}</a>&nbsp;`;
+        }
+    }
+    return html;
+}
+
+document.addEventListener('click', function(event) {
+    const button = event.target.closest('.btn-language');
+    if (!button) return;
+
+    event.preventDefault(); 
+
+    const targetLang = button.getAttribute('data-lang');
+    if (!targetLang) return;
+
+    const url = new URL(window.location.href);
+    let newPath = '';
+
+    // Универсальная карта маршрутов
+    if (targetLang === 'en') {
+        newPath = '/read/';
+    } else if (targetLang === 'ru') {
+        newPath = '/r/';
+    } else if (targetLang === 'th') {
+        newPath = '/th/read/';
+    } else if (targetLang === 'ml') {
+        newPath = '/ml/';
+    } else if (targetLang === 'rev') {
+        newPath = '/rev/';
+    } else {
+        return;
+    }
+
+    window.location.href = url.origin + newPath + url.search + url.hash;
+});

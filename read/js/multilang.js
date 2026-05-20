@@ -71,11 +71,15 @@ async function buildSutta(slug) {
   }
 
   var rustrnpath = `/assets/texts/ru/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`;
+  
+  let engTranslatorId = "sujato";
   var engtrnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/sujato/${texttype}/${slugReady}_translation-en-sujato.json`;
 
   if (texttype === "vinaya") {
+      engTranslatorId = "brahmali";
       engtrnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/brahmali/${texttype}/${slugReady}_translation-en-brahmali.json`;
   } else if (typeof otrnranges !== 'undefined' && otrnranges.indexOf(slug) !== -1) { 
+      engTranslatorId = "o";
       engtrnpath = `/assets/texts/en/o/${texttype}/${slugReady}_translation-en-o.json`;
   }
 
@@ -128,7 +132,6 @@ async function buildSutta(slug) {
 
       if (!htmlData || Object.keys(htmlData).length === 0) throw new Error("Text not found");
 
-      // ПОИСК ОКОНЧАТЕЛЬНОГО ПРАВИЛА (Final Ruling)
       let finalRulingAnchor = "";
       if (slug.includes("bu-") || slug.includes("bi-")) {
           for (let seg in htmlData) {
@@ -165,11 +168,16 @@ async function buildSutta(slug) {
       }
 
       let translatorforuser = window.siteTranslators?.[pathLang]?.[translator] || translator;
-      const translatorByline = `<div id="trn" class="byline"><p><span class="pli-lang" lang="pi">Pāḷi <a class="text-decoration-none text-reset" href="/assets/texts/abbr.html?s=ms" title="Mahāsaṅgīti Pāḷi">MS</a></span> <span class="rus-lang" lang="ru"> Пер. ${translatorforuser}</span></p></div>`;
+      
+      // Ищем маппинг сначала в "en", затем в "ru" (pathLang), затем оставляем ID
+      let secondTrName = window.siteTranslators?.["en"]?.[engTranslatorId] || window.siteTranslators?.[pathLang]?.[engTranslatorId] || engTranslatorId;
+      let secondTranslatorByline = ` <span class="eng-lang second-translation-row" style="color: #666;"> Eng: ${secondTrName}</span>`;
+
+      const translatorByline = `<div id="trn" class="byline"><p><span class="pli-lang" lang="pi">Pāḷi <a class="text-decoration-none text-reset" href="/assets/texts/abbr.html?s=ms" title="Mahāsaṅgīti Pāḷi">MS</a></span> <span class="rus-lang" lang="ru"> Пер. ${translatorforuser}</span><br>
+      ${secondTranslatorByline}</p></div>`;
        
       if (typeof generateThirdPartyLinks === 'function') scLink += generateThirdPartyLinks(slug, slugReady, texttype, translator);
       
-      // Внедрение ссылки Final
       if (finalRulingAnchor) scLink += `&nbsp;<a href="#${finalRulingAnchor}" title="К окончательному правилу">Final</a>`;
       scLink += "</p>";
 
@@ -180,7 +188,6 @@ async function buildSutta(slug) {
       if (tContainer) tContainer.innerHTML = scLink;
       if (bContainer) bContainer.innerHTML = scLink;
 
-      // Инициализируем кнопку переключения языка
       toggleThePali();
 
       window.dispatchEvent(new Event('suttaLoaded'));
@@ -190,6 +197,7 @@ async function buildSutta(slug) {
 
   }).catch(error => { /* логика фолбэка */ });
 }
+
 
 if (document.location.search) {
   let params = new URLSearchParams(document.location.search);

@@ -74,11 +74,16 @@ async function buildSutta(slug) {
 
   var htmlpath = `${Sccopy}/sc-data/sc_bilara_data/html/pli/ms/${texttype}/${slugReady}_html.json`;
 
-  const mlUrl  = window.location.href;
-  const ruUrl = mlUrl.replace("/ml/", "/r/");
-  const enUrl = mlUrl.replace("/ml/", "/read/");
+  const mtUrl  = window.location.href;
+  const ruUrl = mtUrl.replace("/mt/", "/r/");
+  const mlUrl = mtUrl.replace("/mt/", "/ml/");
+  const enUrl = mtUrl.replace("/mt/", "/read/");
 
-  let scLink = `<p class="sc-link"><a title="Русский (Alt+1)" target="" href="${ruUrl}">Ru</a>&nbsp;<a target="" title="Английский (Alt+1)" href="${enUrl}">En</a>&nbsp;`;
+  let scLink = `<p class="sc-link">
+  <a title="Русский (Alt+1)" target="" href="${ruUrl}">Ru</a>&nbsp;
+  <a title="Русский (Alt+1)" target="" href="${mlUrl}">R+E</a>&nbsp;
+  <a target="" title="Английский (Alt+1)" href="${enUrl}">En</a>&nbsp;
+  `;
 
   var trnpath = rustrnpath; 
 

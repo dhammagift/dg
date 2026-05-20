@@ -81,8 +81,8 @@ async function buildSutta(slug) {
   var htmlpath = `${Sccopy}/sc-data/sc_bilara_data/html/pli/ms/${texttype}/${slugReady}_html.json`;
 
   const ruUrl  = window.location.href;
-  const mlUrl = ruUrl.replace("/r/", "/ml/");
-  let scLink = `<p class="sc-link"><a target="" title='Pali + Русский + Английский (Alt+2)' href="${mlUrl}">R+E</a>&nbsp;`;
+  const mtUrl = ruUrl.replace("/r/", "/mt/");
+  let scLink = `<p class="sc-link"><a target="" title='Pali + Русский + Английский (Alt+2)' href="${mtUrl}">R+R</a>&nbsp;`;
   const currentURL = window.location.href;
   const anchorURL = new URL(currentURL).hash; 
 
