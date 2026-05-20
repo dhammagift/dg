@@ -111,26 +111,31 @@ async function buildSutta(slug) {
       return {}; 
   }
 
-    async function fetchSecondTranslation() {
+  async function fetchSecondTranslation() {
       const otherRuPath = "/assets/texts/ru_other";
       
-      const svtrnpath = `${otherRuPath}/${texttype}/${slugReady}_translation-ru-sv.json`;
-      const syrkinpath = `${otherRuPath}/${texttype}/${slugReady}_translation-ru-syrkin.json`;
+      const targets = [
+          { id: "sv", path: `${otherRuPath}/${texttype}/${slugReady}_translation-ru-sv.json` },
+          { id: "syrkin", path: `${otherRuPath}/${texttype}/${slugReady}_translation-ru-syrkin.json` },
+          { id: "khantibalo", path: `${otherRuPath}/${texttype}/${slugReady}_translation-ru-khantibalo.json` },
+          { id: "narinyanievmenenko", path: `${otherRuPath}/${texttype}/${slugReady}_translation-ru-narinyanievmenenko.json` }
+      ];
 
-      const pathsToTry = [svtrnpath, syrkinpath];
-
-      for (const path of pathsToTry) {
+      for (const target of targets) {
           try {
-              const response = await fetch(path);
+              const response = await fetch(target.path);
               if (response.ok) {
                   const data = await response.json();
-                  if (data && Object.keys(data).length > 0) return data;
+                  if (data && Object.keys(data).length > 0) {
+                      data._authorId = target.id; // Запоминаем ID автора внутри объекта
+                      data._loadedFrom = target.id;
+                      return data;
+                  }
               }
           } catch (error) {}
       }
-      return null; // Возвращаем null, если ничего не нашли
+      return null;
   }
-
 
   const translationResponse = fetchTranslation(); 
   const engtranslationResponse = fetchSecondTranslation();
@@ -184,7 +189,16 @@ async function buildSutta(slug) {
       }
 
       let translatorforuser = window.siteTranslators?.[pathLang]?.[translator] || translator;
-      const translatorByline = `<div id="trn" class="byline"><p><span class="pli-lang" lang="pi">Pāḷi <a class="text-decoration-none text-reset" href="/assets/texts/abbr.html?s=ms" title="Mahāsaṅgīti Pāḷi">MS</a></span> <span class="rus-lang" lang="ru"> Пер. ${translatorforuser}</span></p></div>`;
+      
+      // Блок генерации имени второго переводчика
+      let secondTranslatorByline = "";
+      if (engTransData && engTransData._authorId) {
+          let secondTrName = window.siteTranslators?.[pathLang]?.[engTransData._authorId] || engTransData._authorId;
+          secondTranslatorByline = ` <span class="eng-lang second-translation-row" style="color: #666;"> Перевод 2: ${secondTrName}</span>`;
+      }
+
+      const translatorByline = `<div id="trn" class="byline"><p><span class="pli-lang" lang="pi">Pāḷi <a class="text-decoration-none text-reset" href="/assets/texts/abbr.html?s=ms" title="Mahāsaṅgīti Pāḷi">MS</a></span> <span class="rus-lang" lang="ru"> Пер. ${translatorforuser}</span><br>
+      ${secondTranslatorByline}</p></div>`;
        
       if (typeof generateThirdPartyLinks === 'function') scLink += generateThirdPartyLinks(slug, slugReady, texttype, translator);
       
