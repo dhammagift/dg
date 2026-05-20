@@ -87,9 +87,13 @@ async function buildSutta(slug) {
 
   const mlUrl  = window.location.href;
   const ruUrl = mlUrl.replace("/ml/", "/r/");
+  const mtUrl = mlUrl.replace("/ml/", "/mt/");
   const enUrl = mlUrl.replace("/ml/", "/read/");
 
-  let scLink = `<p class="sc-link"><a title="Русский (Alt+1)" target="" href="${ruUrl}">Ru</a>&nbsp;<a target="" title="Английский (Alt+1)" href="${enUrl}">En</a>&nbsp;`;
+  let scLink = `<p class="sc-link">
+  <a title="Русский (Alt+1)" target="" href="${ruUrl}">Ru</a>&nbsp;
+  <a target="" title="Русский + Русский" href="${mtUrl}">R+R</a>&nbsp;
+  <a target="" title="Английский (Alt+1)" href="${enUrl}">En</a>&nbsp;`;
 
   var trnpath = rustrnpath; 
 

@@ -727,7 +727,6 @@ async function fetchGoogleAudio(text, lang, rate, apiKey) {
 */
 
 async function prepareTextData(slug) {
-  // 1. ПРОВЕРКА: Если это старая страница, используем Адаптер
   if (isLegacyPage()) {
       return prepareLegacyData();
   }
@@ -735,27 +734,21 @@ async function prepareTextData(slug) {
   const container = document.querySelector('.sutta-container') || document;
   
   const paliElements = container.querySelectorAll('.pli-lang');
-  const translationElements = container.querySelectorAll('.rus-lang, .tha-lang, .eng-lang');
+  const translationElements = container.querySelectorAll('.rus-lang, .tha-lang, .eng-lang, .second-translation-row');
   
-  // ---> НОВОЕ: Если стандартных блоков перевода нет, запускаем парсер статей <---
   if (paliElements.length === 0 && translationElements.length === 0) {
       return prepareGeneralArticleData();
   }
   const paliJsonData = await fetchSegmentsData(slug);
   
-  // --- НАЧАЛО ИЗМЕНЕНИЙ ---
-  // Сначала собираем все ID, которые фактически отрендерены на странице
   const allIds = new Set();
-  const allNodesInOrder = container.querySelectorAll('.pli-lang, .rus-lang, .tha-lang, .eng-lang');
+  const allNodesInOrder = container.querySelectorAll('.pli-lang, .rus-lang, .tha-lang, .eng-lang, .second-translation-row');
   
   allNodesInOrder.forEach(el => {
     const id = getElementId(el);
     if (id) allIds.add(id);
   });
 
-  // Динамически определяем формат ID для текущей страницы:
-  // Если хотя бы в одном ID есть двоеточие (например, "an2.1:1.1"), 
-  // значит reader-rus оставил полный слаг (режим диапазона).
   let useFullKey = false;
   for (const id of allIds) {
       if (id.includes(':')) {
@@ -769,30 +762,29 @@ async function prepareTextData(slug) {
 
   if (paliJsonData) {
     Object.keys(paliJsonData).forEach(key => {
-      // Используем полный ключ, если это диапазон, иначе обрезаем до цифр
       const cleanKey = useFullKey ? key : key.split(':').pop();
-      
       const rawText = paliJsonData[key].replace(/<[^>]*>/g, '').trim(); 
       cleanJsonMap[cleanKey] = cleanTextForTTS(rawText);
       jsonKeys.push(cleanKey); 
     });
   }
-  // --- КОНЕЦ ИЗМЕНЕНИЙ ---
 
   const textData = [];
   
   allIds.forEach(id => {
     const paliElement = Array.from(paliElements).find(el => getElementId(el) === id);
-    const translationElement = Array.from(translationElements).find(el => getElementId(el) === id);
+    const segTranslations = Array.from(translationElements).filter(el => getElementId(el) === id);
+    const trnEl1 = segTranslations[0] || null;
+    const trnEl2 = segTranslations.length > 1 ? segTranslations[segTranslations.length - 1] : null;
     
     let paliDev = '';
-    let translation = '';
+    let translation1 = '';
+    let translation2 = '';
     
     if (cleanJsonMap[id]) {
       paliDev = cleanJsonMap[id];
       const currentIndex = jsonKeys.indexOf(id);
       if (currentIndex !== -1) {
-        // Логика склеивания (lookahead) для слов на Пали
         let lookAheadIndex = currentIndex + 1;
         while (lookAheadIndex < jsonKeys.length) {
           const nextKey = jsonKeys[lookAheadIndex];
@@ -806,40 +798,42 @@ async function prepareTextData(slug) {
         }
       }
     } else if (paliElement) {
-      // --- ФОЛБЭК ДЛЯ BB (/b/) ---
-      // Файл не качался, берем текст с экрана (он может быть латиницей или деванагари)
       let rawDomText = paliElement.textContent.replace(/<[^>]*>/g, '').trim();
       let cleanedText = cleanTextForTTS(rawDomText);
-      
-      // Конвертируем для Google TTS (функция не тронет текст, если он уже деванагари)
       if (window.convertPaliToDevanagari) {
           paliDev = window.convertPaliToDevanagari(cleanedText);
       } else {
           paliDev = cleanedText;
       }
     }
-
     
-    if (translationElement) {
-      const clone = translationElement.cloneNode(true);
+    if (trnEl1) {
+      const clone = trnEl1.cloneNode(true);
       clone.querySelectorAll('.variant, .not_translate, sup, .ref').forEach(v => v.remove());
-      translation = cleanTextForTTS(clone.textContent);
+      translation1 = cleanTextForTTS(clone.textContent);
     }
     
-    if (paliDev || translation) {
+    if (trnEl2 && trnEl2 !== trnEl1) {
+      const clone = trnEl2.cloneNode(true);
+      clone.querySelectorAll('.variant, .not_translate, sup, .ref').forEach(v => v.remove());
+      translation2 = cleanTextForTTS(clone.textContent);
+    }
+    
+    if (paliDev || translation1 || translation2) {
       textData.push({
         id: id,
         paliDev: paliDev,
-        translation: translation,
+        translation: translation1,
+        translation2: translation2,
         paliElement: paliElement || null,
-        translationElement: translationElement || null
+        translationElement: trnEl1 || null,
+        translationElement2: trnEl2 || null
       });
     }
   });
   
   return textData;
 }
-
 
 function createPlaylistFromData(textData, mode) {
   const playlist = [];
@@ -852,19 +846,34 @@ function createPlaylistFromData(textData, mode) {
         });
     };
     const addTrn = () => {
-        if (item.translation) playlist.push({
-          text: item.translation, lang: translationLang, element: item.translationElement, id: item.id
-        });
+        if (item.translation) {
+            let lang = /[А-Яа-яЁё]/.test(item.translation) ? 'ru' : translationLang;
+            playlist.push({
+              text: item.translation, lang: lang, element: item.translationElement, id: item.id
+            });
+        }
+    };
+    const addTrn2 = () => {
+        if (item.translation2) {
+            let lang = /[А-Яа-яЁё]/.test(item.translation2) ? 'ru' : translationLang;
+            playlist.push({
+              text: item.translation2, lang: lang, element: item.translationElement2, id: item.id
+            });
+        }
     };
 
     if (mode === 'pi') { addPali(); }
     else if (mode === 'trn') { addTrn(); }
+    else if (mode === 'trn2') { addTrn2(); }
     else if (mode === 'pi-trn') { addPali(); addTrn(); }
     else if (mode === 'trn-pi') { addTrn(); addPali(); }
+    else if (mode === 'pi-trn2') { addPali(); addTrn2(); }
+    else if (mode === 'trn2-pi') { addTrn2(); addPali(); }
   });
   
   return playlist;
 }
+
 
 function shouldRequestWakeLockForItem(item) {
   const googleKey = (localStorage.getItem(GOOGLE_KEY_STORAGE) || window.TRIAL_KEY);
@@ -1268,20 +1277,33 @@ function playBrowserTTS(text, langKey, rate, isPali) {
 
 
 async function handleSuttaClick(e) {
-  // === НОВОЕ: Перехват клика по мини-кнопке (после загрузки скрипта) ===
   const dynamicBtn = e.target.closest('.dynamic-tts-btn');
   if (dynamicBtn) {
       e.preventDefault();
       e.stopPropagation();
 
-      let mode = localStorage.getItem(MODE_STORAGE_KEY) || 'trn';
-      if (mode !== 'pi-trn' && mode !== 'trn-pi') {
-          const activeWord = document.querySelector('.active-word');
-          if (activeWord) {
-              mode = activeWord.classList.contains('pli-lang') ? 'pi' : 'trn';
-              localStorage.setItem(MODE_STORAGE_KEY, mode);
+      let globalMode = localStorage.getItem(MODE_STORAGE_KEY) || 'trn';
+      let playbackMode = globalMode;
+      
+      const activeWord = document.querySelector('.active-word');
+      if (activeWord) {
+          const isPali = activeWord.classList.contains('pli-lang');
+          const isTrn2 = activeWord.classList.contains('second-translation-row');
+          
+          if (isTrn2) {
+              if (globalMode === 'pi-trn') playbackMode = 'pi-trn2';
+              else if (globalMode === 'trn-pi') playbackMode = 'trn2-pi';
+              else playbackMode = 'trn2';
+          } else if (isPali) {
+              if (globalMode !== 'pi-trn' && globalMode !== 'trn-pi') playbackMode = 'pi';
+          } else {
+              if (globalMode !== 'pi-trn' && globalMode !== 'trn-pi') playbackMode = 'trn';
+          }
+
+          if (['pi', 'trn', 'pi-trn', 'trn-pi'].includes(playbackMode)) {
+              localStorage.setItem(MODE_STORAGE_KEY, playbackMode);
               const modeSelect = document.getElementById('tts-mode-select');
-              if (modeSelect) modeSelect.value = mode;
+              if (modeSelect) modeSelect.value = playbackMode;
           }
       }
       
@@ -1300,11 +1322,10 @@ async function handleSuttaClick(e) {
       if (internalPlayBtn) internalPlayBtn.dataset.slug = slug;
       
       player.classList.add('active');
-      startPlayback(document, mode, slug); 
+      startPlayback(document, playbackMode, slug); 
       dynamicBtn.remove();
       return;
   }
-  // =====================================================================
 
   if (e.target.closest('#tts-settings-toggle')) {
     e.preventDefault();
@@ -1323,7 +1344,6 @@ async function handleSuttaClick(e) {
         if (panel.classList.contains('visible')) {
             if (icon) icon.style.transform = 'rotate(90deg)';
         } else {
-            // КОГДА ПАНЕЛЬ ЗАКРЫВАЕТСЯ ЦЕЛИКОМ, СБРАСЫВАЕМ ВСЕ В ДЕФОЛТ
             if (icon) icon.style.transform = 'rotate(0deg)';
             
             const advSettings = document.getElementById('tts-advanced-settings');
@@ -1335,7 +1355,6 @@ async function handleSuttaClick(e) {
                 basicPanel.style.opacity = '1';
             }
             
-            // ---> ВОТ ЭТО ДОБАВЛЯЕМ ДЛЯ ВОССТАНОВЛЕНИЯ DELAY <---
             const delayLabel = document.querySelector('.tts-delay-label')?.parentElement;
             if (delayLabel) {
                 delayLabel.style.display = 'flex';
@@ -1344,7 +1363,6 @@ async function handleSuttaClick(e) {
     }
     return;
   }
-
 
   const container = e.target.closest('.sutta-container') || document;
   const voiceLink = e.target.closest('.voice-link');
@@ -1428,19 +1446,33 @@ async function handleSuttaClick(e) {
     const shouldJump = activeId && (!ttsState.speaking || activeId !== currentId);
 
     if (shouldJump) {
-      let mode = localStorage.getItem(MODE_STORAGE_KEY) || 'trn';
-      if (mode !== 'pi-trn' && mode !== 'trn-pi') {
-        mode = activeWordElement.classList.contains('pli-lang') ? 'pi' : 'trn';
-        localStorage.setItem(MODE_STORAGE_KEY, mode);
-        const modeSelect = document.getElementById('tts-mode-select');
-        if (modeSelect) modeSelect.value = mode;
+      let globalMode = localStorage.getItem(MODE_STORAGE_KEY) || 'trn';
+      let playbackMode = globalMode;
+
+      const isPali = activeWordElement.classList.contains('pli-lang');
+      const isTrn2 = activeWordElement.classList.contains('second-translation-row');
+      
+      if (isTrn2) {
+          if (globalMode === 'pi-trn') playbackMode = 'pi-trn2';
+          else if (globalMode === 'trn-pi') playbackMode = 'trn2-pi';
+          else playbackMode = 'trn2';
+      } else if (isPali) {
+          if (globalMode !== 'pi-trn' && globalMode !== 'trn-pi') playbackMode = 'pi';
+      } else {
+          if (globalMode !== 'pi-trn' && globalMode !== 'trn-pi') playbackMode = 'trn';
       }
+
+      if (['pi', 'trn', 'pi-trn', 'trn-pi'].includes(playbackMode)) {
+          localStorage.setItem(MODE_STORAGE_KEY, playbackMode);
+          const modeSelect = document.getElementById('tts-mode-select');
+          if (modeSelect) modeSelect.value = playbackMode;
+      }
+
       let targetSlug = freshPageSlug || playBtn.dataset.slug || ttsState.currentSlug;
-      startPlayback(container, mode, targetSlug, 0);
+      startPlayback(container, playbackMode, targetSlug, 0);
     } else {
       if (ttsState.speaking) {
         if (ttsState.paused) {
-          // --- RESUME ---
           ttsState.paused = false;
           setButtonIcon('pause');
           toggleSilence(true);
@@ -1454,9 +1486,8 @@ async function handleSuttaClick(e) {
               playCurrentSegment(); 
           }
         } else {
-          // --- PAUSE ---
           ttsState.paused = true;
-          releaseWakeLock(); // <--- ВЫКЛЮЧАЕМ ЭКРАН ПРИ ПАУЗЕ
+          releaseWakeLock(); 
           if (window.ttsDelayTimeout) clearTimeout(window.ttsDelayTimeout); 
           if (ttsState.utterance) ttsState.utterance.onend = null; 
           synth.cancel();
@@ -1467,7 +1498,6 @@ async function handleSuttaClick(e) {
           setButtonIcon('play');
         }
       } else {
-        // --- START FRESH ---
         const mode = document.getElementById('tts-mode-select')?.value || localStorage.getItem(MODE_STORAGE_KEY) || 'trn';
         let targetSlug = freshPageSlug || playBtn.dataset.slug || ttsState.currentSlug;
         startPlayback(container, mode, targetSlug, 0);
