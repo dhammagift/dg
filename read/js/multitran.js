@@ -1,7 +1,7 @@
 const Sccopy = "/suttacentral.net";
 const suttaArea = document.getElementById("sutta");
 const homeButton = document.getElementById("home-button");
-const fdgButton = document.getElementById("fdg-button");
+constfdgButton = document.getElementById("fdg-button");
 const bodyTag = document.querySelector("body");
 const previous = document.getElementById("previous");
 const next = document.getElementById("next");
@@ -177,7 +177,7 @@ async function buildSutta(slug) {
           let linkToCopy = `<a class="text-decoration-none copyLink" style="cursor: pointer;" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;
 
           const hasSecondTrn = engTransData && engTransData[segment];
-          const secondTrnStyle = hasSecondTrn ? "display: block; margin-top: 4px; color: #666; font-size: 0.9em;" : "display: none;";
+          const secondTrnStyle = hasSecondTrn ? "display: block; margin-top: 4px; color: #666;" : "display: none;";
 
           html += `${openHtml}<span id="${anchor}">
               <span class="pli-lang inputscript-ISOPali" lang="pi">
