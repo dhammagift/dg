@@ -99,7 +99,9 @@ async function buildSutta(slug) {
   const ruUrl = mlUrl.replace("/memorize/", "/r/");
   const enUrl = mlUrl.replace("/memorize/", "/read/");
 
-  let scLink = `<p class="sc-link"><a title="Russian (Alt+1)" target="" href="${ruUrl}">Ru</a>&nbsp;<a target="" title="English (Alt+1)" href="${enUrl}">En</a>&nbsp;`;
+  let scLink = `<p class="sc-link"><a title="Russian (Alt+1)" target="" href="${ruUrl}">Ru</a>
+  <a target="" title="English (Alt+1)" href="${enUrl}">En</a>
+  `;
   
   // Асинхронная загрузка нужных файлов
   const rootResponse = fetch(rootpath)

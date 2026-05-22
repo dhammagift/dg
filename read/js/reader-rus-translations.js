@@ -84,8 +84,9 @@ async function buildSutta(slug) {
   const mlUrl = ruUrl.replace("/r/", "/ml/");
   const mtUrl = ruUrl.replace("/r/", "/mt/");
   let scLink = `<p class="sc-link">
-  <a target="" title='Pali + Русский + Русский' href="${mtUrl}">R+R</a>&nbsp;
-  <a target="" title='Pali + Русский + Английский (Alt+2)' href="${mlUrl}">R+E</a>&nbsp;`;
+  <a target="" title='Pali + Русский + Русский' href="${mtUrl}">R+R</a>
+  <a target="" title='Pali + Русский + Английский (Alt+2)' href="${mlUrl}">R+E</a>
+  `;
   const currentURL = window.location.href;
   const anchorURL = new URL(currentURL).hash; 
 

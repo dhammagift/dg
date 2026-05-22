@@ -434,7 +434,9 @@ if (translator === "o") {
       ruUrl = enUrl.replace("/b/", "/r/");
       let altTrn = enUrl.replace("/b/", "/read/");
 
-      let scLink = `<p class="sc-link"><a title="English translation from SuttaCentral.net (Alt+1)" href="${altTrn}">En</a>&nbsp;<a title="Russian (Alt+1)" href="${ruUrl}">Ru</a>&nbsp;`;
+      let scLink = `<p class="sc-link"><a title="English translation from SuttaCentral.net (Alt+1)" href="${altTrn}">En</a>
+      <a title="Russian (Alt+1)" href="${ruUrl}">Ru</a>
+      `;
 
       // === 1. МГНОВЕННЫЙ ВЫВОД ТЕКСТА НА ЭКРАН ===
       const origUrl = window.location.href;
