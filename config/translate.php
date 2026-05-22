@@ -641,31 +641,42 @@ $dpdpart = '<h3>Скачать Словарь "DPD"</h3>
 ';
 
 $defaults = '
+<style>
+    html[data-bs-theme="light"] #settings .modal-content,
+    html[data-bs-theme="light"] #settings .droponmain {
+        color: #212529 !important;
+        background-color: #fff !important;
+    }
+    html[data-bs-theme="dark"] #settings .modal-content,
+    html[data-bs-theme="dark"] #settings .droponmain {
+        color: #dee2e6 !important;
+        background-color: #212529 !important;
+    }
+    html[data-bs-theme="dark"] #settings .droponmain option {
+        color: #dee2e6;
+        background-color: #212529;
+    }
+</style>
 
-<!-- Словарь Onlick Popup -->
-<a title="Всплывающий по клику словарь" class="common-size-icon4 toggle-dict-btn text-decoration-none text-black">  <img src="/assets/svg/comment.svg" alt="Всплывающий по клику словарь" class="dictIcon"></img></a>
+<a title="Всплывающий по клику словарь" class="common-size-icon4 toggle-dict-btn text-decoration-none">
+<img src="/assets/svg/comment.svg" alt="Всплывающий по клику словарь" class="dictIcon" width="28" height="28">
+</a>
 <a title="Настройки" id="settingsButton" data-bs-toggle="modal" data-bs-target="#settings" href="javascript:void(0);" class="toggle-icon text-decoration-none text-muted">
-<img id="gearRead" alt="Настройки" src="/assets/svg/gear.svg" class="common-size-icon4"></img>
+<img id="gearRead" alt="Настройки" src="/assets/svg/gear.svg" class="common-size-icon4" width="28" height="28">
 </a>
-<a title="Помощь" data-bs-toggle="modal" data-bs-target="#paliLookupInfo" id="helpMessage" href="javascript:void(0);" class="toggle-icon text-decoration-none text-muted">
-<img id="helpsc" alt="Помощь" src="/assets/svg/question.svg" class="common-size-icon4"></img>
-</a>
-
 <div class="">
 
-<!-- Модальное окно "Настройки" -->
 <div class="modal fade" id="settings" tabindex="-1" aria-labelledby="settingsLabel" aria-hidden="true" data-bs-focus="false">
 <div class="modal-dialog modal-dialog-centered">
-<div class="modal-content text-body">
+<div class="modal-content">
 <div class="modal-header">
 <h2 class="modal-title" id="settingsLabel">Настройки</h2>
 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
 </div>
 <div class="modal-body">
 <div class="mb-2">
-<!-- Дропдаун для выбора системы письма -->
 <label for="script-select"><h5 class="text-start">Система письма:</h5></label>
-<select class="dropdown droponmain rounded-pill text-black border-2 border-secondary text-center input-group-append" id="script-select">
+<select class="dropdown droponmain rounded-pill border-2 border-secondary text-center input-group-append" id="script-select">
 <option value="ISOPali">ISOPali</option>
 <option value="Devanagari">Devanagari</option>
 <option value="Thai">Thai</option>
@@ -674,14 +685,12 @@ $defaults = '
 
 </div>
 <div class="mb-2">
-<!-- Дропдаун для выбора системы письма -->
 <label for="dict-select"><h5 class="text-start">Словарь по клику:</h5></label>
-<select class="dropdown droponmain rounded-pill text-black border-2 border-secondary text-center input-group-append" id="dict-select">
+<select class="dropdown droponmain rounded-pill border-2 border-secondary text-center input-group-append" id="dict-select">
 <option value="standaloneru">DPD Встроенный</option>
 <option value="dpdFullRu">DPD Онлайн </option>
 <option value="newwindowru">DPD Онлайн Новое Окно</option>
 <option value="dpdCompactRu">DPD Онлайн мини</option>
-<!-- <option value="machinetranslation">DharmaMitra.org</option>-->
 <option value="searchonly">Только Поиск</option>
 <option value="dictTango">DictTango Android</option>
 <option value="mdict">Mdict IOS</option>
@@ -723,23 +732,10 @@ $defaults = '
 </div>
 
 </div>
-<!--        <div class="mb-2">
-                    <label for="reader-select"><h5 class="text-start">Интерфейс:</h5></label>
-                    <select class="dropdown droponmain rounded-pill text-black border-2 border-secondary text-center input-group-append" id="reader-select">
-                        <option value="st">Стандартный</option>
-                        <option value="ml">Мульти</option>
-                        <option value="d">"Деванагари"</option>
-                        <option value="mem">Для запоминания</option>
-                        <option value="rv">Реверс</option>
-                        <option value="fr">Полный Реверс</option>
-                    </select>
-                </div> -->
-
 <h5 class="text-start">Выберите Режим Чтения:</h5>
 <div class="container">
 
 
-<!-- Стандартный -->
 <div class="row align-items-center mb-2">
 <div class="col-auto">
 <input class="form-check-input mt-2 border-secondary" name="reader" type="radio" id="stRadio" value="st"> &nbsp;
@@ -751,11 +747,21 @@ $defaults = '
 </div>
 </div>
 
-<!-- Мульти -->
+<div class="row align-items-center mb-2">
+<div class="col-auto">
+<input class="form-check-input mt-2 border-secondary" name="reader" type="radio" id="mtRadio" value="mt"> &nbsp;
+<a id="mtDemo" href="/ml/?q=dn22"> <strong>Мульти Перевод </strong></a>
+
+</div>
+<div class="col text-end">
+Ппали, 2 варианта русс
+</div>
+</div>
+
 <div class="row align-items-center mb-2">
 <div class="col-auto">
 <input class="form-check-input mt-2 border-secondary" name="reader" type="radio" id="mlRadio" value="ml"> &nbsp;
-<a id="mlDemo" href="/ml/?q=dn22"> <strong>Мульти</strong></a>
+<a id="mlDemo" href="/ml/?q=dn22"> <strong>Мульти Язык</strong></a>
 
 </div>
 <div class="col text-end">
@@ -763,7 +769,6 @@ $defaults = '
 </div>
 </div>
 
-<!-- Деванагари -->
 <div class="row align-items-center mb-2">
 <div class="col-auto">
 <input class="form-check-input mt-2 border-secondary" name="reader" type="radio" id="dRadio" value="d">
@@ -777,7 +782,6 @@ $defaults = '
 
 </div>
 
-<!-- Скрытая часть -->
 <div id="collapseInterfaces" class="collapse">
 <div class="row align-items-center mb-2">
 <div class="col-auto">
@@ -817,29 +821,8 @@ $defaults = '
 <p class="mb-2">
 Клик <strong>по названию</strong> - перейти один раз, <strong>по радио кнопке</strong> - сделать по умолчанию.
 </p>
-<!--    <div class="row align-items-center mb-2">
-                            <div class="col-auto">
-                                <input class="form-check-input mt-2 border-secondary" name="reader" type="radio" id="thRadio" value="fr"> &nbsp;
-                                <a id="frDemo" href="/read/th?q=mn44"><strong>Thai</strong></a>
-                            </div>
-                            <div class="col text-end">
-                                Two languages: Pali, Thai
-                            </div>
-                        </div>
-                          <div class="row align-items-center mb-2">
-                        <div class="col-auto">
-                            <input class="form-check-input mt-2 border-secondary" name="reader" type="radio" id="mlRadio" value="mlth"> &nbsp;
-                            <a id="mlDemo" href="/read/mlth.html?q=sn44.1"><strong>Thai Multi</strong></a>
-                        </div>
-                        <div class="col text-end">
-                            Three languages: Pali, Thai, English
-                        </div>
-                    </div>
-                    -->
-
 </div>
 
-<!-- Кнопка "Показать ещё" -->
 <div class="text-end mb-2">
 <button class="btn btn-sm btn-secondary rounded-pill" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInterfaces" aria-expanded="false" aria-controls="collapseInterfaces">
 Другие
@@ -850,7 +833,6 @@ $defaults = '
 </div>
 <div class="modal-footer">
 
-<!-- Кнопки "Применить" и "Сбросить" -->
 <div class="text-end">
 <button type="button" class="btn btn-sm  rounded-pill btn-secondary " id="reset-button">Сбросить</button>
 <button type="button" class="btn btn-sm btn-light border-secondary rounded-pill" id="apply-button">Применить</button>
@@ -862,7 +844,7 @@ $defaults = '
 </div>
 </div>
 ';
- 
+
 
 }
 else {
@@ -1356,30 +1338,43 @@ With Def following search will run:<br>
 grep -E -A1 -Eir "${defpattern}.*nāma|an1\..*${defpattern}|An2.*Dv.*${defpattern}|An3.*(Tis|Tay|Tī).*${defpattern}|An4.*(Cattā|Cata).*${defpattern}|An5.*Pañc.*${defpattern}|An6.*cha.*${defpattern}|An7.*Satta.*${defpattern}|An8.*Aṭṭh.*${defpattern}|An9.*Nav.*${defpattern}|an1[10].*das.*${defpattern}|Seyyathāpi.*${defpattern}|${defpattern}[^\s]{0,3}sutta|(dn3[34]|mn4[34]).*(Dv|Tis|Tay|Tī|Cattā|Cata|Pañc|cha|Satta|Aṭṭh|Nav|das).{0,20}${defpattern}|\bKas.{0,60}${defpattern}.{0,9}\?|Katth.*${defpattern}.*daṭṭhabb|\bKata.{0,20}${defpattern}.{0,9}\?|Kiñ.*${defpattern}.{0,9} vadeth|${defpattern}.*adhivacan|vucca.{2,5} ${defpattern}{0,7}|${defpattern}.{0,15}, ${defpattern}.*vucca|${defpattern}.{0,9} vacan|Yadapi.*${defpattern}.*tadapi.*${defpattern}" --exclude-dir={ab,bv,cnd,cp,ja,kp,mil,mnd,ne,pe,ps,pv,tha-ap,thi-ap,vv} <br>
 Please, create an issue on github or send an email, if you\'ll find other criteria.<br><br> ';
 
+$defaults = '
+<style>
+    html[data-bs-theme="light"] #settings .modal-content,
+    html[data-bs-theme="light"] #settings .droponmain {
+        color: #212529 !important;
+        background-color: #fff !important;
+    }
+    html[data-bs-theme="dark"] #settings .modal-content,
+    html[data-bs-theme="dark"] #settings .droponmain {
+        color: #dee2e6 !important;
+        background-color: #212529 !important;
+    }
+    html[data-bs-theme="dark"] #settings .droponmain option {
+        color: #dee2e6;
+        background-color: #212529;
+    }
+</style>
 
-$defaults = '<!-- Dictionary OnClick Popup -->
-<a alt="onclick popup dictionary" title="onclick popup dictionary" class="common-size-icon4 toggle-dict-btn text-decoration-none text-black">
-<img src="/assets/svg/comment.svg" class="dictIcon"></img>
+<a alt="onclick popup dictionary" title="onclick popup dictionary" class="common-size-icon4 toggle-dict-btn text-decoration-none">
+<img src="/assets/svg/comment.svg" class="dictIcon" width="28" height="28">
 </a>
 
-<!-- Settings Button -->
 <a alt="Settings" title="Settings" id="settingsButton" data-bs-toggle="modal" data-bs-target="#settings" href="javascript:void(0);" class="toggle-icon text-decoration-none text-muted">
-<img id="gearRead" src="/assets/svg/gear.svg" class="common-size-icon4"></img>
+<img id="gearRead" src="/assets/svg/gear.svg" class="common-size-icon4" width="28" height="28">
 </a>
 
-<!-- Модальное окно "Настройки" -->
 <div class="modal fade" id="settings" tabindex="-1" aria-labelledby="settingsLabel" aria-hidden="true" data-bs-focus="false">
 <div class="modal-dialog modal-dialog-centered">
-<div class="modal-content text-body">
+<div class="modal-content">
 <div class="modal-header">
 <h2 class="modal-title" id="settingsLabel">Settings</h2>
 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
 <div class="modal-body">
 <div class="mb-2">
-<!-- Dropdown for script selection -->
 <label for="script-select"><h5 class="text-start">Script system:</h5></label>
-<select class="dropdown droponmain rounded-pill text-black border-2 border-secondary text-center input-group-append" id="script-select">
+<select class="dropdown droponmain rounded-pill border-2 border-secondary text-center input-group-append" id="script-select">
 <option value="ISOPali">ISOPali</option>
 <option value="Devanagari">Devanagari</option>
 <option value="Thai">Thai</option>
@@ -1388,14 +1383,12 @@ $defaults = '<!-- Dictionary OnClick Popup -->
 </div>
 
 <div class="mb-2">
-<!-- Дропдаун для выбора режима словаря -->
 <label for="dict-select"><h5 class="text-start">On click dictionary:</h5></label>
-<select class="dropdown droponmain rounded-pill text-black border-2 border-secondary text-center input-group-append" id="dict-select">
+<select class="dropdown droponmain rounded-pill border-2 border-secondary text-center input-group-append" id="dict-select">
 <option value="standalone">DPD Built-in </option>
 <option value="dpdFull">DPD Online </option>
 <option value="newwindow">DPD Online New Window</option>
 <option value="dpdCompact">DPD Onilne mini </option>
-<!-- <option value="machinetranslation">DharmaMitra.org</option>-->
 <option value="searchonly">Search Only</option>
 <option value="dictTango">DictTango Android</option>
 <option value="mdict">Mdict IOS</option>
@@ -1440,7 +1433,6 @@ $defaults = '<!-- Dictionary OnClick Popup -->
 </div>
 <h5 class="text-start">Select Reading Mode: </h5>
 <div class="container">
-<!-- Standard -->
 <div class="row align-items-center mb-2">
 <div class="col-auto">
 <input class="form-check-input mt-2 border-secondary" name="reader" type="radio" id="stRadio" value="st"> &nbsp;
@@ -1451,7 +1443,6 @@ Two languages: Pali, English
 </div>
 </div>
 
-<!-- Multi -->
 <div class="row align-items-center mb-2">
 <div class="col-auto">
 <input class="form-check-input mt-2 border-secondary" name="reader" type="radio" id="mlRadio" value="ml"> &nbsp;
@@ -1462,7 +1453,6 @@ Three languages: Pali, Russian, English
 </div>
 </div>
 
-<!-- Devanagari -->
 <div class="row align-items-center mb-2">
 <div class="col-auto">
 <input class="form-check-input mt-2 border-secondary" name="reader" type="radio" id="dRadio" value="d"> &nbsp;
@@ -1473,7 +1463,6 @@ Devanagari or Thai script + Pali in Latin
 </div>
 </div>
 
-<!-- Hidden Section -->
 <div id="collapseInterfaces" class="collapse">
 <div class="row align-items-center mb-2">
 <div class="col-auto">
@@ -1507,7 +1496,6 @@ Click <strong>title</strong> to go once or click <strong>radio button</strong> t
 </p>
 </div>
 
-<!-- "Show More" Button -->
 <div class="text-end mb-2">
 <button class="btn btn-sm btn-secondary rounded-pill" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInterfaces" aria-expanded="false" aria-controls="collapseInterfaces">
 Others
@@ -1516,7 +1504,6 @@ Others
 </div>
 </div>
 <div class="modal-footer">
-<!-- "Apply" and "Reset" Buttons -->
 <div class="text-end">
 <button type="button" class="btn btn-sm rounded-pill btn-secondary" id="reset-button">Reset</button>
 <button type="button" class="btn btn-sm btn-light border-secondary rounded-pill" id="apply-button">Apply</button>
@@ -1527,6 +1514,7 @@ Others
 </div>
 </div>
 ';
+
 
 $closemodal = 'Close Window';
 
