@@ -340,33 +340,12 @@ async function buildSutta(slug) {
       }
 
   }).catch(error => {
-      // Фолбэк-поиск, если ничего не найдено
-      var xhr = new XMLHttpRequest();
-      var urlParams = new URLSearchParams(window.location.search);
-      urlParams.set('q', slug);
-      xhr.open("GET", '/ru/?p=-kn&' + urlParams.toString(), true);
-      xhr.send();
-
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState == 4) {
-          if (xhr.status == 200) {
-            if (!xhr.responseText.includes("Page not found") && 
-                !xhr.responseText.includes("404") &&
-                xhr.responseText.trim().length > 0) {
-              window.location.href = "/ru/?p=-kn&q=" + encodeURIComponent(slug);
-            }
-          }
-        }
-      };
-      
-      suttaArea.innerHTML = `<p>Идёт Поиск "${decodeURIComponent(slug)}". Пожалуйста, Ожидайте.</p>
-                          <div class="spinner-border" role="status">
-                    <span class="visually-hidden">Загрузка...</span>
-                      </div>
-    <p>    Подсказка: <br>
-        С главной страницы доступно больше настроек поиска.
-    <br></p>`;
+      console.log('Error fetching sutta data:', error);
+      if (typeof window.handleFetchError === 'function') {
+          window.handleFetchError(slug, true); // true = русский интерфейс
+      }
   });
+
 }
 
 if (document.location.search) {

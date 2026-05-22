@@ -116,31 +116,47 @@ async function buildSutta(slug) {
       return {}; 
   }
 
-  async function fetchSecondTranslation() {
+    async function fetchSecondTranslation() {
       const otherRuPath = "/assets/texts/ru_other";
+      const scRuPath = `${Sccopy}/sc-data/sc_bilara_data/translation/ru`;
       
-      const targets = [
-          { id: "sv", path: `${otherRuPath}/${texttype}/${slugReady}_translation-ru-sv.json` },
-          { id: "syrkin", path: `${otherRuPath}/${texttype}/${slugReady}_translation-ru-syrkin.json` },
-          { id: "khantibalo", path: `${otherRuPath}/${texttype}/${slugReady}_translation-ru-khantibalo.json` },
-          { id: "narinyanievmenenko", path: `${otherRuPath}/${texttype}/${slugReady}_translation-ru-narinyanievmenenko.json` }
-      ];
+      const authors = ["sv", "khantibalo", "syrkin", "narinyanievmenenko"];
 
-      for (const target of targets) {
+      // Поиск в локальных директориях
+      for (const author of authors) {
           try {
-              const response = await fetch(target.path);
+              const localPath = `${otherRuPath}/${texttype}/${slugReady}_translation-ru-${author}.json`;
+              const response = await fetch(localPath);
               if (response.ok) {
                   const data = await response.json();
                   if (data && Object.keys(data).length > 0) {
-                      data._authorId = target.id; // Запоминаем ID автора внутри объекта
-                      data._loadedFrom = target.id;
+                      data._authorId = author;
+                      data._loadedFrom = "local";
                       return data;
                   }
               }
           } catch (error) {}
       }
+
+      // Фолбек: поиск в SuttaCentral репозитории
+      for (const author of authors) {
+          try {
+              const scPath = `${scRuPath}/${author}/${texttype}/${slugReady}_translation-ru-${author}.json`;
+              const response = await fetch(scPath);
+              if (response.ok) {
+                  const data = await response.json();
+                  if (data && Object.keys(data).length > 0) {
+                      data._authorId = author;
+                      data._loadedFrom = "suttacentral";
+                      return data;
+                  }
+              }
+          } catch (error) {}
+      }
+
       return null;
   }
+
 
   const translationResponse = fetchTranslation(); 
   const engtranslationResponse = fetchSecondTranslation();
@@ -226,8 +242,16 @@ async function buildSutta(slug) {
       if (typeof renderNavigation === 'function') renderNavigation(slug, slugReady);
       if (typeof addToSearchHistory === 'function') addToSearchHistory();
 
-  }).catch(error => { /* логика фолбэка */ });
+  }).catch(error => {
+      console.log('Error fetching sutta data:', error);
+      if (typeof window.handleFetchError === 'function') {
+          window.handleFetchError(slug, true); // true = русский интерфейс
+      }
+  });
 }
+
+
+
 
 if (document.location.search) {
   let params = new URLSearchParams(document.location.search);

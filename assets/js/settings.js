@@ -782,9 +782,10 @@ function updateDemoLinks() {
   // 3. Карта ссылок
   const linksMap = {
     stDemo: standardBaseUrl, 
-    mlDemo: window.location.origin + "/ml/",
+    mtDemo: window.location.origin + "/mt/",
     memDemo: window.location.origin + "/memorize/",
     dDemo: window.location.origin + "/d/",
+    mlDemo: window.location.origin + "/ml/",
     thDemo: window.location.origin + "/th/read/",
     rvDemo: window.location.origin + "/rev/",
     frDemo: window.location.origin + "/frev/",
@@ -1684,13 +1685,14 @@ newUrl = params ? `${newUrl}?${params}` : `${newUrl}?q=sn56.11`;
 // Объект, связывающий цифры от 1 до 6 с id ссылок
 const demoLinks = {
  // 1: "stDemo", // Alt + 1
-  2: "mlDemo", // Alt + 2
+  2: "mtDemo", // Alt + 2
   3: "memDemo",  // Alt + 3
   4: "dDemo", // Alt + 4
-  5: "thDemo", // Alt + 5
-  6: "rvDemo",  // Alt + 6
-  7: "frDemo",  // Alt + 7
-  8: "mlthDemo"  // Alt + 8
+  5: "mlDemo", // Alt + 5
+  6: "thDemo", // Alt + 6
+  7: "rvDemo",  // Alt + 7
+  8: "frDemo",  // Alt + 8
+  9: "mlthDemo"  // Alt + 9
 };
 
 // Обработчик события нажатия клавиш

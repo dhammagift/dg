@@ -1660,3 +1660,65 @@ document.addEventListener('click', function(event) {
 
     window.location.href = url.origin + newPath + url.search + url.hash;
 });
+
+window.handleFetchError = function(slug, isRussian) {
+    const suttaArea = document.getElementById("sutta");
+    if (!suttaArea) return;
+
+    const decodedSlug = decodeURIComponent(slug);
+    
+    // Защита от бесконечных редиректов
+    const redirectKey = `redirect_${slug}`;
+    const redirectCount = parseInt(localStorage.getItem(redirectKey) || 0);
+    
+    if (redirectCount >= 3) {
+        console.error('Exceeded maximum redirects for slug:', slug);
+        
+        const errorMsg = isRussian 
+            ? `<p>Поиск "${decodedSlug}" не удался. Пожалуйста, попробуйте другой запрос.</p>
+               <div class="spinner-border" role="status"><span class="visually-hidden">Загрузка...</span></div>
+               <br><br><p>Подсказка: <br>С главной страницы доступно больше настроек поиска.</p>`
+            : `<p>Search for "${decodedSlug}" failed. Please try another slug.</p>
+               <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+               <br><br><p>Note: <br>More search options available from the main page.</p>`;
+               
+        suttaArea.innerHTML = errorMsg;
+        localStorage.removeItem(redirectKey);
+        return;
+    }
+
+    localStorage.setItem(redirectKey, redirectCount + 1);
+
+    // Фолбэк-поиск через XHR
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "/?p=-kn&q=" + encodeURIComponent(slug), true);
+    xhr.send();
+
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+            if (xhr.status == 200) {
+                if (!xhr.responseText.includes("Page not found") && 
+                    !xhr.responseText.includes("404") &&
+                    xhr.responseText.trim().length > 0) {
+                    window.location.href = "/?p=-kn&q=" + encodeURIComponent(slug);
+                } else {
+                    console.log('Page not found or empty response');
+                }
+            } else if (xhr.status == 404) {
+                console.log('Error 404: Page not found');
+            } else {
+                console.log('Error sending request. Status:', xhr.status);
+            }
+        }
+    };
+    
+    const loadingMsg = isRussian
+        ? `<p>Идёт Поиск "${decodedSlug}". Пожалуйста, Ожидайте.</p>
+           <div class="spinner-border" role="status"><span class="visually-hidden">Загрузка...</span></div>
+           <p>Подсказка: <br>С главной страницы доступно больше настроек поиска.<br></p>`
+        : `<p>Searching for "${decodedSlug}". Please wait.</p>
+           <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+           <p>Hint: <br>More search options are available from the main page.<br></p>`;
+           
+    suttaArea.innerHTML = loadingMsg;
+};

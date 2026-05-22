@@ -233,27 +233,10 @@ window.dispatchEvent(new Event('suttaLoaded'));
       if (typeof addToSearchHistory === 'function') addToSearchHistory();
 
   }).catch(error => {
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", "/?p=-kn&q=" + encodeURIComponent(slug), true);
-      xhr.send();
-
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState == 4) {
-          if (xhr.status == 200) {
-            if (!xhr.responseText.includes("Page not found") && !xhr.responseText.includes("404") && xhr.responseText.trim().length > 0) {
-              window.location.href = "/?q=" + encodeURIComponent(slug);
-            }
-          }
-        }
-      };
-      
-      suttaArea.innerHTML = `<p>Идёт Поиск "${decodeURIComponent(slug)}". Пожалуйста, Ожидайте.</p>
-                          <div class="spinner-border" role="status">
-                    <span class="visually-hidden">Загрузка...</span>
-                      </div>
-    <p>    Подсказка: <br>
-        С главной страницы доступно больше настроек поиска.
-    <br></p>`;
+      console.log('Error fetching sutta data:', error);
+      if (typeof window.handleFetchError === 'function') {
+          window.handleFetchError(slug, false); // true = русский интерфейс
+      }
   });
 }
 

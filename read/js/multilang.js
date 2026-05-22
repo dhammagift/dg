@@ -199,7 +199,12 @@ async function buildSutta(slug) {
       if (typeof renderNavigation === 'function') renderNavigation(slug, slugReady);
       if (typeof addToSearchHistory === 'function') addToSearchHistory();
 
-  }).catch(error => { /* логика фолбэка */ });
+  }).catch(error => {
+      console.log('Error fetching sutta data:', error);
+      if (typeof window.handleFetchError === 'function') {
+          window.handleFetchError(slug, true); // true = русский интерфейс
+      }
+  });
 }
 
 

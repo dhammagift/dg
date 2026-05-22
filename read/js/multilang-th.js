@@ -375,31 +375,10 @@ async function buildSutta(slug) {
       }
 
   }).catch(error => {
-      let params = new URLSearchParams(document.location.search);
-      let sGetparam = params.get("s");
-      var targetUrl = "/?s=" + encodeURIComponent(sGetparam || "") + "&p=-kn&q=" + encodeURIComponent(slug) + "#" + anchorURL;
-
-      if (window.location.href.split('#')[0] !== targetUrl.split('#')[0]) {
-          var xhr = new XMLHttpRequest();
-          xhr.open("GET", targetUrl, true);
-          xhr.send();
-
-          xhr.onreadystatechange = function() {
-              if (xhr.readyState == 4 && xhr.status == 200) {
-                  if (xhr.responseText && !xhr.responseText.includes("404") && !xhr.responseText.includes("error")) {
-                      window.location.href = targetUrl;
-                  }
-              }
-          };
+      console.log('Error fetching sutta data:', error);
+      if (typeof window.handleFetchError === 'function') {
+          window.handleFetchError(slug, false); // true = русский интерфейс
       }
-      
-      suttaArea.innerHTML = `<p>Идёт Поиск "${decodeURIComponent(slug)}". Пожалуйста, Ожидайте.</p>
-                          <div class="spinner-border" role="status">
-                    <span class="visually-hidden">Загрузка...</span>
-                      </div>
-    <p>    Подсказка: <br>
-        С главной страницы доступно больше настроек поиска.
-    <br></p>`;
   });
 }
 

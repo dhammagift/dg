@@ -244,57 +244,10 @@ async function buildSutta(slug) {
     addToSearchHistory(); 
 
   }).catch(error => {
-    console.log('error: not found');
-    console.log('Slug:', slug, 'SlugReady:', slugReady);
-    
-    // Защита от бесконечных редиректов
-    const redirectKey = `redirect_${slug}`;
-    const redirectCount = localStorage.getItem(redirectKey) || 0;
-    
-    if (redirectCount >= 3) {
-      console.error('Exceeded maximum redirects for slug:', slug);
-      suttaArea.innerHTML = `<p>Search for "${decodeURIComponent(slug)}" failed. Please try another slug.</p>
-            <div class="spinner-border" role="status">
-              <span class="visually-hidden">Loading...</span>
-            </div>
-            <br><br>
-            <p>Note: <br>More search options available from the main page.</p>`;
-      localStorage.removeItem(redirectKey);
-      return;
-    }
-
-    localStorage.setItem(redirectKey, parseInt(redirectCount) + 1);
-
-    // Фолбэк-поиск через XHR
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", "/?p=-kn&q=" + encodeURIComponent(slug), true);
-    xhr.send();
-
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState == 4) {
-        if (xhr.status == 200) {
-          if (!xhr.responseText.includes("Page not found") && 
-              !xhr.responseText.includes("404") &&
-              xhr.responseText.trim().length > 0) {
-            window.location.href = "/?p=-kn&q=" + encodeURIComponent(slug);
-          } else {
-            console.log('Page not found or empty response');
-          }
-        } else if (xhr.status == 404) {
-            console.log('Error 404: Page not found');
-        } else {
-            console.log('Error sending request. Status:', xhr.status);
-        }
+      console.log('Error fetching sutta data:', error);
+      if (typeof window.handleFetchError === 'function') {
+          window.handleFetchError(slug, false); // true = русский интерфейс
       }
-    };
-    
-    suttaArea.innerHTML = `<p>Searching for "${decodeURIComponent(slug)}". Please wait.</p>
-                        <div class="spinner-border" role="status">
-                  <span class="visually-hidden">Loading...</span>
-                    </div>
-  <p>Hint: <br>
-      More search options are available from the main page.
-  <br></p>`;
   });
 }
 
