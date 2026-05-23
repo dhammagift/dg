@@ -750,7 +750,7 @@ $defaults = '
 <div class="row align-items-center mb-2">
 <div class="col-auto">
 <input class="form-check-input mt-2 border-secondary" name="reader" type="radio" id="mtRadio" value="mt"> &nbsp;
-<a id="mtDemo" href="/ml/?q=dn22"> <strong>Мульти Перевод </strong></a>
+<a id="mtDemo" href="/mt/?q=sn56.11"> <strong>Мульти Перевод </strong></a>
 
 </div>
 <div class="col text-end">
@@ -1445,8 +1445,18 @@ Two languages: Pali, English
 
 <div class="row align-items-center mb-2">
 <div class="col-auto">
+<input class="form-check-input mt-2 border-secondary" name="reader" type="radio" id="mtRadio" value="mt"> &nbsp;
+<a id="mtDemo" href="/mt/?q=sn56.11"><strong>Multi Translation</strong></a>
+</div>
+<div class="col text-end">
+Three languages: Pali, Russian, Russian #2
+</div>
+</div>
+
+<div class="row align-items-center mb-2">
+<div class="col-auto">
 <input class="form-check-input mt-2 border-secondary" name="reader" type="radio" id="mlRadio" value="ml"> &nbsp;
-<a id="mlDemo" href="/ml/?q=dn22"><strong>Multi</strong></a>
+<a id="mlDemo" href="/ml/?q=dn22"><strong>Multi Lang </strong></a>
 </div>
 <div class="col text-end">
 Three languages: Pali, Russian, English
