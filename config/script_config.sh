@@ -35,7 +35,7 @@ urllinkenend='&lang=pli-eng'
 urllinkbw=/bw/
 
 downloaddir=/storage/emulated/0/Download
-trndir=$apachesitepath/assets/texts/sutta/
+trndir=$apachesitepath/assets/texts/ru/sutta/
 
 
 wbefore=1
@@ -191,7 +191,7 @@ elif uname -a | grep -iq CYGWIN; then
 #elif [[ "`uname -a`" == *"Cygwin"* ]]; then
 suttapath=/media/c/soft/suttacentral.net/
 downloaddir=/media/c/Users/o28o/Downloads
-trndir=/media/c/soft/dg/assets/texts/sutta/
+trndir=/media/c/soft/dg/assets/texts/ru/sutta/
 fi
 
 #common vars

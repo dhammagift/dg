@@ -24,7 +24,7 @@ for sanyutta in $snrange
 do
 
 #делаем список переводов
-find ./assets/texts/sutta/$nikaya/$sanyutta/ -type f | sed 's@_.*@_@g' | awk -F'/' '{print $NF}' | uniq > trnList
+find ./assets/texts/ru/sutta/$nikaya/$sanyutta/ -type f | sed 's@_.*@_@g' | awk -F'/' '{print $NF}' | uniq > trnList
 
 cat ./assets/texts/allRootTextWithLineCount | grep -E "$sanyutta\." | grep -v -f trnList  > missing
 
@@ -56,7 +56,7 @@ for sanyutta in $snrange
 do
 echo $sanyutta
 for i in `find  ../suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta/$nikaya/$sanyutta/  -type f | awk -F'/' '{print $NF}' | sed 's/_.*//g' | sort -V | uniq ` ; do
-ls assets/texts/sutta/$nikaya/$sanyutta/${i}_* 2>&1 | grep "ls:" | awk -F'/' '{print $NF}' | sed 's/_.*/ missing/g' | tee out
+ls assets/texts/ru/sutta/$nikaya/$sanyutta/${i}_* 2>&1 | grep "ls:" | awk -F'/' '{print $NF}' | sed 's/_.*/ missing/g' | tee out
 done  | sort -V > total_missing
 cat total_missing
 wc -l total_missing

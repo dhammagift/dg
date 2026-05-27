@@ -39,7 +39,7 @@ function load_all_languages_interleaved($slug) {
         "$basedir/suttacentral.net/sc-data/sc_bilara_data/translation/en/"
       ],
       'ru' => [
-        "$basedir/assets/texts/sutta/",
+        "$basedir/assets/texts/ru/sutta/",
         "$basedir/assets/texts/vinaya/"
       ],
     ];

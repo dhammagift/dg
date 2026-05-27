@@ -14,7 +14,7 @@ fi
 
 # Полная команда для создания массива
 mapfile -t keys_to_modify < <(
-  find assets/texts/sutta/ -name "*.json" $newer \
+  find assets/texts/ru/sutta/ -name "*.json" $newer \
     | grep -iE "(ru-o.json|experiment|progres)" \
     | awk -F'/' '{print $NF}' \
     | awk -F'_' '{print $1}' \
@@ -73,7 +73,7 @@ exit 0
 
 # Полная команда для создания массива
 mapfile -t keys_array < <(
-  find assets/texts/sutta/ -name "*.json" \
+  find assets/texts/ru/sutta/ -name "*.json" \
     | grep -iE "(ru-o.json|experiment|progres)" \
     | awk -F'/' '{print $NF}' \
     | awk -F'_' '{print $1}' \
