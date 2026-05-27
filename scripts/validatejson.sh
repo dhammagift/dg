@@ -3,7 +3,7 @@ source ../../config/script_config.sh --source-only
 state_file=$apachesitepath/assets/texts/lastupdate_state_file
 error_found=0  # Флаг для отслеживания ошибок
 
-cd $apachesitepath/assets/texts/sutta
+cd $apachesitepath/assets/texts/ru/sutta
 
 if [ -e "$state_file" ]; then
   allOrNewerOnly="-newer $state_file"
@@ -45,7 +45,7 @@ source ../config/script_config.sh --source-only
 
 state_file=$apachesitepath/assets/texts/lastupdate_state_file
 
-cd $apachesitepath/assets/texts/sutta
+cd $apachesitepath/assets/texts/ru/sutta
 
 if [ -e "$state_file" ]; then
   allOrNewerOnly="-newer $state_file"

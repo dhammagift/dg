@@ -22,7 +22,7 @@ for i in ` find assets/texts/ru/sutta/ -name "*.json" $newer | grep -iE "(ru-o.j
 do  
 echo $i
 
-find "assets/texts/sutta" -type f \
+find "assets/texts/ru/sutta" -type f \
   -name "${i}_*" | \
   grep -v "${i}_.*\(ru-o\.json\|experiment\|progres\)" | \
   xargs -r mv -t "assets/texts/svEtc/automatic/"

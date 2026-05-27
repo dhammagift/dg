@@ -120,7 +120,7 @@ echo "moved $suttaname to audio/$nikaya/$booknumber"
 done
 
 
-cd $apachesitepath/assets/texts/sutta
+cd $apachesitepath/assets/texts/ru/sutta
  for i in `find . -type f  | awk -F'_' '{print $1}' | sort -V| uniq -c | sort -V | awk '{print $1, $2}' | grep -v "^1" | awk '{print $2}'` 
  do 
  ls ${i}_*  

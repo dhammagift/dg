@@ -7,7 +7,7 @@ cd $apachesitepath
 
 
 Pali="$suttapath/sc-data/sc_bilara_data/root/pli/ms/sutta"
-Trn="$apachesitepath/assets/texts/sutta"
+Trn="$apachesitepath/assets/texts/ru/sutta"
 TrnNew="$suttapath/sc-data/sc_bilara_data/translation/ru"
 
 #manual update for existing folders of snp iti

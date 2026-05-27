@@ -18,7 +18,7 @@ echo "<p style='text-align: center;'>$styleforsc</p>";
 
 $updateReadAndTextInfo = shell_exec("cd $basedir ; bash scripts/updateReadPHP.sh 2>&1 ; bash scripts/updateTextInfoJS.sh 2>&1 ;
 
-cd assets/texts/sutta
+cd assets/texts/ru/sutta
  for i in `find . -type f  | awk -F'_' '{print $1}' | sort -V| uniq -c | sort -V | awk '{print $1, $2}' | grep -v \"^1\" | awk '{print $2}'` 
  do 
  ls ${i}_*  
