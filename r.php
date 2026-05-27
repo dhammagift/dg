@@ -57,7 +57,7 @@ function load_all_languages_interleaved($slug, $is_dev) {
       ],
       'ru' => [
         "$basedir/assets/texts/ru/sutta/",
-        "$basedir/assets/texts/vinaya/"
+        "$basedir/assets/texts/ru/vinaya/"
       ],
     ];
 

@@ -1,14 +1,14 @@
 
-bupm=/data/data/com.termux/files/usr/share/apache2/default-site/htdocs/assets/texts/vinaya/pli-tv-bi-pm_root-pli-ms.json
+bupm=/data/data/com.termux/files/usr/share/apache2/default-site/htdocs/assets/texts/ru/vinaya/pli-tv-bi-pm_root-pli-ms.json
 vb=/data/data/com.termux/files/usr/share/apache2/default-site/htdocs/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/vinaya/pli-tv-bi-vb 
 vbtrn=/data/data/com.termux/files/usr/share/apache2/default-site/htdocs/suttacentral.net/sc-data/sc_bilara_data/translation/en/brahmali/vinaya/pli-tv-bi-vb
 
 
-bupm=/var/www/html/assets/texts/vinaya/pli-tv-bi-pm_root-pli-ms.json
+bupm=/var/www/html/assets/texts/ru/vinaya/pli-tv-bi-pm_root-pli-ms.json
 vb=/var/www/html/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/vinaya/pli-tv-bi-vb 
 vbtrn=/var/www/html/suttacentral.net/sc-data/sc_bilara_data/translation/en/brahmali/vinaya/pli-tv-bi-vb
 
-bupm=/drives/c/soft/fdg/assets/texts/vinaya/pli-tv-bi-pm_root-pli-ms.json
+bupm=/drives/c/soft/fdg/assets/texts/ru/vinaya/pli-tv-bi-pm_root-pli-ms.json
 vb=/drives/c/soft/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/vinaya/pli-tv-bi-vb 
 vbtrn=/drives/c/soft/suttacentral.net/sc-data/sc_bilara_data/translation/en/brahmali/vinaya/pli-tv-bi-vb
 

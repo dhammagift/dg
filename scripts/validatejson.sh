@@ -20,7 +20,7 @@ for i in `find . -type f $allOrNewerOnly -name "*.json" `; do
   fi
 done
 
-cd $apachesitepath/assets/texts/vinaya
+cd $apachesitepath/assets/texts/ru/vinaya
 
 # Проверка файлов в директории vinaya
 for i in `find . -type f $allOrNewerOnly -name "*.json" `; do
@@ -60,7 +60,7 @@ echo;
 echo "</br>
 error in $i"; echo; fi ; done
 
-cd $apachesitepath/assets/texts/vinaya
+cd $apachesitepath/assets/texts/ru/vinaya
 
 for i in `find . -type f $allOrNewerOnly -name "*.json" `; do
 cat $i | jq 1>/dev/null

@@ -157,7 +157,7 @@ MN complete</h2>";
 
 //vinaya
 /*
-$pathvinaya = 'assets/texts/vinaya/pli-tv-b[ui]-vb/';
+$pathvinaya = 'assets/texts/ru/vinaya/pli-tv-b[ui]-vb/';
 $check = shell_exec("
 vinayarangeInFile=`grep 'let vinayaranges = ' $basedir/read/js/reader-rus-translations.js | sed 's@;@@g' | sed 's@.*\[@\[@g'`
 
