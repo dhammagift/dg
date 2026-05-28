@@ -890,18 +890,17 @@ function shouldRequestWakeLockForItem(item) {
   return useNativeTrn;
 }
 
-
 // --- Ядро TTS ---
 async function playCurrentSegment() {
  
  if (window.ttsDelayTimeout) clearTimeout(window.ttsDelayTimeout);
  
    if (ttsState.googleAudio) {
-      ttsState.googleAudio.pause();       // 1. Остановить звук
-      ttsState.googleAudio.onended = null; // 2. Убить переключение на след. фразу
-      ttsState.googleAudio = null;         // 3. Удалить ссылку
+      ttsState.googleAudio.pause();       
+      ttsState.googleAudio.onended = null; 
+      ttsState.googleAudio = null;         
   }
-  window.speechSynthesis.cancel();         // 4. Сбросить нативный голос
+  window.speechSynthesis.cancel();         
   
   if (ttsState.currentIndex < 0 || ttsState.currentIndex >= ttsState.playlist.length) {
     clearTtsStorage();
@@ -934,7 +933,6 @@ async function playCurrentSegment() {
     if (ttsState.currentIndex >= ttsState.playlist.length - 2) {
        clearTtsStorage(); 
     } else {
-       // Оборачиваем слаг в наш хелпер
        localStorage.setItem(LAST_SLUG_KEY, getSavedSlugName(ttsState.currentSlug));
        localStorage.setItem(LAST_INDEX_KEY, ttsState.currentIndex);
     }
@@ -963,7 +961,6 @@ async function playCurrentSegment() {
     }
     
       if (ttsState.autoScroll) {
-      // Скроллим к контейнеру (id), так как само слово может быть скрыто
       const scrollTarget = document.getElementById(item.id) || item.element;
       scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -995,7 +992,6 @@ async function playCurrentSegment() {
   } else if (item.lang === 'pi-dev') {
     isPali = true;
     targetLang = 'pi-dev';
-    // Проверяем, менял ли пользователь скорость вручную. Если нет — ставим 0.8
     const savedPaliRate = localStorage.getItem(RATE_PALI_KEY);
     uiRate = savedPaliRate !== null ? parseFloat(savedPaliRate) : 0.8;
     
@@ -1024,12 +1020,10 @@ async function playCurrentSegment() {
 
   if (googleKey && googleKey.length > 10) {
       if (isPali) {
-          // Если Пали, используем Google ТОЛЬКО если Native выключен
           if (!useNativePali) {
               tryGoogle = true;
           }
       } else {
-          // Если Перевод: используем Google, ТОЛЬКО если Native выключен
           if (!useNativeTrn) { 
               tryGoogle = true;
           }
@@ -1038,14 +1032,10 @@ async function playCurrentSegment() {
 
   if (tryGoogle) {
       try {
-          // 1. ЗАПОМИНАЕМ, какой индекс мы собираемся озвучить
           const targetIndex = ttsState.currentIndex; 
 
-          // Ждем ответа от серверов Google...
           const audioContent = await fetchGoogleAudio(item.text, targetLang, audioRateGoogle, googleKey);
           
-          // 2. ПРОВЕРЯЕМ: если пока мы ждали интернет, пользователь нажал Next/Prev,
-          // индекс изменился. Значит, эта скачанная аудиозапись уже устарела. Выкидываем её!
           if (targetIndex !== ttsState.currentIndex || !ttsState.speaking) {
               return; 
           }
@@ -1060,7 +1050,6 @@ async function playCurrentSegment() {
                       let delay = window.TTS_SEGMENT_DELAY || 0;
                       const isRangeEnd = ttsState.endIndex !== undefined && ttsState.currentIndex >= ttsState.endIndex;
 
-                      // Отключаем задержку внутри пары пали-перевод
                       const currentItem = ttsState.playlist[ttsState.currentIndex];
                       const nextItem = ttsState.playlist[ttsState.currentIndex + 1];
                       if (currentItem && nextItem && currentItem.id === nextItem.id) {
@@ -1068,13 +1057,14 @@ async function playCurrentSegment() {
                       }
 
                       if (!isRangeEnd) {
-                          ttsState.currentIndex++; // Индекс увеличивается ДО таймаута
+                          ttsState.currentIndex++; 
                       }
 
                       const finishOrNext = () => {
                           if (isRangeEnd) {
                               ttsState.speaking = false;
                               setButtonIcon('play');
+                              releaseWakeLock();
                               document.dispatchEvent(new CustomEvent('tts-range-finished'));
                           } else {
                               playCurrentSegment();
@@ -1089,14 +1079,10 @@ async function playCurrentSegment() {
                   }
               };
 
-
-              
-audio.onerror = (err) => {
-    console.error("Google Audio playback error", err);
-    // Вместо безусловного перехода к следующему, можно либо вызвать фолбэк на нативный:
-    playBrowserTTS(item.text, targetLang, audioRateBrowser, isPali); 
-    // Либо, если мы понимаем что это ошибка доступа, просто паузить.
-};
+              audio.onerror = (err) => {
+                  console.error("Google Audio playback error", err);
+                  playBrowserTTS(item.text, targetLang, audioRateBrowser, isPali); 
+              };
 
               if (!ttsState.paused) {
                   const playPromise = audio.play();
@@ -1105,6 +1091,7 @@ audio.onerror = (err) => {
                           console.warn("Autoplay blocked or failed", e);
                           ttsState.paused = true; 
                           setButtonIcon('play');
+                          releaseWakeLock();
                       });
                   }
               }
@@ -1115,14 +1102,12 @@ audio.onerror = (err) => {
       }
   }
 
-  // Фолбэк на Native (Browser)
   playBrowserTTS(item.text, targetLang, audioRateBrowser, isPali);
 }
 
 function playBrowserTTS(text, langKey, rate, isPali) {
   const utterance = new SpeechSynthesisUtterance(text);
   
-  // --- ЧИТАЕМ СОХРАНЕННЫЙ НАТИВНЫЙ ГОЛОС ИЗ НАСТРОЕК ---
   let savedConfigRaw = isPali 
       ? localStorage.getItem('tts_native_pali_custom_voice')
       : localStorage.getItem('tts_native_trn_custom_voice');
@@ -1133,12 +1118,10 @@ function playBrowserTTS(text, langKey, rate, isPali) {
       try {
           const savedConfig = JSON.parse(savedConfigRaw);
           const voices = synth.getVoices();
-          // Ищем системный голос строго по его системному имени
           nativeVoiceSelected = voices.find(v => v.name === savedConfig.name);
       } catch(e) {}
   }
 
-  // Применяем сохраненный голос, иначе работаем по старому дефолтному фолбэку
   if (nativeVoiceSelected) {
       utterance.voice = nativeVoiceSelected;
       utterance.lang = nativeVoiceSelected.lang;
@@ -1160,7 +1143,6 @@ function playBrowserTTS(text, langKey, rate, isPali) {
           let delay = window.TTS_SEGMENT_DELAY || 0;
           const isRangeEnd = ttsState.endIndex !== undefined && ttsState.currentIndex >= ttsState.endIndex;
 
-          // Отключаем задержку внутри пары пали-перевод
           const currentItem = ttsState.playlist[ttsState.currentIndex];
           const nextItem = ttsState.playlist[ttsState.currentIndex + 1];
           if (currentItem && nextItem && currentItem.id === nextItem.id) {
@@ -1175,6 +1157,7 @@ function playBrowserTTS(text, langKey, rate, isPali) {
               if (isRangeEnd) {
                   ttsState.speaking = false;
                   setButtonIcon('play');
+                  releaseWakeLock();
                   document.dispatchEvent(new CustomEvent('tts-range-finished'));
               } else {
                   playCurrentSegment();
@@ -1189,30 +1172,25 @@ function playBrowserTTS(text, langKey, rate, isPali) {
       }
   };
 
-
-
   utterance.onerror = (e) => {
-    // 1. БЛОКИРОВКА БРАУЗЕРОМ (Autoplay blocked)
-    // Хром выдает 'not-allowed', если юзер еще не кликнул по странице.
     if (e.error === 'not-allowed') {
       console.warn('TTS: Autoplay blocked by browser policy.');
       ttsState.paused = true;
       setButtonIcon('play');
-      return; // ОСТАНАВЛИВАЕМСЯ. Индекс не растет, ждем клика (forceUnlock подхватит).
+      releaseWakeLock();
+      return; 
     }
 
-    // 2. КРИТИЧЕСКИЕ СИСТЕМНЫЕ ОШИБКИ
-    // Если упал сервис речи в Windows/Android или нет сети для облачного голоса.
     if (e.error === 'audio-busy' || e.error === 'network') {
       console.error('TTS: Critical system error:', e.error);
       ttsState.paused = true;
       setButtonIcon('play');
+      releaseWakeLock();
       return; 
     }
 
     console.error('Browser TTS Error:', e);
     
-    // 3. ЛОГИКА ФОЛБЭКОВ ДЛЯ ПАЛИ (Sanskrit -> Hindi -> English)
     if (langKey === 'pi-dev') {
       const currentAttempt = utterance._fallbackAttempt || 0;
       
@@ -1250,15 +1228,13 @@ function playBrowserTTS(text, langKey, rate, isPali) {
       }
     }
     
-    // 4. ПРЕРЫВАНИЕ ИЛИ СКРЫТИЕ ВКЛАДКИ
     if (document.hidden || e.error === 'interrupted') {
       ttsState.paused = true;
       setButtonIcon('play');
+      releaseWakeLock();
       return; 
     }
 
-    // 5. ПРОПУСК СЕГМЕНТА (для мелких ошибок)
-    // Переходим к следующей фразе, только если это не блокировка и не пауза.
     if (ttsState.speaking && !ttsState.paused) {
       ttsState.currentIndex++;
       playCurrentSegment();
@@ -1276,7 +1252,6 @@ function playBrowserTTS(text, langKey, rate, isPali) {
     }, 50);
   }
 }
-
 
 async function handleSuttaClick(e) {
   const dynamicBtn = e.target.closest('.dynamic-tts-btn');
@@ -1518,7 +1493,6 @@ async function handleSuttaClick(e) {
     }
   }
 }
-
 
 function stopPlayback() {
   if (window.ttsDelayTimeout) clearTimeout(window.ttsDelayTimeout); // УБИВАЕМ ПРИЗРАКА
