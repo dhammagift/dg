@@ -43,12 +43,20 @@ alias ssssh="ssh -tt a0902785@141.8.192.193"
 
 
 asssh() {
-	ssh -i "/storage/emulated/0/Documents/dpd-ui-eu.pem" ubuntu@ec2-3-125-254-158.eu-central-1.compute.amazonaws.com "$@" 
-
+if [ $# -eq 0 ]; then
+	ssh -i "/storage/emulated/0/Documents/dpd-ui-eu.pem" ubuntu@ec2-3-125-254-158.eu-central-1.compute.amazonaws.com  
+else 
+	ssh -i "/storage/emulated/0/Documents/dpd-ui-eu.pem" ubuntu@ec2-3-125-254-158.eu-central-1.compute.amazonaws.com "source ~/.bashrc && $*"
+fi
 }
 rsssh() {
-  ssh -tt -p1000 root@94.126.201.8 "$@"
-    }
+	  if [ $# -eq 0 ]; then
+
+  ssh -tt -p1000 root@94.126.201.8
+else 
+  ssh -tt -p1000 root@94.126.201.8 "source ~/.profile && $*"
+  fi 
+}
 
 #alias rsssh="ssh -tt -p1000 root@94.126.201.8"
 alias oldsssh="ssh -tt -p1001 root@94.126.201.8"
