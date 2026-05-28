@@ -18,7 +18,7 @@ echo "<p style='text-align: center;'>$styleforsc</p>";
 
 $updateReadAndTextInfo = shell_exec("cd $basedir ; bash scripts/updateReadPHP.sh 2>&1 ; bash scripts/updateTextInfoJS.sh 2>&1 ;
 
-cd assets/texts/sutta
+cd assets/texts/ru/sutta
  for i in `find . -type f  | awk -F'_' '{print $1}' | sort -V| uniq -c | sort -V | awk '{print $1, $2}' | grep -v \"^1\" | awk '{print $2}'` 
  do 
  ls ${i}_*  
@@ -38,7 +38,7 @@ if ( $updateReadAndTextInfo == "" ) {
 
 //mn
 /*
-$pathmn = 'assets/texts/sutta/mn/';
+$pathmn = 'assets/texts/ru/sutta/mn/';
 $check = shell_exec("
 
 mnrangeInFile=`grep 'let mnranges = ' $basedir/read/js/reader-rus-translations.js | sed 's@;@@g' | sed 's@.*\[@\[@g'`
@@ -60,7 +60,7 @@ $check</h2>";
 
 //sn
 /*
-$pathsn = 'assets/texts/sutta/sn/';
+$pathsn = 'assets/texts/ru/sutta/sn/';
 $check = shell_exec("
 snrangeInFile=`grep 'let snranges = ' $basedir/read/js/reader-rus-translations.js | sed 's@;@@g' | sed 's@.*\[@\[@g'`
 
@@ -85,7 +85,7 @@ $check</h2>";
 */
 //dn
 /*
-$pathdn = 'assets/texts/sutta/dn/';
+$pathdn = 'assets/texts/ru/sutta/dn/';
 $check = shell_exec("
 dnrangeInFile=`grep 'let dnranges = ' $basedir/read/js/reader-rus-translations.js | sed 's@;@@g' | sed 's@.*\[@\[@g'`
 
@@ -104,7 +104,7 @@ echo "<h2 style='text-align: center;'>
 $check</h2>";
 
 //an
-$pathan = 'assets/texts/sutta/an/';
+$pathan = 'assets/texts/ru/sutta/an/';
 $check = shell_exec("
 anrangeInFile=`grep 'let anranges = ' $basedir/read/js/reader-rus-translations.js | sed 's@;@@g' | sed 's@.*\[@\[@g'`
 
@@ -130,7 +130,7 @@ $check</h2>";*/
 
 //kn
 /*
-$pathkn = 'assets/texts/sutta/kn/';
+$pathkn = 'assets/texts/ru/sutta/kn/';
 $check = shell_exec("
 knrangeInFile=`grep 'let knranges = ' $basedir/read/js/reader-rus-translations.js | sed 's@;@@g' | sed 's@.*\[@\[@g'`
 
@@ -157,7 +157,7 @@ MN complete</h2>";
 
 //vinaya
 /*
-$pathvinaya = 'assets/texts/vinaya/pli-tv-b[ui]-vb/';
+$pathvinaya = 'assets/texts/ru/vinaya/pli-tv-b[ui]-vb/';
 $check = shell_exec("
 vinayarangeInFile=`grep 'let vinayaranges = ' $basedir/read/js/reader-rus-translations.js | sed 's@;@@g' | sed 's@.*\[@\[@g'`
 

@@ -2,16 +2,19 @@
 
 echo "Вставьте список 'modified: ...'. Когда закончите — нажмите Ctrl+D:"
 
-while read -r line; do
-  filepath=$(echo "$line" | sed 's/^modified:[[:space:]]*//')
+# Считываем весь ввод в переменную
+input=$(cat)
 
-  # Переходим только если путь содержит assets/texts/sutta
-  if [[ "$filepath" != *assets/texts/ru/sutta* ]]; then
-    continue
-  fi
+# Папка для сохранения оригиналов
+backup_dir="assets/texts/svEtc/automatic"
 
-  [[ "$filepath" != *.json ]] && continue
+# Создаем папку для оригиналов, если её вдруг нет
+mkdir -p "$backup_dir"
 
+# Извлекаем все пути к файлам .json, игнорируя лишние пробелы и 'modified:'
+echo "$input" | grep -oE 'assets/texts/ru/sutta/[^[:space:]]+\.json' | while read -r filepath; do
+
+  # Пропускаем файлы, которые уже переименованы
   if [[ "$filepath" =~ [+-]o\.json$ ]]; then
     continue
   fi
@@ -26,15 +29,21 @@ while read -r line; do
   fi
 
   if [[ -f "$filepath" ]]; then
-    echo "Renaming:"
-    echo "  $filepath"
-    echo "    → $target"
+    echo "Processing: $filepath"
+    
+    # Копируем оригинальный файл в папку automatic
+    cp "$filepath" "$backup_dir/"
+    echo "  → Original saved to: $backup_dir/"
+    
+    # Переименовываем исходный файл
     mv "$filepath" "$target"
+    echo "  → Renamed to: $target"
   else
-    echo "Skip: source file missing → $filepath"
+    echo "Skip: source file missing → '$filepath'"
   fi
 done
 
 echo
 echo "✅ Обработка завершена. Нажмите Enter для выхода или Ctrl+C."
+
 

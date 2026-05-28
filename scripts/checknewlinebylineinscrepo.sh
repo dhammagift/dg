@@ -7,7 +7,7 @@ cd $apachesitepath
 
 
 Pali="$suttapath/sc-data/sc_bilara_data/root/pli/ms/sutta"
-Trn="$apachesitepath/assets/texts/sutta"
+Trn="$apachesitepath/assets/texts/ru/sutta"
 TrnNew="$suttapath/sc-data/sc_bilara_data/translation/ru"
 
 #manual update for existing folders of snp iti
@@ -85,4 +85,4 @@ cd $apachesitepath/read/php
 php ./latest-rus.php | sed 's/<[^>]*>//g' | grep -v ^$ | grep -v complete | grep -vi "updated to" 
 #echo cp if have new sv files
 #read x
-#cp suttacentral.net/sc-data/sc_bilara_data/translation/ru/sv/sutta/sn/sn2/* assets/texts/sutta/sn/sn2/
+#cp suttacentral.net/sc-data/sc_bilara_data/translation/ru/sv/sutta/sn/sn2/* assets/texts/ru/sutta/sn/sn2/

@@ -1,7 +1,7 @@
 source ./config/script_config.sh --source-only
 
 #downloaddir=/media/c/Users/o28o/Downloads
-#trndir=/media/c/soft/dg/assets/texts/sutta/
+#trndir=/media/c/soft/dg/assets/texts/ru/sutta/
 thtrndir=/data/data/com.termux/files/usr/share/apache2/default-site/htdocs/assets/texts/th/translation/sutta/
 
 cd $downloaddir
@@ -120,7 +120,7 @@ echo "moved $suttaname to audio/$nikaya/$booknumber"
 done
 
 
-cd $apachesitepath/assets/texts/sutta
+cd $apachesitepath/assets/texts/ru/sutta
  for i in `find . -type f  | awk -F'_' '{print $1}' | sort -V| uniq -c | sort -V | awk '{print $1, $2}' | grep -v "^1" | awk '{print $2}'` 
  do 
  ls ${i}_*  

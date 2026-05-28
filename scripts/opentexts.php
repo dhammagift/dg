@@ -46,6 +46,9 @@ else {
     echo "Romanized string is $convertedStr<br><br>";
   }
     }
+
+
+
 	
 	if ( preg_match('/\/ml\//', $actual_link)) {
   $defaultlang = 'lang=pli-rus';
@@ -53,11 +56,21 @@ else {
   $base = "/";
   $readerlang = $base . "/ml/";
 
-} 	if ( preg_match('/mlth.html/', $actual_link)) {
+} 	
+
+if ( preg_match('/\/mt\//', $actual_link)) {
+  $defaultlang = 'lang=pli-rus';
+  $outputlang = "-oru";
+  $base = "/";
+  $readerlang = $base . "/mt/";
+
+} 	
+
+if ( preg_match('/\/mlth\//', $actual_link)) {
   $defaultlang = 'lang=pli-rus';
   $outputlang = "";
   $base = "/";
-  $readerlang = $base . "read/mlth.html";
+  $readerlang = $base . "/mlth/";
 
 }
 
@@ -74,6 +87,10 @@ if (isset($_GET['reader'])) {
         case 'ml':
           $base = "/";
             $readerlang = $base . "ml/";
+            break;
+        case 'mt':
+          $base = "/";
+            $readerlang = $base . "mt/";
             break;
         case 'rv':
           $base = "/";

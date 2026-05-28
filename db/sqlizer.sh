@@ -60,7 +60,7 @@ CreateSQL sutta eng $basedir/sujato/sutta "an sn mn dn kn"
 CreateSQL vinaya eng $basedir/brahmali/vinaya "pli-tv-bu-pm_translation-en-brahmali.json pli-tv-bi-pm_translation-en-brahmali.json pli-tv-bu-vb pli-tv-bi-vb pli-tv-kd pli-tv-pvr" 
 
 #sutta ru
-basedir=$apachesitepath/assets/texts/sutta
+basedir=$apachesitepath/assets/texts/ru/sutta
 CreateSQL sutta rus $basedir "an sn mn dn" 
 
 exit 0
@@ -131,7 +131,7 @@ AND line_text REGEXP '.*[0-9]* .*';
 
 exit 1
 cd 
-/data/data/com.termux/files/usr/share/apache2/default-site/htdocs/assets/texts/sutta
+/data/data/com.termux/files/usr/share/apache2/default-site/htdocs/assets/texts/ru/sutta
 find . -type f | awk -F'_translation-ru-' '{print $2}' | sort -u
 
 chatgpt.json

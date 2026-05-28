@@ -1548,6 +1548,8 @@ function getBaseUrl() {
 
     if (localStorage.defaultReader === 'ml') {
         baseUrl = window.location.origin + "/ml/";
+    } else if (localStorage.defaultReader === 'mt') {
+        baseUrl = window.location.origin + "/mt/";
     } else if (localStorage.defaultReader === 'rv') {
         baseUrl = window.location.origin + "/rev/";
     } else if (localStorage.defaultReader === 'd') {
@@ -2190,12 +2192,28 @@ document.addEventListener('submit', function(e) {
         const q = normalizeQuery(searchInput.value);
         if (!q) return;
 
+        // Добавляем параметр reader для обычного сабмита формы (чтобы php его подхватил)
+        const savedReader = localStorage.getItem("defaultReader");
+        if (savedReader && savedReader !== 'st') {
+            let hiddenReader = e.target.querySelector('input[name="reader"]');
+            if (!hiddenReader) {
+                hiddenReader = document.createElement('input');
+                hiddenReader.type = 'hidden';
+                hiddenReader.name = 'reader';
+                e.target.appendChild(hiddenReader);
+            }
+            hiddenReader.value = savedReader;
+        }
+
         if (/\d/.test(q) && !q.includes('-')) {
             const result = findRangeForKey(q);
             if (result && result.type === 'range') {
                 e.preventDefault();
-                // Делаем редирект с правильным параметром q и якорем
-                window.location.href = '?q=' + result.key + '#' + q;
+                
+                let readerQuery = (savedReader && savedReader !== 'st') ? `&reader=${savedReader}` : '';
+                
+                // Делаем редирект с правильным параметром q, reader и якорем
+                window.location.href = '?q=' + result.key + readerQuery + '#' + q;
             }
         }
     }

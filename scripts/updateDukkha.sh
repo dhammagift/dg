@@ -1,6 +1,6 @@
 #awk -F':' '{print $1}' /mnt/c/soft/dg/all.txt | uniq -c | sort
 #cd /var/www/html
-#cd $prefix/assets/texts/sutta/
+#cd $prefix/assets/texts/ru/sutta/
 #asset
 
 
@@ -9,7 +9,7 @@ prefix=/mnt/c/soft/dg
 
 function commonGrep() {
 
-grep -riE "\bсчасть" $prefix/assets/texts/sutta/* | grep -v несчасть | grep -v "долго" | grep -v "богов и людей" #| grep -v  
+grep -riE "\bсчасть" $prefix/assets/texts/ru/sutta/* | grep -v несчасть | grep -v "долго" | grep -v "богов и людей" #| grep -v  
 }
 
 commonGrep > $prefix/all.txt
@@ -25,13 +25,13 @@ exit 0
 
 grep -f sukh.id  all.txt
 
-for i in `cat sukh.id `; do echo $i ;  grep -ri -m1 $i assets/texts/sutta/; done
+for i in `cat sukh.id `; do echo $i ;  grep -ri -m1 $i assets/texts/ru/sutta/; done
 
 #check doubles
-find assets/texts/sutta/ -type f  | awk -F'_' '{print $1}' | sort -V| uniq -c | sort -V | awk '{print $1, $2}' | grep -v "^1" | awk '{print $2}'
+find assets/texts/ru/sutta/ -type f  | awk -F'_' '{print $1}' | sort -V| uniq -c | sort -V | awk '{print $1, $2}' | grep -v "^1" | awk '{print $2}'
 
 #remove doubles
-cd assets/texts/sutta
+cd assets/texts/ru/sutta
  for i in `find . -type f  | awk -F'_' '{print $1}' | sort -V| uniq -c | sort -V | awk '{print $1, $2}' | grep -v "^1" | awk '{print $2}'` 
  do 
  ls ${i}_*  

@@ -5,9 +5,9 @@ fi
 
 source ../../config/script_config.sh --source-only
 source ../../config/script_config.sh --source-only
-cd $apachesitepath/assets/texts/sutta
+cd $apachesitepath/assets/texts/ru/sutta
 
-for i in `find $apachesitepath/assets/texts/sutta -type f -name "*.json" | xargs grep -El "(«|»)"`; do
+for i in `find $apachesitepath/assets/texts/ru/sutta -type f -name "*.json" | xargs grep -El "(«|»)"`; do
 
 
 sed -i 's/«/“/g' $i
@@ -16,7 +16,7 @@ sed -i 's/»/”/g' $i
 done
 
 
-for i in `find $apachesitepath/assets/texts/sutta -type f -name "*.json" | xargs grep -El "(\.\.\.|,[\.:;])"`; do
+for i in `find $apachesitepath/assets/texts/ru/sutta -type f -name "*.json" | xargs grep -El "(\.\.\.|,[\.:;])"`; do
 
 
 if grep -q '\.\.\.' $i

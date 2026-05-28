@@ -20,7 +20,7 @@ alias trntxt="cd $basedir/suttacentral.net/sc-data/sc_bilara_data/translation/en
 alias sutta="cd $basedir/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta"
 
 #FDG related
-alias asset="cd $basedir/assets/texts/sutta/"
+alias asset="cd $basedir/assets/texts/ru/sutta/"
 alias thsutta="cd $basedir/assets/texts/th"
 alias res="cd $basedir/fdg/result"
 alias all="cd $basedir/assets/texts/words"

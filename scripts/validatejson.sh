@@ -3,7 +3,7 @@ source ../../config/script_config.sh --source-only
 state_file=$apachesitepath/assets/texts/lastupdate_state_file
 error_found=0  # Флаг для отслеживания ошибок
 
-cd $apachesitepath/assets/texts/sutta
+cd $apachesitepath/assets/texts/ru/sutta
 
 if [ -e "$state_file" ]; then
   allOrNewerOnly="-newer $state_file"
@@ -20,7 +20,7 @@ for i in `find . -type f $allOrNewerOnly -name "*.json" `; do
   fi
 done
 
-cd $apachesitepath/assets/texts/vinaya
+cd $apachesitepath/assets/texts/ru/vinaya
 
 # Проверка файлов в директории vinaya
 for i in `find . -type f $allOrNewerOnly -name "*.json" `; do
@@ -45,7 +45,7 @@ source ../config/script_config.sh --source-only
 
 state_file=$apachesitepath/assets/texts/lastupdate_state_file
 
-cd $apachesitepath/assets/texts/sutta
+cd $apachesitepath/assets/texts/ru/sutta
 
 if [ -e "$state_file" ]; then
   allOrNewerOnly="-newer $state_file"
@@ -60,7 +60,7 @@ echo;
 echo "</br>
 error in $i"; echo; fi ; done
 
-cd $apachesitepath/assets/texts/vinaya
+cd $apachesitepath/assets/texts/ru/vinaya
 
 for i in `find . -type f $allOrNewerOnly -name "*.json" `; do
 cat $i | jq 1>/dev/null

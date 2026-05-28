@@ -12,17 +12,17 @@ newer="-newer $REFERENCE_FILE"
 fi
 
 # Сохраняем результат в переменную
-result=$(find assets/texts/sutta/ -name "*.json" $newer | \
+result=$(find assets/texts/ru/sutta/ -name "*.json" $newer | \
   grep -iE "(ru-o.json|experiment|progres)" | \
   awk -F'/' '{print $NF}' | \
   awk -F'_' '{print $1}' | \
   sort -V)
 
-for i in ` find assets/texts/sutta/ -name "*.json" $newer | grep -iE "(ru-o.json|experiment|progres)"  | awk -F'/' '{print $NF}' | awk -F'_' '{print $1}' | sort -V`; 
+for i in ` find assets/texts/ru/sutta/ -name "*.json" $newer | grep -iE "(ru-o.json|experiment|progres)"  | awk -F'/' '{print $NF}' | awk -F'_' '{print $1}' | sort -V`; 
 do  
 echo $i
 
-find "assets/texts/sutta" -type f \
+find "assets/texts/ru/sutta" -type f \
   -name "${i}_*" | \
   grep -v "${i}_.*\(ru-o\.json\|experiment\|progres\)" | \
   xargs -r mv -t "assets/texts/svEtc/automatic/"
