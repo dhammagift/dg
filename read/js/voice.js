@@ -878,16 +878,18 @@ function createPlaylistFromData(textData, mode) {
 function shouldRequestWakeLockForItem(item) {
   const googleKey = (localStorage.getItem(GOOGLE_KEY_STORAGE) || window.TRIAL_KEY);
 
-  // Если Google TTS недоступен, остаётся нативный голос — экран можно держать как раньше
+  // Если Google TTS недоступен, остаётся нативный голос — экран держим
   if (!googleKey || googleKey.length <= 10) return true;
   if (!item) return true;
 
   const useNativePali = localStorage.getItem(NATIVE_PALI_KEY) === 'true';
   const useNativeTrn  = localStorage.getItem(NATIVE_TRN_KEY) === 'true';
 
-  if (item.lang === 'pi-dev') return !useNativePali;
-  return !useNativeTrn;
+  // Если для текущего языка включен нативный режим, возвращаем true (экран не гаснет)
+  if (item.lang === 'pi-dev') return useNativePali;
+  return useNativeTrn;
 }
+
 
 // --- Ядро TTS ---
 async function playCurrentSegment() {
