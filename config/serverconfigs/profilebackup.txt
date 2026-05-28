@@ -46,9 +46,9 @@ alias ksssh="ssh -tt -p1000 o561122122@94.126.201.8"
 alias tunnel1="ssh -p1001 -L 8888:localhost:8888 root@find.dhamma.gift"
 
 alias comsshpull="commit_and_push && sshpull"
-alias sclpull="sshcommit && git pull "
-alias gp="git pull "
-alias gpall='find . -type d -name ".git" -execdir sh -c "echo \">> Updating \$(pwd)\"; git pull " \;'
+alias sclpull="sshcommit && git pull --rebase"
+alias gp="git pull --rebase"
+alias gpall='find . -type d -name ".git" -execdir sh -c "echo \">> Updating \$(pwd)\"; git pull --rebase" \;'
 
 #Text convertion related
 alias aksa="python3.12 $basedir/scripts/aksharamukha-adapter.py"
@@ -60,8 +60,8 @@ alias pdev="python3.12 $basedir/scripts/paliDevConvW.py "
 alias thai="python3.12 $basedir/scripts/paliThaiConvW.py "
 
 alias dpr="/data/data/com.termux/files/usr/bin/live-server --port=8085 --quiet ~/dpr/ "
-alias gitall="git pull  ; yes '' | commit_and_push ; sshpull ; ssh -p1000 root@94.126.201.8 'cd /var/www/html ; bash scripts/checknewlinebylineinscrepo.sh' ; yes '' | sshcommit ; git pull "
-#alias miss='apa 2>&1 >/dev/null ; bash  scripts/mvNewTextsFromDownloads.sh; bash ./scripts/missingtranslations.sh an5; git pull ; cd - 2>&1 >/dev/null'
+alias gitall="git pull --rebase ; yes '' | commit_and_push ; sshpull ; ssh -p1000 root@94.126.201.8 'cd /var/www/html ; bash scripts/checknewlinebylineinscrepo.sh' ; yes '' | sshcommit ; git pull --rebase"
+#alias miss='apa 2>&1 >/dev/null ; bash  scripts/mvNewTextsFromDownloads.sh; bash ./scripts/missingtranslations.sh an5; git pull --rebase; cd - 2>&1 >/dev/null'
 
 
 function md5checkwrite {
@@ -354,17 +354,17 @@ exit 0
 
 " | md5checkwrite
 
-#git pull 
+#git pull --rebase
 functionname=pull
 function pull {
 cd /storage/emulated/0/Dhamma/scripts
-git pull 
+git pull --rebase
 restore.sh
 }
 
 echo "${functionname}
 cd /storage/emulated/0/Dhamma/scripts
-git pull 
+git pull --rebase
 bash ~/.shortcuts/restore.sh
 
 sleep 2
@@ -398,7 +398,7 @@ read\"
 function sshtest {
 echo "server kz test vhost"
 ssh -p1000 root@94.126.201.8 "cd /var/www/test
-git pull 
+git pull --rebase
 "  
 }
 
@@ -412,15 +412,15 @@ functionname=sshpull
 function sshpull {
 echo "server kz"
 ssh -p1000 root@94.126.201.8 "cd /var/www/html 
-git pull  
+git pull --rebase 
 echo
 echo dpd-ui
 cd /var/www/dpd-ui
-git pull 
+git pull --rebase
 echo
 echo audio
 cd /var/www/html/assets/audio
-git pull "
+git pull --rebase"
 }
 
 
@@ -428,11 +428,11 @@ git pull "
 echo "${functionname}
 echo 'server kz'
 ssh -p1000 root@94.126.201.8 \"cd /var/www/html
-git pull 
+git pull --rebase
 echo                                                            echo audio
 echo
 cd assets/audio
-git pull 
+git pull --rebase
 " | md5checkwrite
 
 function awkit {
@@ -451,7 +451,7 @@ fi
 apa 2>&1>/dev/null
 bash  scripts/mvNewTextsFromDownloads.sh
 #bash ./scripts/missingtranslations.sh $args
-git pull 
+git pull --rebase
 cd - 2>&1>/dev/null
 }
 

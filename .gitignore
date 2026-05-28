@@ -7,3 +7,4 @@ helpdocs
 .well-known
 config/sync-config.json
 config/tts-config.json
+config/*.json
