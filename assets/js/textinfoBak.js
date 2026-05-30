@@ -4559,10 +4559,12 @@
 "ja546":{"pi":"Vidhurajātaka ","en":"","mtph":2},
 "ja547":{"pi":"Vessantarajātaka ","en":"","mtph":10},
 "pli-tv-bu-pm":{"pi":"Bhikkhupātimokkha ","en":"The Bhikkhus Code of Discipline ","mtph":""},
+
 "pli-tv-bu-vb-pj1":{"pi":"1. Paṭhamapārājikasikkhāpada ","en":"The first training rule on expulsion ","mtph":""},
 "pli-tv-bu-vb-pj2":{"pi":"2. Dutiyapārājikasikkhāpada ","en":"The second training rule on expulsion ","mtph":""},
 "pli-tv-bu-vb-pj3":{"pi":"3. Tatiyapārājikasikkhāpada ","en":"The third training rule on expulsion ","mtph":""},
 "pli-tv-bu-vb-pj4":{"pi":"4. Catutthapārājikasikkhāpada ","en":"The fourth training rule on expulsion ","mtph":""},
+
 "pli-tv-bu-vb-ss1":{"pi":"1. Sukkavissaṭṭhisikkhāpada ","en":"The training rule on emission of semen ","mtph":""},
 "pli-tv-bu-vb-ss2":{"pi":"2. Kāyasaṁsaggasikkhāpada ","en":"The training rule on physical contact ","mtph":""},
 "pli-tv-bu-vb-ss3":{"pi":"3. Duṭṭhullavācāsikkhāpada ","en":"The training rule on indecent speech ","mtph":""},
@@ -4576,8 +4578,11 @@
 "pli-tv-bu-vb-ss11":{"pi":"11. Bhedānuvattakasikkhāpada ","en":"The training rule on supporting a schism ","mtph":""},
 "pli-tv-bu-vb-ss12":{"pi":"12. Dubbacasikkhāpada ","en":"The training rule on being difficult to correct ","mtph":""},
 "pli-tv-bu-vb-ss13":{"pi":"13. Kuladūsakasikkhāpada ","en":"The training rule on corrupters of families ","mtph":""},
+
+
 "pli-tv-bu-vb-ay1":{"pi":"1. Paṭhamaaniyatasikkhāpada ","en":"The first undetermined training rule ","mtph":""},
 "pli-tv-bu-vb-ay2":{"pi":"2. Dutiyaaniyatasikkhāpada ","en":"The second undetermined training rule ","mtph":""},
+
 "pli-tv-bu-vb-np1":{"pi":"1. Kathinasikkhāpada ","en":"The training rule on the robe season ","mtph":""},
 "pli-tv-bu-vb-np2":{"pi":"2. Udosita(dutiyakathina)sikkhāpada ","en":"The training rule on storehouses ","mtph":""},
 "pli-tv-bu-vb-np3":{"pi":"3. Tatiyakathinasikkhāpada ","en":"The third training rule on the robe season ","mtph":""},
@@ -4608,6 +4613,7 @@
 "pli-tv-bu-vb-np28":{"pi":"28. Accekacīvarasikkhāpada ","en":"The training rule on haste-cloth ","mtph":""},
 "pli-tv-bu-vb-np29":{"pi":"29. Sāsaṅkasikkhāpada ","en":"The training rule on what is risky ","mtph":""},
 "pli-tv-bu-vb-np30":{"pi":"30. Pariṇatasikkhāpada ","en":"The training rule on what was intended ","mtph":""},
+
 "pli-tv-bu-vb-pc1":{"pi":"1. Musāvādasikkhāpada ","en":"The training rule on lying ","mtph":""},
 "pli-tv-bu-vb-pc2":{"pi":"2. Omasavādasikkhāpada ","en":"The training rule on abusive speech ","mtph":""},
 "pli-tv-bu-vb-pc3":{"pi":"3. Pesuññasikkhāpada ","en":"The training rule on malicious talebearing ","mtph":""},
@@ -4700,10 +4706,12 @@
 "pli-tv-bu-vb-pc90":{"pi":"90. Kaṇḍuppaṭicchādisikkhāpada ","en":"The training rule on itch covers ","mtph":""},
 "pli-tv-bu-vb-pc91":{"pi":"91. Vassikasāṭikāsikkhāpada ","en":"The training rule on the rainy-season robe ","mtph":""},
 "pli-tv-bu-vb-pc92":{"pi":"92. Nandasikkhāpada ","en":"The training rule on Nanda ","mtph":""},
+
 "pli-tv-bu-vb-pd1":{"pi":"1. Paṭhamapāṭidesanīyasikkhāpada ","en":"The first training rule on acknowledgment ","mtph":""},
 "pli-tv-bu-vb-pd2":{"pi":"2. Dutiyapāṭidesanīyasikkhāpada ","en":"The second training rule on acknowledgment ","mtph":""},
 "pli-tv-bu-vb-pd3":{"pi":"3. Tatiyapāṭidesanīyasikkhāpada ","en":"The third training rule on acknowledgment ","mtph":""},
 "pli-tv-bu-vb-pd4":{"pi":"4. Catutthapāṭidesanīyasikkhāpada ","en":"The fourth training rule on acknowledgment ","mtph":""},
+
 "pli-tv-bu-vb-sk1":{"pi":"1. Parimaṇḍalasikkhāpada ","en":"The training rule on evenly all around ","mtph":""},
 "pli-tv-bu-vb-sk2":{"pi":"2. Dutiyaparimaṇḍalasikkhāpada ","en":"The second training rule on evenly all around ","mtph":""},
 "pli-tv-bu-vb-sk3":{"pi":"3. Suppaṭicchannasikkhāpada ","en":"The training rule on well-covered ","mtph":""},
@@ -4779,13 +4787,17 @@
 "pli-tv-bu-vb-sk73":{"pi":"73. Ṭhitouccārasikkhāpada ","en":"The training rule on defecating while standing ","mtph":""},
 "pli-tv-bu-vb-sk74":{"pi":"74. Hariteuccārasikkhāpada ","en":"The training rule on defecating on cultivated plants ","mtph":""},
 "pli-tv-bu-vb-sk75":{"pi":"75. Udakeuccārasikkhāpada ","en":"The training rule on defecating in water ","mtph":""},
+
 "pli-tv-bu-vb-as1-7":{"pi":"Adhikaraṇasamatha ","en":"Settling Disputes ","mtph":""},
+
 "pli-tv-bi-pm":{"pi":"Bhikkhunipātimokkha ","en":"The Bhikkhunis Code of Discipline ","mtph":""},
+
 "pli-tv-bi-vb-pj1-4":{"pi":"1-4.","en":"1-4. ","mtph":""},
 "pli-tv-bi-vb-pj5":{"pi":"5. Ubbhajāṇumaṇḍalikāsikkhāpada ","en":"The training rule on above the knees ","mtph":""},
 "pli-tv-bi-vb-pj6":{"pi":"6. Vajjappaṭicchādikāsikkhāpada ","en":"The training rule on those who conceal offenses ","mtph":""},
 "pli-tv-bi-vb-pj7":{"pi":"7. Ukkhittānuvattikāsikkhāpada ","en":"The training rule on taking sides with one who has been ejected ","mtph":""},
 "pli-tv-bi-vb-pj8":{"pi":"8. Aṭṭhavatthukāsikkhāpada ","en":"The training rule having eight parts ","mtph":""},
+
 "pli-tv-bi-vb-ss1":{"pi":"1. Ussayavādikāsikkhāpada ","en":"The training rule on taking legal action ","mtph":""},
 "pli-tv-bi-vb-ss2":{"pi":"2. Corīvuṭṭhāpikāsikkhāpada ","en":"The training rule on one who gives the full admission to a female criminal ","mtph":""},
 "pli-tv-bi-vb-ss3":{"pi":"3. Ekagāmantaragamanasikkhāpada ","en":"The training rule on walking alone to the next village ","mtph":""},
@@ -4796,6 +4808,7 @@
 "pli-tv-bi-vb-ss11":{"pi":"11. Adhikaraṇakupitasikkhāpada ","en":"The training rule on being angry about a legal issue ","mtph":""},
 "pli-tv-bi-vb-ss12":{"pi":"12. Pāpasamācārasikkhāpada ","en":"The training rule on bad behavior ","mtph":""},
 "pli-tv-bi-vb-ss13":{"pi":"13. Dutiyapāpasamācārasikkhāpada ","en":"The second training rule on bad behavior ","mtph":""},
+
 "pli-tv-bi-vb-np1":{"pi":"1. Pattasannicayasikkhāpada ","en":"The training rule on collections of almsbowls ","mtph":""},
 "pli-tv-bi-vb-np2":{"pi":"2. Akālacīvarabhājanasikkhāpada ","en":"The training rule on distributing out-of-season robe-cloth ","mtph":""},
 "pli-tv-bi-vb-np3":{"pi":"3. Cīvaraparivattanasikkhāpada ","en":"The training rule on trading robes ","mtph":""},
@@ -4808,6 +4821,7 @@
 "pli-tv-bi-vb-np10":{"pi":"10. Puggalikacetāpanasikkhāpada ","en":"The training rule on exchanging what belongs to an individual ","mtph":""},
 "pli-tv-bi-vb-np11":{"pi":"11. Garupāvuraṇasikkhāpada ","en":"The training rule on heavy cloaks ","mtph":""},
 "pli-tv-bi-vb-np12":{"pi":"12. Lahupāvuraṇasikkhāpada ","en":"The training rule on light cloaks ","mtph":""},
+
 "pli-tv-bi-vb-pc1":{"pi":"1. Lasuṇasikkhāpada ","en":"The training rule on garlic ","mtph":""},
 "pli-tv-bi-vb-pc2":{"pi":"2. Sambādhalomasikkhāpada ","en":"The training rule on the hair of the private parts ","mtph":""},
 "pli-tv-bi-vb-pc3":{"pi":"3. Talaghātakasikkhāpada ","en":"The training rule on slapping with the palm of the hand ","mtph":""},
@@ -4904,9 +4918,12 @@
 "pli-tv-bi-vb-pc96":{"pi":"96. Asaṅkaccikasikkhāpada ","en":"The training rule on not wearing a chest wrap ","mtph":""},
 "pli-tv-bi-vb-pd1":{"pi":"1. Sappiviññāpanasikkhāpada ","en":"The training rule on asking for ghee ","mtph":""},
 "pli-tv-bi-vb-pd2-8":{"pi":"2–8. Tela-madhu-phāṇita-maccha-maṁsa-khīra-dadhiviññāpanasikkhāpada ","en":"The training rules on asking for oil … honey … syrup … fish … meat … milk … curd ","mtph":""},
+
 "pli-tv-bi-vb-sk1":{"pi":"1. Parimaṇḍalasikkhāpada ","en":"The training rule on evenly all around ","mtph":""},
 "pli-tv-bi-vb-sk75":{"pi":"75. Udakeuccārasikkhāpada ","en":"the training rule on defecating in water ","mtph":""},
+
 "pli-tv-bi-vb-as1-7":{"pi":"Adhikaraṇasamatha ","en":"Settling Disputes ","mtph":""},
+
 "pli-tv-kd1":{"pi":"1. Mahākhandhaka ","en":"The great chapter ","mtph":""},
 "pli-tv-kd2":{"pi":"2. Uposathakkhandhaka ","en":"The chapter on the observance day ","mtph":""},
 "pli-tv-kd3":{"pi":"3. Vassūpanāyikakkhandhaka ","en":"The chapter on entering the rainy-season residence ","mtph":""},
