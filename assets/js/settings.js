@@ -744,29 +744,31 @@ function loadModal(modalId, modalFile) {
 // --- DYNAMIC LINKS UPDATE SYSTEM (Merged) ---
 
 function updateDemoLinks() {
-  // 1. Определяем приоритетный источник запроса (q)
-  let q = '';
+  // 1. Собираем все текущие параметры из URL
+  const urlParams = new URLSearchParams(window.location.search);
+  
+  // 2. Определяем приоритетный источник запроса (q)
+  let newQ = '';
+  const input = document.getElementById('paliauto');
   
   // А. Инпут (наивысший приоритет)
-  const input = document.getElementById('paliauto');
   if (input && input.value && input.value.trim() !== "") {
-    q = input.value.trim();
+    newQ = input.value.trim();
   } 
   // Б. Активное слово (если инпут пуст)
   else {
     const activeWord = document.querySelector('.active-word');
     if (activeWord) {
-       // Берем ID самого элемента или его родителя
-       q = activeWord.id || activeWord.closest('[id]')?.id || '';
+       newQ = activeWord.id || activeWord.closest('[id]')?.id || '';
     }
   }
   
-  // В. URL параметр (если всё остальное пусто)
-  if (!q) {
-     q = new URLSearchParams(window.location.search).get('q') || '';
+  // Обновляем параметр 'q', если нашли новое значение в интерфейсе
+  if (newQ) {
+      urlParams.set('q', newQ);
   }
 
-  // 2. Определяем базовый URL для "Standard" режима (логика языков из старой функции)
+  // 3. Определяем базовый URL для "Standard" режима
   let standardBaseUrl;
   const currentPath = window.location.href;
   const storedLang = localStorage.siteLanguage;
@@ -779,7 +781,7 @@ function updateDemoLinks() {
     standardBaseUrl = window.location.origin + "/read/";
   }
 
-  // 3. Карта ссылок
+  // 4. Карта ссылок
   const linksMap = {
     stDemo: standardBaseUrl, 
     mtDemo: window.location.origin + "/mt/",
@@ -792,20 +794,19 @@ function updateDemoLinks() {
     mlthDemo: window.location.origin + "/mlth/"
   };
 
-  // 4. Обновляем href элементов
+  // 5. Обновляем href элементов
   const hash = window.location.hash || ''; // Сохраняем якорь, если есть
 
   Object.keys(linksMap).forEach(id => {
     const linkEl = document.getElementById(id);
     if (!linkEl) return;
 
-    // Формируем новый URL
-    // Логика: Базовый путь + ?q=ЗАПРОС + #hash
     let newUrl = linksMap[id];
+    const queryString = urlParams.toString();
     
-    // Если есть запрос, добавляем его. Если нет — ссылка ведет в корень раздела.
-    if (q) {
-        newUrl += `?q=${q}`;
+    // Добавляем строку параметров, если она не пустая
+    if (queryString) {
+        newUrl += `?${queryString}`;
     }
     
     // Добавляем хэш в конец

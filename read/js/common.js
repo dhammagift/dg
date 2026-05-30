@@ -1722,3 +1722,12 @@ window.handleFetchError = function(slug, isRussian) {
            
     suttaArea.innerHTML = loadingMsg;
 };
+
+
+window.applyRemovePunct = function(dataObj, segment) {
+    if (localStorage.getItem("removePunct") === "true" && dataObj && dataObj[segment] !== undefined) {
+        dataObj[segment] = dataObj[segment].replace(/[-—–]/g, ' ')
+                                           .replace(/[:;“”‘’,"']/g, '')
+                                           .replace(/[.?!]/g, ' | ');
+    }
+};

@@ -155,9 +155,6 @@ async function buildSutta(slug) {
       var fullUrlWithAnchor = window.location.href.split('#')[0] + '#' + anchor;
       let finder = (params.get("s") || "").replace(/ṃ/g, "ṁ");
 
-      if (localStorage.getItem("removePunct") === "true" && paliData[segment] !== undefined) {
-          paliData[segment] = paliData[segment].replace(/[-—–]/g, ' ').replace(/[:;“”‘’,"']/g, '').replace(/[.?!]/g, ' | '); 
-      }
 
       if (finder && finder.trim() !== "") {
         let regex = new RegExp(finder, 'gi'); 
@@ -166,6 +163,7 @@ async function buildSutta(slug) {
         if (transData[segment]) transData[segment] = transData[segment].replace(regex, highlight);
         if (varData[segment]) varData[segment] = varData[segment].replace(regex, highlight);
       }
+         window.applyRemovePunct(paliData, segment);
 
       const linkToCopyStart = `<a class="text-decoration-none copyLink copyLink-start" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;
       let linkToCopy = `<a class="text-decoration-none copyLink" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;

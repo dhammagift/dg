@@ -110,14 +110,9 @@ async function buildSutta(slug) {
 
         var fullUrlWithAnchor = window.location.href.split('#')[0] + '#' + anchor;
 
-        if (localStorage.getItem("removePunct") === "true") {
-            if (paliData[segment]) {
-                paliData[segment] = paliData[segment].replace(/[-—–]/g, ' ').replace(/[:;“”‘’,"']/g, '').replace(/[.?!]/g, ' | '); 
-            }
-            if (paliDevanagariData[segment]) {
-                paliDevanagariData[segment] = paliDevanagariData[segment].replace(/[-—–]/g, ' ').replace(/[:;“”‘’,"']/g, '').replace(/[.?!]/g, ' | '); 
-            }
-        }
+window.applyRemovePunct(paliData, segment);
+window.applyRemovePunct(paliDevanagariData, segment);
+
 
         let finder = (params.get("s") || "").replace(/ṃ/g, "ṁ");
         if (finder && finder.trim() !== "") {

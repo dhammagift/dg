@@ -152,6 +152,19 @@ async function buildSutta(slug) {
       
       for (let i = 0; i < segments.length; i++) {
           let segment = segments[i];
+          
+            window.applyRemovePunct(paliData, segment);
+  
+      let finder = (params.get("s") || "").replace(/ṃ/g, "ṁ");
+      if (finder && finder.trim() !== "") {
+        let regex = new RegExp(finder, 'gi'); 
+        const highlight = match => `<b class='match finder'>${match}</b>`;
+        if (paliData[segment]) paliData[segment] = paliData[segment].replace(regex, highlight);
+        if (transData[segment]) transData[segment] = transData[segment].replace(regex, highlight);
+        if (engTransData[segment]) engTransData[segment] = engTransData[segment].replace(regex, highlight);
+        if (varData[segment]) varData[segment] = varData[segment].replace(regex, highlight);
+      }
+          
           let [openHtml, closeHtml] = htmlData[segment].split(/{}/);
           let anchor = segment.substring(segment.indexOf(':') + 1);
           if (slug.includes('-') && (slug.includes('an') || slug.includes('sn') || slug.includes('dhp'))) anchor = segment;

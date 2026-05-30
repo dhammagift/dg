@@ -316,19 +316,8 @@ if (!finder) {
   }
 }
 
+         window.applyRemovePunct(paliData, segment);
 
-
- //  finder = finder.replace(/\\b/g, '');
-//  finder = finder.replace(/%08/g, '\\b');
- // console.log(finder);
-   // let finder = decodeURIComponent(params.get("s"));
-
-
-if (localStorage.getItem("removePunct") === "true" && paliData[segment] !== undefined) {
-    paliData[segment] = paliData[segment].replace(/[-—–]/g, ' ');  
-    paliData[segment] = paliData[segment].replace(/[:;“”‘’,"']/g, '');  
-    paliData[segment] = paliData[segment].replace(/[.?!]/g, ' | '); 
-}
 
 if (finder && finder.trim() !== "") {
   let regex = new RegExp(finder, 'gi'); // 'gi' - игнорировать регистр

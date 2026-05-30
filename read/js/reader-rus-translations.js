@@ -195,14 +195,10 @@ async function buildSutta(slug) {
         }
 
         var fullUrlWithAnchor = window.location.href.split('#')[0] + '#' + anchor;
+
+         window.applyRemovePunct(paliData, segment);
+
         let finder = (params.get("s") || "").replace(/ṃ/g, "ṁ");
-
-        if (localStorage.getItem("removePunct") === "true" && paliData[segment] !== undefined) {
-          paliData[segment] = paliData[segment].replace(/[-—–]/g, ' ');
-          paliData[segment] = paliData[segment].replace(/[:;“”‘’,"']/g, '');
-          paliData[segment] = paliData[segment].replace(/[.?!]/g, ' | ');
-        }
-
         if (finder && finder.trim() !== "") {
           let regex = new RegExp(finder, 'gi');
           try {

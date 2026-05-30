@@ -192,6 +192,9 @@ async function buildSutta(slug) {
       for (let i = 0; i < segments.length; i++) {
           let segment = segments[i];
 
+
+
+
           if (transData[segment] === undefined) transData[segment] = "&nbsp;";
           if (engTransData[segment] === undefined) engTransData[segment] = "&nbsp;";
           if (paliData[segment] === undefined) paliData[segment] = "&nbsp;";
@@ -208,13 +211,12 @@ async function buildSutta(slug) {
           }
 
           var fullUrlWithAnchor = window.location.href.split('#')[0] + '#' + anchor;
+      
+      
           let finder = (params.get("s") || "").replace(/ṃ/g, "ṁ");
 
-          if (localStorage.getItem("removePunct") === "true" && paliData[segment] !== undefined) {
-              paliData[segment] = paliData[segment].replace(/[-—–]/g, ' ');  
-              paliData[segment] = paliData[segment].replace(/[:;“”‘’,"']/g, '');  
-              paliData[segment] = paliData[segment].replace(/[.?!]/g, ' | '); 
-          }
+       window.applyRemovePunct(paliData, segment);
+
           if (paliData[segment] !== undefined) {
               paliData[segment] = paliData[segment].replace(/[—–—]/, ' — ');
           }
@@ -223,6 +225,7 @@ async function buildSutta(slug) {
               let regex = new RegExp(finder, 'gi'); 
               try { if (paliData[segment]) paliData[segment] = paliData[segment].replace(regex, match => `<b class='match finder'>${match}</b>`); } catch (e) {}
               try { if (transData[segment]) transData[segment] = transData[segment].replace(regex, match => `<b class="match finder">${match}</b>`); } catch (e) {}
+              try { if (engTransData[segment]) engTransData[segment] = engTransData[segment].replace(regex, match => `<b class="match finder">${match}</b>`); } catch (e) {}
               try { if (varData[segment]) varData[segment] = varData[segment].replace(regex, match => `<b class="match finder">${match}</b>`); } catch (e) {}
           }
 
