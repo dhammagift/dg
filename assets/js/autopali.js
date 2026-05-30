@@ -166,7 +166,7 @@ function bindAutocomplete(selector, allWords) {
         return ret;
     };
 
-    $(selector).autocomplete({
+    var autocompleteInstance = $(selector).autocomplete({
         position: {
             my: "left bottom",
             at: "left top",
@@ -193,16 +193,23 @@ function bindAutocomplete(selector, allWords) {
             var minLengthForSearch = 3;
 
             var history = JSON.parse(localStorage.getItem("localSearchHistory")) || [];
-            var historyKeys = history.map(item => Array.isArray(item) ? item[0] : item);
+            
+            // Формируем массив объектов, помечая их флагом isHistory
+            var historyObjList = history.map(function(item) {
+                if (Array.isArray(item)) {
+                    return { label: item[0], value: item[0], url: item[1], isHistory: true };
+                }
+                return { label: item, value: item, isHistory: true };
+            });
 
             if (!lastTerm) {
-                response(historyKeys);
+                response(historyObjList);
                 return;
             }
 
-            var filteredHistory = historyKeys.filter(key => 
-                key && key.toLowerCase().startsWith(lastTerm.toLowerCase())
-            );
+            var filteredHistory = historyObjList.filter(function(item) {
+                return item.label && item.label.toLowerCase().startsWith(lastTerm.toLowerCase());
+            });
 
             if (lastTerm.length < minLengthForSearch) {
                 response(filteredHistory);
@@ -219,13 +226,13 @@ function bindAutocomplete(selector, allWords) {
             var matchall = new RegExp(modifiedRe, "i");
 
             var listBeginOnly = $.grep(allWords, function(value) {
-                value = value.label || value.value || value;
-                return matchbeginonly.test(normalize(value));
+                var valStr = value.label || value.value || value;
+                return matchbeginonly.test(normalize(valStr));
             });
 
             var listAll = $.grep(allWords, function(value) {
-                value = value.label || value.value || value;
-                return matchall.test(normalize(value));
+                var valStr = value.label || value.value || value;
+                return matchall.test(normalize(valStr));
             });
 
             listAll = listAll.filter(function(el) {
@@ -239,6 +246,12 @@ function bindAutocomplete(selector, allWords) {
         },
         focus: function() { return false; },
         select: function(event, ui) {
+            // Если это элемент из истории И в названии есть цифра (сутта)
+            if (ui.item.url && /\d/.test(ui.item.value)) {
+                window.location.href = ui.item.url;
+                return false;
+            }
+
             var terms = this.value.split(/([\|\s\*])/);
             terms.pop();
             
@@ -270,8 +283,26 @@ function bindAutocomplete(selector, allWords) {
             this.value = terms.join("");
             return false;
         }
-    }).autocomplete("widget").addClass("fixed-height");
+    }).data("ui-autocomplete");
+
+    // Фиксация высоты меню списка
+    $(selector).autocomplete("widget").addClass("fixed-height");
+
+    // Кастомный рендер элементов выпадающего списка
+    autocompleteInstance._renderItem = function(ul, item) {
+        var $div = $("<div>").addClass("autopali-dropdown-item");
+        
+        // Вставляем иконку, если это запись из истории
+        if (item.isHistory) {
+            $div.append('<img src="/assets/svg/clock-rotate-left.svg" class="autocomplete-history-icon" alt="History">');
+        }
+        
+        $div.append($("<span>").text(item.label));
+        
+        return $("<li>").append($div).appendTo(ul);
+    };
 }
+
 
 function setupMainInput() {
     if (document.getElementById("paliauto")) {
