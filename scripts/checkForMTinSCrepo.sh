@@ -24,11 +24,10 @@ DIFF=$(comm -13 \
     awk -F/ '{print $NF}' | sort -u))
 
 
-
 echo $DIFF | xargs -n1 
 echo
-echo "Any key to copy. Ctrl+C to cancel"
-read x
+#echo "Any key to copy. Ctrl+C to cancel"
+# read x
 echo -n "cp " 
 for i in $DIFF
 do 
