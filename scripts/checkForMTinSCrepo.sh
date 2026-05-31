@@ -28,6 +28,13 @@ echo $DIFF | xargs -n1
 echo
 #echo "Any key to copy. Ctrl+C to cancel"
 # read x
+
+if [ -z "$DIFF" ]; then
+    echo "No new files. Exit"
+    exit 0
+fi
+
+
 echo -n "cp " 
 for i in $DIFF
 do 
