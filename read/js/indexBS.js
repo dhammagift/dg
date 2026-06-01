@@ -193,6 +193,8 @@ async function buildSutta(slug) {
       translatorforuser = 'Bhikkhu Sujato';
     } else if (translator === "brahmali") {
       translatorforuser = 'Bhikkhu Brahmali';
+    } else if (translator === "thanissaro") {
+      translatorforuser = 'Thanissaro Bhikkhu';
     }
 
     const translatorByline = `<div id="trn" class="byline">
@@ -252,7 +254,6 @@ async function buildSutta(slug) {
       }
   });
 }
-
 
 
 // initialize the whole app
