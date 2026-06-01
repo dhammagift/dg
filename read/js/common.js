@@ -1,6 +1,6 @@
 
 window.otrnranges = ['sn56.11', 'sn12.2', 'sn54.1'];
-window.thanissarotrnranges = ['sn1.1'];
+window.thanissarotrnranges = ['sn1.1', 'an6.63'];
 
 
 function parseSlug(slug) {
