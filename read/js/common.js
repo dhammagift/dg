@@ -111,13 +111,26 @@ function getTopVisibleSegment() {
 function runWithTransition(stateChangeCallback) {
   const suttaContainer = document.getElementById("sutta");
   
-  const anchorData = getTopVisibleSegment();
+  // 1. Ищем выделенное слово TTS
+  let activeElement = document.querySelector('.active-word');
+  let anchorData = null;
+
+  if (activeElement) {
+      // Если слово есть, привязываемся к родительской строке [id]
+      const row = activeElement.closest('[id]') || activeElement;
+      anchorData = { element: row, topOffset: row.getBoundingClientRect().top };
+  } else {
+      // Если слова нет, используем стандартный поиск верхнего элемента
+      anchorData = getTopVisibleSegment();
+  }
 
   if (suttaContainer) suttaContainer.classList.add("text-hidden");
 
   setTimeout(() => {
+      // Вызываем само переключение языка (hide-pali, hide-russian и т.д.)
       stateChangeCallback();
 
+      // 2. Восстанавливаем позицию прокрутки
       if (anchorData && anchorData.element) {
            const currentRect = anchorData.element.getBoundingClientRect();
            const currentAbsoluteTop = window.scrollY + currentRect.top;
@@ -137,6 +150,25 @@ function runWithTransition(stateChangeCallback) {
 
       requestAnimationFrame(() => {
           if (suttaContainer) suttaContainer.classList.remove("text-hidden");
+          
+          // 3. Восстанавливаем маркер TTS и кнопку Play
+          if (activeElement && typeof window.activateSegmentForTTS === 'function') {
+              const row = activeElement.closest('[id]') || activeElement;
+              const spans = row.querySelectorAll('.pli-lang, .rus-lang, .eng-lang, .tha-lang');
+              
+              let visibleTarget = row;
+              
+              // Ищем первый язык в строке, который сейчас ВИДИМ (не скрыт через display: none)
+              for (let span of spans) {
+                  if (span.offsetParent !== null) { 
+                      visibleTarget = span;
+                      break;
+                  }
+              }
+              
+              // Заново вешаем желтое выделение и кнопку плеера на видимый язык
+              window.activateSegmentForTTS(visibleTarget);
+          }
       });
 
   }, 150);
@@ -360,37 +392,6 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 
-
-document.addEventListener('click', function(event) {
-    // Ищем, был ли клик по элементу с нужным классом (или внутри него)
-    const button = event.target.closest('.btn-language');
-
-    // Если кликнули не по кнопке языка — просто игнорируем и выходим
-    if (!button) return;
-
-    event.preventDefault(); // Отменяем стандартный переход href="#"
-
-    // Получаем язык из атрибута data-lang
-    const targetLang = button.getAttribute('data-lang');
-    if (!targetLang) return;
-
-    const url = new URL(window.location.href);
-    let newPath = '';
-
-    // Определяем нужный путь
-    if (targetLang === 'en') {
-        newPath = '/read/';
-    } else if (targetLang === 'ru') {
-        newPath = '/r/';
-    } else if (targetLang === 'th') {
-        newPath = '/th/read/';
-    } else {
-        return;
-    }
-
-    // Собираем и применяем новый URL
-    window.location.href = url.origin + newPath + url.search + url.hash;
-});
 
 // ==========================================
 // UI ИЗБРАННОГО ДЛЯ ЧИТАЛКИ И СИНХРОНИЗАЦИЯ (SPA)
@@ -1631,35 +1632,6 @@ function generateLanguageLinks(modes = ['ru', 'en']) {
     return html;
 }
 
-document.addEventListener('click', function(event) {
-    const button = event.target.closest('.btn-language');
-    if (!button) return;
-
-    event.preventDefault(); 
-
-    const targetLang = button.getAttribute('data-lang');
-    if (!targetLang) return;
-
-    const url = new URL(window.location.href);
-    let newPath = '';
-
-    // Универсальная карта маршрутов
-    if (targetLang === 'en') {
-        newPath = '/read/';
-    } else if (targetLang === 'ru') {
-        newPath = '/r/';
-    } else if (targetLang === 'th') {
-        newPath = '/th/read/';
-    } else if (targetLang === 'ml') {
-        newPath = '/ml/';
-    } else if (targetLang === 'rev') {
-        newPath = '/rev/';
-    } else {
-        return;
-    }
-
-    window.location.href = url.origin + newPath + url.search + url.hash;
-});
 
 window.handleFetchError = function(slug, isRussian) {
     const suttaArea = document.getElementById("sutta");
@@ -1731,3 +1703,44 @@ window.applyRemovePunct = function(dataObj, segment) {
                                            .replace(/[.?!]/g, ' | ');
     }
 };
+
+
+document.addEventListener('click', function(event) {
+    const button = event.target.closest('.btn-language');
+    if (!button) return;
+
+    event.preventDefault(); // Отменяем стандартный переход href="#"
+
+    const targetLang = button.getAttribute('data-lang');
+    if (!targetLang) return;
+
+    const url = new URL(window.location.href);
+    let newPath = '';
+
+    // Определяем нужный путь
+    if (targetLang === 'en') {
+        newPath = '/read/';
+    } else if (targetLang === 'ru') {
+        newPath = '/r/';
+    } else if (targetLang === 'th') {
+        newPath = '/th/read/';
+    } else if (targetLang === 'ml') {
+        newPath = '/ml/';
+    } else if (targetLang === 'rev') {
+        newPath = '/rev/';
+    } else {
+        return;
+    }
+
+    // Сохранение ID активного слова во временную память сессии перед перезагрузкой
+    const activeWord = document.querySelector('.active-word');
+    if (activeWord) {
+        const activeId = activeWord.id || activeWord.closest('[id]')?.id;
+        if (activeId) {
+            sessionStorage.setItem('dg_temp_tts_restore', activeId);
+        }
+    }
+
+    // Собираем и применяем новый URL
+    window.location.href = url.origin + newPath + url.search + url.hash;
+});
