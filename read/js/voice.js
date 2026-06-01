@@ -1106,6 +1106,13 @@ async function playCurrentSegment() {
 }
 
 function playBrowserTTS(text, langKey, rate, isPali) {
+  // --- ИСПРАВЛЕНИЕ WAKE LOCK ---
+  // Гарантируем, что любой запуск нативного TTS (прямой или фолбэк) удерживает экран.
+  if (!wakeLock && !ttsState.paused) {
+    requestWakeLock();
+  }
+  // -----------------------------
+
   const utterance = new SpeechSynthesisUtterance(text);
   
   let savedConfigRaw = isPali 
@@ -1136,7 +1143,6 @@ function playBrowserTTS(text, langKey, rate, isPali) {
   }
 
   utterance.rate = rate;
-
 
   utterance.onend = () => {
       if (ttsState.speaking && !ttsState.paused) {
@@ -1241,7 +1247,6 @@ function playBrowserTTS(text, langKey, rate, isPali) {
     }
   };
 
-  
   ttsState.utterance = utterance;
   
   if (!ttsState.paused) {
