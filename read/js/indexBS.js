@@ -96,7 +96,10 @@ async function buildSutta(slug) {
   } else if (typeof otrnranges !== 'undefined' && otrnranges.indexOf(slug) !== -1) { 
     trnpath = `/assets/texts/en/o/${texttype}/${slugReady}_translation-en-o.json`;
     translator = "o";
-  } else {
+  } else if (typeof thanissarotrnranges !== 'undefined' && thanissarotrnranges.indexOf(slug) !== -1) { 
+    trnpath = `/assets/texts/en_other/${texttype}/${slugReady}_translation-en-thanissaro.json`;
+    translator = "thanissaro";
+  }  else {
     trnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/${pathLang}/${translator}/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`;
   }
 

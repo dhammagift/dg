@@ -1,3 +1,8 @@
+
+window.otrnranges = ['sn56.11', 'sn12.2', 'sn54.1'];
+window.thanissarotrnranges = ['sn1.1'];
+
+
 function parseSlug(slug) {
 if (
     slug === 'bu-pm' ||
