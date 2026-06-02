@@ -418,7 +418,13 @@ document.addEventListener("click", function (e) {
         !e.target.closest(".tts-mode-select") &&
         !e.target.closest(".tts-rate-select") &&
         !e.target.closest("#tts-scroll-toggle") && 
-        !e.target.closest(".dynamic-tts-btn")
+        !e.target.closest(".dynamic-tts-btn") &&
+        // ДОБАВЛЕННЫЕ ИСКЛЮЧЕНИЯ: сохраняем активный TTS для меню и модалок
+        !e.target.closest(".modal") &&                     // Клики внутри модального окна
+        !e.target.closest("[data-bs-toggle='modal']") &&   // Кнопки, открывающие модалки
+        !e.target.closest(".smart-panel") &&               // Панель шестеренки
+        !e.target.closest(".smart-btn") &&                 // Кнопки шестеренки/оглавления
+        !e.target.closest("#smart-gear-btn")               // Сама кнопка шестеренки
     ) {
         window.removeAllHighlights();
     }

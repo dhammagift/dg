@@ -1,6 +1,6 @@
 
 window.otrnranges = ['sn56.11', 'sn12.2', 'sn54.1'];
-window.thanissarotrnranges = ['sn1.1', 'an6.63'];
+window.thanissarotrnranges = ['sn1.1'];
 
 
 function parseSlug(slug) {
@@ -1710,42 +1710,86 @@ window.applyRemovePunct = function(dataObj, segment) {
 };
 
 
-document.addEventListener('click', function(event) {
-    const button = event.target.closest('.btn-language');
-    if (!button) return;
+// ==========================================================================
+// УМНЫЙ ПЕРЕХОД МЕЖДУ РЕЖИМАМИ (СОХРАНЕНИЕ ПОЗИЦИИ И TTS)
+// ==========================================================================
 
-    event.preventDefault(); // Отменяем стандартный переход href="#"
+let dg_lastActiveWordId = null;
 
-    const targetLang = button.getAttribute('data-lang');
-    if (!targetLang) return;
-
-    const url = new URL(window.location.href);
-    let newPath = '';
-
-    // Определяем нужный путь
-    if (targetLang === 'en') {
-        newPath = '/read/';
-    } else if (targetLang === 'ru') {
-        newPath = '/r/';
-    } else if (targetLang === 'th') {
-        newPath = '/th/read/';
-    } else if (targetLang === 'ml') {
-        newPath = '/ml/';
-    } else if (targetLang === 'rev') {
-        newPath = '/rev/';
-    } else {
-        return;
-    }
-
-    // Сохранение ID активного слова во временную память сессии перед перезагрузкой
+function captureActiveWord() {
     const activeWord = document.querySelector('.active-word');
     if (activeWord) {
-        const activeId = activeWord.id || activeWord.closest('[id]')?.id;
-        if (activeId) {
-            sessionStorage.setItem('dg_temp_tts_restore', activeId);
+        // Ищем ID у самого элемента или его родителя
+        const elementWithId = activeWord.id ? activeWord : activeWord.closest('[id]');
+        if (elementWithId && elementWithId.id) {
+            const id = elementWithId.id;
+            // Жестко отсекаем технические контейнеры и берем только якоря текста
+            if (!id.includes('links-container') && !id.includes('trn') && id !== 'sutta') {
+                dg_lastActiveWordId = id;
+                return;
+            }
         }
     }
+    dg_lastActiveWordId = null;
+}
 
-    // Собираем и применяем новый URL
-    window.location.href = url.origin + newPath + url.search + url.hash;
+// Перехват до снятия выделения
+document.addEventListener('mousedown', captureActiveWord, true);
+document.addEventListener('touchstart', captureActiveWord, { capture: true, passive: true });
+
+// Глобальный перехватчик переходов
+document.addEventListener('click', function(event) {
+    const btnLang = event.target.closest('.btn-language');
+    const anchor = event.target.closest('a');
+
+    const currentUrl = new URL(window.location.href);
+    const currentQ = currentUrl.searchParams.get('q');
+
+    if (!currentQ) return;
+
+    let targetUrl = null;
+
+    if (btnLang) {
+        event.preventDefault();
+        const targetLang = btnLang.getAttribute('data-lang');
+        if (!targetLang) return;
+
+        let newPath = '';
+        if (targetLang === 'en') newPath = '/read/';
+        else if (targetLang === 'ru') newPath = '/r/';
+        else if (targetLang === 'th') newPath = '/th/read/';
+        else if (targetLang === 'ml') newPath = '/ml/';
+        else if (targetLang === 'rev') newPath = '/rev/';
+        else return;
+
+        targetUrl = new URL(currentUrl.origin + newPath + currentUrl.search);
+    }
+    else if (anchor && anchor.href) {
+        try {
+            const linkUrl = new URL(anchor.href);
+            if (linkUrl.origin === currentUrl.origin &&
+                linkUrl.searchParams.get('q') === currentQ &&
+                linkUrl.pathname !== currentUrl.pathname) {
+
+                if (anchor.target === '_blank') return;
+
+                event.preventDefault();
+                targetUrl = new URL(linkUrl.href);
+            }
+        } catch(e) {}
+    }
+
+    if (targetUrl) {
+        // 1. Исключительный приоритет: восстанавливаем активный TTS
+        if (dg_lastActiveWordId) {
+            targetUrl.hash = '#' + dg_lastActiveWordId;
+        } 
+        // 2. Штатное поведение: прокидываем старый хэш (если TTS не было)
+        else if (currentUrl.hash) {
+            targetUrl.hash = currentUrl.hash;
+        }
+
+        sessionStorage.removeItem('dg_temp_tts_restore');
+        window.location.href = targetUrl.toString();
+    }
 });
