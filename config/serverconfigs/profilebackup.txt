@@ -417,6 +417,9 @@ echo "server kz"
 ssh -p1000 root@94.126.201.8 "cd /var/www/html 
 git pull --rebase 
 echo
+echo offline-data
+cd /var/www/offline-data
+git pull --rebase
 echo dpd-ui
 cd /var/www/dpd-ui
 git pull --rebase
