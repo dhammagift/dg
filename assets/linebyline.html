@@ -819,7 +819,6 @@ console.log('url ' + url) ;
 }
 </script>
 
-
 <script>
 function loadText() {
   const language = document.getElementById('languageSelect').value;
@@ -838,16 +837,12 @@ let cleanedTranslation = translation;
     // Если это не JSON, продолжаем обычную обработку текста
   }
 
-
-
-
-
 if (document.getElementById('lineBreakCheckbox').checked) {
   cleanedTranslation = translation.replace(/[\.…:?!] /g, match => {
     let index = translation.indexOf(match);
     if (translation.charAt(index + match.length) !== '\n') {
       return `${match}\n`;
-    }
+  }
     return match;
   });
  
@@ -1036,10 +1031,8 @@ console.log('url ' + url) ;
             const tableBody = document.getElementById('outputTableBody');
 const translationInput = document.getElementById('translationInput'); // Ваше textarea
 
-
-
-
-tableBody.innerHTML = '';
+// Накапливаем HTML-код таблицы в переменную, вместо множественных обращений к DOM
+let tableHtml = '';
 
 const dataArray = Object.entries(data);
 const translationLines = translationInput.value.split('\n'); // Разбиваем строки translationInput
@@ -1060,9 +1053,27 @@ dataArray.forEach(([key, value], index) => {
                   <td>${currentText}</td>
                   <td><a href="#" title="${key}" onclick="gotoLine(${rowCounter})"><i class="fa-solid fa-link"></i></a></td>
                 </tr>`;
-    tableBody.innerHTML += row;
+    tableHtml += row;
   });
 });
+
+// Проверяем, если translationInput содержит больше строк, чем dataArray
+if (translationLines.length > dataArray.length) {
+  for (let i = dataArray.length; i < translationLines.length; i++) {
+    rowCounter++;
+    const extraText = translationLines[i] || ''; // Дополнительные строки
+
+    const extraRow = `<tr>
+                      <td></td>                       <td></td>
+                      <td>${extraText}</td>
+                      <td><a href="#" onclick="gotoLine(${rowCounter})"><i class="fa-solid fa-link"></i></a></td>
+                    </tr>`;
+    tableHtml += extraRow;
+  }
+}
+
+// Вставляем собранный HTML в таблицу один раз
+tableBody.innerHTML = tableHtml;
 
     async function checkFileExists(url) {
         try {
@@ -1168,22 +1179,6 @@ document.getElementById('loadFromServerButton').addEventListener('click', functi
 });
 
 
-
-// Проверяем, если translationInput содержит больше строк, чем dataArray
-if (translationLines.length > dataArray.length) {
-  for (let i = dataArray.length; i < translationLines.length; i++) {
-    rowCounter++;
-    const extraText = translationLines[i] || ''; // Дополнительные строки
-
-    const extraRow = `<tr>
-                      <td></td> <!-- Пустая ячейка для первых двух колонок -->
-                      <td></td>
-                      <td>${extraText}</td>
-                      <td><a href="#" onclick="gotoLine(${rowCounter})"><i class="fa-solid fa-link"></i></a></td>
-                    </tr>`;
-    tableBody.innerHTML += extraRow;
-  }
-}
 
 	  
 // новый код 	  
@@ -1549,7 +1544,6 @@ function updateSingleTranslationRow(cell) {
     .catch(error => console.error('Error fetching data:', error.message));
 }
 </script>
-
 
 <script>
 
@@ -2190,25 +2184,48 @@ document.addEventListener('DOMContentLoaded', function() {
  <script src="/assets/js/smoothScroll.js" defer></script>
 
 <script>
+// Функция быстрой синхронизации (не скачивает файлы, не перерисовывает таблицу целиком)
+function syncTextToTable() {
+  const textarea = document.getElementById('translationInput');
+  const tableBody = document.getElementById('outputTableBody');
+  
+  if (!textarea || !tableBody || tableBody.rows.length === 0) return;
+
+  const translationLines = textarea.value.split('\n');
+  const rows = tableBody.rows;
+  const rowCount = rows.length;
+
+  // Проходим по существующим строкам
+  for (let i = 0; i < rowCount; i++) {
+    const currentText = translationLines[i] || '';
+    const cell = rows[i].cells[2]; 
+    
+    // Обновляем текст только если он реально изменился и ячейка сейчас не в режиме редактирования
+    if (cell && !cell.querySelector('textarea')) {
+      if (cell.textContent !== currentText) {
+        cell.textContent = currentText;
+      }
+    }
+  }
+}
 
 // Функция для добавления обработчиков событий
 function init() {
   const textarea = document.getElementById('translationInput');
   if (!textarea) {
     console.error('Textarea not found!');
-    return;  // Если textarea не найден, прерываем выполнение
+    return;
   }
 
-  let typingTimer; // Таймер для отслеживания времени после нажатия клавиш
-  const typingInterval = 700; // Время задержки перед вызовом функции (500 мс)
+  let typingTimer; 
+  const typingInterval = 300; // Можно уменьшить задержку, так как синхронизация теперь легкая
 
   function handleKeyPress(event) {
     const key = event.key || event.keyCode;
 
-    // Проверяем нажатие клавиш Enter, Backspace, Delete или пробела
     if (key === 'Enter' || key === 'Backspace' || key === 'Delete' || event.keyCode === 13 || event.keyCode === 8 || event.keyCode === 46 || event.keyCode === 32 || event.keyCode === 229) {
-      clearTimeout(typingTimer); // Сбрасываем таймер при нажатии клавиши
-      typingTimer = setTimeout(loadText, typingInterval); // Запускаем таймер для вызова функции
+      clearTimeout(typingTimer); 
+      typingTimer = setTimeout(syncTextToTable, typingInterval); // Вызываем легкую синхронизацию
     }
   }
 
@@ -2216,14 +2233,12 @@ function init() {
   textarea.addEventListener('keyup', handleKeyPress);
 
   textarea.addEventListener('input', function() {
-    clearTimeout(typingTimer); // Сбрасываем таймер при любом изменении текста
-    typingTimer = setTimeout(loadText, typingInterval); // Запускаем таймер для вызова функции после изменения
+    clearTimeout(typingTimer); 
+    typingTimer = setTimeout(syncTextToTable, typingInterval); // Вызываем легкую синхронизацию
   });
 }
 
-// Убедимся, что код выполняется после загрузки DOM
 document.addEventListener('DOMContentLoaded', init);
-
 </script>
 
 
@@ -2254,8 +2269,8 @@ function formatSelectedText() {
         // Форматируем строки: добавляем пробел в конце, если его нет
         const formattedLines = lines.map(line => {
             line = line.trimEnd(); // Убираем пробелы в конце
-            if (line && !line.endsWith(" ")) { // Проверяем наличие ; в конце строки
-                line += " "; // Добавляем ; если его не было
+            if (line && !line.endsWith(" ")) { // Проверяем наличие пробела в конце строки
+                line += " "; // Добавляем пробел если его не было
             }
             return line;
         });
@@ -2267,13 +2282,13 @@ function formatSelectedText() {
         const newText = textarea.value.substring(0, selectionStart) + formattedText + textarea.value.substring(selectionEnd);
         textarea.value = newText;
 
-		loadText();
+        // Вызываем легкую синхронизацию вместо полного обновления loadText()
+        syncTextToTable();
 
         // Восстанавливаем выделение
         textarea.setSelectionRange(selectionStart, selectionStart + formattedText.length);
     }
 }
-
 
 //вывод номера текста в название вкладки document.title
 document.addEventListener("DOMContentLoaded", function() {
