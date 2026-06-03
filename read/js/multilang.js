@@ -81,7 +81,10 @@ async function buildSutta(slug) {
   } else if (typeof otrnranges !== 'undefined' && otrnranges.indexOf(slug) !== -1) { 
       engTranslatorId = "o";
       engtrnpath = `/assets/texts/en/o/${texttype}/${slugReady}_translation-en-o.json`;
-  }
+  } else if (typeof thanissarotrnranges !== 'undefined' && thanissarotrnranges.indexOf(slug) !== -1) { 
+    engtrnpath = `/assets/texts/en_other/${texttype}/${slugReady}_translation-en-thanissaro.json`;
+      engTranslatorId = "thanissaro";
+  } 
 
   var htmlpath = `${Sccopy}/sc-data/sc_bilara_data/html/pli/ms/${texttype}/${slugReady}_html.json`;
 
