@@ -73,6 +73,41 @@ window.addEventListener('DOMContentLoaded', loadPresets);
         window.memoNextAllowedTime = 0;
         window.memoLockId = 0;
 
+
+// --- MEMO WAKE LOCK (БЕЗОТКАЗНЫЙ ЭКРАН) ---
+window.memoWakeLock = null;
+
+window.requestMemoWakeLock = async function() {
+    if ('wakeLock' in navigator) {
+        try {
+            if (window.memoWakeLock !== null) return;
+            window.memoWakeLock = await navigator.wakeLock.request('screen');
+            window.memoWakeLock.addEventListener('release', () => {
+                window.memoWakeLock = null;
+            });
+        } catch (err) {
+            console.warn(`Memo Wake Lock error: ${err.message}`);
+        }
+    }
+};
+
+window.releaseMemoWakeLock = function() {
+    if (window.memoWakeLock !== null) {
+        window.memoWakeLock.release().catch(() => {});
+        window.memoWakeLock = null;
+    }
+};
+
+// Восстанавливаем блокировку экрана, если пользователь свернул и развернул браузер
+document.addEventListener('visibilitychange', () => {
+    if (window.isMemoPlaying && document.visibilityState === 'visible') {
+        if (typeof window.requestMemoWakeLock === 'function') {
+            window.requestMemoWakeLock();
+        }
+    }
+});
+
+
 // --- ОБЩИЙ ТАЙМЕР СЕССИИ ---
 window.globalSessionSeconds = 0;
 window.globalSessionInterval = null;
@@ -623,52 +658,58 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        function updatePlayButtonState(playing) {
-            window.isMemoPlaying = playing;
-            const btn = document.getElementById('btn_play_toggle');
-            const iconPlay = document.getElementById('icon_play');
-            const iconStop = document.getElementById('icon_stop');
-            
-            // Управление глобальным таймером
-            if (playing) {
-                startGlobalSessionTimer();
-            } else {
-                pauseGlobalSessionTimer();
-            }
-
-            if (!btn) return;
-
-            if (playing) {
-                // Обязательно удаляем btn-primary, чтобы кнопка смогла стать красной (danger)
-                btn.classList.remove('btn-primary', 'btn-primary');
-                btn.classList.add('btn-danger');
-                btn.title = window.memoLang === 'ru' ? 'Стоп' : 'Stop';
-                
-                // Переключаем видимость через классы (сбрасывая inline-стили)
-                if (iconPlay) {
-                    iconPlay.style.display = '';
-                    iconPlay.classList.add('d-none');
-                }
-                if (iconStop) {
-                    iconStop.style.display = '';
-                    iconStop.classList.remove('d-none');
-                }
-            } else {
-                // Возвращаем в зеленый (или синий) цвет
-                btn.classList.remove('btn-danger', 'btn-primary');
-                btn.classList.add('btn-primary');
-                btn.title = window.memoLang === 'ru' ? 'Слушать' : 'Play';
-                
-                if (iconPlay) {
-                    iconPlay.style.display = '';
-                    iconPlay.classList.remove('d-none');
-                }
-                if (iconStop) {
-                    iconStop.style.display = '';
-                    iconStop.classList.add('d-none');
-                }
-            }
+  function updatePlayButtonState(playing) {
+    window.isMemoPlaying = playing;
+    const btn = document.getElementById('btn_play_toggle');
+    const iconPlay = document.getElementById('icon_play');
+    const iconStop = document.getElementById('icon_stop');
+    
+    // Управление глобальным таймером и удержанием экрана
+    if (playing) {
+        startGlobalSessionTimer();
+        if (typeof window.requestMemoWakeLock === 'function') {
+            window.requestMemoWakeLock();
         }
+    } else {
+        pauseGlobalSessionTimer();
+        if (typeof window.releaseMemoWakeLock === 'function') {
+            window.releaseMemoWakeLock();
+        }
+    }
+
+    if (!btn) return;
+
+    if (playing) {
+        // Обязательно удаляем btn-primary, чтобы кнопка смогла стать красной (danger)
+        btn.classList.remove('btn-primary', 'btn-primary');
+        btn.classList.add('btn-danger');
+        btn.title = window.memoLang === 'ru' ? 'Стоп' : 'Stop';
+        
+        // Переключаем видимость через классы (сбрасывая inline-стили)
+        if (iconPlay) {
+            iconPlay.style.display = '';
+            iconPlay.classList.add('d-none');
+        }
+        if (iconStop) {
+            iconStop.style.display = '';
+            iconStop.classList.remove('d-none');
+        }
+    } else {
+        // Возвращаем в зеленый (или синий) цвет
+        btn.classList.remove('btn-danger', 'btn-primary');
+        btn.classList.add('btn-primary');
+        btn.title = window.memoLang === 'ru' ? 'Слушать' : 'Play';
+        
+        if (iconPlay) {
+            iconPlay.style.display = '';
+            iconPlay.classList.remove('d-none');
+        }
+        if (iconStop) {
+            iconStop.style.display = '';
+            iconStop.classList.add('d-none');
+        }
+    }
+}
 
 
         Object.defineProperty(window, 'TTS_SEGMENT_DELAY', {
