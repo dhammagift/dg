@@ -44,8 +44,6 @@ body {
     max-height: var(--textarea-max-height); /* Максимальная высота текстового поля */
   }  
   
-  
-
 .table-container {
     resize: both; /* Позволяет растягивать в любом направлении */
 
@@ -67,6 +65,31 @@ body {
   }
 }
 
+table.table-hover {
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* Колонка "Текст" (Пали) */
+table.table-hover th:nth-child(1) { 
+  width: 50%; 
+}
+
+/* Колонка "Индексы" (скрытая) */
+table.table-hover th:nth-child(2) { 
+  width: 0; 
+}
+
+/* Колонка "Перевод" (Русский) */
+table.table-hover th:nth-child(3) { 
+  width: 50%; 
+}
+
+/* Колонка со ссылкой */
+table.table-hover th:nth-child(4) { 
+  width: 40px; 
+  text-align: center; 
+}
 
 label {
   font-weight: bold;
@@ -824,202 +847,155 @@ function loadText() {
   const language = document.getElementById('languageSelect').value;
   const indexValue = document.getElementById('indexInput').value.trim().toLowerCase();
   let translation = document.getElementById('translationInput').value;
+  let cleanedTranslation = translation;
 
-let cleanedTranslation = translation;
-
-  // Проверяем, является ли ввод валидным JSON
   try {
     const jsonObject = JSON.parse(translation);
-    // Если это JSON, очищаем его с помощью processJson
     processJson(translation);
-    return;  // Прекращаем дальнейшую обработку, так как JSON уже очищен
+    return;  
   } catch (error) {
-    // Если это не JSON, продолжаем обычную обработку текста
   }
 
-if (document.getElementById('lineBreakCheckbox').checked) {
-  cleanedTranslation = translation.replace(/[\.…:?!] /g, match => {
-    let index = translation.indexOf(match);
-    if (translation.charAt(index + match.length) !== '\n') {
-      return `${match}\n`;
-  }
-    return match;
-  });
+  if (document.getElementById('lineBreakCheckbox').checked) {
+    cleanedTranslation = translation.replace(/[\.…:?!] /g, match => {
+      let index = translation.indexOf(match);
+      if (translation.charAt(index + match.length) !== '\n') {
+        return `${match}\n`;
+      }
+      return match;
+    });
  
+    cleanedTranslation = cleanedTranslation.replace(/\([А-Я]* [0-9]*\.[0-9]*\)/g, '');
+    cleanedTranslation = cleanedTranslation.replace(/ {2,}/g, ' ');
+    cleanedTranslation = cleanedTranslation.replace(/АН\s[0-9]+\.[0-9]+\s+[\s\S]*?Anguttara Nikaya.*$/gm, '');
+    cleanedTranslation = cleanedTranslation.replace(/СН\s[0-9]+\.[0-9]+\s+[\s\S]*?Samyutta Nikaya.*$/gm, '');
+    cleanedTranslation = cleanedTranslation.replace(/(\(1\)|1\)) ([а-я])/g, function(match, p1, p2) {
+      return p1 + ' ' + p2.toUpperCase();
+    });
 
- cleanedTranslation = cleanedTranslation.replace(/\([А-Я]* [0-9]*\.[0-9]*\)/g, '');
-cleanedTranslation = cleanedTranslation.replace(/ {2,}/g, ' ');
-  
+    cleanedTranslation = cleanedTranslation.replace(/(?<![а-яА-Я])то точно также/g, 'точно также');
+    cleanedTranslation = cleanedTranslation.replace(/точно также/g, '\nточно также');
+    cleanedTranslation = cleanedTranslation.replace(/Как ты думаешь, /g, 'Как ты думаешь,\n');
+    cleanedTranslation = cleanedTranslation.replace(/Как вы думаете, /g, 'Как вы думаете,\n');
+    cleanedTranslation = cleanedTranslation.replace(/или как ты считаешь/g, '\nили как ты считаешь');
+    cleanedTranslation = cleanedTranslation.replace(/или как вы считаете/g, '\nили как вы считаете');
+    cleanedTranslation = cleanedTranslation.replace(/Каки/g, '\nКаки');
+    cleanedTranslation = cleanedTranslation.replace(/В каких/g, '\nВ каких');
+    cleanedTranslation = cleanedTranslation.replace(/\[Благословенный сказал\]:/gm, '');
+    cleanedTranslation = cleanedTranslation.replace(/\[Благословенный сказал:/gm, '');
+    cleanedTranslation = cleanedTranslation.replace(/^.*\[И далее он добавил\]:.*$/gm, '');
+    cleanedTranslation = cleanedTranslation.replace(/Там Благословенный обратился к монахам:/g, '\nТам Благословенный обратился к монахам:\n');
+    cleanedTranslation = cleanedTranslation.replace(/Так сказал Благословенный./g, '\nТак сказал Благословенный.\n');
+    cleanedTranslation = cleanedTranslation.replace(/\(I\)/g, 'Первая');
+    cleanedTranslation = cleanedTranslation.replace(/\(II\)/g, 'Вторая');
+    cleanedTranslation = cleanedTranslation.replace(/\(III\)/g, 'Третья');
+    cleanedTranslation = cleanedTranslation.replace(/\(IV\)/g, 'Четвёртая');
+    cleanedTranslation = cleanedTranslation.replace(/^\*\s+/gm, '');
+    cleanedTranslation = cleanedTranslation.replace(/[0-9]*"/g, '');
+    cleanedTranslation = cleanedTranslation.replace(/^–\s+/gm, '');
+    cleanedTranslation = cleanedTranslation.replace(/\([1-9][0-9]?\) /g, '');
+    cleanedTranslation = cleanedTranslation.replace(/\([1-9][0-9]?-[1-9][0-9]?\) /g, '');
+    cleanedTranslation = cleanedTranslation.replace(/[1-9][0-9]?\) /g, '');
+    cleanedTranslation = cleanedTranslation.replace(/^\s*[\r\n]/gm, '');
+    cleanedTranslation = cleanedTranslation.replace(/([А-Яа-я»…\]])\d+\b/g, '$1');
+  }
 
+  if (/sn[0-9]/.test(indexValue)) {
+      if (!cleanedTranslation.startsWith("Связанные Наставления")) {
+          const additionalLines = `Связанные Наставления ${indexValue.replace(/[a-z]/g, '')}\nРаздел \nСутта \n\n\n`;
+          cleanedTranslation = additionalLines + cleanedTranslation;
+      } else if (cleanedTranslation.startsWith("Связанные Наставления")) {
+          cleanedTranslation = `Связанные Наставления ${indexValue.replace(/[a-z]/g, '')}${cleanedTranslation.substring(cleanedTranslation.indexOf("\n"))}`;
+      }
+  } else if (indexValue.includes("an")) {
+      if (!cleanedTranslation.startsWith("Восходящие Наставления")) {
+          const additionalLines = `Восходящие Наставления ${indexValue.replace(/[a-z]/g, '')}\nРаздел \nСутта \n\n\n`;
+          cleanedTranslation = additionalLines + cleanedTranslation;
+      } else if (cleanedTranslation.startsWith("Восходящие Наставления")) {
+          cleanedTranslation = `Восходящие Наставления ${indexValue.replace(/[a-z]/g, '')}${cleanedTranslation.substring(cleanedTranslation.indexOf("\n"))}`;
+      }
+  } else if (indexValue.includes("snp")) {
+      if (!cleanedTranslation.startsWith("Сутта Нипата")) {
+          const additionalLines = `Сутта Нипата ${indexValue.replace(/[a-z]/g, '')}\nНазвание\n\n`;
+          cleanedTranslation = additionalLines + cleanedTranslation;
+      } else if (cleanedTranslation.startsWith("Сутта Нипата")) {
+          cleanedTranslation = `Сутта Нипата ${indexValue.replace(/[a-z]/g, '')}${cleanedTranslation.substring(cleanedTranslation.indexOf("\n"))}`;
+      }
+  } else if (indexValue.includes("ud")) {
+      if (!cleanedTranslation.startsWith("Удана")) {
+          const additionalLines = `Удана ${indexValue.replace(/[a-z]/g, '')}\nСутта \n\n`;
+          cleanedTranslation = additionalLines + cleanedTranslation;
+      } else if (cleanedTranslation.startsWith("Удана")) {
+          cleanedTranslation = `Удана ${indexValue.replace(/[a-z]/g, '')}${cleanedTranslation.substring(cleanedTranslation.indexOf("\n"))}`;
+      }
+  } else if (indexValue.includes("iti")) {
+      if (!cleanedTranslation.startsWith("Это Сказано")) {
+          const additionalLines = `Это Сказано ${indexValue.replace(/[a-z]/g, '')}\nСобрание \nРаздел \nСутта \n`;
+          cleanedTranslation = additionalLines + cleanedTranslation;
+      } else if (cleanedTranslation.startsWith("Это Сказано")) {
+          cleanedTranslation = `Это Сказано ${indexValue.replace(/[a-z]/g, '')}${cleanedTranslation.substring(cleanedTranslation.indexOf("\n"))}`;
+      }
+  }
 
-cleanedTranslation = cleanedTranslation.replace(/АН\s[0-9]+\.[0-9]+\s+[\s\S]*?Anguttara Nikaya.*$/gm, '');
-cleanedTranslation = cleanedTranslation.replace(/СН\s[0-9]+\.[0-9]+\s+[\s\S]*?Samyutta Nikaya.*$/gm, '');
-
-cleanedTranslation = cleanedTranslation.replace(/(\(1\)|1\)) ([а-я])/g, function(match, p1, p2) {
-  return p1 + ' ' + p2.toUpperCase();
-});
-
-// Если строка начинается с цифры и не оканчивается пробелом, добавляем пробел
-//cleanedTranslation = cleanedTranslation.replace(/(\([0-9]\).+?)([^\s])$/gm, function(match, p1, p2) {
-//  return p1 + p2 + ' ';
-//});
-
-
-// добавить логику, чтобы собирал в одно предложение, короткие списки???
-
-cleanedTranslation = cleanedTranslation.replace(/(?<![а-яА-Я])то точно также/g, 'точно также');
-cleanedTranslation = cleanedTranslation.replace(/точно также/g, '\nточно также');
-cleanedTranslation = cleanedTranslation.replace(/Как ты думаешь, /g, 'Как ты думаешь,\n');
-cleanedTranslation = cleanedTranslation.replace(/Как вы думаете, /g, 'Как вы думаете,\n');
-cleanedTranslation = cleanedTranslation.replace(/или как ты считаешь/g, '\nили как ты считаешь');
-cleanedTranslation = cleanedTranslation.replace(/или как вы считаете/g, '\nили как вы считаете');
-cleanedTranslation = cleanedTranslation.replace(/Каки/g, '\nКаки');
-cleanedTranslation = cleanedTranslation.replace(/В каких/g, '\nВ каких');
-cleanedTranslation = cleanedTranslation.replace(/\[Благословенный сказал\]:/gm, '');
-cleanedTranslation = cleanedTranslation.replace(/\[Благословенный сказал:/gm, '');
-cleanedTranslation = cleanedTranslation.replace(/^.*\[И далее он добавил\]:.*$/gm, '');
-cleanedTranslation = cleanedTranslation.replace(/Там Благословенный обратился к монахам:/g, '\nТам Благословенный обратился к монахам:\n');
-cleanedTranslation = cleanedTranslation.replace(/Так сказал Благословенный./g, '\nТак сказал Благословенный.\n');
-
-
-
-cleanedTranslation = cleanedTranslation.replace(/\(I\)/g, 'Первая');
-cleanedTranslation = cleanedTranslation.replace(/\(II\)/g, 'Вторая');
-cleanedTranslation = cleanedTranslation.replace(/\(III\)/g, 'Третья');
-cleanedTranslation = cleanedTranslation.replace(/\(IV\)/g, 'Четвёртая');
-
-
-
-
-cleanedTranslation = cleanedTranslation.replace(/^\*\s+/gm, '');
-cleanedTranslation = cleanedTranslation.replace(/[0-9]*"/g, '');
-cleanedTranslation = cleanedTranslation.replace(/^–\s+/gm, '');
-
-
-cleanedTranslation = cleanedTranslation.replace(/\([1-9][0-9]?\) /g, '');
-cleanedTranslation = cleanedTranslation.replace(/\([1-9][0-9]?-[1-9][0-9]?\) /g, '');
-cleanedTranslation = cleanedTranslation.replace(/[1-9][0-9]?\) /g, '');
-
-
-cleanedTranslation = cleanedTranslation.replace(/^\s*[\r\n]/gm, '');
-cleanedTranslation = cleanedTranslation.replace(/([А-Яа-я»…\]])\d+\b/g, '$1');
-cleanedTranslation = cleanedTranslation.replace(/([^\s])$/gm, '$1 ');
-
-}
-
-
-if (/sn[0-9]/.test(indexValue)) {
-    if (!cleanedTranslation.startsWith("Связанные Наставления")) {
-        const additionalLines = `Связанные Наставления ${indexValue.replace(/[a-z]/g, '')}\nРаздел \nСутта \n\n\n`;
-        cleanedTranslation = additionalLines + cleanedTranslation;
-    } else if (cleanedTranslation.startsWith("Связанные Наставления")) {
-        cleanedTranslation = `Связанные Наставления ${indexValue.replace(/[a-z]/g, '')}${cleanedTranslation.substring(cleanedTranslation.indexOf("\n"))}`;
-    }
-} else if (indexValue.includes("an")) {
-    if (!cleanedTranslation.startsWith("Восходящие Наставления")) {
-        const additionalLines = `Восходящие Наставления ${indexValue.replace(/[a-z]/g, '')}\nРаздел \nСутта \n\n\n`;
-        cleanedTranslation = additionalLines + cleanedTranslation;
-    } else if (cleanedTranslation.startsWith("Восходящие Наставления")) {
-        cleanedTranslation = `Восходящие Наставления ${indexValue.replace(/[a-z]/g, '')}${cleanedTranslation.substring(cleanedTranslation.indexOf("\n"))}`;
-    }
-} else if (indexValue.includes("snp")) {
-    if (!cleanedTranslation.startsWith("Сутта Нипата")) {
-        const additionalLines = `Сутта Нипата ${indexValue.replace(/[a-z]/g, '')}\nНазвание\n\n`;
-        cleanedTranslation = additionalLines + cleanedTranslation;
-    } else if (cleanedTranslation.startsWith("Сутта Нипата")) {
-        cleanedTranslation = `Сутта Нипата ${indexValue.replace(/[a-z]/g, '')}${cleanedTranslation.substring(cleanedTranslation.indexOf("\n"))}`;
-    }
-} else if (indexValue.includes("ud")) {
-    if (!cleanedTranslation.startsWith("Удана")) {
-        const additionalLines = `Удана ${indexValue.replace(/[a-z]/g, '')}\nСутта \n\n`;
-        cleanedTranslation = additionalLines + cleanedTranslation;
-    } else if (cleanedTranslation.startsWith("Удана")) {
-        cleanedTranslation = `Удана ${indexValue.replace(/[a-z]/g, '')}${cleanedTranslation.substring(cleanedTranslation.indexOf("\n"))}`;
-    }
-} else if (indexValue.includes("iti")) {
-    if (!cleanedTranslation.startsWith("Это Сказано")) {
-        const additionalLines = `Это Сказано ${indexValue.replace(/[a-z]/g, '')}\nСобрание \nРаздел \nСутта \n`;
-        cleanedTranslation = additionalLines + cleanedTranslation;
-    } else if (cleanedTranslation.startsWith("Это Сказано")) {
-        cleanedTranslation = `Это Сказано ${indexValue.replace(/[a-z]/g, '')}${cleanedTranslation.substring(cleanedTranslation.indexOf("\n"))}`;
-    }
-}
+  // Очистка от лишних пробелов в концах строк и гарантированное добавление одного пробела
+  cleanedTranslation = cleanedTranslation
+      .replace(/[ \t]+$/gm, '')
+      .replace(/([^\r\n])$/gm, '$1 ');
 
   document.getElementById('translationInput').value = cleanedTranslation;
-
-    document.getElementById('lineBreakCheckbox').checked = false;
+  document.getElementById('lineBreakCheckbox').checked = false;
 
   const translationLines = cleanedTranslation.split('\n');
+  let lettersOnly = indexValue.match(/[a-z]+/)[0];
+  let beforeDot = indexValue.split('.')[0];
+  let firstNumberOnly = beforeDot.match(/[0-9]+/)?.[0] ?? null;
+
+  if (indexValue.includes('snp') || indexValue.includes('ud') || indexValue.includes('dhp') || indexValue.includes('iti')) {
+    lettersOnly = 'kn/' + lettersOnly;
+  }
+
+  if (indexValue.includes('snp') || indexValue.includes('ud')) {
+    beforeDot = 'vagga' + firstNumberOnly;
+  } else if (indexValue.includes('dhp')) {
+    beforeDot = '';
+  }  
   
-    let lettersOnly = indexValue.match(/[a-z]+/)[0];
-
-  // Извлечение всех символов до точки
-let beforeDot = indexValue.split('.')[0];
-  
-let firstNumberOnly = beforeDot.match(/[0-9]+/)?.[0] ?? null;
-//let lettersOnly = beforeDot.replace(/[0-9]/g, '');  // Удаление всех цифр, если требуется
-
-
-
-// Проверка, содержит ли строка 'snp', 'ud' или 'dhp'
-if (indexValue.includes('snp') || indexValue.includes('ud') || indexValue.includes('dhp') || indexValue.includes('iti')) {
-  lettersOnly = 'kn/' + lettersOnly;
-}
-
-// Проверка, содержит ли строка 'snp' или 'ud'
-if (indexValue.includes('snp') || indexValue.includes('ud')) {
-  beforeDot = 'vagga' + firstNumberOnly;
-} else if (indexValue.includes('dhp')) {
-  beforeDot = '';
-}  
-  
-if ( indexValue.includes('iti')) {
-  beforeDot = 'vagga' + findItiVagga(firstNumberOnly);
-} 
+  if ( indexValue.includes('iti')) {
+    beforeDot = 'vagga' + findItiVagga(firstNumberOnly);
+  } 
   
   let url;
   let fileNameBlock;
   
- if (indexValue.includes('bu-') || indexValue.includes('bi-')) {
-  
-  let buOrbi = indexValue.split('-')[0]; 
-  let lawIndex = indexValue.split('-')[1]; 
-  let lawType = lawIndex.match(/[a-z]+/)[0];
-  
- fileNameBlock = 'pli-tv-' + buOrbi + '-vb/pli-tv-' + buOrbi + '-vb-' + lawType + '/pli-tv-' + buOrbi + '-vb-' + lawIndex;
-   
-    //for other laws or patimolkha
- if (indexValue.includes('-pm')) {
-  fileNameBlock = 'pli-tv-' + buOrbi + '-pm';
- } 
-  
-console.log('fileNameBlock ' + fileNameBlock) ;
-  
-if (language === 'pli') {
-  url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/vinaya/${fileNameBlock}_root-pli-ms.json`;    
-}
-else if (language === 'en') {
-  url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/brahmali/vinaya/${fileNameBlock}_translation-en-brahmali.json`;
+  if (indexValue.includes('bu-') || indexValue.includes('bi-')) {
+    let buOrbi = indexValue.split('-')[0]; 
+    let lawIndex = indexValue.split('-')[1]; 
+    let lawType = lawIndex.match(/[a-z]+/)[0];
+    fileNameBlock = 'pli-tv-' + buOrbi + '-vb/pli-tv-' + buOrbi + '-vb-' + lawType + '/pli-tv-' + buOrbi + '-vb-' + lawIndex;
+    if (indexValue.includes('-pm')) {
+      fileNameBlock = 'pli-tv-' + buOrbi + '-pm';
+    } 
+    console.log('fileNameBlock ' + fileNameBlock) ;
+    if (language === 'pli') {
+      url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/vinaya/${fileNameBlock}_root-pli-ms.json`;    
+    } else if (language === 'en') {
+      url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/brahmali/vinaya/${fileNameBlock}_translation-en-brahmali.json`;
+    }
+  } else if (language === 'pli') {
+      url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta/${lettersOnly}/${beforeDot}/${indexValue}_root-pli-ms.json`;
+  } else if (language === 'en') {
+      url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${lettersOnly}/${beforeDot}/${indexValue}_translation-en-sujato.json`;
   }
   
-} else if (language === 'pli') {
-    url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta/${lettersOnly}/${beforeDot}/${indexValue}_root-pli-ms.json`;
+  if (indexValue.match(/dn|mn/)) {
+    if (language === 'pli') {
+      url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta/${lettersOnly}/${indexValue}_root-pli-ms.json`;
+    } else if (language === 'en') {
+      url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${lettersOnly}/${indexValue}_translation-en-sujato.json`;
+    }
+  }
+  console.log('url ' + url) ;
 
-  } else if (language === 'en') {
-    url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${lettersOnly}/${beforeDot}/${indexValue}_translation-en-sujato.json`;
-  }
-  
-  
-if (indexValue.match(/dn|mn/)) {
-  if (language === 'pli') {
-    url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta/${lettersOnly}/${indexValue}_root-pli-ms.json`;
-  } else if (language === 'en') {
-    url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${lettersOnly}/${indexValue}_translation-en-sujato.json`;
-  }
-}
-console.log('url ' + url) ;
-  //    url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta/kn/snp/vagga3/snp3.2_root-pli-ms.json`;
-//console.log(url);
   fetch(url)
     .then(response => {
       if (!response.ok) {
@@ -1028,521 +1004,436 @@ console.log('url ' + url) ;
       return response.json();
     })
     .then(data => {
-            const tableBody = document.getElementById('outputTableBody');
-const translationInput = document.getElementById('translationInput'); // Ваше textarea
+      const tableBody = document.getElementById('outputTableBody');
+      const translationInput = document.getElementById('translationInput'); 
 
-// Накапливаем HTML-код таблицы в переменную, вместо множественных обращений к DOM
-let tableHtml = '';
+      let tableHtml = '';
+      const dataArray = Object.entries(data);
+      const translationLines = translationInput.value.split('\n'); 
+      let rowCounter = 0; 
 
-const dataArray = Object.entries(data);
-const translationLines = translationInput.value.split('\n'); // Разбиваем строки translationInput
-let rowCounter = 0; // Счётчик для строк
+      dataArray.forEach(([key, value], index) => {
+        const translationLine = translationLines[index] || ''; 
+        const texts = translationLine.split('\n'); 
 
-// Основной цикл по данным
-dataArray.forEach(([key, value], index) => {
-  const translationLine = translationLines[index] || ''; // Берём соответствующую строку из translationInput
-  const texts = translationLine.split('\n'); // Разбиваем её на подстроки
+        texts.forEach((text, textIndex) => {
+          const currentText = texts[textIndex] || ''; 
+          rowCounter++;
+          const row = `<tr>
+                        <td class="pli-lang">${value.trimEnd()}</td>
+                        <td>${key}</td>
+                        <td>${currentText}</td>
+                        <td><a href="#" title="${key}" onclick="gotoLine(${rowCounter})"><i class="fa-solid fa-link"></i></a></td>
+                      </tr>`;
+          tableHtml += row;
+        });
+      });
 
-  texts.forEach((text, textIndex) => {
-    const currentText = texts[textIndex] || ''; // Текущая строка для вывода
-
-    rowCounter++;
-    const row = `<tr>
-                  <td class="pli-lang">${value.trimEnd()}</td>
-                  <td>${key}</td>
-                  <td>${currentText}</td>
-                  <td><a href="#" title="${key}" onclick="gotoLine(${rowCounter})"><i class="fa-solid fa-link"></i></a></td>
-                </tr>`;
-    tableHtml += row;
-  });
-});
-
-// Проверяем, если translationInput содержит больше строк, чем dataArray
-if (translationLines.length > dataArray.length) {
-  for (let i = dataArray.length; i < translationLines.length; i++) {
-    rowCounter++;
-    const extraText = translationLines[i] || ''; // Дополнительные строки
-
-    const extraRow = `<tr>
-                      <td></td>                       <td></td>
-                      <td>${extraText}</td>
-                      <td><a href="#" onclick="gotoLine(${rowCounter})"><i class="fa-solid fa-link"></i></a></td>
-                    </tr>`;
-    tableHtml += extraRow;
-  }
-}
-
-// Вставляем собранный HTML в таблицу один раз
-tableBody.innerHTML = tableHtml;
-
-    async function checkFileExists(url) {
-        try {
-            const response = await fetch(url, { method: 'HEAD' });
-            return response.ok;  // Проверяем, существует ли файл
-        } catch (error) {
-            console.error(`Error fetching ${url}`, error);
-            return false;
+      if (translationLines.length > dataArray.length) {
+        for (let i = dataArray.length; i < translationLines.length; i++) {
+          rowCounter++;
+          const extraText = translationLines[i] || ''; 
+          const extraRow = `<tr>
+                            <td></td><td></td>
+                            <td>${extraText}</td>
+                            <td><a href="#" onclick="gotoLine(${rowCounter})"><i class="fa-solid fa-link"></i></a></td>
+                          </tr>`;
+          tableHtml += extraRow;
         }
-    }
-
-    function generateUrls(originalUrl) {
-        // Найдём часть URL от sutta или vinaya до подчеркивания
-        const trimmedUrl = originalUrl.match(/\/(sutta|vinaya)\/.*/)[0];
-        const baseUrl = `/assets/texts${trimmedUrl.split('_')[0]}`;  // Обрезаем от подчеркивания и формируем новый URL
-
-        // Генерируем возможные варианты файлов
-        return [
-            `${baseUrl}_translation-ru-o.json`,
-            `${baseUrl}_translation-ru-o+in+progress.json`,
-            `${baseUrl}_translation-ru-sv+edited+o.json`,
-            `${baseUrl}_translation-ru-sv.json`,
-            `${baseUrl}_translation-ru-khemanando+edited+o.json`,
-            `${baseUrl}_translation-ru-kheminda+edited+o.json`,
-            `${baseUrl}_translation-ru-microsoftTranslator+edited+o.json`,
-            `${baseUrl}_translation-ru-tel+edited+o.json`
-        ];
-    }
-
-    async function findAvailableTranslations(originalUrl) {
-        const urls = generateUrls(originalUrl);  // Генерируем URL на основе исходного
-        const availableUrls = [];
-
-        // Проверяем доступность каждого URL
-        for (const url of urls) {
-            const exists = await checkFileExists(url);
-            if (exists) {
-                availableUrls.push(url);  // Добавляем доступные URL в список
-            }
-        }
-
-if (availableUrls.length > 0) {
-    if (availableUrls.length === 1) {
-        return availableUrls[0]; // Если только один вариант, сразу выбираем его
-    }
-
-    // Если вариантов больше одного, показываем выбор
-    let selectionMessage = 'Выберите перевод:\n';
-    availableUrls.forEach((url, index) => {
-        selectionMessage += `${index + 1}: ${url}\n`;
-    });
-
-    const userChoice = prompt(selectionMessage);
-    const selectedUrl = availableUrls[userChoice - 1];
-
-    if (selectedUrl) {
-        return selectedUrl;
-    } else {
-        alert("Неверный выбор.");
-        return null;
-    }
-} else {
-    alert("Нет доступных переводов.");
-    return null;
-}
-    }
-
-    async function loadFileContent(url) {
-        try {
-            const response = await fetch(url);
-            if (response.ok) {
-                const content = await response.text();  // Получаем текст файла
-                document.getElementById('translationInput').value = content;  // Вставляем текст в textarea
-            } else {
-                alert('Не удалось загрузить файл.');
-            }
-        } catch (error) {
-            console.error('Ошибка загрузки файла:', error);
-            alert('Произошла ошибка при загрузке файла.');
-        }
-    }
-
-    // Пример использования, назначаем выполнение на кнопку
-
-/* if (document.getElementById('loadFromServer').checked) {     
-    findAvailableTranslations(url).then((selectedUrl) => {
-        if (selectedUrl) {
-            loadFileContent(selectedUrl);  // Загружаем содержимое выбранного файла
-        }
-
-    });
-         // Снимаем отметку с чекбокса после завершения
-        document.getElementById('loadFromServer').checked = false;   
-} */
-
-
-document.getElementById('loadFromServerButton').addEventListener('click', function() {
-    findAvailableTranslations(url).then((selectedUrl) => {
-        if (selectedUrl) {
-            loadFileContent(selectedUrl);  // Загружаем содержимое выбранного файла
-        }
-    });
-});
-
-
-
-	  
-// новый код 	  
-
-// Добавляем обработчик клика на таблицу
-document.getElementById('outputTableBody').addEventListener('click', function(event) {
-    // Проверяем, был ли клик по ячейке с переводом (по столбцу с индексом 2)
-    const target = event.target;
-    if (target.tagName === 'TD' && target.cellIndex === 2) {
-        makeCellEditable(target);
-    }
-});
-
-// Функция для превращения ячейки в textarea для редактирования
-// makeCellEditable(cell); //  По умолчанию, курсор в конец строки
-// makeCellEditable(cell, 'start'); // Курсор в начало строки
-// makeCellEditable(cell, 'end'); // Курсор в конец строки
-// makeCellEditable(cell, 5); // Курсор на 5-м символе от начала
-// makeCellEditable(cell, -3); // Курсор на 3-м символе от конца
-
-
-function makeCellEditable(cell, cursorPosition = null) {
-    if (cell.querySelector('textarea')) return; // Если textarea уже есть, ничего не делаем
-
-    const originalText = cell.textContent.trim(); // Используем textContent вместо innerText
-    
-    // Создаем textarea для редактирования
-    const textarea = document.createElement('textarea');
-    textarea.value = originalText;
-    textarea.classList.add('table-textarea'); // Опционально добавляем класс для стилей
-
-    // Устанавливаем размеры textarea в соответствии с размерами ячейки
-	textarea.style.width = `${cell.clientWidth - 5}px`;
-    textarea.style.height = `${cell.clientHeight - 10}px`;
-    
-    // Сохраняем оригинальный текст как data-атрибут
-    cell.dataset.originalText = originalText;
-    
-    // Заменяем содержимое ячейки на textarea
-    cell.textContent = '';
-    cell.appendChild(textarea);
-    textarea.focus();
-
-    // Обрабатываем курсорную позицию, если передана
-    if (cursorPosition !== null) {
-        let position;
-        const textLength = textarea.value.length;
-
-        if (cursorPosition === 'start') {
-            position = 0;
-        } else if (cursorPosition === 'end') {
-            position = textLength;
-        } else if (typeof cursorPosition === 'number') {
-            if (cursorPosition >= 0) {
-                position = Math.min(cursorPosition, textLength); // Если положительное значение
-            } else {
-                position = Math.max(textLength + cursorPosition, 0); // Если отрицательное значение
-            }
-        }
-
-        textarea.setSelectionRange(position, position); // Устанавливаем курсор на нужную позицию
-    } else {
-        textarea.setSelectionRange(textarea.value.length, textarea.value.length); // Если позиция не указана, курсор ставится в конец текста
-    }
-
-    // Функция для завершения редактирования
-    function finishEditing() {
-        const newText = textarea.value.trim();
-        cell.textContent = newText; // Устанавливаем новое значение (может быть пустым)
-        delete cell.dataset.originalText; // Удаляем временный data-атрибут
-        updateTranslationTextarea();
-		saveInputs();
-    }
-
-    // Обрабатываем выход из режима редактирования
-    textarea.addEventListener('blur', finishEditing);
-
-
-// Обрабатываем нажатие клавиш
-textarea.addEventListener('keydown', function(event) {
-    if (event.key === 'Enter') {
-        if (!event.ctrlKey) {
-            event.preventDefault(); // Предотвращаем стандартное поведение Enter
-
-            const cursorPosition = textarea.selectionStart; // Получаем позицию курсора
-            const textBeforeCursor = textarea.value.slice(0, cursorPosition).trim(); // Текст до курсора
-            const textAfterCursor = textarea.value.slice(cursorPosition).trim(); // Текст после курсора
-
-            // Завершаем редактирование текущей ячейки
-            finishEditing();
-
-            // Получаем текущую строку и следующую строку
-            const currentRow = cell.parentElement;
-            let nextRow = currentRow.nextElementSibling;
-
-            // Перемещаем текст до курсора в текущую ячейку
-            cell.textContent = textBeforeCursor;
-
-            // Начинаем сдвигать строки вниз, начиная с текущей
-            let currentTextAfterCursor = textAfterCursor; // Текст, который нужно переместить вниз
-            while (nextRow) {
-                const nextCell = nextRow.cells[2]; // Получаем третью ячейку следующей строки
-                if (nextCell) {
-                    const tempText = nextCell.textContent.trim(); // Сохраняем текущий текст ячейки
-                    nextCell.textContent = currentTextAfterCursor; // Перемещаем текст в следующую ячейку
-                    currentTextAfterCursor = tempText; // Обновляем текст для перемещения на следующую строку
-                }
-                nextRow = nextRow.nextElementSibling; // Переходим к следующей строке
-            }
-
-            // Если остался текст, который нужно переместить, добавляем новую строку
-            if (currentTextAfterCursor) {
-                const newRow = currentRow.cloneNode(true); // Клонируем текущую строку
-                newRow.cells[2].textContent = currentTextAfterCursor; // Устанавливаем текст в третью ячейку новой строки
-                currentRow.parentElement.appendChild(newRow); // Добавляем новую строку в таблицу
-            }
-
-            // Переходим к редактированию следующей строки
-            const nextCell = currentRow.nextElementSibling.cells[2]; // Получаем ячейку третьей колонки следующей строки
-            if (nextCell) {
-                makeCellEditable(nextCell, 0); // Устанавливаем редактирование на следующую ячейку
-            }
-        } else {
-            // Обработка Ctrl + Enter для переноса текста
-            event.preventDefault(); // Предотвращаем стандартное поведение Enter
-
-            const cursorPosition = textarea.selectionStart; // Получаем позицию курсора
-            const textBeforeCursor = textarea.value.slice(0, cursorPosition).trim(); // Текст до курсора
-            const textAfterCursor = textarea.value.slice(cursorPosition).trim(); // Текст после курсора
-
-            // Завершаем редактирование текущей ячейки
-            finishEditing();
-
-            // Обновляем следующую ячейку, если она существует
-            const currentRow = cell.parentElement;
-            const nextRow = currentRow.nextElementSibling;
-            if (nextRow) {
-                const nextCell = nextRow.cells[2]; // Получаем третью ячейку следующей строки
-                if (nextCell) {
-                    // Устанавливаем текст до курсора в текущую ячейку
-                    cell.textContent = textBeforeCursor;
-
-                    // Перемещаем текст после курсора в следующую ячейку
-                    nextCell.textContent = textAfterCursor + (nextCell.textContent.trim() ? ' ' : '') + nextCell.textContent.trim();
-                    makeCellEditable(nextCell, 0); // Начинаем редактирование следующей ячейки
-                }
-            }
-        }
-    }
-	
-// Обработка нажатия клавиши Backspace
-if (event.key === 'Backspace') {
-    const cursorPosition = textarea.selectionStart;
-    const selectionEnd = textarea.selectionEnd;
-
-    // Если есть выделенный текст, позволяем его удалить стандартным поведением
-    if (cursorPosition !== selectionEnd) {
-        return; // Прерываем выполнение, чтобы сработало стандартное поведение удаления выделенного текста
-    }
-
-    // Если курсор в начале строки и нет выделенного текста
-    if (cursorPosition === 0) {
-        event.preventDefault(); // Предотвращаем стандартное поведение удаления символа
-
-        const currentRow = cell.parentElement;
-        const previousRow = currentRow.previousElementSibling;
-        if (previousRow) {
-            const previousCell = previousRow.cells[2]; // Получаем третью ячейку предыдущей строки
-            const currentCell = currentRow.cells[2];
-            const currentText = textarea.value.trim();
-
-            if (currentText === '') {
-                // Если текущая ячейка пустая, просто сдвигаем строки вверх и переносим фокус на предыдущую ячейку
-                shiftCellsUp(currentRow);
-                makeCellEditable(previousCell);
-            } else {
-                // Сохраняем текст предыдущей ячейки до объединения
-                const previousText = previousCell.textContent.trim();
-
-                // Определяем нужно ли добавлять пробел
-                const newCursorPosition = previousText.length; // Без +1, если предыдущая ячейка пустая
-
-                // Объединяем текст предыдущей ячейки с текущим текстом
-                previousCell.textContent = previousText + (previousText ? ' ' : '') + currentText;
-                currentCell.textContent = ''; // Очищаем текущую ячейку
-                updateSingleTranslationRow(currentCell);
-
-                // После очистки текущей ячейки, сдвигаем все нижестоящие ячейки вверх
-                shiftCellsUp(currentRow);
-
-                // Устанавливаем фокус на предыдущую ячейку
-                makeCellEditable(previousCell);
-
-                // Устанавливаем курсор на новое место
-                const textarea = previousCell.querySelector('textarea'); // Найдем textarea внутри предыдущей ячейки
-                if (textarea) {
-                    textarea.setSelectionRange(newCursorPosition, newCursorPosition);
-                }
-            }
-
-            // Обновляем translationInput
-            updateTranslationInput();
-        }
-    }
-}
-
-// Обработка нажатия клавиши Delete
-if (event.key === 'Delete') {
-    const cursorPosition = textarea.selectionStart;
-    const selectionEnd = textarea.selectionEnd;
-    const currentText = textarea.value.trim();
-
-    // Если есть выделенный текст, позволяем его удалить стандартным поведением
-    if (cursorPosition !== selectionEnd) {
-        return; // Прерываем выполнение, чтобы сработало стандартное поведение удаления выделенного текста
-    }
-
-    // Если курсор в конце строки или строка пустая
-    if (cursorPosition === textarea.value.length || currentText === '') {
-        event.preventDefault(); // Предотвращаем стандартное поведение удаления символа
-
-        const currentRow = cell.parentElement;
-        const nextRow = currentRow.nextElementSibling;
-        if (nextRow) {
-            const currentCell = currentRow.cells[2]; // Текущая ячейка
-            const nextCell = nextRow.cells[2]; // Следующая ячейка
-
-            // Если строка пустая, просто сдвигаем строки вверх
-            if (currentText === '') {
-                shiftCellsUp(currentRow);
-                makeCellEditable(currentCell);
-            } else {
-                // Сохраняем текст следующей ячейки до объединения
-                const nextText = nextCell.textContent.trim();
-
-                // Определяем нужно ли добавлять пробел
-                const newCursorPosition = currentText.length;
-
-                // Объединяем текст текущей ячейки со следующим текстом
-                currentCell.textContent = currentText + (nextText ? ' ' : '') + nextText;
-                nextCell.textContent = ''; // Очищаем следующую ячейку
-                updateSingleTranslationRow(nextCell);
-
-                // После очистки следующей ячейки, сдвигаем все нижестоящие ячейки вверх
-                shiftCellsUp(nextRow);
-
-                // Устанавливаем фокус на текущую ячейку
-                makeCellEditable(currentCell);
-
-                // Устанавливаем курсор на новое место
-                const textarea = currentCell.querySelector('textarea'); // Найдем textarea внутри текущей ячейки
-                if (textarea) {
-                    textarea.setSelectionRange(newCursorPosition, newCursorPosition);
-                }
-            }
-
-            // Обновляем translationInput
-            updateTranslationInput();
-        }
-    }
-}
-
-
-textarea.addEventListener('keydown', function(event) {
-    const cursorPosition = textarea.selectionStart;
-    const selectionEnd = textarea.selectionEnd;
-    const textLength = textarea.value.length;
-
-    // Если курсор в конце строки и нажата стрелка вниз или вправо
-    if ((event.key === 'ArrowRight' || event.key === 'ArrowDown') && cursorPosition === textLength) {
-        const currentRow = cell.parentElement;
-        const nextRow = currentRow.nextElementSibling;
-
-        if (nextRow) {
-            event.preventDefault();  // Предотвращаем стандартное поведение
-            const nextCell = nextRow.cells[2];  // Предполагаем, что целевая ячейка - третья
-            makeCellEditable(nextCell, 0);  // Перемещаем курсор в начало следующей ячейки
-        }
-    }
-
-    // Если курсор в начале строки и нажата стрелка влево или вверх
-    if ((event.key === 'ArrowLeft' || event.key === 'ArrowUp') && cursorPosition === 0) {
-        const currentRow = cell.parentElement;
-        const previousRow = currentRow.previousElementSibling;
-
-        if (previousRow) {
-            event.preventDefault();  // Предотвращаем стандартное поведение
-            const previousCell = previousRow.cells[2];  // Предполагаем, что целевая ячейка - третья
-            makeCellEditable(previousCell, 'end');  // Перемещаем курсор в конец предыдущей ячейки
-        }
-    }
-});
-
-
-// Функция для сдвига ячеек вверх
-function shiftCellsUp(startRow) {
-    let rowToMove = startRow;
-    while (rowToMove.nextElementSibling) {
-        const nextRow = rowToMove.nextElementSibling;
-        rowToMove.cells[2].textContent = nextRow.cells[2].textContent;
-        rowToMove = nextRow;
-    }
-    // Очищаем последнюю ячейку
-    rowToMove.cells[2].textContent = '';
-    
-    // Обновляем все затронутые строки
-    let rowToUpdate = startRow;
-    while (rowToUpdate) {
-        updateSingleTranslationRow(rowToUpdate.cells[2]);
-        rowToUpdate = rowToUpdate.nextElementSibling;
-    }
-}
-
-
-
-// Функция для обновления translationInput
-function updateTranslationInput() {
-    const rows = document.querySelectorAll('tr');
-    const translations = Array.from(rows).map(row => row.cells[2].textContent.trim());
-    translationInput.value = translations.join('\n');
-}
-  
-  
-    });
-}
-
-// Функция для синхронизации изменений в таблице с полем textarea
-function updateTranslationTextarea() {
-    const tableRows = document.querySelectorAll('#outputTableBody tr');
-    let updatedTranslation = '';
-    tableRows.forEach(row => {
-        const translationCell = row.cells[2]; // Ячейка с переводом (3-я ячейка в строке)
-        updatedTranslation += translationCell.textContent.trim() + '\n'; // Используем textContent и удаляем лишние пробелы
-    });
-    document.getElementById('translationInput').value = updatedTranslation.trim(); // Обновляем textarea
-}
-
-// Инициализация: заполняем translationInput при загрузке страницы
-document.addEventListener('DOMContentLoaded', updateTranslationTextarea);
-
-
-// Функция для обновления translationInput только для одной строки
-function updateSingleTranslationRow(cell) {
-    const currentText = document.getElementById('translationInput').value;
-    const rows = currentText.split('\n');
-
-    // Определяем индекс строки, который нужно обновить
-    const rowIndex = Array.prototype.indexOf.call(cell.parentElement.parentElement.children, cell.parentElement);
-
-    // Обновляем текст только для этой строки
-    rows[rowIndex] = cell.textContent.trim();
-
-    // Обновляем содержимое translationInput
-    document.getElementById('translationInput').value = rows.join('\n');
-}
-
-
-// новый код 	  
-
-  
-	  
+      }
+
+      tableBody.innerHTML = tableHtml;
+
+      async function checkFileExists(url) {
+          try {
+              const response = await fetch(url, { method: 'HEAD' });
+              return response.ok;  
+          } catch (error) {
+              console.error(`Error fetching ${url}`, error);
+              return false;
+          }
+      }
+
+      function generateUrls(originalUrl) {
+          const trimmedUrl = originalUrl.match(/\/(sutta|vinaya)\/.*/)[0];
+          const baseUrl = `/assets/texts${trimmedUrl.split('_')[0]}`;  
+          return [
+              `${baseUrl}_translation-ru-o.json`,
+              `${baseUrl}_translation-ru-o+in+progress.json`,
+              `${baseUrl}_translation-ru-sv+edited+o.json`,
+              `${baseUrl}_translation-ru-sv.json`,
+              `${baseUrl}_translation-ru-khemanando+edited+o.json`,
+              `${baseUrl}_translation-ru-kheminda+edited+o.json`,
+              `${baseUrl}_translation-ru-microsoftTranslator+edited+o.json`,
+              `${baseUrl}_translation-ru-tel+edited+o.json`
+          ];
+      }
+
+      async function findAvailableTranslations(originalUrl) {
+          const urls = generateUrls(originalUrl);  
+          const availableUrls = [];
+
+          for (const url of urls) {
+              const exists = await checkFileExists(url);
+              if (exists) {
+                  availableUrls.push(url);  
+              }
+          }
+
+          if (availableUrls.length > 0) {
+              if (availableUrls.length === 1) {
+                  return availableUrls[0]; 
+              }
+              let selectionMessage = 'Выберите перевод:\n';
+              availableUrls.forEach((url, index) => {
+                  selectionMessage += `${index + 1}: ${url}\n`;
+              });
+
+              const userChoice = prompt(selectionMessage);
+              const selectedUrl = availableUrls[userChoice - 1];
+
+              if (selectedUrl) {
+                  return selectedUrl;
+              } else {
+                  alert("Неверный выбор.");
+                  return null;
+              }
+          } else {
+              alert("Нет доступных переводов.");
+              return null;
+          }
+      }
+
+      async function loadFileContent(url) {
+          try {
+              const response = await fetch(url);
+              if (response.ok) {
+                  const content = await response.text();  
+                  document.getElementById('translationInput').value = content;  
+              } else {
+                  alert('Не удалось загрузить файл.');
+              }
+          } catch (error) {
+              console.error('Ошибка загрузки файла:', error);
+              alert('Произошла ошибка при загрузке файла.');
+          }
+      }
+
+      document.getElementById('loadFromServerButton').addEventListener('click', function() {
+          findAvailableTranslations(url).then((selectedUrl) => {
+              if (selectedUrl) {
+                  loadFileContent(selectedUrl);  
+              }
+          });
+      });
+
+      document.getElementById('outputTableBody').addEventListener('click', function(event) {
+          const target = event.target;
+          if (target.tagName === 'TD' && target.cellIndex === 2) {
+              makeCellEditable(target);
+          }
+      });
+
+      function makeCellEditable(cell, cursorPosition = null) {
+          if (cell.querySelector('textarea')) return; 
+
+          const currentOffsetHeight = cell.offsetHeight;
+          const computedStyle = window.getComputedStyle(cell);
+          const paddingTop = parseFloat(computedStyle.paddingTop) || 0;
+          const paddingBottom = parseFloat(computedStyle.paddingBottom) || 0;
+          const innerHeight = currentOffsetHeight - paddingTop - paddingBottom;
+
+          let originalText = cell.textContent.trimStart(); 
+          if (originalText !== '') {
+              originalText = originalText.trimEnd() + ' ';
+          }
+          
+          const textarea = document.createElement('textarea');
+          textarea.value = originalText;
+          textarea.classList.add('table-textarea'); 
+
+          cell.style.height = `${currentOffsetHeight}px`;
+          
+          textarea.style.width = '100%';
+          textarea.style.height = `${innerHeight}px`;
+          textarea.style.boxSizing = 'border-box';
+          textarea.style.resize = 'none'; 
+          textarea.style.overflowY = 'auto'; 
+          
+          cell.dataset.originalText = originalText;
+          
+          cell.textContent = '';
+          cell.appendChild(textarea);
+          textarea.focus();
+
+          if (cursorPosition !== null) {
+              let position;
+              const textLength = textarea.value.length;
+
+              if (cursorPosition === 'start') {
+                  position = 0;
+              } else if (cursorPosition === 'end') {
+                  position = textLength;
+              } else if (typeof cursorPosition === 'number') {
+                  if (cursorPosition >= 0) {
+                      position = Math.min(cursorPosition, textLength); 
+                  } else {
+                      position = Math.max(textLength + cursorPosition, 0); 
+                  }
+              }
+
+              textarea.setSelectionRange(position, position); 
+          } else {
+              textarea.setSelectionRange(textarea.value.length, textarea.value.length); 
+          }
+
+          function finishEditing() {
+              let newText = textarea.value.trimStart(); 
+              if (newText !== '') {
+                  newText = newText.trimEnd() + ' ';
+              }
+              cell.textContent = newText; 
+              cell.style.height = ''; 
+              delete cell.dataset.originalText; 
+              updateTranslationTextarea();
+              saveInputs();
+          }
+
+          textarea.addEventListener('blur', finishEditing);
+
+          textarea.addEventListener('keydown', function(event) {
+              if (event.key === 'Enter') {
+                  if (!event.ctrlKey) {
+                      event.preventDefault(); 
+
+                      const cursorPosition = textarea.selectionStart; 
+                      let textBeforeCursor = textarea.value.slice(0, cursorPosition).trim(); 
+                      let textAfterCursor = textarea.value.slice(cursorPosition).trim(); 
+
+                      finishEditing();
+
+                      const currentRow = cell.parentElement;
+                      let nextRow = currentRow.nextElementSibling;
+
+                      cell.textContent = textBeforeCursor !== '' ? textBeforeCursor + ' ' : '';
+
+                      let currentTextAfterCursor = textAfterCursor !== '' ? textAfterCursor + ' ' : ''; 
+                      while (nextRow) {
+                          const nextCell = nextRow.cells[2]; 
+                          if (nextCell) {
+                              const tempText = nextCell.textContent.trim(); 
+                              nextCell.textContent = currentTextAfterCursor; 
+                              currentTextAfterCursor = tempText !== '' ? tempText + ' ' : ''; 
+                          }
+                          nextRow = nextRow.nextElementSibling; 
+                      }
+
+                      if (currentTextAfterCursor) {
+                          const newRow = currentRow.cloneNode(true); 
+                          newRow.cells[2].textContent = currentTextAfterCursor; 
+                          currentRow.parentElement.appendChild(newRow); 
+                      }
+
+                      const nextCell = currentRow.nextElementSibling.cells[2]; 
+                      if (nextCell) {
+                          makeCellEditable(nextCell, 0); 
+                      }
+                  } else {
+                      event.preventDefault(); 
+
+                      const cursorPosition = textarea.selectionStart; 
+                      let textBeforeCursor = textarea.value.slice(0, cursorPosition).trim(); 
+                      let textAfterCursor = textarea.value.slice(cursorPosition).trim(); 
+
+                      finishEditing();
+
+                      const currentRow = cell.parentElement;
+                      const nextRow = currentRow.nextElementSibling;
+                      if (nextRow) {
+                          const nextCell = nextRow.cells[2]; 
+                          if (nextCell) {
+                              cell.textContent = textBeforeCursor !== '' ? textBeforeCursor + ' ' : '';
+                              const existingNext = nextCell.textContent.trim();
+                              const combined = textAfterCursor + (existingNext ? ' ' : '') + existingNext;
+                              nextCell.textContent = combined !== '' ? combined.trimEnd() + ' ' : '';
+                              makeCellEditable(nextCell, 0); 
+                          }
+                      }
+                  }
+              }
+            
+              if (event.key === 'Backspace') {
+                  const cursorPosition = textarea.selectionStart;
+                  const selectionEnd = textarea.selectionEnd;
+
+                  if (cursorPosition !== selectionEnd) {
+                      return; 
+                  }
+
+                  if (cursorPosition === 0) {
+                      event.preventDefault(); 
+
+                      const currentRow = cell.parentElement;
+                      const previousRow = currentRow.previousElementSibling;
+                      if (previousRow) {
+                          const previousCell = previousRow.cells[2]; 
+                          const currentCell = currentRow.cells[2];
+                          const currentText = textarea.value.trim();
+
+                          if (currentText === '') {
+                              shiftCellsUp(currentRow);
+                              makeCellEditable(previousCell);
+                          } else {
+                              const previousText = previousCell.textContent.trim();
+                              const newCursorPosition = previousText.length + (previousText ? 1 : 0); 
+                              const combined = previousText + (previousText ? ' ' : '') + currentText;
+                              previousCell.textContent = combined !== '' ? combined.trimEnd() + ' ' : '';
+                              currentCell.textContent = ''; 
+                              updateSingleTranslationRow(currentCell);
+
+                              shiftCellsUp(currentRow);
+                              makeCellEditable(previousCell);
+
+                              const newTextarea = previousCell.querySelector('textarea'); 
+                              if (newTextarea) {
+                                  newTextarea.setSelectionRange(newCursorPosition, newCursorPosition);
+                              }
+                          }
+                          updateTranslationInput();
+                      }
+                  }
+              }
+
+              if (event.key === 'Delete') {
+                  const cursorPosition = textarea.selectionStart;
+                  const selectionEnd = textarea.selectionEnd;
+                  const currentText = textarea.value.trim();
+
+                  if (cursorPosition !== selectionEnd) {
+                      return; 
+                  }
+
+                  if (cursorPosition === textarea.value.length || currentText === '') {
+                      event.preventDefault(); 
+
+                      const currentRow = cell.parentElement;
+                      const nextRow = currentRow.nextElementSibling;
+                      if (nextRow) {
+                          const currentCell = currentRow.cells[2]; 
+                          const nextCell = nextRow.cells[2]; 
+
+                          if (currentText === '') {
+                              shiftCellsUp(currentRow);
+                              makeCellEditable(currentCell);
+                          } else {
+                              const nextText = nextCell.textContent.trim();
+                              const newCursorPosition = currentText.length + (currentText ? 1 : 0);
+
+                              const combined = currentText + (nextText ? ' ' : '') + nextText;
+                              currentCell.textContent = combined !== '' ? combined.trimEnd() + ' ' : '';
+                              nextCell.textContent = ''; 
+                              updateSingleTranslationRow(nextCell);
+
+                              shiftCellsUp(nextRow);
+                              makeCellEditable(currentCell);
+
+                              const newTextarea = currentCell.querySelector('textarea'); 
+                              if (newTextarea) {
+                                  newTextarea.setSelectionRange(newCursorPosition, newCursorPosition);
+                              }
+                          }
+                          updateTranslationInput();
+                      }
+                  }
+              }
+
+              const cursorPosition = textarea.selectionStart;
+              const textLength = textarea.value.length;
+
+              if ((event.key === 'ArrowRight' || event.key === 'ArrowDown') && cursorPosition === textLength) {
+                  const currentRow = cell.parentElement;
+                  const nextRow = currentRow.nextElementSibling;
+
+                  if (nextRow) {
+                      event.preventDefault();  
+                      const nextCell = nextRow.cells[2];  
+                      makeCellEditable(nextCell, 0);  
+                  }
+              }
+
+              if ((event.key === 'ArrowLeft' || event.key === 'ArrowUp') && cursorPosition === 0) {
+                  const currentRow = cell.parentElement;
+                  const previousRow = currentRow.previousElementSibling;
+
+                  if (previousRow) {
+                      event.preventDefault();  
+                      const previousCell = previousRow.cells[2];  
+                      makeCellEditable(previousCell, 'end');  
+                  }
+              }
+          });
+
+          function shiftCellsUp(startRow) {
+              let rowToMove = startRow;
+              while (rowToMove.nextElementSibling) {
+                  const nextRow = rowToMove.nextElementSibling;
+                  rowToMove.cells[2].textContent = nextRow.cells[2].textContent;
+                  rowToMove = nextRow;
+              }
+              rowToMove.cells[2].textContent = '';
+              
+              let rowToUpdate = startRow;
+              while (rowToUpdate) {
+                  updateSingleTranslationRow(rowToUpdate.cells[2]);
+                  rowToUpdate = rowToUpdate.nextElementSibling;
+              }
+          }
+
+          function updateTranslationInput() {
+              const rows = document.querySelectorAll('tr');
+              const translations = Array.from(rows).map(row => {
+                  let text = row.cells[2].textContent.trimStart();
+                  return text !== '' ? text.trimEnd() + ' ' : '';
+              });
+              translationInput.value = translations.join('\n').replace(/\n$/, '');
+          }
+      }
+
+
+      function updateTranslationTextarea() {
+          const tableRows = document.querySelectorAll('#outputTableBody tr');
+          let updatedTranslation = '';
+          
+          tableRows.forEach(row => {
+              const translationCell = row.cells[2]; 
+              let text = translationCell.textContent.trim();
+              // Добавляем пробел, если строка не пустая
+              updatedTranslation += (text !== '' ? text + ' ' : '') + '\n'; 
+          });
+          
+          // Заменяем trim() на удаление только последнего переноса строки, 
+          // чтобы сохранить конечный пробел в самом конце текста
+          document.getElementById('translationInput').value = updatedTranslation.replace(/\n$/, ''); 
+      }
+
+      function updateSingleTranslationRow(cell) {
+          const currentText = document.getElementById('translationInput').value;
+          const rows = currentText.split('\n');
+          const rowIndex = Array.prototype.indexOf.call(cell.parentElement.parentElement.children, cell.parentElement);
+          
+          let text = cell.textContent.trim();
+          // Обновляем конкретную строку, добавляя пробел, если она не пустая
+          rows[rowIndex] = text !== '' ? text + ' ' : '';
+          
+          document.getElementById('translationInput').value = rows.join('\n');
+      }
+
+      document.addEventListener('DOMContentLoaded', updateTranslationTextarea);
+
     })
     .catch(error => console.error('Error fetching data:', error.message));
 }
+
 </script>
 
 <script>
@@ -2260,33 +2151,28 @@ function formatSelectedText() {
     const selectionEnd = textarea.selectionEnd;
 
     if (selectionStart !== selectionEnd) {
-        // Получаем выделенный текст
+        // Форматирование для выделенного куска текста
         const selectedText = textarea.value.substring(selectionStart, selectionEnd);
+        
+        const formattedText = selectedText
+            .replace(/[ \t]+$/gm, '') // Сначала убираем все пробелы и табы на концах строк
+            .replace(/([^\r\n])$/gm, '$1 '); // Добавляем ровно один пробел в конец каждой непустой строки
 
-        // Разделяем текст на строки
-        const lines = selectedText.split("\n");
-
-        // Форматируем строки: добавляем пробел в конце, если его нет
-        const formattedLines = lines.map(line => {
-            line = line.trimEnd(); // Убираем пробелы в конце
-            if (line && !line.endsWith(" ")) { // Проверяем наличие пробела в конце строки
-                line += " "; // Добавляем пробел если его не было
-            }
-            return line;
-        });
-
-        // Объединяем строки без переносов
-        const formattedText = formattedLines.join("");
-
-        // Заменяем выделенный текст отформатированным
         const newText = textarea.value.substring(0, selectionStart) + formattedText + textarea.value.substring(selectionEnd);
         textarea.value = newText;
 
-        // Вызываем легкую синхронизацию вместо полного обновления loadText()
         syncTextToTable();
-
-        // Восстанавливаем выделение
         textarea.setSelectionRange(selectionStart, selectionStart + formattedText.length);
+    } else {
+        // Если ничего не выделено, легковесно и быстро форматируем весь текст
+        const currentPosition = textarea.selectionStart;
+        
+        textarea.value = textarea.value
+            .replace(/[ \t]+$/gm, '')
+            .replace(/([^\r\n])$/gm, '$1 ');
+
+        syncTextToTable();
+        textarea.setSelectionRange(currentPosition, currentPosition);
     }
 }
 

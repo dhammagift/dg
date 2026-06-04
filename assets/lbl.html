@@ -31,6 +31,33 @@ body {
   margin: 20px;
 }
 
+table.table-hover {
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* Колонка "Текст" (Пали) */
+table.table-hover th:nth-child(1) { 
+  width: 50%; 
+}
+
+/* Колонка "Индексы" (скрытая) */
+table.table-hover th:nth-child(2) { 
+  width: 0; 
+}
+
+/* Колонка "Перевод" (Русский) */
+table.table-hover th:nth-child(3) { 
+  width: 50%; 
+}
+
+/* Колонка со ссылкой */
+table.table-hover th:nth-child(4) { 
+  width: 40px; 
+  text-align: center; 
+}
+
+
 .custom-textarea {
   resize: both;
   overflow: auto;
@@ -187,7 +214,7 @@ button:hover {
                 <div style="display: inline-flex; margin-top: -60px;">
                     <top-nav-icons type="read" show-dict></top-nav-icons>
                 </div>
-                <a href="./lbl.html" title="для ПК" class="ms-1 text-muted" target=""><i class="fa-solid fa-desktop"></i></a>
+                <a href="./linebyline.html" title="для Мобильных" class="ms-1 text-muted" target=""><i class="fa-solid fa-mobile"></i></a>
                 <a href="#" onclick="openHelpModal();" title="Инструкция" class="ms-2 text-muted" target=""><i class="fa-solid fa-question"></i></a>
                 <a href="/assets/readylinebyline.html" title="Обновить Список Готовых" class=" ms-2 me-2 text-muted" target="_blank"><i class="fa-solid fa-list"></i></a>  
                 
@@ -713,7 +740,6 @@ function loadText() {
     cleanedTranslation = cleanedTranslation.replace(/[1-9][0-9]?\) /g, '');
     cleanedTranslation = cleanedTranslation.replace(/^\s*[\r\n]/gm, '');
     cleanedTranslation = cleanedTranslation.replace(/([А-Яа-я»…\]])\d+\b/g, '$1');
-    cleanedTranslation = cleanedTranslation.replace(/([^\s])$/gm, '$1 ');
   }
 
   if (/sn[0-9]/.test(indexValue)) {
@@ -752,6 +778,11 @@ function loadText() {
           cleanedTranslation = `Это Сказано ${indexValue.replace(/[a-z]/g, '')}${cleanedTranslation.substring(cleanedTranslation.indexOf("\n"))}`;
       }
   }
+
+  // Очистка от лишних пробелов в концах строк и гарантированное добавление одного пробела
+  cleanedTranslation = cleanedTranslation
+      .replace(/[ \t]+$/gm, '')
+      .replace(/([^\r\n])$/gm, '$1 ');
 
   document.getElementById('translationInput').value = cleanedTranslation;
   document.getElementById('lineBreakCheckbox').checked = false;
@@ -948,14 +979,28 @@ function loadText() {
       function makeCellEditable(cell, cursorPosition = null) {
           if (cell.querySelector('textarea')) return; 
 
-          const originalText = cell.textContent.trim(); 
+          const currentOffsetHeight = cell.offsetHeight;
+          const computedStyle = window.getComputedStyle(cell);
+          const paddingTop = parseFloat(computedStyle.paddingTop) || 0;
+          const paddingBottom = parseFloat(computedStyle.paddingBottom) || 0;
+          const innerHeight = currentOffsetHeight - paddingTop - paddingBottom;
+
+          let originalText = cell.textContent.trimStart(); 
+          if (originalText !== '') {
+              originalText = originalText.trimEnd() + ' ';
+          }
           
           const textarea = document.createElement('textarea');
           textarea.value = originalText;
           textarea.classList.add('table-textarea'); 
 
-          textarea.style.width = `${cell.clientWidth - 5}px`;
-          textarea.style.height = `${cell.clientHeight - 10}px`;
+          cell.style.height = `${currentOffsetHeight}px`;
+          
+          textarea.style.width = '100%';
+          textarea.style.height = `${innerHeight}px`;
+          textarea.style.boxSizing = 'border-box';
+          textarea.style.resize = 'none'; 
+          textarea.style.overflowY = 'auto'; 
           
           cell.dataset.originalText = originalText;
           
@@ -985,8 +1030,12 @@ function loadText() {
           }
 
           function finishEditing() {
-              const newText = textarea.value.trim();
+              let newText = textarea.value.trimStart(); 
+              if (newText !== '') {
+                  newText = newText.trimEnd() + ' ';
+              }
               cell.textContent = newText; 
+              cell.style.height = ''; 
               delete cell.dataset.originalText; 
               updateTranslationTextarea();
               saveInputs();
@@ -1000,23 +1049,23 @@ function loadText() {
                       event.preventDefault(); 
 
                       const cursorPosition = textarea.selectionStart; 
-                      const textBeforeCursor = textarea.value.slice(0, cursorPosition).trim(); 
-                      const textAfterCursor = textarea.value.slice(cursorPosition).trim(); 
+                      let textBeforeCursor = textarea.value.slice(0, cursorPosition).trim(); 
+                      let textAfterCursor = textarea.value.slice(cursorPosition).trim(); 
 
                       finishEditing();
 
                       const currentRow = cell.parentElement;
                       let nextRow = currentRow.nextElementSibling;
 
-                      cell.textContent = textBeforeCursor;
+                      cell.textContent = textBeforeCursor !== '' ? textBeforeCursor + ' ' : '';
 
-                      let currentTextAfterCursor = textAfterCursor; 
+                      let currentTextAfterCursor = textAfterCursor !== '' ? textAfterCursor + ' ' : ''; 
                       while (nextRow) {
                           const nextCell = nextRow.cells[2]; 
                           if (nextCell) {
                               const tempText = nextCell.textContent.trim(); 
                               nextCell.textContent = currentTextAfterCursor; 
-                              currentTextAfterCursor = tempText; 
+                              currentTextAfterCursor = tempText !== '' ? tempText + ' ' : ''; 
                           }
                           nextRow = nextRow.nextElementSibling; 
                       }
@@ -1035,8 +1084,8 @@ function loadText() {
                       event.preventDefault(); 
 
                       const cursorPosition = textarea.selectionStart; 
-                      const textBeforeCursor = textarea.value.slice(0, cursorPosition).trim(); 
-                      const textAfterCursor = textarea.value.slice(cursorPosition).trim(); 
+                      let textBeforeCursor = textarea.value.slice(0, cursorPosition).trim(); 
+                      let textAfterCursor = textarea.value.slice(cursorPosition).trim(); 
 
                       finishEditing();
 
@@ -1045,8 +1094,10 @@ function loadText() {
                       if (nextRow) {
                           const nextCell = nextRow.cells[2]; 
                           if (nextCell) {
-                              cell.textContent = textBeforeCursor;
-                              nextCell.textContent = textAfterCursor + (nextCell.textContent.trim() ? ' ' : '') + nextCell.textContent.trim();
+                              cell.textContent = textBeforeCursor !== '' ? textBeforeCursor + ' ' : '';
+                              const existingNext = nextCell.textContent.trim();
+                              const combined = textAfterCursor + (existingNext ? ' ' : '') + existingNext;
+                              nextCell.textContent = combined !== '' ? combined.trimEnd() + ' ' : '';
                               makeCellEditable(nextCell, 0); 
                           }
                       }
@@ -1076,17 +1127,18 @@ function loadText() {
                               makeCellEditable(previousCell);
                           } else {
                               const previousText = previousCell.textContent.trim();
-                              const newCursorPosition = previousText.length; 
-                              previousCell.textContent = previousText + (previousText ? ' ' : '') + currentText;
+                              const newCursorPosition = previousText.length + (previousText ? 1 : 0); 
+                              const combined = previousText + (previousText ? ' ' : '') + currentText;
+                              previousCell.textContent = combined !== '' ? combined.trimEnd() + ' ' : '';
                               currentCell.textContent = ''; 
                               updateSingleTranslationRow(currentCell);
 
                               shiftCellsUp(currentRow);
                               makeCellEditable(previousCell);
 
-                              const textarea = previousCell.querySelector('textarea'); 
-                              if (textarea) {
-                                  textarea.setSelectionRange(newCursorPosition, newCursorPosition);
+                              const newTextarea = previousCell.querySelector('textarea'); 
+                              if (newTextarea) {
+                                  newTextarea.setSelectionRange(newCursorPosition, newCursorPosition);
                               }
                           }
                           updateTranslationInput();
@@ -1117,18 +1169,19 @@ function loadText() {
                               makeCellEditable(currentCell);
                           } else {
                               const nextText = nextCell.textContent.trim();
-                              const newCursorPosition = currentText.length;
+                              const newCursorPosition = currentText.length + (currentText ? 1 : 0);
 
-                              currentCell.textContent = currentText + (nextText ? ' ' : '') + nextText;
+                              const combined = currentText + (nextText ? ' ' : '') + nextText;
+                              currentCell.textContent = combined !== '' ? combined.trimEnd() + ' ' : '';
                               nextCell.textContent = ''; 
                               updateSingleTranslationRow(nextCell);
 
                               shiftCellsUp(nextRow);
                               makeCellEditable(currentCell);
 
-                              const textarea = currentCell.querySelector('textarea'); 
-                              if (textarea) {
-                                  textarea.setSelectionRange(newCursorPosition, newCursorPosition);
+                              const newTextarea = currentCell.querySelector('textarea'); 
+                              if (newTextarea) {
+                                  newTextarea.setSelectionRange(newCursorPosition, newCursorPosition);
                               }
                           }
                           updateTranslationInput();
@@ -1136,6 +1189,7 @@ function loadText() {
                   }
               }
 
+              const cursorPosition = textarea.selectionStart;
               const textLength = textarea.value.length;
 
               if ((event.key === 'ArrowRight' || event.key === 'ArrowDown') && cursorPosition === textLength) {
@@ -1179,34 +1233,50 @@ function loadText() {
 
           function updateTranslationInput() {
               const rows = document.querySelectorAll('tr');
-              const translations = Array.from(rows).map(row => row.cells[2].textContent.trim());
-              translationInput.value = translations.join('\n');
+              const translations = Array.from(rows).map(row => {
+                  let text = row.cells[2].textContent.trimStart();
+                  return text !== '' ? text.trimEnd() + ' ' : '';
+              });
+              translationInput.value = translations.join('\n').replace(/\n$/, '');
           }
       }
+
 
       function updateTranslationTextarea() {
           const tableRows = document.querySelectorAll('#outputTableBody tr');
           let updatedTranslation = '';
+          
           tableRows.forEach(row => {
               const translationCell = row.cells[2]; 
-              updatedTranslation += translationCell.textContent.trim() + '\n'; 
+              let text = translationCell.textContent.trim();
+              // Добавляем пробел, если строка не пустая
+              updatedTranslation += (text !== '' ? text + ' ' : '') + '\n'; 
           });
-          document.getElementById('translationInput').value = updatedTranslation.trim(); 
+          
+          // Заменяем trim() на удаление только последнего переноса строки, 
+          // чтобы сохранить конечный пробел в самом конце текста
+          document.getElementById('translationInput').value = updatedTranslation.replace(/\n$/, ''); 
       }
-
-      document.addEventListener('DOMContentLoaded', updateTranslationTextarea);
 
       function updateSingleTranslationRow(cell) {
           const currentText = document.getElementById('translationInput').value;
           const rows = currentText.split('\n');
           const rowIndex = Array.prototype.indexOf.call(cell.parentElement.parentElement.children, cell.parentElement);
-          rows[rowIndex] = cell.textContent.trim();
+          
+          let text = cell.textContent.trim();
+          // Обновляем конкретную строку, добавляя пробел, если она не пустая
+          rows[rowIndex] = text !== '' ? text + ' ' : '';
+          
           document.getElementById('translationInput').value = rows.join('\n');
       }
+
+      document.addEventListener('DOMContentLoaded', updateTranslationTextarea);
+
 
     })
     .catch(error => console.error('Error fetching data:', error.message));
 }
+
 </script>
 
 <script>
@@ -1769,23 +1839,28 @@ function formatSelectedText() {
     const selectionEnd = textarea.selectionEnd;
 
     if (selectionStart !== selectionEnd) {
+        // Форматирование для выделенного куска текста
         const selectedText = textarea.value.substring(selectionStart, selectionEnd);
-        const lines = selectedText.split("\n");
+        
+        const formattedText = selectedText
+            .replace(/[ \t]+$/gm, '') // Сначала убираем все пробелы и табы на концах строк
+            .replace(/([^\r\n])$/gm, '$1 '); // Добавляем ровно один пробел в конец каждой непустой строки
 
-        const formattedLines = lines.map(line => {
-            line = line.trimEnd(); 
-            if (line && !line.endsWith(" ")) { 
-                line += " "; 
-            }
-            return line;
-        });
-
-        const formattedText = formattedLines.join("");
         const newText = textarea.value.substring(0, selectionStart) + formattedText + textarea.value.substring(selectionEnd);
         textarea.value = newText;
 
         syncTextToTable();
         textarea.setSelectionRange(selectionStart, selectionStart + formattedText.length);
+    } else {
+        // Если ничего не выделено, легковесно и быстро форматируем весь текст
+        const currentPosition = textarea.selectionStart;
+        
+        textarea.value = textarea.value
+            .replace(/[ \t]+$/gm, '')
+            .replace(/([^\r\n])$/gm, '$1 ');
+
+        syncTextToTable();
+        textarea.setSelectionRange(currentPosition, currentPosition);
     }
 }
 
