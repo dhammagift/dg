@@ -1,6 +1,23 @@
 
 window.otrnranges = ['sn56.11', 'sn12.2', 'sn54.1'];
-window.thanissarotrnranges = ['sn1.1', 'sn12.2', 'sn35.28', 'sn56.11', 'an3.70', 'an4.10', 'an6.63', 'an10.46', 'an11.15', 'dn22', 'dn33', 'dn34', 'mn141',  'snp1.8' ];
+window.thanissarotrnranges = [
+'an3.70',
+'an3.101',
+'an4.10',
+'an6.63',
+'an10.46',
+'an11.15',
+'dn22',
+'dn33',
+'dn34',
+'snp1.8',
+'mn141',
+'sn1.1',
+'sn12.2',
+'sn12.63',
+'sn35.28',
+'sn56.11'
+];
 
 
 function parseSlug(slug) {

@@ -48,3 +48,11 @@ do
 done
     echo
     echo "done"
+
+
+exit 0
+
+
+#Update Thanissaro or en_other files for common.js
+cd offline-data/en_other/
+find . -type f | sort -V | awk -F/ '{print $NF}' | awk -F_ '{print $1}' | sed -e "s/^/'/" -e "s/$/',/"
