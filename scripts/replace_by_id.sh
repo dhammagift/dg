@@ -56,7 +56,8 @@ while read -r id; do
 
   sed -i "/\"$id\"/ s${rule}" "$file"
 
-done < "$list"
+done < <(awk '{print $2}' "$list")
+#done < "$list"
 
 
 #while read -r id; do   file=$(grep -rl $id .);    echo "$id";    [ -n "$file" ] && sed -i "/$id/ s/ там / здесь /" "$file"; done < "$dwnl/id.txt"
