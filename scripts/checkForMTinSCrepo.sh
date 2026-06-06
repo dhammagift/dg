@@ -9,10 +9,10 @@ fi
 dest=$base/assets/texts/ru_other/
 src=$base/suttacentral.net/sc-data/sc_bilara_data/translation/ru
 
-echo updating SC repo
-git -C $src "pull" 
 echo updating RU repo
 git -C $dest "pull" 
+echo updating SC repo
+git -C $src "pull" 
 
 
 DIFF=$(comm -13 \
