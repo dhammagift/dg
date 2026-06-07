@@ -86,12 +86,12 @@ RewriteRule ^/$ / [L,R=302]
 
     # CSS — умеренно долго (1 месяц)
     <FilesMatch "\.(css)$">
-        Header set Cache-Control "public, max-age=604800"
+        Header set Cache-Control "public, max-age=86400"
     </FilesMatch>
 
-    # JS — 1 неделя
+    # JS
     <FilesMatch "\.(js)$">
-        Header set Cache-Control "public, max-age=864000"
+        Header set Cache-Control "public, max-age=86400"
     </FilesMatch>
 
 </IfModule>
