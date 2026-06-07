@@ -184,7 +184,7 @@ async function buildSutta(slug) {
           let linkToCopy = `<a class="text-decoration-none copyLink" style="cursor: pointer;" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;
 
           const hasSecondTrn = secondTransData && secondTransData[segment];
-          const secondTrnStyle = hasSecondTrn ? "display: block; margin-top: 4px; color: #666;" : "display: none;";
+          const secondTrnStyle = hasSecondTrn ? "display: block; margin-top: 4px; color: #4d4d4d !important;" : "display: none;";
 
           html += `${openHtml}<span id="${anchor}">
               <span class="pli-lang inputscript-ISOPali" lang="pi">
@@ -212,11 +212,17 @@ async function buildSutta(slug) {
       let secondTranslatorByline = "";
       if (secondTransData && secondTransData._authorId) {
           let secondTrName = getAuthorName(secondTransData._authorId);
-          secondTranslatorByline = ` <span class="eng-lang second-translation-row" style="color: #666;"> Trn 2: ${secondTrName}</span>`;
+          secondTranslatorByline = `<span class="eng-lang second-translation-row" style="color: #4d4d4d !important;"> Trn 2: ${secondTrName}</span>`;
       }
 
-      const translatorByline = `<div id="trn" class="byline"><p><span class="pli-lang" lang="pi">Pāḷi <a class="text-decoration-none text-reset" href="/assets/texts/abbr.html?s=ms" title="Mahāsaṅgīti Pāḷi">MS</a></span> <span class="eng-lang" lang="en"> Trn: ${translatorforuser}</span><br>
-      ${secondTranslatorByline}</p></div>`;
+      const translatorByline = `<div id="trn" class="byline"><p>
+          <span class="pli-lang" lang="pi">Pāḷi <a class="text-decoration-none text-reset" href="/assets/texts/abbr.html?s=ms" title="Mahāsaṅgīti Pāḷi">MS</a></span>
+          <span class="right-column">
+              <span class="eng-lang" lang="en"> Trn: ${translatorforuser}</span><br>
+              ${secondTranslatorByline}
+          </span>
+      </p></div>`;
+
 
       if (typeof generateThirdPartyLinks === 'function') scLink += generateThirdPartyLinks(slug, slugReady, texttype, translator);
 

@@ -188,15 +188,22 @@ async function buildSutta(slug) {
           </span>${closeHtml}\n\n`;
       }
 
+
       let translatorforuser = window.siteTranslators?.[pathLang]?.[translator] || translator;
       
       // Ищем маппинг сначала в "en", затем в "ru" (pathLang), затем оставляем ID
       let secondTrName = window.siteTranslators?.["en"]?.[engTranslatorId] || window.siteTranslators?.[pathLang]?.[engTranslatorId] || engTranslatorId;
-      let secondTranslatorByline = ` <span class="eng-lang second-translation-row" style="color: #666;"> Eng: ${secondTrName}</span>`;
+      let secondTranslatorByline = `<span class="eng-lang second-translation-row"> Eng: ${secondTrName}</span>`;
 
-      const translatorByline = `<div id="trn" class="byline"><p><span class="pli-lang" lang="pi">Pāḷi <a class="text-decoration-none text-reset" href="/assets/texts/abbr.html?s=ms" title="Mahāsaṅgīti Pāḷi">MS</a></span> <span class="rus-lang" lang="ru"> Пер. ${translatorforuser}</span><br>
-      ${secondTranslatorByline}</p></div>`;
-       
+      const translatorByline = `<div id="trn" class="byline"><p>
+          <span class="pli-lang" lang="pi">Pāḷi <a class="text-decoration-none text-reset" href="/assets/texts/abbr.html?s=ms" title="Mahāsaṅgīti Pāḷi">MS</a></span>
+          <span class="right-column">
+              <span class="rus-lang" lang="ru"> Пер. ${translatorforuser}</span><br>
+              ${secondTranslatorByline}
+          </span>
+      </p></div>`;
+
+
       if (typeof generateThirdPartyLinks === 'function') scLink += generateThirdPartyLinks(slug, slugReady, texttype, translator);
       
       if (finalRulingAnchor) scLink += `&nbsp;<a href="#${finalRulingAnchor}" title="К окончательному правилу">Final</a>`;

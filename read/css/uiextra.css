@@ -1291,3 +1291,8 @@ smart TOC
         max-width: calc(100vw - 40px); /* Гарантируем, что панель уместится по ширине с аккуратными отступами */
     }
 }
+
+
+.second-translation-row {
+  color: #666;
+}

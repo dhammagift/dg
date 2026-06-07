@@ -225,18 +225,25 @@ async function buildSutta(slug) {
               </span>
           </span>${closeHtml}\n\n`;
       }
-
-      let translatorforuser = window.siteTranslators?.[pathLang]?.[translator] || translator;
+      
+      
+            let translatorforuser = window.siteTranslators?.[pathLang]?.[translator] || translator;
       
       // Блок генерации имени второго переводчика
       let secondTranslatorByline = "";
       if (engTransData && engTransData._authorId) {
           let secondTrName = window.siteTranslators?.[pathLang]?.[engTransData._authorId] || engTransData._authorId;
-          secondTranslatorByline = ` <span class="eng-lang second-translation-row" style="color: #666;"> Перевод 2: ${secondTrName}</span>`;
+          secondTranslatorByline = `<span class="eng-lang second-translation-row"> Перевод 2: ${secondTrName}</span>`;
       }
 
-      const translatorByline = `<div id="trn" class="byline"><p><span class="pli-lang" lang="pi">Pāḷi <a class="text-decoration-none text-reset" href="/assets/texts/abbr.html?s=ms" title="Mahāsaṅgīti Pāḷi">MS</a></span> <span class="rus-lang" lang="ru"> Пер. ${translatorforuser}</span><br>
-      ${secondTranslatorByline}</p></div>`;
+      const translatorByline = `<div id="trn" class="byline"><p>
+          <span class="pli-lang" lang="pi">Pāḷi <a class="text-decoration-none text-reset" href="/assets/texts/abbr.html?s=ms" title="Mahāsaṅgīti Pāḷi">MS</a></span>
+          <span class="right-column">
+              <span class="rus-lang" lang="ru"> Пер. ${translatorforuser}</span><br>
+              ${secondTranslatorByline}
+          </span>
+      </p></div>`;
+
        
       if (typeof generateThirdPartyLinks === 'function') scLink += generateThirdPartyLinks(slug, slugReady, texttype, translator);
       
