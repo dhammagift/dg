@@ -671,7 +671,7 @@ function getDprUrl(slug) {
     let cleanSlug = slug.split('&')[0].toLowerCase();
     let dprItem = dprLinksData.find(item => item[0] === cleanSlug);
     if (dprItem && dprItem[1]) {
-        return "https://www.digitalpalireader.online/_dprhtml/index.html?loc=" + dprItem[1];
+        return "https://d.dhamma.gift/_dprhtml/index.html?loc=" + dprItem[1];
     }
     return null;
 }

@@ -82,7 +82,7 @@ echo '<!--
     
 
 
-    <li><a class="dropdown-item" target="_blank" href="https://www.digitalpalireader.online/_dprhtml/index.html">Digital Pali Reader</a></li>
+    <li><a class="dropdown-item" target="_blank" href="https://d.dhamma.gift/_dprhtml/index.html">Digital Pali Reader</a></li>
     
     
     <li><a class="dropdown-item" target="_blank" href="https://simsapa.github.io/">Simsapa Pali Reader <u>PC</u> <u>Mac</u> <u>Linux</u></a></li>
@@ -245,7 +245,7 @@ DG
     \'https://dsal.uchicago.edu/cgi-bin/app/pali_query.py?matchtype=default&qs=\',
     \'https://gandhari.org/dictionary?section=dop&search=\',
     \'https://dict.dhamma.gift/?silent&source=pwa&q=\',
-    \'https://www.digitalpalireader.online/_dprhtml/index.html?frombox=1&analysis=\',
+    \'https://d.dhamma.gift/_dprhtml/index.html?frombox=1&analysis=\',
     \'https://cpd.uni-koeln.de/search?query=\'
   ])">Pali PTS, Cone, DPD, DPR, CPD</a>
 </li>
@@ -257,7 +257,7 @@ DG
   </a>
 </li>
 <li><a class="dropdown-item" href="javascript:void(0)" target="_blank" onclick="openWithQuery(event, \'https://gandhari.org/dictionary?section=dop&search={{q}}\')">Cловарь M. Cone Gandhari.org</a></li>
-<li><a class="dropdown-item" href="javascript:void(0)" target="_blank" onclick="openWithQuery(event, \'https://www.digitalpalireader.online/_dprhtml/index.html?frombox=1&analysis={{q}}\')">DPR Analysis</a></li>
+<li><a class="dropdown-item" href="javascript:void(0)" target="_blank" onclick="openWithQuery(event, \'https://d.dhamma.gift/_dprhtml/index.html?frombox=1&analysis={{q}}\')">DPR Analysis</a></li>
 <li><a class="dropdown-item" target="_blank" href="javascript:void(0)" onclick="openWithQuery(event, \'https://dsal.uchicago.edu/cgi-bin/app/pali_query.py?matchtype=default&qs={{q}}\')">Cловарь R. Davids, W. Stede PTS</a></li>
 
    <li>

@@ -71,7 +71,7 @@ function openDictionaries(event) {
     { name: 'PTS', method: 'GET', base: 'https://dsal.uchicago.edu/cgi-bin/app/pali_query.py?matchtype=default&qs=', fallback: 'https://dsal.uchicago.edu/dictionaries/pali/', iframe: true },
     { name: 'Gandhari', method: 'GET', base: 'https://gandhari.org/dictionary?section=dop&search=', fallback: 'https://gandhari.org/dop', iframe: true },
     { name: 'DPD', method: 'GET', base: `https://dict.dhamma.gift/?silent&theme=${theme}&source=pwa&q=`, fallback: `https://dict.dhamma.gift/?theme=${theme}&source=pwa`, iframe: true },
-    { name: 'DPR', method: 'GET', base: 'https://www.digitalpalireader.online/_dprhtml/index.html?frombox=1&analysis=', fallback: 'https://www.digitalpalireader.online/_dprhtml/index.html', iframe: false },
+    { name: 'DPR', method: 'GET', base: 'https://d.dhamma.gift/_dprhtml/index.html?frombox=1&analysis=', fallback: 'https://d.dhamma.gift/_dprhtml/index.html', iframe: false },
     { name: 'CPD', method: 'GET', base: 'https://cpd.uni-koeln.de/search?query=', fallback: 'https://cpd.uni-koeln.de/search', iframe: true },
     { name: 'Glosbe', method: 'GET', base: 'https://glosbe.com/pi/sa/', fallback: 'https://glosbe.com/pi/sa/', iframe: false },
     { name: 'MWScan', method: 'GET', base: 'https://www.sanskrit-lexicon.uni-koeln.de/scans/MWScan/2020/web/webtc/indexcaller.php?transLit=roman&key=', fallback: 'https://www.sanskrit-lexicon.uni-koeln.de/scans/MWScan/2020/web/index.php', iframe: false },

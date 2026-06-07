@@ -54,7 +54,7 @@ function getDprUrl(slug) {
 
     if (dprItem && dprItem[1]) {
         // Базовый URL
-        const dprBaseUrl = "https://www.digitalpalireader.online/_dprhtml/index.html?loc=";
+        const dprBaseUrl = "https://d.dhamma.gift/_dprhtml/index.html?loc=";
         return dprBaseUrl + dprItem[1];
     }
     
