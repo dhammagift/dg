@@ -96,11 +96,7 @@ async function buildSutta(slug) {
   if (slug.includes("mn"))  {
       trnpath = rustrnpath; 
       language = "pli-2nd";
-  } else if (slug.includes("sn")) { 
-      trnpath = rustrnpath; 
-  } else if (slug.includes("an")) { 
-      trnpath = rustrnpath; 
-  } else if (slug.includes("dn")) { 
+  } else if (slug.match(/sn|an|dn|thig|thag|iti|ud|snp|dhp|kp/)) { 
       trnpath = rustrnpath; 
   } else if (typeof knranges !== 'undefined' && knranges.indexOf(slug) !== -1) { 
       trnpath = rustrnpath; 
