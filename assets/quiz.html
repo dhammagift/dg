@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dhamma.gift Quiz</title>
+    <style>
+        :root {
+            --bs-primary: #1abc9c;
+            --bs-secondary: #2c3e50;
+            --bs-font-sans-serif: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --bg-dark: #111;
+            --text-light: #eee;
+            --btn-dark-bg: #136857;
+            --btn-primary-bg: #16a085;
+            --btn-primary-border: #1abc9c;
+            --wrong-bg: #dc322f;
+        }
+
+        body {
+            background-color: var(--bg-dark) !important;
+            color: var(--text-light);
+            font-family: var(--bs-font-sans-serif);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .quiz-container {
+            max-width: 600px;
+            width: 100%;
+            background-color: #222;
+            border: 1px solid #444;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        h2 {
+            font-family: "Montserrat", sans-serif;
+            font-weight: 700;
+            color: var(--text-light);
+            text-align: center;
+            margin-top: 0;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .question-text {
+            font-size: 1.15rem;
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option-btn {
+            background-color: transparent;
+            color: var(--text-light);
+            border: 0.125rem solid #6e6969;
+            border-radius: 0.5rem;
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background-color: var(--bs-secondary);
+            border-color: var(--bs-primary);
+        }
+
+        .option-btn:disabled {
+            cursor: default;
+        }
+
+        .option-btn.correct {
+            background-color: var(--btn-dark-bg) !important;
+            border-color: var(--bs-primary) !important;
+            color: #fff;
+        }
+
+        .option-btn.wrong {
+            background-color: var(--wrong-bg) !important;
+            border-color: var(--wrong-bg) !important;
+            color: #fff;
+        }
+
+        .action-btn {
+            display: none;
+            width: 100%;
+            margin-top: 1.5rem;
+            padding: 12px;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            background-color: var(--btn-primary-bg);
+            color: #fff;
+            border: 0.125rem solid var(--btn-primary-border);
+        }
+
+        .action-btn:hover {
+            background-color: #15967d;
+        }
+
+        .explanation {
+            display: none;
+            margin-top: 1.5rem;
+            padding: 12px;
+            background-color: #1a252f;
+            border-left: 4px solid var(--bs-primary);
+            border-radius: 0 8px 8px 0;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <h2>Дхамма или Адхамма</h2>
+        <div class="stats">
+            <span id="question-counter">Вопрос 1</span>
+            <span id="score-counter">Очки: 0</span>
+        </div>
+        
+        <div id="question-text" class="question-text"></div>
+        <div id="options" class="options-list"></div>
+        <div id="explanation" class="explanation"></div>
+        
+        <button id="next-btn" class="action-btn">Следующий вопрос</button>
+        <button id="restart-btn" class="action-btn">Пройти заново</button>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "Монах может лично пользоваться деньгами, если в этом есть необходимость.",
+                options: ["Дхамма", "Адхамма"],
+                correct: 1,
+                explanation: "Правила Винаи (np28, np29) строго запрещают монахам принимать деньги и лично пользоваться ими."
+            },
+            {
+                question: "В Суттах под термином Dukkha понимается широкое философское понятие всеобщей неудовлетворенности.",
+                options: ["Дхамма", "Адхамма"],
+                correct: 1,
+                explanation: "В Суттах зафиксировано конкретное определение: dukkha — это боль или дискомфорт."
+            },
+            {
+                question: "Истинное значение термина Pañña в контексте Сутт — это:",
+                options: ["Мистическая интуиция", "Понимание", "Космическая мудрость"],
+                correct: 1,
+                explanation: "Значение Pañña в системе Сутт — это исключительно понимание."
+            },
+            {
+                question: "Принципы Махападесы (Четыре Великих Указателя) служат для:",
+                options: ["Сверки утверждений с Суттами и Винаей", "Определения уровней джхан", "Установления правил для мирян"],
+                correct: 0,
+                explanation: "Махападеса используется для проверки любого тезиса на соответствие Дхамме и Винае."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainerEl = document.getElementById('options');
+        const explanationEl = document.getElementById('explanation');
+        const nextBtn = document.getElementById('next-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const questionCounterEl = document.getElementById('question-counter');
+        const scoreCounterEl = document.getElementById('score-counter');
+
+        function loadQuestion() {
+            resetState();
+            const currentQuiz = quizData[currentQuestionIndex];
+            questionTextEl.innerText = currentQuiz.question;
+            questionCounterEl.innerText = `Вопрос ${currentQuestionIndex + 1} из ${quizData.length}`;
+            
+            currentQuiz.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.innerText = option;
+                button.classList.add('option-btn');
+                button.addEventListener('click', () => selectAnswer(index));
+                optionsContainerEl.appendChild(button);
+            });
+        }
+
+        function resetState() {
+            nextBtn.style.display = 'none';
+            restartBtn.style.display = 'none';
+            explanationEl.style.display = 'none';
+            explanationEl.innerText = '';
+            optionsContainerEl.innerHTML = '';
+        }
+
+        function selectAnswer(selectedIndex) {
+            const currentQuiz = quizData[currentQuestionIndex];
+            const buttons = optionsContainerEl.querySelectorAll('.option-btn');
+            
+            buttons.forEach(btn => btn.disabled = true);
+            
+            if (selectedIndex === currentQuiz.correct) {
+                buttons[selectedIndex].classList.add('correct');
+                score++;
+                scoreCounterEl.innerText = `Очки: ${score}`;
+            } else {
+                buttons[selectedIndex].classList.add('wrong');
+                buttons[currentQuiz.correct].classList.add('correct');
+            }
+            
+            explanationEl.innerText = currentQuiz.explanation;
+            explanationEl.style.display = 'block';
+            nextBtn.style.display = 'block';
+        }
+
+        function showResults() {
+            resetState();
+            questionCounterEl.innerText = "Тест завершен";
+            questionTextEl.innerText = `Результат: ${score} из ${quizData.length}`;
+            restartBtn.style.display = 'block';
+        }
+
+        nextBtn.addEventListener('click', () => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            score = 0;
+            scoreCounterEl.innerText = `Очки: ${score}`;
+            loadQuestion();
+        });
+
+        loadQuestion();
+    </script>
+</body>
+</html>
