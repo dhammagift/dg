@@ -21,25 +21,17 @@
 <body>
 <div class="container mt-3">
 <div class="d-flex align-items-center">
-<div class="input-group">
+<div class="input-group align-items-center">
+<top-nav-icons type="read" show-dict></top-nav-icons>
 
-<a href="/ru" title="Sutta and Vinaya search" rel="noreferrer" class="me-1">
-<img width="24px" alt="dhamma.gift icon" src="/assets/img/gray-white.png">
-</a>
-
-<div class="ms-1 form-check form-switch">
-<input type="checkbox" class="form-check-input" id="darkSwitch">
-</div>
-
-<a class="text-reset text-decoration-none" href="https://jasonsturges.com/lunarphase-js/">
+<a class="text-reset text-decoration-none ms-2" href="https://jasonsturges.com/lunarphase-js/">
 candima
 </a>
 </div>
 
-<!-- Языковой переключатель справа и в одну линию -->
 <div class="ms-auto d-inline-flex align-items-center">
 <a class="btn btn-sm btn-secondary rounded-pill text-decoration-none ms-1" href="./lunar.html">en</a>
-<span>ru</span>
+<span class="ms-2">ru</span>
 </div>
 </div>
 </div>
@@ -68,11 +60,11 @@ candima
 <div class="container mt-5">
 <h2>Основные сутты по теме</h2>
 <ul>
-<li><a href="/r/?q=an10.46&s=al%C4%81bh%C4%81|dulladdha%E1%B9%81|appekad%C4%81#1.5">an10.46</a> — пропускать упосатхи нельзя («это ваша потеря и неудача»).</li>
-<li><a href="/r/?s=c%C4%81tuddasi%E1%B9%81%20pa%C3%B1cadasi%E1%B9%81%20a%E1%B9%AD%E1%B9%ADhami%C3%B1ca&q=mn83#3.3">mn83</a> — нужно соблюдать 14, 15 и 8 дни.</li>
-<li><a href="/r/?q=mn146&s=%C5%ABno|pu%E1%B9%87%E1%B9%87o#15.2">mn146</a> — 14-я неполная луна, 15-я полная.</li>
-<li><a href="/r/?q=an3.37&s=A%E1%B9%AD%E1%B9%ADham|pannaras|C%C4%81tuddas#1.1">an3.37</a> — сопоставление 14-го, 15-го и 8-го дней с визитами божеств разного ранга.</li>
-<li><a href="/r/?q=an3.70&s=ratti%E1%B9%81|divas#19.3">an3.70</a> — «ночи и дня», а не «дня и ночи». В пали есть устойчивое выражение <i>ahoratta</i> («день-ночь») — в других контекстах.</li>
+<li><a href="/mt/?q=an10.46&s=al%C4%81bh%C4%81|dulladdha%E1%B9%81|appekad%C4%81#1.5">an10.46</a> — пропускать упосатхи нельзя («это ваша потеря и неудача»).</li>
+<li><a href="/mt/?s=c%C4%81tuddasi%E1%B9%81%20pa%C3%B1cadasi%E1%B9%81%20a%E1%B9%AD%E1%B9%ADhami%C3%B1ca&q=mn83#3.3">mn83</a> — нужно соблюдать 14, 15 и 8 дни.</li>
+<li><a href="/mt/?q=mn146&s=%C5%ABno|pu%E1%B9%87%E1%B9%87o#15.2">mn146</a> — 14-я неполная луна, 15-я полная.</li>
+<li><a href="/mt/?q=an3.37&s=A%E1%B9%AD%E1%B9%ADham|pannaras|C%C4%81tuddas#1.1">an3.37</a> — сопоставление 14-го, 15-го и 8-го дней с визитами божеств разного ранга.</li>
+<li><a href="/mt/?q=an3.70&s=ratti%E1%B9%81|divas#19.3">an3.70</a> — «ночи и дня», а не «дня и ночи». В пали есть устойчивое выражение <i>ahoratta</i> («день-ночь») — в других контекстах.</li>
 </ul>
 </div>
 
@@ -114,6 +106,8 @@ LunarPhase-js
 
 <script src="/assets/js/bootstrap.bundle.5.3.1.min.js"></script>
 <script src="/assets/js/lunar.js"></script>
-<script src="/assets/js/dark-mode-switch/dark-mode-switch.js"></script>
+<script src="/assets/js/settings.js" defer></script>
+<script src="/assets/js/nav-component.js" defer></script>
+<script src="/assets/js/themeswitch.js" defer></script>
 </body>
 </html>
