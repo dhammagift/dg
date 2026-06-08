@@ -61,11 +61,11 @@ $totalinyears years total
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta charset="UTF-8">
 
-<link rel="stylesheet" type="text/css" href="/assets/css/datatables.min.css"/>
+<link rel="stylesheet" type="text/css" href="/assets/js/datatables/datatables/datatables.min.css"/>
 <link rel="stylesheet" href="/assets/css/langswitch.css">
 <script src="/assets/js/jquery-3.7.0.min.js"></script>
 
-<script type="text/javascript" src="/assets/js/datatables.min.js"></script>
+<script type="text/javascript" src="/assets/js/datatables/datatables.min.js"></script>
 <script type="text/javascript" src="/assets/js/natural.js"></script>
 <script type="text/javascript" src="/assets/js/strip-html.js"></script>
 <!-- <script type="text/javascript" src="/assets/js/diacritics.js"></script> -->
