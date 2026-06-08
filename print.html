@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataTables CDN Print Demo</title>
+    
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
+    
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 40px; 
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Полноценная таблица с кнопкой Print (CDN)</h2>
+    
+    <table id="example" class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th>Имя</th>
+                <th>Должность</th>
+                <th>Город</th>
+                <th>Возраст</th>
+                <th>Скрытая колонка (для печати)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Тайгер Никсон</td>
+                <td>Системный архитектор</td>
+                <td>Эдинбург</td>
+                <td>61</td>
+                <td>ID сотрудника: 5421</td>
+            </tr>
+            <tr>
+                <td>Гаррет Винтерс</td>
+                <td>Бухгалтер</td>
+                <td>Токио</td>
+                <td>63</td>
+                <td>ID сотрудника: 8422</td>
+            </tr>
+            <tr>
+                <td>Эштон Кокс</td>
+                <td>Младший технический автор</td>
+                <td>Сан-Франциско</td>
+                <td>66</td>
+                <td>ID сотрудника: 1562</td>
+            </tr>
+            <tr>
+                <td>Седрик Келли</td>
+                <td>Старший разработчик JS</td>
+                <td>Эдинбург</td>
+                <td>22</td>
+                <td>ID сотрудника: 6224</td>
+            </tr>
+            <tr>
+                <td>Аири Сато</td>
+                <td>Бухгалтер</td>
+                <td>Токио</td>
+                <td>33</td>
+                <td>ID сотрудника: 5407</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('#example').DataTable({
+                // dom: 'Bfrtip' выводит элементы управления: B - кнопки, f - поиск, r - обработка, t - таблица, i - информация, p - пагинация
+                dom: 'Bfrtip',
+                buttons: [
+                    {
+                        extend: 'print',
+                        text: 'Печать',
+                        autoPrint: false,
+                        exportOptions: {
+                            // Выводим все видимые колонки и принудительно колонку с индексом 4
+                            columns: ':visible, 4'
+                        }
+                    }
+                ],
+                columnDefs: [
+                    {
+                        // Скрываем 5-ю колонку при обычном просмотре
+                        target: 4,
+                        visible: false
+                    }
+                ]
+            });
+        });
+    </script>
+
+</body>
+</html>
+
+
