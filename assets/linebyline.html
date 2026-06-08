@@ -556,7 +556,7 @@ button:hover {
   <button class="btn btn-primary mt-1" title="Найти и Заменить" onclick="    openSearchModal();"><i class="fas fa-search"></i></button>
   
     
-  <button class="btn btn-primary mt-1" title="Найти и Заменить" id="formatButton"><i class="fa-solid fa-text-width"></i></button>
+  <button class="btn btn-primary mt-1" title="Список в Строку" id="formatButton"><i class="fa-solid fa-text-width"></i></button>
 
 
   <button class="btn btn-danger mt-1"  title="Очистить окно ввода текста" onclick="clearInputs()"><i class="fa-solid fa-eraser"></i></button>
@@ -2134,16 +2134,15 @@ document.addEventListener('DOMContentLoaded', init);
 
 
 <script>
-document.getElementById("formatButton").addEventListener("click", formatSelectedText);
+document.getElementById("formatButton").addEventListener("click", joinSelectedText);
 
 document.addEventListener("keydown", function(event) {
-    // Проверяем нажатие сочетания клавиш Ctrl + M
     if (event.ctrlKey && event.code === 'KeyQ') {
-                event.preventDefault(); // Предотвращаем стандартное действие
-
-                    formatSelectedText();
+        event.preventDefault();
+        joinSelectedText(); // Новая функция для выпрямления
     }
 });
+
 
 function formatSelectedText() {
     const textarea = document.getElementById("translationInput");
@@ -2175,6 +2174,29 @@ function formatSelectedText() {
         textarea.setSelectionRange(currentPosition, currentPosition);
     }
 }
+
+function joinSelectedText() {
+    const textarea = document.getElementById("translationInput");
+    const selectionStart = textarea.selectionStart;
+    const selectionEnd = textarea.selectionEnd;
+
+    if (selectionStart !== selectionEnd) {
+        const selectedText = textarea.value.substring(selectionStart, selectionEnd);
+        
+        // Превращаем вертикальный список в строку
+        const joinedText = selectedText
+            .replace(/\r?\n|\r/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        const newText = textarea.value.substring(0, selectionStart) + joinedText + textarea.value.substring(selectionEnd);
+        textarea.value = newText;
+
+        syncTextToTable();
+        textarea.setSelectionRange(selectionStart, selectionStart + joinedText.length);
+    }
+}
+
 
 //вывод номера текста в название вкладки document.title
 document.addEventListener("DOMContentLoaded", function() {

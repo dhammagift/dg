@@ -1824,12 +1824,12 @@ document.addEventListener('DOMContentLoaded', init);
 </script>
 
 <script>
-document.getElementById("formatButton").addEventListener("click", formatSelectedText);
+document.getElementById("formatButton").addEventListener("click", joinSelectedText);
 
 document.addEventListener("keydown", function(event) {
     if (event.ctrlKey && event.code === 'KeyQ') {
-                event.preventDefault(); 
-                    formatSelectedText();
+        event.preventDefault();
+        joinSelectedText(); // Новая функция для выпрямления
     }
 });
 
@@ -1863,6 +1863,31 @@ function formatSelectedText() {
         textarea.setSelectionRange(currentPosition, currentPosition);
     }
 }
+
+
+function joinSelectedText() {
+    const textarea = document.getElementById("translationInput");
+    const selectionStart = textarea.selectionStart;
+    const selectionEnd = textarea.selectionEnd;
+
+    if (selectionStart !== selectionEnd) {
+        const selectedText = textarea.value.substring(selectionStart, selectionEnd);
+        
+        // Превращаем вертикальный список в строку
+        const joinedText = selectedText
+            .replace(/\r?\n|\r/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        const newText = textarea.value.substring(0, selectionStart) + joinedText + textarea.value.substring(selectionEnd);
+        textarea.value = newText;
+
+        syncTextToTable();
+        textarea.setSelectionRange(selectionStart, selectionStart + joinedText.length);
+    }
+}
+
+
 
 document.addEventListener("DOMContentLoaded", function() {
     let timeoutId;
