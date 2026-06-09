@@ -1,3 +1,4 @@
+git pull
 
 
 if uname -a | grep -qi "android"; then
