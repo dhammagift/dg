@@ -389,33 +389,39 @@ button:hover {
 Также вместо 'Загрузить JSON' в это окно можно вставить скопированный текст JSON файла напрямую.
 " class="form-control custom-textarea" rows="15"></textarea>
 
-
 <script>
   function gotoLine(lineNumber) {
-    const textarea = document.getElementById('translationInput');
-    const lines = textarea.value.split('\n');
-    
-    if (lineNumber > lines.length) {
-      console.log("Номер строки превышает количество строк в тексте.");
-      return;
+    // Принудительно закрываем редактирование ячейки (если она активна)
+    const activeTextarea = document.querySelector('#outputTableBody textarea.table-textarea');
+    if (activeTextarea) {
+      activeTextarea.blur();
     }
 
-    let charCount = 0;
+    // Задержка в 10мс, чтобы blur успел перенести текст в левое окно
+    setTimeout(() => {
+      const textarea = document.getElementById('translationInput');
+      const lines = textarea.value.split('\n');
+      
+      if (lineNumber > lines.length) {
+        console.log("Номер строки превышает количество строк в тексте.");
+        return;
+      }
 
-    // Подсчитываем количество символов до нужной строки
-    for (let i = 0; i < lineNumber - 1 && i < lines.length; i++) {
-      charCount += lines[i].length + 1; // Учитываем символ новой строки
-    }
+      let charCount = 0;
 
-    // Определяем конец строки
-    const lineEnd = charCount + lines[lineNumber - 1].length;
+      for (let i = 0; i < lineNumber - 1 && i < lines.length; i++) {
+        charCount += lines[i].length + 1; 
+      }
 
-    // Перемещаем фокус и выделяем строку
-    textarea.focus();
-    textarea.setSelectionRange(charCount, lineEnd);
+      const lineEnd = charCount + lines[lineNumber - 1].length;
 
-    // Прокручиваем textarea, чтобы выделенная строка была видима
-    textarea.scrollTop = textarea.scrollHeight * (charCount / textarea.value.length);
+      textarea.focus();
+      textarea.setSelectionRange(charCount, lineEnd);
+      
+      if (textarea.scrollHeight > 0) {
+        textarea.scrollTop = textarea.scrollHeight * (charCount / textarea.value.length);
+      }
+    }, 10);
   }
 </script>
 
@@ -1023,7 +1029,7 @@ function loadText() {
                         <td class="pli-lang">${value.trimEnd()}</td>
                         <td>${key}</td>
                         <td>${currentText}</td>
-                        <td><a href="#" title="${key}" onclick="gotoLine(${rowCounter})"><i class="fa-solid fa-link"></i></a></td>
+                        <td><a href="#" title="${key}" onmousedown="gotoLine(${rowCounter})"><i class="fa-solid fa-link"></i></a></td>
                       </tr>`;
           tableHtml += row;
         });
@@ -1036,7 +1042,7 @@ function loadText() {
           const extraRow = `<tr>
                             <td></td><td></td>
                             <td>${extraText}</td>
-                            <td><a href="#" onclick="gotoLine(${rowCounter})"><i class="fa-solid fa-link"></i></a></td>
+                            <td><a href="#" onmousedown="gotoLine(${rowCounter})"><i class="fa-solid fa-link"></i></a></td>
                           </tr>`;
           tableHtml += extraRow;
         }
@@ -1128,11 +1134,32 @@ function loadText() {
       });
 
       document.getElementById('outputTableBody').addEventListener('click', function(event) {
-          const target = event.target;
-          if (target.tagName === 'TD' && target.cellIndex === 2) {
-              makeCellEditable(target);
+          let target = event.target;
+          
+          // Поднимаемся к TD, если клик был по вложенному элементу
+          while (target && target.tagName !== 'TD') {
+              target = target.parentElement;
+          }
+
+          if (target && target.tagName === 'TD' && target.cellIndex === 2) {
+              let cursorPosition = null;
+              
+              // Вычисляем позицию курсора на основе места клика
+              const selection = window.getSelection();
+              if (selection.rangeCount > 0) {
+                  const range = selection.getRangeAt(0);
+                  if (target.contains(range.startContainer)) {
+                      const preCaretRange = range.cloneRange();
+                      preCaretRange.selectNodeContents(target);
+                      preCaretRange.setEnd(range.startContainer, range.startOffset);
+                      cursorPosition = preCaretRange.toString().length;
+                  }
+              }
+              
+              makeCellEditable(target, cursorPosition);
           }
       });
+
 
       function makeCellEditable(cell, cursorPosition = null) {
           if (cell.querySelector('textarea')) return; 
