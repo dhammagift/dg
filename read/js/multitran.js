@@ -17,6 +17,7 @@ homeButton.addEventListener("click", () => {
   document.location.search = "";
 });
 
+// Делаем функцию асинхронной, чтобы использовать await вместо PHP
 async function buildSutta(slug) {
   let translator = "";
   let texttype = "sutta";
@@ -28,6 +29,7 @@ async function buildSutta(slug) {
   
   slug = slug.toLowerCase();
 
+  // Определение типа текста
   if ((!slug.match("bu-pm")) && (!slug.match("bi-pm")) && (slug.match(/bu-|bi-|kd|pvr/))) {
     texttype = "vinaya";
     slug = slug.replace(/bu([psan])/, "bu-$1");
@@ -55,14 +57,17 @@ async function buildSutta(slug) {
   let html = `<div class="button-area"><button title="Переключить язык (Atl+Z или Alt+Space)" id="language-button" class="hide-button">Pāḷi Рус</button></div>`;
   const slugReady = parseSlug(slug);
 
+  // Получаем переводчика через PHP или HEAD-запросы из common.js
   if (translator === "") {
       translator = await getTranslator(texttype, slugReady, pathLang);
+      if (!translator) translator = "o"; // Глубокий фолбек
   }
 
   let params = new URLSearchParams(document.location.search);
   let script = params.get("script");
   const savedScript = localStorage.getItem('selectedScript');
 
+  // Пути к Root файлам
   let rootpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slugReady}_root-pli-ms.json`;
   if (script === "devanagari" || savedScript === "Devanagari") {
       rootpath = `/assets/texts/devanagari/root/pli/ms/${texttype}/${slugReady}_rootd-pli-ms.json`;
@@ -70,43 +75,35 @@ async function buildSutta(slug) {
       rootpath = `/assets/texts/th/root/pli/ms/${texttype}/${slugReady}_rootth-pli-ms.json`;
   }
 
-  var rustrnpath = `/assets/texts/ru/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`;
-
   var htmlpath = `${Sccopy}/sc-data/sc_bilara_data/html/pli/ms/${texttype}/${slugReady}_html.json`;
 
   const mtUrl  = window.location.href;
-  const ruUrl = mtUrl.replace("/mt/", "/r/");
-  const mlUrl = mtUrl.replace("/mt/", "/ml/");
-  const enUrl = mtUrl.replace("/mt/", "/read/");
+  const ruUrl = mtUrl.replace("/mt/", "/r/").replace("/ml/", "/r/");
+  const mlUrl = mtUrl.replace("/mt/", "/ml/").replace("/r/", "/ml/");
+  const enUrl = mtUrl.replace("/mt/", "/read/").replace("/ml/", "/read/").replace("/r/", "/read/");
 
   let scLink = `<p class="sc-link">
   <a title="Русский (Alt+1)" target="" href="${ruUrl}">Ru</a>
-  <a title="Русский (Alt+1)" target="" href="${mlUrl}">R+E</a>
-  <a target="" title="Английский (Alt+1)" href="${enUrl}">En</a>
+  <a title="Русский + Английский (Alt+2)" target="" href="${mlUrl}">R+E</a>
+  <a target="" title="Английский (Alt+3)" href="${enUrl}">En</a>
   `;
-
-  var trnpath = rustrnpath; 
-
-  if (slug.includes("mn") || slug.includes("sn") || slug.includes("an") || slug.includes("dn") || (typeof knranges !== 'undefined' && knranges.indexOf(slug) !== -1)) { 
-      trnpath = rustrnpath; 
-  } else if (slug.match(/ja/)) {
-      let slugNumber = parseInt(slug.replace(/\D/g, ''), 10);
-      if (slugNumber >= 1 && slugNumber <= 75) {
-          trnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/ru/sv/sutta/${slugReady}_translation-ru-sv.json`;
-      }
-  } else if (slug.match(/bu-pm|bi-pm/)) {
-      translator = slug.match(/bi-pm/) ? "adelina" : "o";
-      trnpath = `/assets/texts/ru/${texttype}/${slug}_translation-${pathLang}-${translator}.json`;
-      htmlpath = `/assets/html/${texttype}/${slug}_html.json`;
-  }
 
   var varpath = `${Sccopy}/sc-data/sc_bilara_data/variant/pli/ms/${texttype}/${slugReady}_variant-pli-ms.json`;
   var varpathLocal = `/assets/texts/variant/${texttype}/${slugReady}_variant-pli-ms.json`;
 
   const rootResponse = fetch(rootpath).then(res => res.ok ? res.json() : fetch(`${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slugReady}_root-pli-ms.json`).then(r => r.json())).catch(() => ({}));
 
+  // Единая функция загрузки с фолбеком без ranges
   async function fetchTranslation() {
-      const paths = [rustrnpath, trnpath];
+      // 1. Локальный русский путь
+      const localRuPath = `/assets/texts/ru/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`;
+      // 2. Путь на SuttaCentral для русского
+      const scRuPath = `${Sccopy}/sc-data/sc_bilara_data/translation/ru/${translator}/${texttype}/${slugReady}_translation-ru-${translator}.json`;
+      // 3. Фолбек на английский SC
+      const enFallbackTranslator = texttype === "vinaya" ? "brahmali" : "sujato";
+      const scEnPath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/${enFallbackTranslator}/${texttype}/${slugReady}_translation-en-${enFallbackTranslator}.json`;
+
+      const paths = [localRuPath, scRuPath, scEnPath];
       for (const path of paths) {
           try {
               const response = await fetch(path);
@@ -116,13 +113,12 @@ async function buildSutta(slug) {
       return {}; 
   }
 
-    async function fetchSecondTranslation() {
+  // Для multilang/multitran - функция поиска второго перевода
+  async function fetchSecondTranslation() {
       const otherRuPath = "/assets/texts/ru_other";
       const scRuPath = `${Sccopy}/sc-data/sc_bilara_data/translation/ru`;
-      
       const authors = ["sv", "khantibalo", "syrkin", "narinyanievmenenko"];
 
-      // Поиск в локальных директориях
       for (const author of authors) {
           try {
               const localPath = `${otherRuPath}/${texttype}/${slugReady}_translation-ru-${author}.json`;
@@ -131,14 +127,12 @@ async function buildSutta(slug) {
                   const data = await response.json();
                   if (data && Object.keys(data).length > 0) {
                       data._authorId = author;
-                      data._loadedFrom = "local";
                       return data;
                   }
               }
           } catch (error) {}
       }
 
-      // Фолбек: поиск в SuttaCentral репозитории
       for (const author of authors) {
           try {
               const scPath = `${scRuPath}/${author}/${texttype}/${slugReady}_translation-ru-${author}.json`;
@@ -147,19 +141,16 @@ async function buildSutta(slug) {
                   const data = await response.json();
                   if (data && Object.keys(data).length > 0) {
                       data._authorId = author;
-                      data._loadedFrom = "suttacentral";
                       return data;
                   }
               }
           } catch (error) {}
       }
-
       return null;
   }
 
-
   const translationResponse = fetchTranslation(); 
-  const engtranslationResponse = fetchSecondTranslation();
+  const engtranslationResponse = typeof fetchSecondTranslation === 'function' ? fetchSecondTranslation() : Promise.resolve({});
   const htmlResponse = fetch(htmlpath).then(res => res.ok ? res.json() : {});
   const varResponse = window.fetchVariantData ? window.fetchVariantData(varpathLocal, varpath) : Promise.resolve({});
 
@@ -168,7 +159,6 @@ async function buildSutta(slug) {
 
       if (!htmlData || Object.keys(htmlData).length === 0) throw new Error("Text not found");
 
-      // ПОИСК ОКОНЧАТЕЛЬНОГО ПРАВИЛА (Final Ruling)
       let finalRulingAnchor = "";
       if (slug.includes("bu-") || slug.includes("bi-")) {
           for (let seg in htmlData) {
@@ -185,22 +175,18 @@ async function buildSutta(slug) {
       for (let i = 0; i < segments.length; i++) {
           let segment = segments[i];
           
-          
-                let finder = (params.get("s") || "").replace(/ṃ/g, "ṁ");
-
-
-      if (finder && finder.trim() !== "") {
-        let regex = new RegExp(finder, 'gi'); 
-        const highlight = match => `<b class='match finder'>${match}</b>`;
-        if (paliData[segment]) paliData[segment] = paliData[segment].replace(regex, highlight);
-        if (transData[segment]) transData[segment] = transData[segment].replace(regex, highlight);
-        if (engTransData[segment]) engTransData[segment] = engTransData[segment].replace(regex, highlight);
-        if (varData[segment]) varData[segment] = varData[segment].replace(regex, highlight);
-      }
+          let finder = (params.get("s") || "").replace(/ṃ/g, "ṁ");
+          if (finder && finder.trim() !== "") {
+            let regex = new RegExp(finder, 'gi'); 
+            const highlight = match => `<b class='match finder'>${match}</b>`;
+            if (paliData[segment]) paliData[segment] = paliData[segment].replace(regex, highlight);
+            if (transData[segment]) transData[segment] = transData[segment].replace(regex, highlight);
+            if (engTransData && engTransData[segment]) engTransData[segment] = engTransData[segment].replace(regex, highlight);
+            if (varData[segment]) varData[segment] = varData[segment].replace(regex, highlight);
+          }
       
           window.applyRemovePunct(paliData, segment);
 
-          
           let [openHtml, closeHtml] = htmlData[segment].split(/{}/);
           let anchor = segment.substring(segment.indexOf(':') + 1);
           if (slug.includes('-') && (slug.includes('an') || slug.includes('sn') || slug.includes('dhp'))) anchor = segment;
@@ -209,6 +195,7 @@ async function buildSutta(slug) {
           const linkToCopyStart = `<a class="text-decoration-none copyLink copyLink-start" style="cursor: pointer;" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;
           let linkToCopy = `<a class="text-decoration-none copyLink" style="cursor: pointer;" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;
 
+          // Логика отрисовки (ниже пример для multilang/multitran)
           const hasSecondTrn = engTransData && engTransData[segment];
           const secondTrnStyle = hasSecondTrn ? "display: block; margin-top: 4px; color: #666;" : "display: none;";
 
@@ -226,10 +213,8 @@ async function buildSutta(slug) {
           </span>${closeHtml}\n\n`;
       }
       
+      let translatorforuser = window.siteTranslators?.[pathLang]?.[translator] || translator;
       
-            let translatorforuser = window.siteTranslators?.[pathLang]?.[translator] || translator;
-      
-      // Блок генерации имени второго переводчика
       let secondTranslatorByline = "";
       if (engTransData && engTransData._authorId) {
           let secondTrName = window.siteTranslators?.[pathLang]?.[engTransData._authorId] || engTransData._authorId;
@@ -244,10 +229,7 @@ async function buildSutta(slug) {
           </span>
       </p></div>`;
 
-       
       if (typeof generateThirdPartyLinks === 'function') scLink += generateThirdPartyLinks(slug, slugReady, texttype, translator);
-      
-      // Внедрение ссылки Final
       if (finalRulingAnchor) scLink += `&nbsp;<a href="#${finalRulingAnchor}" title="К окончательному правилу">Final</a>`;
       scLink += "</p>";
 
@@ -258,7 +240,6 @@ async function buildSutta(slug) {
       if (tContainer) tContainer.innerHTML = scLink;
       if (bContainer) bContainer.innerHTML = scLink;
 
-      // Инициализируем кнопку переключения языка
       toggleThePali();
 
       window.dispatchEvent(new Event('suttaLoaded'));
@@ -269,7 +250,7 @@ async function buildSutta(slug) {
   }).catch(error => {
       console.log('Error fetching sutta data:', error);
       if (typeof window.handleFetchError === 'function') {
-          window.handleFetchError(slug, true); // true = русский интерфейс
+          window.handleFetchError(slug, true); 
       }
   });
 }
