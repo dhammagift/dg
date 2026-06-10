@@ -1009,7 +1009,6 @@ function loadText() {
           }
       });
 
-
       function makeCellEditable(cell, cursorPosition = null) {
           if (cell.querySelector('textarea')) return; 
 
@@ -1018,6 +1017,8 @@ function loadText() {
           const paddingTop = parseFloat(computedStyle.paddingTop) || 0;
           const paddingBottom = parseFloat(computedStyle.paddingBottom) || 0;
           const innerHeight = currentOffsetHeight - paddingTop - paddingBottom;
+
+          const originalRawLength = cell.textContent.trimEnd().length;
 
           let originalText = cell.textContent.trimStart(); 
           if (originalText !== '') {
@@ -1051,7 +1052,9 @@ function loadText() {
               } else if (cursorPosition === 'end') {
                   position = textLength;
               } else if (typeof cursorPosition === 'number') {
-                  if (cursorPosition >= 0) {
+                  if (cursorPosition >= originalRawLength) {
+                      position = textLength; 
+                  } else if (cursorPosition >= 0) {
                       position = Math.min(cursorPosition, textLength); 
                   } else {
                       position = Math.max(textLength + cursorPosition, 0); 
@@ -1230,7 +1233,6 @@ function loadText() {
                   }
               }
           });
-
 
           function shiftCellsUp(startRow) {
               let rowToMove = startRow;

@@ -74,12 +74,10 @@ async function buildSutta(slug) {
   const currentUrl = window.location.href;
   const ruUrl = currentUrl.replace("/multi/", "/r/");
   const enUrl = currentUrl.replace("/multi/", "/read/");
-  const eeUrl = currentUrl;
 
   let scLink = `<p class="sc-link">
   <a title="Russian (Alt+1)" href="${ruUrl}">Ru</a>
   <a title="English (Alt+1)" href="${enUrl}">En</a>
-  <a title="English Multi (Alt+1)" href="${eeUrl}">E+E</a>
   `;
 
   var varpath = `${Sccopy}/sc-data/sc_bilara_data/variant/pli/ms/${texttype}/${slugReady}_variant-pli-ms.json`;

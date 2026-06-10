@@ -202,7 +202,11 @@ async function buildSutta(slug) {
     </div>`;
 
     const ruUrl = window.location.href.replace("/read/", "/r/");
-    let scLink = `<p class="sc-link"><a title="Russian (Alt+1)" href="${ruUrl}">Ru</a>
+    const mtUrl = window.location.href.replace("/read/", "/multi/");
+    
+    let scLink = `<p class="sc-link">
+    <a title="Multi Tran" href="${mtUrl}">E+E</a>
+    <a title="Russian (Alt+1)" href="${ruUrl}">Ru</a>
     `;
 
     // Интерфейсные элементы

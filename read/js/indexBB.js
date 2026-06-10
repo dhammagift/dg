@@ -422,8 +422,10 @@ if (translator === "o") {
       let ruUrl = enUrl.replace("/read/", "/r/");
       ruUrl = enUrl.replace("/b/", "/r/");
       let altTrn = enUrl.replace("/b/", "/read/");
+      let mtTrn = enUrl.replace("/b/", "/multi/");
 
       let scLink = `<p class="sc-link"><a title="English translation from SuttaCentral.net (Alt+1)" href="${altTrn}">En</a>
+      <a title="Mutli Tran" href="${ruUrl}">E+E</a>
       <a title="Russian (Alt+1)" href="${ruUrl}">Ru</a>
       `;
 

@@ -1228,160 +1228,160 @@ function loadText() {
 
           textarea.addEventListener('blur', finishEditing);
 
-          textarea.addEventListener('keydown', function(event) {
-              const currentRow = cell.parentElement;
-              const tbody = currentRow.parentElement;
-              const rows = Array.from(tbody.children);
-              const rowIndex = rows.indexOf(currentRow);
+textarea.addEventListener('keydown', function(event) {
+    const currentRow = cell.parentElement;
+    const tbody = currentRow.parentElement;
+    const rows = Array.from(tbody.children);
+    const rowIndex = rows.indexOf(currentRow);
+    
+    // Получаем "чистый" текст и позицию курсора
+    const rawValue = textarea.value;
+    const cursorPos = textarea.selectionStart;
+    const isAtEnd = cursorPos >= rawValue.length; // true если курсор в конце (даже если есть пробел)
 
-              // -- НАВИГАЦИЯ СТРЕЛКАМИ --
-              if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-                  if (textarea.selectionStart === textarea.value.length) {
-                      event.preventDefault();
-                      const nextRow = currentRow.nextElementSibling;
-                      if (nextRow) makeCellEditable(nextRow.cells[2], 0);
-                      return;
-                  }
-              }
+    // -- НАВИГАЦИЯ СТРЕЛКАМИ (исправлено: учитываем пробел в конце) --
+    if ((event.key === 'ArrowRight' || event.key === 'ArrowDown') && isAtEnd) {
+        event.preventDefault();
+        const nextRow = currentRow.nextElementSibling;
+        if (nextRow) makeCellEditable(nextRow.cells[2], 0);
+        return;
+    }
 
-              if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
-                  if (textarea.selectionStart === 0) {
-                      event.preventDefault();
-                      const prevRow = currentRow.previousElementSibling;
-                      if (prevRow) makeCellEditable(prevRow.cells[2], 'end');
-                      return;
-                  }
-              }
+    if ((event.key === 'ArrowLeft' || event.key === 'ArrowUp') && cursorPos === 0) {
+        event.preventDefault();
+        const prevRow = currentRow.previousElementSibling;
+        if (prevRow) makeCellEditable(prevRow.cells[2], 'end');
+        return;
+    }
 
-              // -- ОБРАБОТКА ENTER, BACKSPACE, DELETE (Пакетное обновление) --
-              if (event.key === 'Enter' || event.key === 'Backspace' || event.key === 'Delete') {
-                  
-                  // Разрешаем стандартное поведение, если курсор не на краях текста или выделен кусок текста
-                  if (event.key === 'Backspace' && textarea.selectionStart !== 0) return;
-                  if (event.key === 'Delete' && textarea.selectionStart !== textarea.value.length) return;
-                  if ((event.key === 'Backspace' || event.key === 'Delete') && textarea.selectionStart !== textarea.selectionEnd) return;
+    // -- ОБРАБОТКА ENTER, BACKSPACE, DELETE (Пакетное обновление) --
+    if (event.key === 'Enter' || event.key === 'Backspace' || event.key === 'Delete') {
+        
+        // Разрешаем стандартное поведение, если курсор не на краях текста или выделен кусок текста
+        if (event.key === 'Backspace' && cursorPos !== 0) return;
+        if (event.key === 'Delete' && !isAtEnd) return;
+        if ((event.key === 'Backspace' || event.key === 'Delete') && textarea.selectionStart !== textarea.selectionEnd) return;
 
-                  event.preventDefault();
+        event.preventDefault();
 
-                  // 1. Batch Read: Быстро собираем все переводы в массив (в память)
-                  let translations = rows.map(r => {
-                      const c = r.cells[2];
-                      if (c.querySelector('textarea')) return textarea.value.trim();
-                      return c.textContent.trim();
-                  });
+        // 1. Batch Read: Быстро собираем все переводы в массив (в память)
+        let translations = rows.map(r => {
+            const c = r.cells[2];
+            if (c.querySelector('textarea')) return textarea.value.trim();
+            return c.textContent.trim();
+        });
 
-                  const cursorPosition = textarea.selectionStart;
-                  let targetCell = null;
-                  let targetCursorPos = 0;
-                  
-                  // Отключаем blur, чтобы избежать фантомных записей
-                  textarea.removeEventListener('blur', finishEditing);
-                  cell.textContent = ''; 
-                  cell.style.height = '';
+        let targetCell = null;
+        let targetCursorPos = 0;
+        
+        // Отключаем blur, чтобы избежать фантомных записей
+        textarea.removeEventListener('blur', finishEditing);
+        cell.textContent = ''; 
+        cell.style.height = '';
 
-                  // 2. Логика сдвигов в массиве (очень быстро)
-                  if (event.key === 'Enter' && !event.ctrlKey) {
-                      const textBefore = textarea.value.slice(0, cursorPosition).trim();
-                      const textAfter = textarea.value.slice(cursorPosition).trim();
-                      
-                      translations[rowIndex] = textBefore;
-                      translations.splice(rowIndex + 1, 0, textAfter);
-                      
-                      targetCell = currentRow.nextElementSibling ? currentRow.nextElementSibling.cells[2] : null;
-                      targetCursorPos = 0;
-                  } 
-                  else if (event.key === 'Enter' && event.ctrlKey) {
-                      const textBefore = textarea.value.slice(0, cursorPosition).trim();
-                      const textAfter = textarea.value.slice(cursorPosition).trim();
-                      
-                      translations[rowIndex] = textBefore;
-                      
-                      if (rowIndex + 1 < translations.length) {
-                          const existingNext = translations[rowIndex + 1];
-                          translations[rowIndex + 1] = textAfter + (existingNext ? ' ' : '') + existingNext;
-                      } else {
-                          translations.push(textAfter);
-                      }
-                      
-                      targetCell = currentRow.nextElementSibling ? currentRow.nextElementSibling.cells[2] : null;
-                      targetCursorPos = 0;
-                  }
-                  else if (event.key === 'Backspace' && rowIndex > 0) {
-                      const currentText = textarea.value.trim();
-                      const prevText = translations[rowIndex - 1];
-                      targetCursorPos = prevText.length > 0 ? prevText.length + 1 : 0;
-                      
-                      translations[rowIndex - 1] = prevText + (prevText ? ' ' : '') + currentText;
-                      translations.splice(rowIndex, 1);
-                      
-                      targetCell = currentRow.previousElementSibling.cells[2];
-                  }
-                  else if (event.key === 'Delete' && rowIndex < translations.length - 1) {
-                      const currentText = textarea.value.trim();
-                      const nextText = translations[rowIndex + 1];
-                      
-                      translations[rowIndex] = currentText + (currentText ? ' ' : '') + nextText;
-                      translations.splice(rowIndex + 1, 1);
-                      
-                      targetCell = cell;
-                      targetCursorPos = currentText.length;
-                  } else {
-                      // Предохранитель для Backspace в самом начале или Delete в самом конце
-                      cell.textContent = textarea.value.trim() !== '' ? textarea.value.trim() + ' ' : '';
-                      makeCellEditable(cell, cursorPosition);
-                      return;
-                  }
+        // 2. Логика сдвигов в массиве (очень быстро)
+        if (event.key === 'Enter' && !event.ctrlKey) {
+            const textBefore = textarea.value.slice(0, cursorPos).trim();
+            const textAfter = textarea.value.slice(cursorPos).trim();
+            
+            translations[rowIndex] = textBefore;
+            translations.splice(rowIndex + 1, 0, textAfter);
+            
+            targetCell = currentRow.nextElementSibling ? currentRow.nextElementSibling.cells[2] : null;
+            targetCursorPos = 0;
+        } 
+        else if (event.key === 'Enter' && event.ctrlKey) {
+            const textBefore = textarea.value.slice(0, cursorPos).trim();
+            const textAfter = textarea.value.slice(cursorPos).trim();
+            
+            translations[rowIndex] = textBefore;
+            
+            if (rowIndex + 1 < translations.length) {
+                const existingNext = translations[rowIndex + 1];
+                translations[rowIndex + 1] = textAfter + (existingNext ? ' ' : '') + existingNext;
+            } else {
+                translations.push(textAfter);
+            }
+            
+            targetCell = currentRow.nextElementSibling ? currentRow.nextElementSibling.cells[2] : null;
+            targetCursorPos = 0;
+        }
+        else if (event.key === 'Backspace' && rowIndex > 0) {
+            const currentText = textarea.value.trim();
+            const prevText = translations[rowIndex - 1];
+            targetCursorPos = prevText.length > 0 ? prevText.length + 1 : 0;
+            
+            translations[rowIndex - 1] = prevText + (prevText ? ' ' : '') + currentText;
+            translations.splice(rowIndex, 1);
+            
+            targetCell = currentRow.previousElementSibling.cells[2];
+        }
+        else if (event.key === 'Delete' && rowIndex < translations.length - 1) {
+            // Исправлено: удаляем даже если есть пробел в конце
+            const currentText = textarea.value.trim();
+            const nextText = translations[rowIndex + 1];
+            
+            translations[rowIndex] = currentText + (currentText && nextText ? ' ' : '') + nextText;
+            translations.splice(rowIndex + 1, 1);
+            
+            targetCell = cell;
+            targetCursorPos = currentText.length;
+        } else {
+            // Предохранитель для Backspace в самом начале или Delete в самом конце
+            cell.textContent = textarea.value.trim() !== '' ? textarea.value.trim() + ' ' : '';
+            makeCellEditable(cell, cursorPos);
+            return;
+        }
 
-                  // 3. Batch Write: Записываем массив обратно в DOM без мерцаний и тормозов
-                  for (let i = 0; i < rows.length; i++) {
-                      const expected = translations[i] !== undefined ? translations[i] : '';
-                      const expectedFormatted = expected !== '' ? expected + ' ' : '';
-                      
-                      if (i < translations.length) {
-                          if (rows[i].cells[2].textContent !== expectedFormatted) {
-                              rows[i].cells[2].textContent = expectedFormatted;
-                          }
-                      } else {
-                          rows[i].cells[2].textContent = '';
-                      }
-                  }
+        // 3. Batch Write: Записываем массив обратно в DOM без мерцаний и тормозов
+        for (let i = 0; i < rows.length; i++) {
+            const expected = translations[i] !== undefined ? translations[i] : '';
+            const expectedFormatted = expected !== '' ? expected + ' ' : '';
+            
+            if (i < translations.length) {
+                if (rows[i].cells[2].textContent !== expectedFormatted) {
+                    rows[i].cells[2].textContent = expectedFormatted;
+                }
+            } else {
+                rows[i].cells[2].textContent = '';
+            }
+        }
 
-                  // Если массив стал больше таблицы (переводы ушли вниз) - добавляем строки без оригинала в конец
-                  while (rows.length < translations.length) {
-                      const i = rows.length;
-                      const expected = translations[i] || '';
-                      const expectedFormatted = expected !== '' ? expected + ' ' : '';
-                      const tr = document.createElement('tr');
-                      tr.innerHTML = `<td></td><td></td><td>${expectedFormatted}</td><td><a href="#" onclick="gotoLine(${i + 1})"><i class="fa-solid fa-link"></i></a></td>`;
-                      tbody.appendChild(tr);
-                      rows.push(tr); 
-                  }
+        // Если массив стал больше таблицы (переводы ушли вниз) - добавляем строки без оригинала в конец
+        while (rows.length < translations.length) {
+            const i = rows.length;
+            const expected = translations[i] || '';
+            const expectedFormatted = expected !== '' ? expected + ' ' : '';
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td></td><td></td><td>${expectedFormatted}</td><td><a href="#" onclick="gotoLine(${i + 1})"><i class="fa-solid fa-link"></i></a></td>`;
+            tbody.appendChild(tr);
+            rows.push(tr); 
+        }
 
-                  // Если удалили пустые хвосты снизу (где нет оригинала)
-                  while (rows.length > translations.length) {
-                      const lastRow = rows[rows.length - 1];
-                      if (lastRow.cells[0].textContent.trim() === '') {
-                          lastRow.remove();
-                          rows.pop();
-                      } else {
-                          break; 
-                      }
-                  }
+        // Если удалили пустые хвосты снизу (где нет оригинала)
+        while (rows.length > translations.length) {
+            const lastRow = rows[rows.length - 1];
+            if (lastRow.cells[0].textContent.trim() === '') {
+                lastRow.remove();
+                rows.pop();
+            } else {
+                break; 
+            }
+        }
 
-                  // 4. Синхронизируем левое текстовое окно и хранилище
-                  document.getElementById('translationInput').value = translations.join('\n');
-                  saveInputs();
+        // 4. Синхронизируем левое текстовое окно и хранилище
+        document.getElementById('translationInput').value = translations.join('\n');
+        saveInputs();
 
-                  // 5. Восстанавливаем фокус
-                  if (!targetCell && event.key === 'Enter' && !event.ctrlKey) {
-                       targetCell = tbody.lastElementChild.cells[2];
-                  }
-                  if (targetCell) {
-                      makeCellEditable(targetCell, targetCursorPos);
-                  }
-              }
-          });
-
+        // 5. Восстанавливаем фокус
+        if (!targetCell && event.key === 'Enter' && !event.ctrlKey) {
+            targetCell = tbody.lastElementChild.cells[2];
+        }
+        if (targetCell) {
+            makeCellEditable(targetCell, targetCursorPos);
+        }
+    }
+});
 
           function shiftCellsUp(startRow) {
               let rowToMove = startRow;
