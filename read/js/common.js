@@ -6,6 +6,7 @@ window.thanissarotrnranges = [
 'an3.100',
 'an3.101',
 'an4.10',
+'an5.166',
 'an6.63',
 'an10.46',
 'an11.15',
