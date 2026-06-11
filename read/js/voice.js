@@ -142,6 +142,10 @@ let silenceAudio = new Audio(SILENCE_URL);
 silenceAudio.loop = true; 
 silenceAudio.volume = 0.05;
 
+// Глобальный плеер для Google TTS (для обхода блокировки iOS)
+window.sharedGoogleAudio = new Audio();
+
+
 function showToast(message) {
     const oldToast = document.getElementById('tts-toast');
     if (oldToast) oldToast.remove();
@@ -262,16 +266,27 @@ function getRateForLang(lang) {
   }
 }
 
+let isWakeLockActive = false; // Добавляем флаг состояния
+
 async function requestWakeLock() {
-  if ('wakeLock' in navigator) {
+  if ('wakeLock' in navigator && !isWakeLockActive) {
     try {
       wakeLock = await navigator.wakeLock.request('screen');
-      wakeLock.addEventListener('release', () => {});
+      isWakeLockActive = true;
+      
+      wakeLock.addEventListener('release', () => {
+        isWakeLockActive = false;
+        console.log('Wake Lock released by system');
+      });
+      
+      console.log('Wake Lock acquired successfully');
     } catch (err) {
-      console.error(`${err.name}, ${err.message}`);
+      console.warn(`Wake Lock error: ${err.name}, ${err.message}`);
+      isWakeLockActive = false;
     }
   }
 }
+
 
 async function releaseWakeLock() {
   if (wakeLock !== null) {
@@ -895,7 +910,7 @@ async function playCurrentSegment() {
  
  if (window.ttsDelayTimeout) clearTimeout(window.ttsDelayTimeout);
  
-   if (ttsState.googleAudio) {
+  if (ttsState.googleAudio) {
       ttsState.googleAudio.pause();       
       ttsState.googleAudio.onended = null; 
       ttsState.googleAudio = null;         
@@ -921,13 +936,7 @@ async function playCurrentSegment() {
   
   synth.cancel();
   
-  if (ttsState.googleAudio) {
-      ttsState.googleAudio.pause();
-      ttsState.googleAudio = null;
-  }
-
   resetUI();
-
 
   if (ttsState.currentSlug) {
     if (ttsState.currentIndex >= ttsState.playlist.length - 2) {
@@ -937,7 +946,6 @@ async function playCurrentSegment() {
        localStorage.setItem(LAST_INDEX_KEY, ttsState.currentIndex);
     }
   }
-
   
   if (item.element) {
     document.querySelectorAll('.active-word').forEach(e => e.classList.remove('active-word'));
@@ -1011,7 +1019,6 @@ async function playCurrentSegment() {
       }
   }
 
-  // === ГИБРИДНЫЙ РЕЖИМ ===
   const googleKey = (localStorage.getItem(GOOGLE_KEY_STORAGE) || window.TRIAL_KEY); 
   const useNativePali = localStorage.getItem(NATIVE_PALI_KEY) === 'true';
   const useNativeTrn  = localStorage.getItem(NATIVE_TRN_KEY) === 'true'; 
@@ -1041,7 +1048,11 @@ async function playCurrentSegment() {
           }
 
           if (audioContent) {
-              const audio = new Audio("data:audio/mp3;base64," + audioContent);
+              // ИСПОЛЬЗУЕМ ГЛОБАЛЬНЫЙ ПЛЕЕР ДЛЯ ОБХОДА IOS
+              const audio = window.sharedGoogleAudio || new Audio();
+              window.sharedGoogleAudio = audio; // Гарантируем наличие
+              audio.src = "data:audio/mp3;base64," + audioContent;
+              
               ttsState.googleAudio = audio;
               
               audio.onended = () => {
@@ -1104,6 +1115,7 @@ async function playCurrentSegment() {
 
   playBrowserTTS(item.text, targetLang, audioRateBrowser, isPali);
 }
+
 
 function playBrowserTTS(text, langKey, rate, isPali) {
   // --- ИСПРАВЛЕНИЕ WAKE LOCK ---
@@ -1260,6 +1272,19 @@ function playBrowserTTS(text, langKey, rate, isPali) {
 
 async function handleSuttaClick(e) {
   const dynamicBtn = e.target.closest('.dynamic-tts-btn');
+  const voiceLink = e.target.closest('.voice-link');
+  const playBtn = e.target.closest('.play-main-button');
+  const navBtn = e.target.closest('.prev-main-button, .next-main-button');
+  
+  // ВОССТАНОВЛЕННАЯ ПЕРЕМЕННАЯ (без неё всё падало)
+  const container = e.target.closest('.sutta-container') || document;
+
+  // ВАЖНО: Запрашиваем экран мгновенно при любом клике, связанном с воспроизведением.
+  // Это синхронный перехват жеста пользователя, который требует iOS Safari.
+  if (dynamicBtn || voiceLink || (playBtn && !e.target.classList.contains('voice-link')) || navBtn) {
+      requestWakeLock();
+  }
+
   if (dynamicBtn) {
       e.preventDefault();
       e.stopPropagation();
@@ -1304,7 +1329,7 @@ async function handleSuttaClick(e) {
       if (internalPlayBtn) internalPlayBtn.dataset.slug = slug;
       
       player.classList.add('active');
-      startPlayback(document, playbackMode, slug); 
+      startPlayback(container, playbackMode, slug); 
       dynamicBtn.remove();
       return;
   }
@@ -1345,11 +1370,6 @@ async function handleSuttaClick(e) {
     }
     return;
   }
-
-  const container = e.target.closest('.sutta-container') || document;
-  const voiceLink = e.target.closest('.voice-link');
-  const playBtn = e.target.closest('.play-main-button');
-  const navBtn = e.target.closest('.prev-main-button, .next-main-button');
 
   if (voiceLink) {
     e.preventDefault();
@@ -1506,13 +1526,11 @@ function stopPlayback() {
   
   if (ttsState.googleAudio) {
       ttsState.googleAudio.pause();
-      ttsState.googleAudio.src = ''; // Выгружаем из памяти
-      ttsState.googleAudio.load();
+      // Убираем полную выгрузку src и load(), чтобы iOS Safari не заблокировал элемент снова
       ttsState.googleAudio = null;
   }
   
   // --- ПОЛНАЯ ОСТАНОВКА ФОНОВОЙ ТИШИНЫ ---
-  // Вместо toggleSilence(false) мы жестко отвязываем файл:
   silenceAudio.pause();
   silenceAudio.src = ''; // Отвязываем mp3 файл
   silenceAudio.load();   // Заставляем браузер забыть его. Это действие закроет шторку Android!
@@ -1548,7 +1566,6 @@ function stopPlayback() {
   setButtonIcon('play');
   resetUI();
 }
-
 
 
 async function startPlayback(container, mode, slug, startIndex = 0) {
@@ -1603,6 +1620,15 @@ async function startPlayback(container, mode, slug, startIndex = 0) {
       ttsState.googleAudio.pause();
       ttsState.googleAudio = null;
   }
+
+  // === UNLOCK GLOBAL AUDIO FOR IOS ===
+  if (!window.sharedGoogleAudio) {
+      window.sharedGoogleAudio = new Audio();
+  }
+  // Пустой короткий MP3 для снятия блокировки автоплей при клике
+  window.sharedGoogleAudio.src = 'data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq';
+  window.sharedGoogleAudio.play().catch(e => console.warn('Unlock failed', e));
+  // ===================================
   
   toggleSilence(true);
   
@@ -1620,7 +1646,6 @@ async function startPlayback(container, mode, slug, startIndex = 0) {
   
   setButtonIcon('pause');
   
-  // --- НОВОЕ: Показываем Hint при первом воспроизведении, если активен триал ---
   // --- НОВОЕ: Показываем Hint при первом воспроизведении (с ссылкой) ---
   if (window.TRIAL_KEY && !localStorage.getItem(GOOGLE_KEY_STORAGE)) {
       if (!localStorage.getItem('tts_trial_play_hint_shown')) {
@@ -1644,9 +1669,6 @@ async function startPlayback(container, mode, slug, startIndex = 0) {
           }
       }
   }
-  // -----------------------------------------------------------------------
-
-  // ---------------------------------------------------------------------------
   
   setTimeout(() => {
      playCurrentSegment();
