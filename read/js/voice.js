@@ -262,23 +262,37 @@ function getRateForLang(lang) {
   }
 }
 
+let isWakeLockActive = false; // Добавляем флаг состояния
+
 async function requestWakeLock() {
-  if ('wakeLock' in navigator) {
+  if ('wakeLock' in navigator && !isWakeLockActive) {
     try {
       wakeLock = await navigator.wakeLock.request('screen');
-      wakeLock.addEventListener('release', () => {});
+      isWakeLockActive = true;
+      
+      wakeLock.addEventListener('release', () => {
+        isWakeLockActive = false;
+        console.log('Wake Lock released by system');
+      });
+      
+      console.log('Wake Lock acquired successfully');
     } catch (err) {
-      console.error(`${err.name}, ${err.message}`);
+      console.warn(`Wake Lock error: ${err.name}, ${err.message}`);
     }
   }
 }
 
 async function releaseWakeLock() {
-  if (wakeLock !== null) {
-    await wakeLock.release();
+  if (wakeLock !== null && isWakeLockActive) {
+    try {
+        await wakeLock.release();
+    } catch(e) {}
     wakeLock = null;
+    isWakeLockActive = false;
+    console.log('Wake Lock released manually');
   }
 }
+
 
 function clearTtsStorage() {
   localStorage.removeItem(LAST_SLUG_KEY);
@@ -910,9 +924,9 @@ async function playCurrentSegment() {
 
   const item = ttsState.playlist[ttsState.currentIndex];
 
-  if (!wakeLock && !ttsState.paused && shouldRequestWakeLockForItem(item)) {
-    requestWakeLock();
-  }
+ // if (!wakeLock && !ttsState.paused && shouldRequestWakeLockForItem(item)) {
+ //   requestWakeLock();
+ // }
 
   if (ttsState.utterance) {
     ttsState.utterance.onend = null;
@@ -1458,6 +1472,7 @@ async function handleSuttaClick(e) {
           ttsState.paused = false;
           setButtonIcon('pause');
           toggleSilence(true);
+          requestWakeLock();
 
           if (shouldRequestWakeLockForItem(ttsState.playlist[ttsState.currentIndex])) {
             requestWakeLock();
@@ -1604,8 +1619,11 @@ async function startPlayback(container, mode, slug, startIndex = 0) {
       ttsState.googleAudio = null;
   }
   
-  toggleSilence(true);
   
+  
+  toggleSilence(true);
+requestWakeLock();
+
   ttsState.playlist = playlist;
   ttsState.currentIndex = actualStartIndex;
   ttsState.currentSlug = slug;
@@ -2464,10 +2482,12 @@ if (document.readyState === 'loading') {
 
 
 document.addEventListener('visibilitychange', async () => {
-  if (wakeLock !== null && document.visibilityState === 'visible') {
-    requestWakeLock();
+  // Если вкладка снова стала активной, а мы в процессе чтения (не на паузе) — перезахватываем
+  if (document.visibilityState === 'visible' && ttsState.speaking && !ttsState.paused) {
+    await requestWakeLock();
   }
 });
+
 
 // --- АДАПТЕР ДЛЯ THERAVADA.RU (LEGACY HTML) ---
 
