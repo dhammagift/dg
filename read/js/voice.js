@@ -262,7 +262,6 @@ function getRateForLang(lang) {
   }
 }
 
-
 let isWakeLockActive = false; // Добавляем флаг состояния
 
 async function requestWakeLock() {
@@ -1275,6 +1274,9 @@ async function handleSuttaClick(e) {
   const voiceLink = e.target.closest('.voice-link');
   const playBtn = e.target.closest('.play-main-button');
   const navBtn = e.target.closest('.prev-main-button, .next-main-button');
+  
+  // ВОССТАНОВЛЕННАЯ ПЕРЕМЕННАЯ (без неё всё падало)
+  const container = e.target.closest('.sutta-container') || document;
 
   // ВАЖНО: Запрашиваем экран мгновенно при любом клике, связанном с воспроизведением.
   // Это синхронный перехват жеста пользователя, который требует iOS Safari.
@@ -1326,7 +1328,7 @@ async function handleSuttaClick(e) {
       if (internalPlayBtn) internalPlayBtn.dataset.slug = slug;
       
       player.classList.add('active');
-      startPlayback(document, playbackMode, slug); 
+      startPlayback(container, playbackMode, slug); 
       dynamicBtn.remove();
       return;
   }
@@ -1659,8 +1661,6 @@ async function startPlayback(container, mode, slug, startIndex = 0) {
      playCurrentSegment();
   }, 100);
 }
-
-
 
 
 function showVoiceHint(title, message, storageKey) {
