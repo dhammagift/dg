@@ -2700,16 +2700,15 @@ window.ttsAPI = {
         
         if (!playlist.length) return;
 
-let sIdx = playlist.findIndex(item => item.id === startId);
-// Ищем ПОСЛЕДНЕЕ совпадение для endId
-let eIdx = -1;
-for (let i = playlist.length - 1; i >= 0; i--) {
-    if (playlist[i].id === endId) {
-        eIdx = i;
-        break;
-    }
-}
-
+        let sIdx = playlist.findIndex(item => item.id === startId);
+        // Ищем ПОСЛЕДНЕЕ совпадение для endId
+        let eIdx = -1;
+        for (let i = playlist.length - 1; i >= 0; i--) {
+            if (playlist[i].id === endId) {
+                eIdx = i;
+                break;
+            }
+        }
         
         if (sIdx === -1) sIdx = 0;
         if (eIdx === -1) eIdx = playlist.length - 1;
@@ -2729,7 +2728,8 @@ for (let i = playlist.length - 1; i >= 0; i--) {
     },
     stop: stopPlayback,
     keepSilenceAlive: toggleSilence,
-    releaseWakeLock: releaseWakeLock
+    releaseWakeLock: releaseWakeLock,
+    requestWakeLock: requestWakeLock
 };
 
 // --- Обработка поля Delay (Span ContentEditable) ---

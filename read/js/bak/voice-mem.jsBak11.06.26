@@ -694,8 +694,6 @@ for (let i = state.playlist.length - 1; i >= 0; i--) {
         memState.pauseStartedAt = Date.now();
         memState.targetTimestamp = memState.pauseStartedAt + msInterval;
         
-        // Удерживаем экран и звуковой фон активными на время паузы таймера
-        if (window.ttsAPI.requestWakeLock) window.ttsAPI.requestWakeLock();
         if (window.ttsAPI.keepSilenceAlive) window.ttsAPI.keepSilenceAlive(true);
 
         if (memState.countdownId) clearInterval(memState.countdownId);
