@@ -73,22 +73,6 @@ window.addEventListener('DOMContentLoaded', loadPresets);
         window.memoNextAllowedTime = 0;
         window.memoLockId = 0;
 
-// --- ГЛОБАЛЬНЫЙ ПЛЕЕР ДЛЯ ЗВУКОВ ТАЙМЕРА (IOS FIX) ---
-window.sharedMemoAudio = new Audio();
-
-window.playMemoSound = function(soundChoice) {
-    if (!soundChoice || soundChoice === 'none') return;
-    
-    // Если плеер по какой-то причине пропал, пересоздаем
-    if (!window.sharedMemoAudio) {
-        window.sharedMemoAudio = new Audio();
-    }
-    
-    window.sharedMemoAudio.src = `/assets/sounds/${soundChoice}`;
-    window.sharedMemoAudio.play().catch(e => console.warn("Memo sound playback failed or blocked:", e));
-};
-
-
 
 // --- MEMO WAKE LOCK (БЕЗОТКАЗНЫЙ ЭКРАН) ---
 window.memoWakeLock = null;
@@ -1306,8 +1290,10 @@ function runMeditationCycle() {
     window.memoRestartTimeout = setTimeout(() => {
         if (!window.isMemoPlaying) return;
         
-        // ЗВУЧИТ ГОНГ (Конец основной сессии) через глобальный плеер
-        window.playMemoSound(soundChoice);
+        // ЗВУЧИТ ГОНГ (Конец основной сессии)
+        if (soundChoice !== 'none') {
+            new Audio(`/assets/sounds/${soundChoice}`).play().catch(e => console.warn(e));
+        }
 
         window.memoLoopsPlayed++;
 
@@ -1336,6 +1322,7 @@ function runMeditationCycle() {
     }, activeTimeMs);
 }
 
+
 function startMemoTTS(isRestart = false) {
     добавитьПробелыВКонцеСтрок();
     if (isRestart !== true) {
@@ -1349,13 +1336,6 @@ function startMemoTTS(isRestart = false) {
             if (span) span.innerHTML = '';
         }
     }
-
-    // Снимаем блокировку с глобального плейера звуков таймера для iOS
-    if (!window.sharedMemoAudio) {
-        window.sharedMemoAudio = new Audio();
-    }
-    window.sharedMemoAudio.src = 'data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq';
-    window.sharedMemoAudio.play().catch(() => {});
 
     updatePlayButtonState(true); 
 
@@ -1519,6 +1499,7 @@ function startMemoTTS(isRestart = false) {
         };
 
         // --- ЖЕСТКИЙ ПЕРЕХВАТ КОНТЕКСТА ДЛЯ GOOGLE TTS ---
+        // Игнорируем URL и отдаем настройки строго по языку текста
         window.getContextInfo = function() {
             if (window.memoDetectedTrnLang === 'ru') {
                 return {
@@ -1555,7 +1536,6 @@ function startMemoTTS(isRestart = false) {
 
     document.body.classList.add('body-tts-active');
 }
-
 
 function stopMemoTTS(fullReset = true) {
       
@@ -1647,61 +1627,61 @@ function stopMemoTTS(fullReset = true) {
             window.memoLoopsPlayed = 0;
         }
 
-document.addEventListener('tts-range-finished', () => {
-    const isLoop = document.getElementById('ttsIsLoop').checked;
-    const soundChoice = document.getElementById('ttsSound').value;
-    const delaySec = parseFloat(document.getElementById("ttsDelay").value) || 0;
-    const intervalMs = delaySec * 1000;
-    
-    window.isLoopingPause = true;
 
-    if (!isLoop) {
-        window.playMemoSound(soundChoice);
-        stopMemoTTS(true); 
-        return;
-    }
+        document.addEventListener('tts-range-finished', () => {
+            const isLoop = document.getElementById('ttsIsLoop').checked;
+            const soundChoice = document.getElementById('ttsSound').value;
+            const delaySec = parseFloat(document.getElementById("ttsDelay").value) || 0;
+            const intervalMs = delaySec * 1000;
+            
+            window.isLoopingPause = true;
 
-    const loopInput = document.getElementById('ttsLoopCount').value;
-    let targetLoops = loopInput === '∞' ? Infinity : parseInt(loopInput) || Infinity;
-    window.memoLoopsPlayed = (window.memoLoopsPlayed || 0) + 1;
+            if (!isLoop) {
+                if (soundChoice !== 'none') new Audio(`/assets/sounds/${soundChoice}`).play().catch(e => console.warn(e));
+                stopMemoTTS(true); 
+                return;
+            }
 
-    if (window.memoLoopsPlayed >= targetLoops) {
-        window.playMemoSound(soundChoice);
-        stopMemoTTS(true); 
-        return;
-    }
+            const loopInput = document.getElementById('ttsLoopCount').value;
+            let targetLoops = loopInput === '∞' ? Infinity : parseInt(loopInput) || Infinity;
+            window.memoLoopsPlayed = (window.memoLoopsPlayed || 0) + 1;
 
-    const endDelaySec = parseFloat(document.getElementById("ttsEndDelay").value) || 10;
-    const FIXED_PAUSE = endDelaySec * 1000; 
-    const lCycle = window.memoLang === 'ru' ? 'Конец.' : 'End.';
+            if (window.memoLoopsPlayed >= targetLoops) {
+                if (soundChoice !== 'none') new Audio(`/assets/sounds/${soundChoice}`).play().catch(e => console.warn(e));
+                stopMemoTTS(true); 
+                return;
+            }
 
-    const startLoopRestart = () => {
-        if (FIXED_PAUSE > 0) {
-            window.startMemoVisualTimer(FIXED_PAUSE, lCycle);
-            window.memoRestartTimeout = setTimeout(() => {
-                const container = document.getElementById("tts-virtual-container");
-                if (container.style.display === 'none' || !document.getElementById('ttsIsLoop').checked) return;
-                startMemoTTS(true); 
-            }, FIXED_PAUSE);
-        } else {
-            const container = document.getElementById("tts-virtual-container");
-            if (container.style.display === 'none' || !document.getElementById('ttsIsLoop').checked) return;
-            startMemoTTS(true); 
-        }
-    };
+            const endDelaySec = parseFloat(document.getElementById("ttsEndDelay").value) || 10;
+            const FIXED_PAUSE = endDelaySec * 1000; 
+            const lCycle = window.memoLang === 'ru' ? 'Конец.' : 'End.';
 
-    if (intervalMs > 0) {
-        window.startMemoVisualTimer(intervalMs, '');
-        window.memoLoopTimeout = setTimeout(() => {
-            window.playMemoSound(soundChoice);
-            startLoopRestart();
-        }, intervalMs);
-    } else {
-        window.playMemoSound(soundChoice);
-        startLoopRestart();
-    }
-});
+            const startLoopRestart = () => {
+                if (FIXED_PAUSE > 0) {
+                    window.startMemoVisualTimer(FIXED_PAUSE, lCycle);
+                    window.memoRestartTimeout = setTimeout(() => {
+                        const container = document.getElementById("tts-virtual-container");
+                        if (container.style.display === 'none' || !document.getElementById('ttsIsLoop').checked) return;
+                        startMemoTTS(true); 
+                    }, FIXED_PAUSE);
+                } else {
+                    const container = document.getElementById("tts-virtual-container");
+                    if (container.style.display === 'none' || !document.getElementById('ttsIsLoop').checked) return;
+                    startMemoTTS(true); 
+                }
+            };
 
+            if (intervalMs > 0) {
+                window.startMemoVisualTimer(intervalMs, '');
+                window.memoLoopTimeout = setTimeout(() => {
+                    if (soundChoice !== 'none') new Audio(`/assets/sounds/${soundChoice}`).play().catch(e => console.warn(e));
+                    startLoopRestart();
+                }, intervalMs);
+            } else {
+                if (soundChoice !== 'none') new Audio(`/assets/sounds/${soundChoice}`).play().catch(e => console.warn(e));
+                startLoopRestart();
+            }
+        });
 
         document.addEventListener('click', (e) => {
             window.memoNextAllowedTime = 0; 
