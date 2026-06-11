@@ -262,27 +262,16 @@ function getRateForLang(lang) {
   }
 }
 
-let isWakeLockActive = false; // Добавляем флаг состояния
-
 async function requestWakeLock() {
-  if ('wakeLock' in navigator && !isWakeLockActive) {
+  if ('wakeLock' in navigator) {
     try {
       wakeLock = await navigator.wakeLock.request('screen');
-      isWakeLockActive = true;
-      
-      wakeLock.addEventListener('release', () => {
-        isWakeLockActive = false;
-        console.log('Wake Lock released by system');
-      });
-      
-      console.log('Wake Lock acquired successfully');
+      wakeLock.addEventListener('release', () => {});
     } catch (err) {
-      console.warn(`Wake Lock error: ${err.name}, ${err.message}`);
-      isWakeLockActive = false;
+      console.error(`${err.name}, ${err.message}`);
     }
   }
 }
-
 
 async function releaseWakeLock() {
   if (wakeLock !== null) {
@@ -1271,19 +1260,6 @@ function playBrowserTTS(text, langKey, rate, isPali) {
 
 async function handleSuttaClick(e) {
   const dynamicBtn = e.target.closest('.dynamic-tts-btn');
-  const voiceLink = e.target.closest('.voice-link');
-  const playBtn = e.target.closest('.play-main-button');
-  const navBtn = e.target.closest('.prev-main-button, .next-main-button');
-  
-  // ВОССТАНОВЛЕННАЯ ПЕРЕМЕННАЯ (без неё всё падало)
-  const container = e.target.closest('.sutta-container') || document;
-
-  // ВАЖНО: Запрашиваем экран мгновенно при любом клике, связанном с воспроизведением.
-  // Это синхронный перехват жеста пользователя, который требует iOS Safari.
-  if (dynamicBtn || voiceLink || (playBtn && !e.target.classList.contains('voice-link')) || navBtn) {
-      requestWakeLock();
-  }
-
   if (dynamicBtn) {
       e.preventDefault();
       e.stopPropagation();
@@ -1328,7 +1304,7 @@ async function handleSuttaClick(e) {
       if (internalPlayBtn) internalPlayBtn.dataset.slug = slug;
       
       player.classList.add('active');
-      startPlayback(container, playbackMode, slug); 
+      startPlayback(document, playbackMode, slug); 
       dynamicBtn.remove();
       return;
   }
@@ -1369,6 +1345,11 @@ async function handleSuttaClick(e) {
     }
     return;
   }
+
+  const container = e.target.closest('.sutta-container') || document;
+  const voiceLink = e.target.closest('.voice-link');
+  const playBtn = e.target.closest('.play-main-button');
+  const navBtn = e.target.closest('.prev-main-button, .next-main-button');
 
   if (voiceLink) {
     e.preventDefault();
@@ -1569,6 +1550,7 @@ function stopPlayback() {
 }
 
 
+
 async function startPlayback(container, mode, slug, startIndex = 0) {
   const textData = await prepareTextData(slug);
   if (!textData.length) {
@@ -1608,10 +1590,12 @@ async function startPlayback(container, mode, slug, startIndex = 0) {
     if (actualStartIndex === 0 && slug) {
       const lastSlug = localStorage.getItem(LAST_SLUG_KEY);
       const lastIndex = parseInt(localStorage.getItem(LAST_INDEX_KEY) || '0');
+      // Оборачиваем текущий слаг в наш хелпер для проверки
       if (lastSlug === getSavedSlugName(slug) && lastIndex < playlist.length) {
         actualStartIndex = lastIndex;
       }
     }
+
   }
   
   synth.cancel();
@@ -1622,15 +1606,12 @@ async function startPlayback(container, mode, slug, startIndex = 0) {
   
   toggleSilence(true);
   
-  // Этот вызов оставлен для фолбэка Android, но для iOS всю работу сделал вызов из handleSuttaClick
-  requestWakeLock();
-
   ttsState.playlist = playlist;
   ttsState.currentIndex = actualStartIndex;
   ttsState.currentSlug = slug;
   
-  ttsState.endIndex = undefined; 
-  document.dispatchEvent(new CustomEvent('tts-playback-started')); 
+  ttsState.endIndex = undefined; // Сброс границы заучивания
+  document.dispatchEvent(new CustomEvent('tts-playback-started')); // Сигнал отключения цикла
   
   ttsState.langSettings = mode;
   ttsState.speaking = true;
@@ -1639,12 +1620,19 @@ async function startPlayback(container, mode, slug, startIndex = 0) {
   
   setButtonIcon('pause');
   
+  // --- НОВОЕ: Показываем Hint при первом воспроизведении, если активен триал ---
+  // --- НОВОЕ: Показываем Hint при первом воспроизведении (с ссылкой) ---
   if (window.TRIAL_KEY && !localStorage.getItem(GOOGLE_KEY_STORAGE)) {
       if (!localStorage.getItem('tts_trial_play_hint_shown')) {
+          
           const isRu = window.location.pathname.includes('/ru') || window.location.pathname.includes('/r/');
           const title = isRu ? "Демо-режим:" : "Demo Mode:";
+          
+          // Ссылки на поиск Google
           const searchUrlRu = "https://www.google.com/search?q=%D0%BA%D0%B0%D0%BA+%D0%BF%D0%BE%D0%BB%D1%83%D1%87%D0%B8%D1%82%D1%8C+%D0%B0%D0%BF%D0%B8+%D0%BA%D0%BB%D1%8E%D1%87+%D0%B3%D1%83%D0%B3%D0%BB+tts";
           const searchUrlEn = "https://www.google.com/search?q=how+to+get+google+cloud+text+to+speech+api+key";
+          
+          // Стиль для ссылки (светло-голубой, чтобы видно на темном)
           const linkStyle = "color: #4da6ff; text-decoration: underline; font-weight: bold;";
 
           const message = isRu 
@@ -1656,12 +1644,14 @@ async function startPlayback(container, mode, slug, startIndex = 0) {
           }
       }
   }
+  // -----------------------------------------------------------------------
+
+  // ---------------------------------------------------------------------------
   
   setTimeout(() => {
      playCurrentSegment();
   }, 100);
 }
-
 
 function showVoiceHint(title, message, storageKey) {
   if (localStorage.getItem(storageKey)) return;
