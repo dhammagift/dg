@@ -268,8 +268,8 @@ if (document.location.search) {
   if (lang) {
     language = lang;
     setLanguage(lang);
-  } else if  (localStorage.paliToggleSpecial) {
-    language = localStorage.paliToggleSpecial; 
+  } else if  (localStorage.paliToggle) {
+    language = localStorage.paliToggle; 
     setLanguage(language);
   }
 } else {
@@ -289,24 +289,41 @@ if (document.location.search) {
 }
 
 function setLanguage(language) {
-  if (language === "pli-2nd" || language === "2nd") {
-    showPaliAll();
+  if (language === "pli-2nd") {
+    showPaliEnglish();
   } else if (language === "pli") {
     showPali();
+  } else if (language === "2nd") {
+    showEnglish();
   }
 }
 
-function showPaliAll() {
-  suttaArea.classList.remove("hide-pali", "hide-english", "hide-russian");
+function showPaliEnglish() {
+  suttaArea.classList.remove("hide-pali");
+  suttaArea.classList.remove("hide-english");
+  suttaArea.classList.remove("hide-russian");
+  
   const savedMode = localStorage.getItem('viewMode') || 'alternate';
-  if (savedMode === 'columns') suttaArea.classList.add('column-view');
+  if (savedMode === 'columns') {
+    suttaArea.classList.add('column-view');
+  }
+}
+
+function showEnglish() {
+  suttaArea.classList.add("hide-pali");
+  suttaArea.classList.remove("hide-english");
+  suttaArea.classList.remove("hide-russian");
+  suttaArea.classList.remove('column-view');
 }
 
 function showPali() {
   suttaArea.classList.remove("hide-pali");
-  suttaArea.classList.add("hide-english", "hide-russian");
+  suttaArea.classList.add("hide-english");
+  suttaArea.classList.add("hide-russian");
   suttaArea.classList.remove('column-view');
 }
+
+
 
 const abbreviations = document.querySelectorAll("span.abbr");
 abbreviations.forEach(book => {
