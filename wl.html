@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wake Lock Test</title>
+
+<style>
+body{
+    font-family:sans-serif;
+    text-align:center;
+    padding:30px;
+}
+button{
+    font-size:20px;
+    padding:15px 30px;
+}
+#status{
+    margin-top:20px;
+    font-size:18px;
+}
+</style>
+</head>
+<body>
+
+<h1>Wake Lock Test</h1>
+
+<button id="start">Enable Wake Lock</button>
+
+<div id="status">Not active</div>
+
+<script>
+let wakeLock = null;
+
+async function requestWakeLock() {
+    try {
+        wakeLock = await navigator.wakeLock.request("screen");
+
+        document.getElementById("status").textContent =
+            "Wake Lock ACTIVE";
+
+        wakeLock.addEventListener("release", () => {
+            document.getElementById("status").textContent =
+                "Wake Lock RELEASED";
+        });
+
+        console.log("Wake Lock acquired");
+    } catch (err) {
+        document.getElementById("status").textContent =
+            "Error: " + err.message;
+
+        console.error(err);
+    }
+}
+
+document.getElementById("start").addEventListener("click", requestWakeLock);
+
+document.addEventListener("visibilitychange", async () => {
+    if (
+        wakeLock !== null &&
+        document.visibilityState === "visible"
+    ) {
+        await requestWakeLock();
+    }
+});
+</script>
+
+</body>
+</html>
