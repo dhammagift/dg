@@ -13506,11 +13506,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.125"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.125">an4.125</a> Paṭhamamettāsutta</span>
+<span class="level5" id="an4.125"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.125">an4.125</a> Paṭhamamettāsutta <?php echo $ifRuLitTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.126"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.126">an4.126</a> Dutiyamettāsutta</span>
+<span class="level5" id="an4.126"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.126">an4.126</a> Dutiyamettāsutta <?php echo $ifRuLitTrn;?></span>
 </div>
  
 <div class="mt-3">
