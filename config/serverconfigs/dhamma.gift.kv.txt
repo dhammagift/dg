@@ -1,0 +1,60 @@
+;;
+;; Domain:     dhamma.gift.
+;; Exported:   2026-06-14 19:52:00
+;;
+;; This file is intended for use for informational and archival
+;; purposes ONLY and MUST be edited before use on a production
+;; DNS server.  In particular, you must:
+;;   -- update the SOA record with the correct authoritative name server
+;;   -- update the SOA record with the contact e-mail address information
+;;   -- update the NS record(s) with the authoritative name servers for this domain.
+;;
+;; For further information, please consult the BIND documentation
+;; located on the following website:
+;;
+;; http://www.isc.org/
+;;
+;; And RFC 1035:
+;;
+;; http://www.ietf.org/rfc/rfc1035.txt
+;;
+;; Please note that we do NOT offer technical support for any use
+;; of this zone data, the BIND name server, or any other third-party
+;; DNS software.
+;;
+;; Use at your own risk.
+;; SOA Record
+dhamma.gift	3600	IN	SOA	decker.ns.cloudflare.com. dns.cloudflare.com. 2053313332 10000 2400 604800 3600
+
+;; NS Records
+dhamma.gift.	86400	IN	NS	decker.ns.cloudflare.com.
+dhamma.gift.	86400	IN	NS	ursula.ns.cloudflare.com.
+
+;; A Records
+d2.dhamma.gift.	1	IN	A	3.125.254.158 ; cf_tags=cf-proxied:false
+d.dhamma.gift.	1	IN	A	94.126.201.8 ; cf_tags=cf-proxied:false
+dhamma.gift.	1	IN	A	94.126.201.8 ; cf_tags=cf-proxied:true
+dict.dhamma.gift.	1	IN	A	94.126.201.8 ; cf_tags=cf-proxied:false
+f2.dhamma.gift.	1	IN	A	3.125.254.158 ; cf_tags=cf-proxied:true
+test.dhamma.gift.	1	IN	A	94.126.201.8 ; cf_tags=cf-proxied:false
+
+;; CNAME Records
+f.dhamma.gift.	1	IN	CNAME	dhamma.gift. ; cf_tags=cf-proxied:false
+find.dhamma.gift.	1	IN	CNAME	dhamma.gift. ; cf_tags=cf-proxied:true
+www.dhamma.gift.	1	IN	CNAME	dhamma.gift. ; cf_tags=cf-proxied:true
+www.dict.dhamma.gift.	1	IN	CNAME	dict.dhamma.gift. ; cf_tags=cf-proxied:true
+www.f.dhamma.gift.	1	IN	CNAME	f.dhamma.gift. ; cf_tags=cf-proxied:false
+www.find.dhamma.gift.	1	IN	CNAME	find.dhamma.gift. ; cf_tags=cf-proxied:true
+
+;; MX Records
+dhamma.gift.	1	IN	MX	10 mail.dhamma.gift.
+
+;; NS Records
+dhamma.gift.	1	IN	NS	ns2.ps.kz.
+dhamma.gift.	1	IN	NS	ns3.ps.kz.
+dhamma.gift.	1	IN	NS	ns1.ps.kz.
+
+;; TXT Records
+dhamma.gift.	3600	IN	TXT	"google-site-verification=B42B7Uxl1GEabqoYsTT10gIzh8kO9MKxqPqRs_m6PvE"
+dhamma.gift.	1	IN	TXT	"v=spf1 +a +mx include:_spf.ps.kz -all"
+dhamma.gift.	1	IN	TXT	"google-site-verification=mgo3Z34qdbUU8qTBBIEc_0gNG7uDPOdLovfkAMx5PdA"
