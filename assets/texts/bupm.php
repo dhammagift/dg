@@ -6,7 +6,7 @@
 <div class="level2 d-flex align-items-center">
   <span class="toggle-button btn btn-primary btn-sm form-check-inline btn-fixed-width btn-rotate"
     data-bs-toggle="collapse" data-bs-target="#pkCollapsePubbakicca">+</span>
-			<a data-bs-toggle="collapse" data-bs-target="#pkCollapsePubbakicca" href=""><h3>Pubbakaraṇa 1 ver</h3></a>
+			<a data-bs-toggle="collapse" data-bs-target="#pkCollapsePubbakicca" href=""><h3>Pubbakaraṇa 1 var</h3></a>
 </div>
 					  <div class="collapse" id="pkCollapsePubbakicca"> 
             <div class="my-3">
@@ -73,7 +73,7 @@ Uposathakammassa pattakallattaṁ viditvā idāni kariyamāno uposatho saṅghen
 <div class="level2 d-flex align-items-center">
   <span class="toggle-button btn btn-primary btn-sm form-check-inline btn-fixed-width btn-rotate"
     data-bs-toggle="collapse" data-bs-target="#pkCollapseBu">+</span>
-			<a data-bs-toggle="collapse" data-bs-target="#pkCollapseBu" href=""><h3>Pubbakaraṇa 2 ver</h3></a>
+			<a data-bs-toggle="collapse" data-bs-target="#pkCollapseBu" href=""><h3>Pubbakaraṇa 2 var</h3></a>
 			
 			<!-- <?php echo "$readerPage"; ?>?q=bu-pm#5.0-->
 </div>
