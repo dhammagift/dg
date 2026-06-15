@@ -143,7 +143,7 @@ tasmā saramānena bhikkhunā āpannena visuddhāpekkhena santī āpatti āvikā
 
            <div class="level4 my-3">
  <span class="level5 pli-lang">Uddiṭṭhaṁ kho āyasmanto nidānaṁ.
-Tatthāyasmante pucchāmi, kaccittha parisuddhā,
+ <br> <br>Tatthāyasmante pucchāmi, kaccittha parisuddhā,
 dutiyampi pucchāmi, kaccittha parisuddhā,
 tatiyampi pucchāmi, kaccittha parisuddhā,
 parisuddhetthāyasmanto, tasmā tuṇhī, evametaṁ dhārayāmīti. </span>
@@ -197,7 +197,7 @@ tato aparena samayena samanuggāhīyamāno vā asamanuggāhīyamāno vā āpanno
  <span class="level5 pli-lang">Uddiṭṭhā kho āyasmanto cattāro pārājikā dhammā.
 Yesaṁ bhikkhu aññataraṁ vā aññataraṁ vā āpajjitvā na labhati bhikkhūhi saddhiṁ saṁvāsaṁ
 yathā pure, tathā pacchā, pārājiko hoti asaṁvāso.
-Tatthāyasmante pucchāmi, kaccittha parisuddhā,
+ <br> <br>Tatthāyasmante pucchāmi, kaccittha parisuddhā,
 dutiyampi pucchāmi, kaccittha parisuddhā,
 tatiyampi pucchāmi, kaccittha parisuddhā,
 parisuddhetthāyasmanto, tasmā tuṇhī, evametaṁ dhārayāmīti. </span>
@@ -294,7 +294,7 @@ Yesaṁ bhikkhu aññataraṁ vā aññataraṁ vā āpajjitvā yāvatīhaṁ j�
 Parivutthaparivāsena bhikkhunā uttari chārattaṁ bhikkhumānattāya paṭipajjitabbaṁ,
 ciṇṇamānatto bhikkhu yattha siyā vīsatigaṇo bhikkhusaṅgho, tattha so bhikkhu abbhetabbo.
 Ekenapi ce ūno vīsatigaṇo bhikkhusaṅgho taṁ bhikkhuṁ abbheyya, so ca bhikkhu anabbhito, te ca bhikkhū gārayhā, ayaṁ tattha sāmīci.
-Tatthāyasmante pucchāmi, kaccittha parisuddhā,
+ <br> <br>Tatthāyasmante pucchāmi, kaccittha parisuddhā,
 dutiyampi pucchāmi, kaccittha parisuddhā,
 tatiyampi pucchāmi, kaccittha parisuddhā,
 parisuddhetthāyasmanto, tasmā tuṇhī, evametaṁ dhārayāmīti.
@@ -341,7 +341,7 @@ parisuddhetthāyasmanto, tasmā tuṇhī, evametaṁ dhārayāmīti.
  
            <div class="level4 my-3">
  <span class="level5 pli-lang">Uddiṭṭhā kho āyasmanto dve aniyatā dhammā.
-Tatthāyasmante pucchāmi, kaccittha parisuddhā,
+ <br> <br>Tatthāyasmante pucchāmi, kaccittha parisuddhā,
 dutiyampi pucchāmi, kaccittha parisuddhā,
 tatiyampi pucchāmi, kaccittha parisuddhā,
 parisuddhetthāyasmanto, tasmā tuṇhī, evametaṁ dhārayāmīti.</span>
@@ -609,7 +609,7 @@ Tato ce uttari nikkhipeyya satiyāpi paccāsāya, nissaggiyaṁ pācittiyaṁ.
 
            <div class="level4 my-3">
  <span class="level5 pli-lang">Uddiṭṭhā kho āyasmanto tiṁsa nissaggiyā pācittiyā dhammā.
-Tatthāyasmante pucchāmi, kaccittha parisuddhā,
+ <br> <br>Tatthāyasmante pucchāmi, kaccittha parisuddhā,
 dutiyampi pucchāmi, kaccittha parisuddhā,
 tatiyampi pucchāmi, kaccittha parisuddhā,
 parisuddhetthāyasmanto, tasmā tuṇhī, evametaṁ dhārayāmīti.
@@ -1357,7 +1357,7 @@ parisuddhetthāyasmanto, tasmā tuṇhī, evametaṁ dhārayāmīti.
    
            <div class="level4 my-3">
  <span class="level5 pli-lang">Uddiṭṭhā kho āyasmanto dvenavuti pācittiyā dhammā.
-Tatthāyasmante pucchāmi, kaccittha parisuddhā,
+ <br> <br>Tatthāyasmante pucchāmi, kaccittha parisuddhā,
 dutiyampi pucchāmi, kaccittha parisuddhā,
 tatiyampi pucchāmi, kaccittha parisuddhā,
 parisuddhetthāyasmanto, tasmā tuṇhī, evametaṁ dhārayāmīti.
@@ -1409,7 +1409,7 @@ parisuddhetthāyasmanto, tasmā tuṇhī, evametaṁ dhārayāmīti.
 </div>
            <div class="level4 my-3">
  <span class="level5 pli-lang">Uddiṭṭhā kho āyasmanto cattāro pāṭidesanīyā dhammā.
-Tatthāyasmante pucchāmi, kaccittha parisuddhā,
+ <br> <br>Tatthāyasmante pucchāmi, kaccittha parisuddhā,
 dutiyampi pucchāmi, kaccittha parisuddhā,
 tatiyampi pucchāmi, kaccittha parisuddhā,
 parisuddhetthāyasmanto, tasmā tuṇhī, evametaṁ dhārayāmīti.
@@ -1672,7 +1672,7 @@ parisuddhetthāyasmanto, tasmā tuṇhī, evametaṁ dhārayāmīti.
            
                      <div class="level4 my-3">
  <span class="level5 pli-lang">Uddiṭṭhā kho āyasmanto sekhiyā dhammā.
-Tatthāyasmante pucchāmi, kaccittha parisuddhā,
+ <br> <br>Tatthāyasmante pucchāmi, kaccittha parisuddhā,
 dutiyampi pucchāmi, kaccittha parisuddhā,
 tatiyampi pucchāmi, kaccittha parisuddhā,
 parisuddhetthāyasmanto, tasmā tuṇhī, evametaṁ dhārayāmīti. </span>
@@ -1745,7 +1745,7 @@ Sekhiyā niṭṭhitā </span>
 </div>
            <div class="level4 my-3">
  <span class="level5 pli-lang">Uddiṭṭhā kho āyasmanto satta adhikaraṇasamathā dhammā.
-Tatthāyasmante pucchāmi, kaccittha parisuddhā,
+ <br> <br>Tatthāyasmante pucchāmi, kaccittha parisuddhā,
 dutiyampi pucchāmi, kaccittha parisuddhā,
 tatiyampi pucchāmi, kaccittha parisuddhā,
 parisuddhetthāyasmanto, tasmā tuṇhī, evametaṁ dhārayāmīti.
