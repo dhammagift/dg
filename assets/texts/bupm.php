@@ -2,10 +2,78 @@
         <div class="mt-3 ">
           <div class="level2 right-text reverse-order">
 
+
+<div class="level2 d-flex align-items-center">
+  <span class="toggle-button btn btn-primary btn-sm form-check-inline btn-fixed-width btn-rotate"
+    data-bs-toggle="collapse" data-bs-target="#pkCollapsePubbakicca">+</span>
+			<a data-bs-toggle="collapse" data-bs-target="#pkCollapsePubbakicca" href=""><h3>Pubbakaraṇa 1 ver</h3></a>
+</div>
+					  <div class="collapse" id="pkCollapsePubbakicca"> 
+            <div class="my-3">
+   
+<div class="level4 my-3">
+ <span class="level5 pli-lang">Okāsaṁ me bhante thero detu pāṭimokkhaṁ uddesituṁ.</br>
+ <br>
+ <u>Saṅghatthera</u>: Karomi āyasmato okāsaṁ. </span>
+</div>     
+
+<div class="level4 my-3">
+ <span class="level5 pli-lang">Uposathakaraṇato pubbe navavidhaṁ pubbakiccaṁ kātabbaṁ hoti:</br>
+Taṇṭhānasammajjanañca; tattha padīpujjalanañca; āsanapaññapanañca; pānīyaparibhojanīyūpaṭṭhapanañca; chandārahānaṁ bhikkhūnaṁ chandāharaṇañca; tesaññeva akatuposathānaṁ pārisuddhiyāpi āharaṇañca; utukkhānañca; bhikkhugaṇanā ca; bhikkhunīnamovādo cāti.</span>
+</div>
+
+<div class="level4 my-3">
+ <span class="level5 pli-lang">Tattha purimesu catūsu kiccesu padīpakiccaṁ idāni suriyālokassa atthitāya natthi, aparāni tīṇi bhikkhūnaṁ vattaṁ jānantehi bhikkhūhi katāni pariniṭṭhitāni honti.</br>
+  <br>
+<b>Chandāharaṇa pārisuddhiāharaṇāni</b> pana imissaṁ sīmāyaṁ hatthapāsaṁ vijahitvā nisinnānaṁ bhikkhūnaṁ abhāvato natthi.</span>
+</div>
+
+<div class="level4 my-3">
+ <span class="level5 pli-lang"><b>Utukkhānaṁ</b> nāma ettakaṁ atikkantaṁ ettakaṁ avasiṭṭhanti; evaṁ utuācikkhanaṁ. Utūnīdha pana sāsane hemantagimhavassānānaṁ vasena tīṇi honti.</br>
+Ayaṁ <i>hemantotu</i> asmiñca utumhi aṭṭha uposathā, iminā pakkhena: <i>eko</i> uposatho sampatto, <i>dve</i> uposathā atikkantā, <i>pañca</i> uposathā avasiṭṭhā.</br>
+Iti evaṁ sabbehi āyasmantehi utukkhānaṁ dhāretabbaṁ.</br>
+ <br>
+  <u>Sabbe</u>: “Evaṁ bhante/āvuso” </span>
+</div>
+
+<div class="level4 my-3">
+ <span class="level5 pli-lang"><b>Bhikkhugaṇanā</b> nāma imasmiṁ uposathagge uposathatthāya sannipatitā bhikkhū ettakāti, bhikkhūnaṁ gaṇanā.</br>
+Imasmiṁ pana uposathagge <i>cattāro</i> bhikkhū sannipatitā honti.</br>
+Iti sabbehi āyasmantehi bhikkhugaṇanāpi dhāretabbā.</br>
+ <br>
+ <u>Sabbe</u>: “Evaṁ bhante/āvuso” </span>
+</div>
+
+<div class="level4 my-3">
+ <span class="level5 pli-lang"><b>Bhikkhunīnamovādo</b> pana samīpe tāsaṁ natthitāya natthi.</br>
+Iti sakaraṇokāsānaṁ pubbakiccānaṁ katattā nikkaraṇokāsānaṁ pubbakiccānaṁ pakatiyā pariniṭṭhitattā evantaṁ navavidhaṁ pubbakiccaṁ pariniṭṭhitaṁ hoti.</br>
+Niṭṭhite ca pubbakicce: Sace so divaso cātuddasīpaṇṇarasīsāmaggīnamaññataro yathājja uposatho <i>paṇṇaraso/cātuddaso/sāmaggo</i>.</span>
+</div>
+
+<div class="level4 my-3">
+ <span class="level5 pli-lang">1. Yāvatikā ca bhikkhū kammappattā saṅghuposathārahā cattāro vā tato vā atirekā pakatattā pārājikaṁ anāpannā saṅghena vā anukkhittā.</br>
+2. Te ca kho hatthapāsaṁ avijahitvā ekasīmāyaṁ ṭhitā.</br>
+3. Tesañca vikālabhojanādivasenavatthusabhāgāpattiyo ce na vijjanti.</br>
+4. Tesañca hatthapāse hatthapāsato bahikaraṇavasena vajjetabbo koci vajjanīyapuggalo ce natthi.</span>
+</div>
+
+<div class="level4 my-3">
+ <span class="level5 pli-lang">Evantaṁ uposathakammaṁ imehi catūhi lakkhaṇehi saṅgahitaṁ pattakallaṁ nāma hoti, kātuṁ yuttarūpaṁ.</br>
+Uposathakammassa pattakallattaṁ viditvā idāni kariyamāno uposatho saṅghena anumānetabbo.</br>
+ <br>
+ <u>Sabbe</u>: “Sādhu bhante/āvuso” </br>
+ <br>
+ <u>Saṅghatthera</u>: <b>Pubbakaraṇapubbakiccāni</b> samāpetvā, imassa nisinnassa bhikkhusaṅghassa anumatiyā pāṭimokkhaṁ uddesituṁ ajjhesanaṁ karomi. </span>
+</div>
+             
+           </div> <!-- mt div -->
+         </div> <!-- collapsediv -->
+
+
 <div class="level2 d-flex align-items-center">
   <span class="toggle-button btn btn-primary btn-sm form-check-inline btn-fixed-width btn-rotate"
     data-bs-toggle="collapse" data-bs-target="#pkCollapseBu">+</span>
-			<a data-bs-toggle="collapse" data-bs-target="#pkCollapseBu" href=""><h3>Pubbakaraṇaṁ</h3></a>
+			<a data-bs-toggle="collapse" data-bs-target="#pkCollapseBu" href=""><h3>Pubbakaraṇa 2 ver</h3></a>
 			
 			<!-- <?php echo "$readerPage"; ?>?q=bu-pm#5.0-->
 </div>
@@ -14,13 +82,13 @@
    
 <div class="level4 my-3">
   <audio controls class="lazy-audio" preload="none"><source src='/assets/audio/bu-pm/Bu-pbkrn.mp3' type='audio/mp4'>Browser is not supported.</audio></br> </br>
- <span class="level5 pli-lang"><strong>Pubbakaraṇaṁ</strong></br>
+ <span class="level5 pli-lang"><strong>Pubbakaraṇa</strong></br>
 Sammajjanī padīpo ca, udakaṁ āsanena ca;
 Uposathassa etāni, “pubbakaraṇa”nti vuccati. </span>
 </div>     
 
 <div class="level4 my-3">
- <span class="level5 pli-lang"><strong>Pubbakiccaṁ</strong></br>
+ <span class="level5 pli-lang"><strong>Pubbakicca</strong></br>
 Chanda, pārisuddhi, utukkhānaṁ, bhikkhugaṇanā ca ovādo;
 Uposathassa etāni, “pubbakicca”nti vuccati.
 </span>
