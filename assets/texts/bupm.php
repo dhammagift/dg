@@ -12,6 +12,8 @@
             <div class="my-3">
    
 <div class="level4 my-3">
+    <audio controls class="lazy-audio" preload="none"><source src='/assets/audio/bu-pm/Bu-pbkc1var.mp3' type='audio/mp4'>Browser is not supported.</audio></br> </br>
+
  <span class="level5 pli-lang">Okāsaṁ me bhante thero detu pāṭimokkhaṁ uddesituṁ.</br>
  <br>
  <u>Saṅghatthera</u>: Karomi āyasmato okāsaṁ. </span>
