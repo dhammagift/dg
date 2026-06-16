@@ -194,7 +194,6 @@ function bindAutocomplete(selector, allWords) {
 
             var history = JSON.parse(localStorage.getItem("localSearchHistory")) || [];
             
-            // Формируем массив объектов, помечая их флагом isHistory
             var historyObjList = history.map(function(item) {
                 if (Array.isArray(item)) {
                     return { label: item[0], value: item[0], url: item[1], isHistory: true };
@@ -219,34 +218,49 @@ function bindAutocomplete(selector, allWords) {
             var normLastTerm = normalize(lastTerm);
             var re = $.ui.autocomplete.escapeRegex(normLastTerm);
             
-            var modifiedRe = re.replace(/([a-zA-Z])/g, "$1{1,2}");
-            modifiedRe = modifiedRe.replace(/m|n/g, "[mn]");
+            // 1. Строгий поиск (без смешивания m и n)
+            var strictReStr = re.replace(/([a-zA-Z])/g, "$1{1,2}");
+            var strictMatchBegin = new RegExp("^" + strictReStr, "i");
+            var strictMatchAll = new RegExp(strictReStr, "i");
 
-            var matchbeginonly = new RegExp("^" + modifiedRe, "i");
-            var matchall = new RegExp(modifiedRe, "i");
+            // 2. Мягкий поиск (разрешаем замену m на n и наоборот)
+            var looseReStr = strictReStr.replace(/m|n/g, "[mn]");
+            var looseMatchBegin = new RegExp("^" + looseReStr, "i");
+            var looseMatchAll = new RegExp(looseReStr, "i");
 
-            var listBeginOnly = $.grep(allWords, function(value) {
+            var strictBeginList = [];
+            var looseBeginList = [];
+            var strictAllList = [];
+            var looseAllList = [];
+
+            // Один проход по словарю с распределением по приоритетам
+            $.each(allWords, function(i, value) {
                 var valStr = value.label || value.value || value;
-                return matchbeginonly.test(normalize(valStr));
-            });
+                var normVal = normalize(valStr);
 
-            var listAll = $.grep(allWords, function(value) {
-                var valStr = value.label || value.value || value;
-                return matchall.test(normalize(valStr));
-            });
-
-            listAll = listAll.filter(function(el) {
-                return !listBeginOnly.includes(el);
+                if (strictMatchBegin.test(normVal)) {
+                    strictBeginList.push(value);
+                } else if (looseMatchBegin.test(normVal)) {
+                    looseBeginList.push(value);
+                } else if (strictMatchAll.test(normVal)) {
+                    strictAllList.push(value);
+                } else if (looseMatchAll.test(normVal)) {
+                    looseAllList.push(value);
+                }
             });
 
             var maxRecord = 1000;
-            var resultList = listBeginOnly.concat(listAll).slice(0, maxRecord);
+            // Склейка результатов по убыванию приоритета
+            var resultList = strictBeginList
+                .concat(looseBeginList)
+                .concat(strictAllList)
+                .concat(looseAllList)
+                .slice(0, maxRecord);
 
             response(resultList);
         },
         focus: function() { return false; },
         select: function(event, ui) {
-            // Если это элемент из истории И в названии есть цифра (сутта)
             if (ui.item.url && /\d/.test(ui.item.value)) {
                 window.location.href = ui.item.url;
                 return false;
@@ -285,14 +299,11 @@ function bindAutocomplete(selector, allWords) {
         }
     }).data("ui-autocomplete");
 
-    // Фиксация высоты меню списка
     $(selector).autocomplete("widget").addClass("fixed-height");
 
-    // Кастомный рендер элементов выпадающего списка
     autocompleteInstance._renderItem = function(ul, item) {
         var $div = $("<div>").addClass("autopali-dropdown-item");
         
-        // Вставляем иконку, если это запись из истории
         if (item.isHistory) {
             $div.append('<img src="/assets/svg/clock-rotate-left.svg" class="autocomplete-history-icon" alt="History">');
         }
@@ -302,7 +313,6 @@ function bindAutocomplete(selector, allWords) {
         return $("<li>").append($div).appendTo(ul);
     };
 }
-
 
 function setupMainInput() {
     if (document.getElementById("paliauto")) {
