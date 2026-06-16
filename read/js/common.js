@@ -26,6 +26,7 @@ window.thanissarotrnranges = [
 'sn1.1',
 'sn12.2',
 'sn12.63',
+'sn12.70',
 'sn15.3',
 'sn15.5',
 'sn15.11',
