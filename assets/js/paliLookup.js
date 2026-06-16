@@ -1172,8 +1172,8 @@ function getClickedWordWithHTML(element, x, y) {
         return null;
     }
 
-    const fullText = parentElement.textContent;
-    const globalOffset = calculateOffsetWithHTML(parentElement, range.startContainer, range.startOffset);
+    const { fullText, globalOffset } = getTextAndOffset(parentElement, range.startContainer, range.startOffset);
+    
     if (globalOffset === -1) {
         return null;
     }
@@ -1189,20 +1189,37 @@ function getClickedWordWithHTML(element, x, y) {
     return null;
 }
 
-function calculateOffsetWithHTML(element, targetNode, targetOffset) {
-    let offset = 0;
-    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
-
+function getTextAndOffset(parentElement, targetNode, targetOffset) {
+    let fullText = '';
+    let globalOffset = -1;
+    
+    const walker = document.createTreeWalker(parentElement, NodeFilter.SHOW_TEXT, null, false);
     let node;
+    let prevIsVar = null;
+
     while ((node = walker.nextNode())) {
-        if (node === targetNode) {
-            return offset + targetOffset;
+        const isVar = node.parentElement && node.parentElement.closest('.var, .variant') !== null;
+        
+        // Если статус "варианта" изменился, добавляем пробел для разделения склеенных слов
+        if (prevIsVar !== null && isVar !== prevIsVar) {
+            // Добавляем пробел, только если на стыке нет других пробельных символов
+            if (!fullText.endsWith(' ') && !node.textContent.startsWith(' ')) {
+                fullText += ' ';
+            }
         }
-        offset += node.textContent.length;
+        
+        // Фиксируем смещение с учетом добавленных пробелов
+        if (node === targetNode) {
+            globalOffset = fullText.length + targetOffset;
+        }
+        
+        fullText += node.textContent;
+        prevIsVar = isVar;
     }
 
-    return -1; 
+    return { fullText, globalOffset };
 }
+
 
 function getFullTextFromElement(element) {
     const textNodes = [];
@@ -1225,4 +1242,5 @@ function cleanWord(word) {
         .trim()
         .toLowerCase();
 }
+
 
