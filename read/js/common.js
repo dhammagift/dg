@@ -23,6 +23,10 @@ window.thanissarotrnranges = [
 'sn1.1',
 'sn12.2',
 'sn12.63',
+'sn22.56',
+'sn22.59',
+'sn22.79',
+'sn22.95',
 'sn35.28',
 'sn56.11'
 ];
