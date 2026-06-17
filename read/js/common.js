@@ -26,6 +26,7 @@ window.thanissarotrnranges = [
 'sn1.1',
 'sn12.2',
 'sn12.63',
+'sn12.68',
 'sn12.70',
 'sn15.3',
 'sn15.5',
@@ -40,7 +41,8 @@ window.thanissarotrnranges = [
 'sn35.28',
 'sn56.11',
 'sn56.35',
-'sn56.45'
+'sn56.45',
+'iti26'
 ];
 
 
