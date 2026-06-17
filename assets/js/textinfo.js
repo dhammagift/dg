@@ -3014,7 +3014,7 @@
 "sn47.45":{"pi":"Kusalarāsisutta ","en":"A Heap of the Skillful ","mtph":"","ru":"Куча благого "},
 "sn47.46":{"pi":"Pātimokkhasaṁvarasutta ","en":"Restraint in the Monastic Code ","mtph":"","ru":"Самообуздание Патимоккхой"},
 "sn47.47":{"pi":"Duccaritasutta ","en":"Bad Conduct ","mtph":"","ru":"Неблагое поведение"},
-"sn47.48":{"pi":"Mittasutta ","en":"Friends ","mtph":"","ru":"Друг"},
+"sn47.48":{"pi":"Mittasutta ","en":"Friends ","mtph":"","ru":"Друг (o)"},
 "sn47.49":{"pi":"Vedanāsutta ","en":"Feelings ","mtph":"","ru":"Чувства"},
 "sn47.50":{"pi":"Āsavasutta ","en":"Defilements ","mtph":"","ru":"Пятно"},
 "sn47.51-62":{"pi":"Gaṅgānadīādisuttadvādasaka ","en":"Twelve Discourses on the Ganges River, Etc. ","mtph":1,"ru":"Двенадцать Сутт, начинающихся с Ганг"},
