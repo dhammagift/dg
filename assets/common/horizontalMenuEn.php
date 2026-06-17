@@ -439,7 +439,7 @@ echo '<!--
     </li>  
          
 
-   <li><a class="dropdown-item" href="javascript:void(0)" target="_blank"  onclick="openWithQuery(event, \'/assets/linebyline.html?q={{q}}\')">Line-by-line Translation Tool</a></li>   
+   <li><a class="dropdown-item" href="javascript:void(0)" target="_blank"  onclick="openWithQuery(event, \'/assets/lbl-en.html?q={{q}}\')">Line-by-line Translation Tool</a></li>   
 
 
    <li><a class="dropdown-item" href="javascript:void(0)" target="_blank"  onclick="openWithQuery(event, \'/assets/diff/?lang=pl&one={{q}}&two={{q}}\')">' . $anamesdiff . '</a></li>

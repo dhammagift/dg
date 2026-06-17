@@ -1062,7 +1062,7 @@ function loadText() {
 
       function generateUrls(originalUrl) {
           const trimmedUrl = originalUrl.match(/\/(sutta|vinaya)\/.*/)[0];
-          const baseUrl = `/assets/texts${trimmedUrl.split('_')[0]}`;  
+          const baseUrl = `/assets/texts/ru${trimmedUrl.split('_')[0]}`;  
           return [
               `${baseUrl}_translation-ru-o.json`,
               `${baseUrl}_translation-ru-o+in+progress.json`,
