@@ -1,0 +1,1929 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" type="text/css" href="/assets/css/bootstrap.5.3.1.min.css"/>
+    <link href="/assets/css/styles.css" rel="stylesheet" />
+    <link href="/assets/css/extrastyles.css" rel="stylesheet" />
+    <link href="/assets/css/lbl.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/css/paliLookup.css">
+
+    <link rel="icon" type="image/png" href="/assets/img/favico-noglass.png" />
+	
+	<link href="/assets/css/jquery-ui.min.css" rel="stylesheet"/>
+<script src="/assets/js/jquery-3.7.0.min.js"></script>
+<script src="/assets/js/jquery-ui.min.js"></script>
+	
+<script type="text/javascript" src="/assets/js/bootstrap.bundle.5.3.1.min.js"></script>
+    <script src="/assets/js/nav-component.js" defer></script>
+
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Построчные Переводы</title>
+<style>
+:root {
+  --textarea-default-height: 600px;
+  --textarea-max-height: 800px;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+
+table.table-hover {
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* Колонка "Текст" (Пали) */
+table.table-hover th:nth-child(1) { 
+  width: 50%; 
+}
+
+/* Колонка "Индексы" (скрытая) */
+table.table-hover th:nth-child(2) { 
+  width: 0; 
+}
+
+/* Колонка "Перевод" (Русский) */
+table.table-hover th:nth-child(3) { 
+  width: 50%; 
+}
+
+/* Колонка со ссылкой */
+table.table-hover th:nth-child(4) { 
+  width: 40px; 
+  text-align: center; 
+}
+
+
+.custom-textarea {
+  resize: both;
+  overflow: auto;
+  min-height: 100px;
+  height: var(--textarea-default-height);
+  max-height: var(--textarea-max-height);
+}
+
+.table-container {
+  flex: 1;
+  resize: both;
+  max-width: 60%;
+  overflow-y: auto;
+  height: var(--textarea-default-height);
+  max-height: var(--textarea-max-height);
+}
+
+.content-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.textarea-container {
+  flex: 1;
+  max-width: 40%;
+}
+
+@media (max-width: 1024px) {
+  .table-container {
+    max-height: 600px;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-container {
+    flex-direction: column;
+  }
+  .table-container,
+  .textarea-container {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .table-container {
+    max-height: 600px;
+  }
+}
+
+label {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+input[type="text"],
+textarea {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  right: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.modal-content {
+  position: absolute;
+  background-color: white;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 60%;
+  max-width: 400px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@media (max-width: 1024px) {
+  .modal-content {
+    width: 70%;
+  }
+}
+
+@media (max-width: 600px) {
+  .modal-content {
+    width: 90%;
+    max-width: none;
+    padding: 10px;
+  }
+}
+
+@media (min-width: 1025px) {
+  .modal-content {
+    width: 60%;
+    max-width: 400px;
+  }
+}
+
+.modal-header {
+  cursor: move;
+}
+
+.close {
+  position: absolute;
+  top: 25px;
+  right: 35px;
+  font-size: 40px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+#translationInput {
+    line-height: 1.5;
+}  
+
+.resizable {
+  resize: horizontal;
+  overflow: auto;
+  min-width: 10px;
+}
+</style>
+</head>
+<body>
+    <div class="mt-3">
+        <div class="align-items-center align-items-center toggle-switch input-group-append">
+            <div id="" class="input-group">
+                <div style="display: inline-flex; margin-top: -60px;">
+                    <top-nav-icons type="read" show-dict></top-nav-icons>
+                </div>
+                <a href="./linebyline.html" title="для Мобильных" class="ms-1 text-muted" target=""><i class="fa-solid fa-mobile"></i></a>
+                <a href="#" onclick="openHelpModal();" title="Инструкция" class="ms-2 text-muted" target=""><i class="fa-solid fa-question"></i></a>
+                <a href="/assets/readylinebyline.html" title="Обновить Список Готовых" class=" ms-2 me-2 text-muted" target="_blank"><i class="fa-solid fa-list"></i></a>  
+                
+                <div class="input-group-append ms-1 me-3 mb-2">
+                    <div class=" ms-1">
+                        <button title="Предыдущий текст" class="input-group-append btn btn-primary" onclick="loadPrev(); loadAndCheckRanges()">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <button title="Следующий текст" class="input-group-append btn btn-primary" onclick="loadNext(); loadAndCheckRanges()">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <div class="ms-1" id="checkResult" style="margin-top: 10px;"></div>
+                </div>
+                
+                <div>
+                    <input style="width: 150px;" type="search" onclick="loadAndCheckRanges()" class="form-control input-sm mb-2" id="indexInput" title="Индекс Текста пример sn56.11, an3.70, sn23.1 и т.п." placeholder="Номер Сутты">   
+                </div>
+
+                <div class="input-group-append ms-1">
+                    <select title="Язык исходного файла" class="form-select input-sm" id="languageSelect">
+                        <option value="pli">Пали</option>
+                        <option value="en">Англ</option>
+                    </select>
+                </div>
+                
+                <div class="input-group-append ms-1 me-3">
+                    <button class="btn btn-primary mb-1" title="Открыть текст на dhamma.gift" id="linkButton2">Th.ru</button>
+                    <button class="btn btn-primary mb-1" title="Открыть текст на dhamma.gift" id="linkButton1">DG</button>
+                </div>
+
+                <div class="input-group-append ms-1 me-3">
+                    <button class="btn btn-primary ms-2 me-1 input-group-append " title="Обновить перевод" onclick="loadText()">Обновить <i class="fa-solid fa-arrow-rotate-right"></i></button>
+                    <button class="btn btn-primary me-1" title="Найти и Заменить" onclick="openSearchModal();"><i class="fas fa-search"></i></button>
+                    <button class="btn btn-primary me-1" title="Найти и Заменить" id="formatButton"><i class="fa-solid fa-text-width"></i></button>
+                    <button class="btn btn-danger me-1" title="Очистить окно ввода текста" onclick="clearInputs()"><i class="fa-solid fa-eraser"></i></button>
+                    <button id="uploadButton" title="Загрузить JSON" class="btn btn-secondary me-1"><i class="fa-solid fa-upload"></i></button>
+                    <button id="loadFromServerButton" class="btn btn-secondary me-1" title="Загрузить перевод с сервера (beta)"><i class="fa-regular fa-folder-open"></i></button>
+                    <button class="btn btn-primary me-1" title="Сохранить JSON" onclick="downloadJson()">Сохранить <i class="fa-solid fa-download"></i></button>
+                    
+                    <div class="d-flex align-items-center">
+                        <div class="form-check me-2">
+                            <input class="form-check-input" title="Отформатировать текст" type="checkbox" id="lineBreakCheckbox">
+                            <label class="form-check-label" for="lineBreakCheckbox">Формат</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" title="Заменить +edited+o в название файла на o" type="checkbox" id="customTranslatorName">
+                            <label class="form-check-label" for="customTranslatorName">пер. o</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<div id="translationJsonOutput"></div>
+
+<div class="content-container">
+    <div class="table-container mt-2 mb-3">
+        <table class="table-hover">
+            <thead>
+                <tr>
+                    <th class="resizable">Текст</th>
+                    <th class="resizable">Индексы</th>
+                    <th class="resizable">Перевод</th>
+                    <th class=""><i class="fa-solid fa-link"></i></th>
+                </tr>
+            </thead>
+            <tbody id="outputTableBody"></tbody>
+        </table>
+    </div>
+
+    <div class="textarea-container my-3">
+        <textarea id="translationInput" placeholder="1. Введите номер текста в 'Номер Текста'&#10;2. Вставьте русский перевод сюда&#10;3. Нажмите 'Обновить'&#10;&#10;Инструмент добавит заголовок и переносы строк.&#10;Можно будет поправить переноcы вручную. &#10;Если перенос строки где-то не нужен, то нужно объеденить предложения в переводе.&#10;&#10;Также вместо 'Загрузить JSON' в это окно можно вставить скопированный текст JSON файла напрямую." class="form-control custom-textarea" rows="15"></textarea>
+    </div>
+</div>
+
+<script>
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const qParam = urlParams.get('q');
+            if (qParam) {
+                document.getElementById('indexInput').value = qParam;
+				loadText();
+				window.history.replaceState(null, '', window.location.origin + window.location.pathname);
+            }
+        };
+
+    function loadAndCheckRanges() {
+        fetch('/read/js/reader-rus-translations.js')
+            .then(response => response.text())
+            .then(data => {
+                const regex = /let (\w+) = \[([\s\S]+?)\];/g;
+                let match;
+                let variables = {};
+
+                while ((match = regex.exec(data)) !== null) {
+                    let varName = match[1];
+                    let varValues = match[2].replace(/\s+/g, '').split(',').map(val => val.replace(/['"]/g, ''));
+                    variables[varName] = varValues;
+                }
+
+                const inputField = document.getElementById('indexInput');
+                inputField.addEventListener('input', function () {
+                    const inputValue = this.value.trim().toLowerCase();
+                    console.log('Введенное значение:', inputValue);
+
+                    let resultMessage = '<i class="fa-solid fa-triangle-exclamation"></i>❌✅Уже есть!';
+
+                    if (inputValue.startsWith('an')) {
+                     resultMessage = '<i class="fa-solid fa-triangle-exclamation"></i>❌✅Уже есть!';
+                    } else if (inputValue.startsWith('sn')) {
+                        if (variables['snranges'] && variables['snranges'].includes(inputValue)) {
+                            console.log('Найден в snranges:', inputValue);
+                        } else {
+                            console.log('Не найден в snranges:', inputValue);
+                            resultMessage = '';
+                        }
+                    } else if (inputValue.startsWith('mn')) {
+                        if (variables['mnranges'] && variables['mnranges'].includes(inputValue)) {
+                            console.log('Найден в mnranges:', inputValue);
+                        } else {
+                            console.log('Не найден в mnranges:', inputValue);
+                            resultMessage = '';
+                        }
+                    } else if (inputValue.startsWith('dn')) {
+                        if (variables['dnranges'] && variables['dnranges'].includes(inputValue)) {
+                            console.log('Найден в dnranges:', inputValue);
+                        } else {
+                            console.log('Не найден в dnranges:', inputValue);
+                            resultMessage = '';
+                        }
+                    } else if (
+                      inputValue.startsWith('iti') ||
+                      inputValue.startsWith('snp') ||
+                      inputValue.startsWith('dhp')
+                    ) {
+                        if (variables['knranges'] && variables['knranges'].includes(inputValue)) {
+                            console.log('Найден в knranges:', inputValue);
+                        } else {
+                            console.log('Не найден в knranges:', inputValue);
+                            resultMessage = '';
+                        }
+                    } else if (inputValue.startsWith('bu-')) {
+                        if (variables['vinayaranges'] && variables['vinayaranges'].includes(inputValue)) {
+                            console.log('Найден в vinayaranges:', inputValue);
+                        } else {
+                            console.log('Не найден в vinayaranges:', inputValue);
+                            resultMessage = '';
+                        }
+                    } else {
+                        resultMessage = 'Неизвестный префикс.';
+                    }
+
+                    document.getElementById('checkResult').innerHTML = resultMessage;
+                });
+
+                inputField.dispatchEvent(new Event('input'));
+            })
+            .catch(error => {
+                console.error('Ошибка при загрузке файла:', error);
+            });
+    }
+
+    loadAndCheckRanges();
+
+  function gotoLine(lineNumber) {
+    // Принудительно закрываем редактирование ячейки (если она активна)
+    const activeTextarea = document.querySelector('#outputTableBody textarea.table-textarea');
+    if (activeTextarea) {
+      activeTextarea.blur();
+    }
+
+    // Задержка в 10мс, чтобы blur успел перенести текст в левое окно
+    setTimeout(() => {
+      const textarea = document.getElementById('translationInput');
+      const lines = textarea.value.split('\n');
+      
+      if (lineNumber > lines.length) {
+        console.log("Номер строки превышает количество строк в тексте.");
+        return;
+      }
+
+      let charCount = 0;
+
+      for (let i = 0; i < lineNumber - 1 && i < lines.length; i++) {
+        charCount += lines[i].length + 1; 
+      }
+
+      const lineEnd = charCount + lines[lineNumber - 1].length;
+
+      textarea.focus();
+      textarea.setSelectionRange(charCount, lineEnd);
+      
+      if (textarea.scrollHeight > 0) {
+        textarea.scrollTop = textarea.scrollHeight * (charCount / textarea.value.length);
+      }
+    }, 10);
+  }
+</script>
+
+<div id="searchModal" class="modal">
+  <div class="modal-content">
+    <div id="modalHeader" class="modal-header">	        
+	<button class="mb-1 btn btn-link text-decoration-none close closeBtn" id="">&times;</button>
+      <h3>Поиск и замена</h3>
+    </div>
+    <div class="modal-body">
+      <label for="searchText">Найти:</label>
+      <input type="text" id="searchText">
+      <br>
+      <label for="replaceText">Заменить на:</label>
+      <input type="text" id="replaceText">
+      <br><br>
+      <button class="mb-1 btn btn-primary" id="findBtn">Найти</button>
+      <button  class="mb-1 btn btn-primary" id="replaceOneBtn">Заменить</button>
+      <button class="mb-1 btn btn-primary" id="replaceAllBtn">Заменить все</button>
+      <button class="mb-1 btn btn-secondary closeBtn" id="">Закрыть</button>
+      <br>
+      <button class="mb-1 btn btn-primary btn-sm" data-template="«Это – боль», «Это – скапливание боли», «Это – истечение боли», «Это – к истечению боли ведущая практика».">4би</button>
+      <button class="mb-1 btn btn-primary btn-sm" data-template="«Это – боль»… «Это – к истечению боли ведущая практика». ">4би short</button>
+      <button class="mb-1 btn btn-primary btn-sm" data-template="Правильный взгляд, правильное намерение-заготовка, правильная речь, правильные действия, правильные быт, правильное старание, правильное памятование, правильное объединение опыта. ">б8п</button>
+      <button class="mb-1 btn btn-primary btn-sm" data-template="Правильный взгляд… правильное объединение опыта. ">б8п short</button>
+      <button class="mb-1 btn btn-primary btn-sm" data-template="Так сказал Благословенный. Довольные монахи обрадовались речи Благословенного. ">Так сказал…</button>
+      <button class="mb-1 btn btn-primary btn-sm" data-template="—">—</button>
+      <button class="mb-1 btn btn-primary btn-sm" data-template="“”">“”</button>
+      <button class="mb-1 btn btn-primary btn-sm" data-template="¿">¿</button>
+    </div>
+  </div>
+</div>
+
+<div id="helpModal" style="z-index:100;" class="modal">
+  <div class="modal-content">
+    <div id="modalHeader" class="modal-header">
+      <button class="mb-1 btn btn-link text-decoration-none close closeBtn" id="">&times;</button>
+      <h3>Помощь</h3>
+    </div>
+    <div class="modal-body">
+        <button class="btn btn-link text-decoration-none" data-bs-toggle="collapse" data-bs-target="#tableHelp" aria-expanded="false" aria-controls="tableHelp">
+              <h3>В Режиме Таблицы</h3><p>показать / скрыть</p>
+        </button>
+      <div class="collapse" id="tableHelp">
+        <p>
+          Клик по ячейке с русским текстом - редактировать.<br><br>
+          Клик по <i class="fa-solid fa-link"></i> - перейти в эту строку в быстром редактировании.<br><br>
+          Когда ячейка таблицы активна:<br><br>
+          <strong><i class="fa-solid fa-arrow-up"></i> или <i class="fa-solid fa-arrow-left"></i></strong> - переход между ячейками вверх<br><br>
+          <strong><i class="fa-solid fa-arrow-down"></i> или <i class="fa-solid fa-arrow-right"></i></strong> - переход между ячейками вниз<br><br>
+          <strong>enter</strong> - добавить пустую строку или перенести текст в новую строку<br><br>
+          <strong>ctrl+enter</strong> - перенести текст в начало следующей строки<br><br>
+          <strong>backspace</strong> в начале строки переместит текст на строку выше.<br><br>
+          <strong>delete</strong> в конце строки переместит текст на текущую строку.
+        </p>
+      </div>
+      <br><br>
+        <button class="btn btn-link text-decoration-none" data-bs-toggle="collapse" data-bs-target="#textInputHelp" aria-expanded="false" aria-controls="textInputHelp">
+                    <h3>В Режиме Окна Ввода</h3><p>показать / скрыть</p>    
+        </button>
+      <div class="collapse" id="textInputHelp">
+        <p>
+          <strong>ctrl+Q</strong> - выделить вертикальный список и нажать комбинацию. Это переделает вертикальный список в строку.<br><br>
+          <strong>ctrl+F или ctrl+H</strong> - замена текста. () или [] нужно экранировать так: \(\) и \[\] .
+        </p>
+      </div>
+      <br><br>
+      <h3>
+        <a href="https://youtu.be/JkJNgMhmv64" title="Видео Инструкция" class="ms-2" target="_blank">
+          <i class="fa-brands fa-youtube"></i> Видео-инструкция
+        </a>
+      </h3>
+      <br><br>
+      <button class="mb-1 btn btn-primary closeBtn" id="">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<div id="settings" class="modal">
+  <div class="modal-content">
+    <div id="modalHeader" class="modal-header">
+	<button class="mb-1 btn btn-link text-decoration-none close closeBtn" id="">&times;</button>
+      <h3>Настройки</h3>
+    </div>
+    <div class="modal-body">
+      <label for="translator">Переводчик:</label>
+      <input type="text" id="translator">
+      <br><br>
+      <button class="mb-1 btn btn-primary" id="saveSettings">Сохранить</button>
+      <button  class="mb-1 btn btn-primary" id="resetSettings">Сбросить</button>
+      <button class="mb-1 btn btn-primary" id="closeBtn">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<button style="display: none;" class="btn btn-primary" title="Эмулировать клавишу Ctrl" id="ctrlEnterButton">Ctrl + Enter</button>
+
+<div class="my-3">
+    <input type="file" id="fileInput" style="display:none" accept=".json" />
+<script>
+ function findItiVagga(suttaNumber) {
+  if (suttaNumber >= 1 && suttaNumber <= 10) {
+    return "1";
+  } else if (suttaNumber >= 11 && suttaNumber <= 20) {
+    return "2";
+  } else if (suttaNumber >= 21 && suttaNumber <= 27) {
+    return "3";
+  } else if (suttaNumber >= 28 && suttaNumber <= 37) {
+    return "4";
+  } else if (suttaNumber >= 38 && suttaNumber <= 49) {
+    return "5";
+  } else if (suttaNumber >= 50 && suttaNumber <= 59) {
+    return "6";
+  } else if (suttaNumber >= 60 && suttaNumber <= 69) {
+    return "7";
+  } else if (suttaNumber >= 70 && suttaNumber <= 79) {
+    return "8";
+  } else if (suttaNumber >= 80 && suttaNumber <= 89) {
+    return "9";
+  } else if (suttaNumber >= 90 && suttaNumber <= 99) {
+    return "10";
+  } else if (suttaNumber >= 100 && suttaNumber <= 112) {
+    return "11";
+  }
+} 
+  
+  document.getElementById('uploadButton').addEventListener('click', function() {
+    const inputText = document.getElementById('translationInput').value;
+    if (inputText.trim() === '') {
+      document.getElementById('fileInput').click();
+    } else {
+      processJson(inputText);
+    }
+  });
+
+  document.getElementById('fileInput').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const fileContent = e.target.result;
+        processJson(fileContent);
+      };
+      reader.readAsText(file);
+    }
+  });
+
+  function processJson(inputText) {
+    try {
+      const jsonObject = JSON.parse(inputText);
+      const values = Object.values(jsonObject);
+      const result = values.join('\n');
+      document.getElementById('translationInput').value = result;
+    } catch (error) {
+      const proceed = confirm('Хотите загрузить файл для замены данных?');
+      if (proceed) {
+        document.getElementById('fileInput').click();
+      }
+    }
+  }
+</script>
+</div>
+
+<script>
+function downloadJson() {
+  const language = document.getElementById('languageSelect').value;
+  const indexValue = document.getElementById('indexInput').value.trim().toLowerCase();
+  const translation = document.getElementById('translationInput').value.trim();
+
+  const translationLines = translation.split('\n');
+  const jsonData = {};
+
+  let lettersOnly = indexValue.match(/[a-z]+/)[0];
+  let beforeDot = indexValue.split('.')[0];
+  let firstNumberOnly = beforeDot.match(/[0-9]+/)?.[0] ?? null;
+
+  if (indexValue.includes('snp') || indexValue.includes('ud') || indexValue.includes('dhp') || indexValue.includes('iti')) {
+    lettersOnly = 'kn/' + lettersOnly;
+  }
+
+  if (indexValue.includes('snp') || indexValue.includes('ud')) {
+    beforeDot = 'vagga' + firstNumberOnly;
+  } else if (indexValue.includes('dhp')) {
+    beforeDot = '';
+  }  
+  
+  if ( indexValue.includes('iti')) {
+    beforeDot = 'vagga' + findItiVagga(firstNumberOnly);
+  } 
+
+  let url;
+  if (indexValue.includes('bu-') || indexValue.includes('bi-')) {
+    let buOrbi = indexValue.split('-')[0]; 
+    let lawIndex = indexValue.split('-')[1]; 
+    let lawType = lawIndex.match(/[a-z]+/)[0];
+    let fileNameBlock = 'pli-tv-' + buOrbi + '-vb/pli-tv-' + buOrbi + '-vb-' + lawType + '/pli-tv-' + buOrbi + '-vb-' + lawIndex;
+
+    if (indexValue.includes('-pm')) {
+      fileNameBlock = 'pli-tv-' + buOrbi + '-pm';
+    } 
+    console.log('fileNameBlock ' + fileNameBlock) ;
+    if (language === 'pli') {
+      url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/vinaya/${fileNameBlock}_root-pli-ms.json`;    
+    } else if (language === 'en') {
+      url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/brahmali/vinaya/${fileNameBlock}_translation-en-brahmali.json`;
+    }
+  } else if (language === 'pli') {
+      url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta/${lettersOnly}/${beforeDot}/${indexValue}_root-pli-ms.json`;
+  } else if (language === 'en') {
+      url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${lettersOnly}/${beforeDot}/${indexValue}_translation-en-sujato.json`;
+  }
+
+  if (indexValue.match(/dn|mn/)) {
+    if (language === 'pli') {
+      url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta/${lettersOnly}/${indexValue}_root-pli-ms.json`;
+    } else if (language === 'en') {
+      url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${lettersOnly}/${indexValue}_translation-en-sujato.json`;
+    }
+  }
+  console.log('url ' + url) ;
+
+  const translations = {
+  "Paṭhamaṁ.": "The First.",
+  "Dutiyaṁ.": "The Second.",
+  "Tatiyaṁ.": "The Third.",
+  "Catutthaṁ.": "The Fourth.",
+  "Pañcamaṁ.": "The Fifth.",
+  "Chaṭṭhaṁ.": "The Sixth.",
+  "Sattamaṁ.": "The Seventh.",
+  "Aṭṭhamaṁ.": "The Eighth.",
+  "Navamaṁ.": "The Ninth.",
+  "Dasamaṁ.": "The Tenth.",
+  "Ekādasamaṁ.": "The Eleventh.",
+  "Dvādasamaṁ.": "The Twelfth.",
+  "Terasamaṁ.": "The Thirteenth.",
+  "Cuddasamaṁ.": "The Fourteenth.",
+  "Pannarasamaṁ.": "The Fifteenth.",
+  "Soḷasamaṁ.": "The Sixteenth.",
+  "Sattarasamaṁ.": "The Seventeenth.",
+  "Aṭṭhārasamaṁ.": "The Eighteenth.",
+  "Tiṁsatimaṁ.": "The Thirtieth.",
+  "Tassuddānaṁ": "The Summary"
+};
+  fetch(url)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(data => {
+      const dataArray = Object.entries(data);
+
+      dataArray.forEach(([key, value], index) => {
+        let translationLine = translationLines[index] || ''; 
+        if (translations[value.trim()]) {
+          translationLine = translations[value.trim()];
+        }
+        jsonData[key] = translationLine;
+      });
+
+      const jsonString = JSON.stringify(jsonData, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+	  
+      let translatorName = 'thanissaro';
+      if (document.getElementById('customTranslatorName').checked) {
+        translatorName = 'o';
+      }
+	  
+      a.download = indexValue + '_translation-en-' + translatorName + '.json';
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    })
+    .catch(error => console.error('Error fetching data:', error.message));
+}
+</script>
+
+<script>
+function loadText() {
+  const language = document.getElementById('languageSelect').value;
+  const indexValue = document.getElementById('indexInput').value.trim().toLowerCase();
+  let translation = document.getElementById('translationInput').value;
+  let cleanedTranslation = translation;
+
+  try {
+    const jsonObject = JSON.parse(translation);
+    processJson(translation);
+    return;  
+  } catch (error) {
+  }
+
+  if (document.getElementById('lineBreakCheckbox').checked) {
+    cleanedTranslation = translation.replace(/[\.…:?!] /g, (match, offset, fullString) => {
+      if (match === '. ' && offset >= 3 && fullString.substring(offset - 3, offset) === 'Ven') {
+        return match;
+      }
+      if (fullString.charAt(offset + match.length) !== '\n') {
+        return `${match}\n`;
+      }
+      return match;
+    });
+
+    cleanedTranslation = cleanedTranslation.replace(/\([А-Я]* [0-9]*\.[0-9]*\)/g, '');
+    cleanedTranslation = cleanedTranslation.replace(/ {2,}/g, ' ');
+    cleanedTranslation = cleanedTranslation.replace(/АН\s[0-9]+\.[0-9]+\s+[\s\S]*?Anguttara Nikaya.*$/gm, '');
+    cleanedTranslation = cleanedTranslation.replace(/СН\s[0-9]+\.[0-9]+\s+[\s\S]*?Samyutta Nikaya.*$/gm, '');
+    cleanedTranslation = cleanedTranslation.replace(/(\(1\)|1\)) ([а-я])/g, function(match, p1, p2) {
+      return p1 + ' ' + p2.toUpperCase();
+    });
+
+    cleanedTranslation = cleanedTranslation.replace(/(?<![а-яА-Я])то точно также/g, 'точно также');
+    cleanedTranslation = cleanedTranslation.replace(/точно также/g, '\nточно также');
+    cleanedTranslation = cleanedTranslation.replace(/Как ты думаешь, /g, 'Как ты думаешь,\n');
+    cleanedTranslation = cleanedTranslation.replace(/Как вы думаете, /g, 'Как вы думаете,\n');
+    cleanedTranslation = cleanedTranslation.replace(/или как ты считаешь/g, '\nили как ты считаешь');
+    cleanedTranslation = cleanedTranslation.replace(/или как вы считаете/g, '\nили как вы считаете');
+    cleanedTranslation = cleanedTranslation.replace(/Каки/g, '\nКаки');
+    cleanedTranslation = cleanedTranslation.replace(/В каких/g, '\nВ каких');
+    cleanedTranslation = cleanedTranslation.replace(/\[Благословенный сказал\]:/gm, '');
+    cleanedTranslation = cleanedTranslation.replace(/\[Благословенный сказал:/gm, '');
+    cleanedTranslation = cleanedTranslation.replace(/^.*\[И далее он добавил\]:.*$/gm, '');
+    cleanedTranslation = cleanedTranslation.replace(/Там Благословенный обратился к монахам:/g, '\nТам Благословенный обратился к монахам:\n');
+    cleanedTranslation = cleanedTranslation.replace(/Так сказал Благословенный./g, '\nТак сказал Благословенный.\n');
+    cleanedTranslation = cleanedTranslation.replace(/\(I\)/g, 'Первая');
+    cleanedTranslation = cleanedTranslation.replace(/\(II\)/g, 'Вторая');
+    cleanedTranslation = cleanedTranslation.replace(/\(III\)/g, 'Третья');
+    cleanedTranslation = cleanedTranslation.replace(/\(IV\)/g, 'Четвёртая');
+    cleanedTranslation = cleanedTranslation.replace(/^\*\s+/gm, '');
+    cleanedTranslation = cleanedTranslation.replace(/[0-9]*"/g, '');
+    cleanedTranslation = cleanedTranslation.replace(/^–\s+/gm, '');
+    cleanedTranslation = cleanedTranslation.replace(/\([1-9][0-9]?\) /g, '');
+    cleanedTranslation = cleanedTranslation.replace(/\([1-9][0-9]?-[1-9][0-9]?\) /g, '');
+    cleanedTranslation = cleanedTranslation.replace(/[1-9][0-9]?\) /g, '');
+    cleanedTranslation = cleanedTranslation.replace(/^\s*[\r\n]/gm, '');
+    cleanedTranslation = cleanedTranslation.replace(/([А-Яа-я»…\]])\d+\b/g, '$1');
+  }
+
+  if (/sn[0-9]/.test(indexValue)) {
+      if (!cleanedTranslation.startsWith("Linked Discourses")) {
+          const additionalLines = `Linked Discourses ${indexValue.replace(/[a-z]/g, '')}\nChapter \nSutta \n\n\n`;
+          cleanedTranslation = additionalLines + cleanedTranslation;
+      } else if (cleanedTranslation.startsWith("Linked Discourses")) {
+          cleanedTranslation = `Linked Discourses ${indexValue.replace(/[a-z]/g, '')}${cleanedTranslation.substring(cleanedTranslation.indexOf("\n"))}`;
+      }
+  } else if (indexValue.includes("an")) {
+      if (!cleanedTranslation.startsWith("Numbered Discourses")) {
+          const additionalLines = `Numbered Discourses ${indexValue.replace(/[a-z]/g, '')}\nChapter \nSutta \n\n\n`;
+          cleanedTranslation = additionalLines + cleanedTranslation;
+      } else if (cleanedTranslation.startsWith("Numbered Discourses")) {
+          cleanedTranslation = `Numbered Discourses ${indexValue.replace(/[a-z]/g, '')}${cleanedTranslation.substring(cleanedTranslation.indexOf("\n"))}`;
+      }
+  } else if (indexValue.includes("snp")) {
+      if (!cleanedTranslation.startsWith("Sutta Nipata")) {
+          const additionalLines = `Sutta Nipata ${indexValue.replace(/[a-z]/g, '')}\nName\n\n`;
+          cleanedTranslation = additionalLines + cleanedTranslation;
+      } else if (cleanedTranslation.startsWith("Sutta Nipata")) {
+          cleanedTranslation = `Sutta Nipata ${indexValue.replace(/[a-z]/g, '')}${cleanedTranslation.substring(cleanedTranslation.indexOf("\n"))}`;
+      }
+  } else if (indexValue.includes("ud")) {
+      if (!cleanedTranslation.startsWith("Udana")) {
+          const additionalLines = `Udana ${indexValue.replace(/[a-z]/g, '')}\nSutta \n\n`;
+          cleanedTranslation = additionalLines + cleanedTranslation;
+      } else if (cleanedTranslation.startsWith("Udana")) {
+          cleanedTranslation = `Udana ${indexValue.replace(/[a-z]/g, '')}${cleanedTranslation.substring(cleanedTranslation.indexOf("\n"))}`;
+      }
+  } else if (indexValue.includes("iti")) {
+      if (!cleanedTranslation.startsWith("Thus Was Said")) {
+          const additionalLines = `Thus Was Said ${indexValue.replace(/[a-z]/g, '')}\nNipata \nChapter \nSutta \n`;
+          cleanedTranslation = additionalLines + cleanedTranslation;
+      } else if (cleanedTranslation.startsWith("Thus Was Said")) {
+          cleanedTranslation = `Thus Was Said ${indexValue.replace(/[a-z]/g, '')}${cleanedTranslation.substring(cleanedTranslation.indexOf("\n"))}`;
+      }
+  }
+
+  // Очистка от лишних пробелов в концах строк и гарантированное добавление одного пробела
+  cleanedTranslation = cleanedTranslation
+      .replace(/[ \t]+$/gm, '')
+      .replace(/([^\r\n])$/gm, '$1 ');
+
+  document.getElementById('translationInput').value = cleanedTranslation;
+  document.getElementById('lineBreakCheckbox').checked = false;
+
+  const translationLines = cleanedTranslation.split('\n');
+  let lettersOnly = indexValue.match(/[a-z]+/)[0];
+  let beforeDot = indexValue.split('.')[0];
+  let firstNumberOnly = beforeDot.match(/[0-9]+/)?.[0] ?? null;
+
+  if (indexValue.includes('snp') || indexValue.includes('ud') || indexValue.includes('dhp') || indexValue.includes('iti')) {
+    lettersOnly = 'kn/' + lettersOnly;
+  }
+
+  if (indexValue.includes('snp') || indexValue.includes('ud')) {
+    beforeDot = 'vagga' + firstNumberOnly;
+  } else if (indexValue.includes('dhp')) {
+    beforeDot = '';
+  }  
+  
+  if ( indexValue.includes('iti')) {
+    beforeDot = 'vagga' + findItiVagga(firstNumberOnly);
+  } 
+  
+  let url;
+  let fileNameBlock;
+  
+  if (indexValue.includes('bu-') || indexValue.includes('bi-')) {
+    let buOrbi = indexValue.split('-')[0]; 
+    let lawIndex = indexValue.split('-')[1]; 
+    let lawType = lawIndex.match(/[a-z]+/)[0];
+    fileNameBlock = 'pli-tv-' + buOrbi + '-vb/pli-tv-' + buOrbi + '-vb-' + lawType + '/pli-tv-' + buOrbi + '-vb-' + lawIndex;
+    if (indexValue.includes('-pm')) {
+      fileNameBlock = 'pli-tv-' + buOrbi + '-pm';
+    } 
+    console.log('fileNameBlock ' + fileNameBlock) ;
+    if (language === 'pli') {
+      url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/vinaya/${fileNameBlock}_root-pli-ms.json`;    
+    } else if (language === 'en') {
+      url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/brahmali/vinaya/${fileNameBlock}_translation-en-brahmali.json`;
+    }
+  } else if (language === 'pli') {
+      url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta/${lettersOnly}/${beforeDot}/${indexValue}_root-pli-ms.json`;
+  } else if (language === 'en') {
+      url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${lettersOnly}/${beforeDot}/${indexValue}_translation-en-sujato.json`;
+  }
+  
+  if (indexValue.match(/dn|mn/)) {
+    if (language === 'pli') {
+      url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta/${lettersOnly}/${indexValue}_root-pli-ms.json`;
+    } else if (language === 'en') {
+      url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${lettersOnly}/${indexValue}_translation-en-sujato.json`;
+    }
+  }
+  console.log('url ' + url) ;
+
+  fetch(url)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(data => {
+      const tableBody = document.getElementById('outputTableBody');
+      const translationInput = document.getElementById('translationInput'); 
+
+      let tableHtml = '';
+      const dataArray = Object.entries(data);
+      const translationLines = translationInput.value.split('\n'); 
+      let rowCounter = 0; 
+
+      dataArray.forEach(([key, value], index) => {
+        const translationLine = translationLines[index] || ''; 
+        const texts = translationLine.split('\n'); 
+
+        texts.forEach((text, textIndex) => {
+          const currentText = texts[textIndex] || ''; 
+          rowCounter++;
+          const row = `<tr>
+                        <td class="pli-lang">${value.trimEnd()}</td>
+                        <td>${key}</td>
+                        <td>${currentText}</td>
+                        <td><a href="#" title="${key}" onmousedown="gotoLine(${rowCounter})"><i class="fa-solid fa-link"></i></a></td>
+                      </tr>`;
+          tableHtml += row;
+        });
+      });
+
+      if (translationLines.length > dataArray.length) {
+        for (let i = dataArray.length; i < translationLines.length; i++) {
+          rowCounter++;
+          const extraText = translationLines[i] || ''; 
+          const extraRow = `<tr>
+                            <td></td><td></td>
+                            <td>${extraText}</td>
+                            <td><a href="#" onmousedown="gotoLine(${rowCounter})"><i class="fa-solid fa-link"></i></a></td>
+                          </tr>`;
+          tableHtml += extraRow;
+        }
+      }
+
+
+      tableBody.innerHTML = tableHtml;
+
+      async function checkFileExists(url) {
+          try {
+              const response = await fetch(url, { method: 'HEAD' });
+              return response.ok;  
+          } catch (error) {
+              console.error(`Error fetching ${url}`, error);
+              return false;
+          }
+      }
+
+      function generateUrls(originalUrl) {
+          const trimmedUrl = originalUrl.match(/\/(sutta|vinaya)\/.*/)[0];
+          const baseUrl = `/assets/texts${trimmedUrl.split('_')[0]}`;  
+          return [
+              `${baseUrl}_translation-ru-o.json`,
+              `${baseUrl}_translation-ru-o+in+progress.json`,
+              `${baseUrl}_translation-ru-sv+edited+o.json`,
+              `${baseUrl}_translation-ru-sv.json`,
+              `${baseUrl}_translation-ru-khemanando+edited+o.json`,
+              `${baseUrl}_translation-ru-kheminda+edited+o.json`,
+              `${baseUrl}_translation-ru-microsoftTranslator+edited+o.json`,
+              `${baseUrl}_translation-ru-tel+edited+o.json`
+          ];
+      }
+
+      async function findAvailableTranslations(originalUrl) {
+          const urls = generateUrls(originalUrl);  
+          const availableUrls = [];
+
+          for (const url of urls) {
+              const exists = await checkFileExists(url);
+              if (exists) {
+                  availableUrls.push(url);  
+              }
+          }
+
+          if (availableUrls.length > 0) {
+              if (availableUrls.length === 1) {
+                  return availableUrls[0]; 
+              }
+              let selectionMessage = 'Выберите перевод:\n';
+              availableUrls.forEach((url, index) => {
+                  selectionMessage += `${index + 1}: ${url}\n`;
+              });
+
+              const userChoice = prompt(selectionMessage);
+              const selectedUrl = availableUrls[userChoice - 1];
+
+              if (selectedUrl) {
+                  return selectedUrl;
+              } else {
+                  alert("Неверный выбор.");
+                  return null;
+              }
+          } else {
+              alert("Нет доступных переводов.");
+              return null;
+          }
+      }
+
+      async function loadFileContent(url) {
+          try {
+              const response = await fetch(url);
+              if (response.ok) {
+                  const content = await response.text();  
+                  document.getElementById('translationInput').value = content;  
+              } else {
+                  alert('Не удалось загрузить файл.');
+              }
+          } catch (error) {
+              console.error('Ошибка загрузки файла:', error);
+              alert('Произошла ошибка при загрузке файла.');
+          }
+      }
+
+      document.getElementById('loadFromServerButton').addEventListener('click', function() {
+          findAvailableTranslations(url).then((selectedUrl) => {
+              if (selectedUrl) {
+                  loadFileContent(selectedUrl);  
+              }
+          });
+      });
+
+      document.getElementById('outputTableBody').addEventListener('click', function(event) {
+          let target = event.target;
+          
+          // Поднимаемся к TD, если клик был по вложенному элементу
+          while (target && target.tagName !== 'TD') {
+              target = target.parentElement;
+          }
+
+          if (target && target.tagName === 'TD' && target.cellIndex === 2) {
+              let cursorPosition = null;
+              
+              // Вычисляем позицию курсора на основе места клика
+              const selection = window.getSelection();
+              if (selection.rangeCount > 0) {
+                  const range = selection.getRangeAt(0);
+                  if (target.contains(range.startContainer)) {
+                      const preCaretRange = range.cloneRange();
+                      preCaretRange.selectNodeContents(target);
+                      preCaretRange.setEnd(range.startContainer, range.startOffset);
+                      cursorPosition = preCaretRange.toString().length;
+                  }
+              }
+              
+              makeCellEditable(target, cursorPosition);
+          }
+      });
+
+      function makeCellEditable(cell, cursorPosition = null) {
+          if (cell.querySelector('textarea')) return; 
+
+          const currentOffsetHeight = cell.offsetHeight;
+          const computedStyle = window.getComputedStyle(cell);
+          const paddingTop = parseFloat(computedStyle.paddingTop) || 0;
+          const paddingBottom = parseFloat(computedStyle.paddingBottom) || 0;
+          const innerHeight = currentOffsetHeight - paddingTop - paddingBottom;
+
+          const originalRawLength = cell.textContent.trimEnd().length;
+
+          let originalText = cell.textContent.trimStart(); 
+          if (originalText !== '') {
+              originalText = originalText.trimEnd() + ' ';
+          }
+          
+          const textarea = document.createElement('textarea');
+          textarea.value = originalText;
+          textarea.classList.add('table-textarea'); 
+
+          cell.style.height = `${currentOffsetHeight}px`;
+          
+          textarea.style.width = '100%';
+          textarea.style.height = `${innerHeight}px`;
+          textarea.style.boxSizing = 'border-box';
+          textarea.style.resize = 'none'; 
+          textarea.style.overflowY = 'auto'; 
+          
+          cell.dataset.originalText = originalText;
+          
+          cell.textContent = '';
+          cell.appendChild(textarea);
+          textarea.focus();
+
+          if (cursorPosition !== null) {
+              let position;
+              const textLength = textarea.value.length;
+
+              if (cursorPosition === 'start') {
+                  position = 0;
+              } else if (cursorPosition === 'end') {
+                  position = textLength;
+              } else if (typeof cursorPosition === 'number') {
+                  if (cursorPosition >= originalRawLength) {
+                      position = textLength; 
+                  } else if (cursorPosition >= 0) {
+                      position = Math.min(cursorPosition, textLength); 
+                  } else {
+                      position = Math.max(textLength + cursorPosition, 0); 
+                  }
+              }
+
+              textarea.setSelectionRange(position, position); 
+          } else {
+              textarea.setSelectionRange(textarea.value.length, textarea.value.length); 
+          }
+
+          function finishEditing() {
+              let newText = textarea.value.trimStart(); 
+              if (newText !== '') {
+                  newText = newText.trimEnd() + ' ';
+              }
+              cell.textContent = newText; 
+              cell.style.height = ''; 
+              delete cell.dataset.originalText; 
+              updateTranslationTextarea();
+              saveInputs();
+          }
+
+          textarea.addEventListener('blur', finishEditing);
+
+          textarea.addEventListener('keydown', function(event) {
+              const currentRow = cell.parentElement;
+              const tbody = currentRow.parentElement;
+              const rows = Array.from(tbody.children);
+              const rowIndex = rows.indexOf(currentRow);
+
+              // -- НАВИГАЦИЯ СТРЕЛКАМИ --
+              if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+                  if (textarea.selectionStart === textarea.value.length) {
+                      event.preventDefault();
+                      const nextRow = currentRow.nextElementSibling;
+                      if (nextRow) makeCellEditable(nextRow.cells[2], 0);
+                      return;
+                  }
+              }
+
+              if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+                  if (textarea.selectionStart === 0) {
+                      event.preventDefault();
+                      const prevRow = currentRow.previousElementSibling;
+                      if (prevRow) makeCellEditable(prevRow.cells[2], 'end');
+                      return;
+                  }
+              }
+
+              // -- ОБРАБОТКА ENTER, BACKSPACE, DELETE (Пакетное обновление) --
+              if (event.key === 'Enter' || event.key === 'Backspace' || event.key === 'Delete') {
+                  
+                  // Разрешаем стандартное поведение, если курсор не на краях текста или выделен кусок текста
+                  if (event.key === 'Backspace' && textarea.selectionStart !== 0) return;
+                  if (event.key === 'Delete' && textarea.selectionStart !== textarea.value.length) return;
+                  if ((event.key === 'Backspace' || event.key === 'Delete') && textarea.selectionStart !== textarea.selectionEnd) return;
+
+                  event.preventDefault();
+
+                  // 1. Batch Read: Быстро собираем все переводы в массив (в память)
+                  let translations = rows.map(r => {
+                      const c = r.cells[2];
+                      if (c.querySelector('textarea')) return textarea.value.trim();
+                      return c.textContent.trim();
+                  });
+
+                  const cursorPosition = textarea.selectionStart;
+                  let targetCell = null;
+                  let targetCursorPos = 0;
+                  
+                  // Отключаем blur, чтобы избежать фантомных записей
+                  textarea.removeEventListener('blur', finishEditing);
+                  cell.textContent = ''; 
+                  cell.style.height = '';
+
+                  // 2. Логика сдвигов в массиве (очень быстро)
+                  if (event.key === 'Enter' && !event.ctrlKey) {
+                      const textBefore = textarea.value.slice(0, cursorPosition).trim();
+                      const textAfter = textarea.value.slice(cursorPosition).trim();
+                      
+                      translations[rowIndex] = textBefore;
+                      translations.splice(rowIndex + 1, 0, textAfter);
+                      
+                      targetCell = currentRow.nextElementSibling ? currentRow.nextElementSibling.cells[2] : null;
+                      targetCursorPos = 0;
+                  } 
+                  else if (event.key === 'Enter' && event.ctrlKey) {
+                      const textBefore = textarea.value.slice(0, cursorPosition).trim();
+                      const textAfter = textarea.value.slice(cursorPosition).trim();
+                      
+                      translations[rowIndex] = textBefore;
+                      
+                      if (rowIndex + 1 < translations.length) {
+                          const existingNext = translations[rowIndex + 1];
+                          translations[rowIndex + 1] = textAfter + (existingNext ? ' ' : '') + existingNext;
+                      } else {
+                          translations.push(textAfter);
+                      }
+                      
+                      targetCell = currentRow.nextElementSibling ? currentRow.nextElementSibling.cells[2] : null;
+                      targetCursorPos = 0;
+                  }
+                  else if (event.key === 'Backspace' && rowIndex > 0) {
+                      const currentText = textarea.value.trim();
+                      const prevText = translations[rowIndex - 1];
+                      targetCursorPos = prevText.length > 0 ? prevText.length + 1 : 0;
+                      
+                      translations[rowIndex - 1] = prevText + (prevText ? ' ' : '') + currentText;
+                      translations.splice(rowIndex, 1);
+                      
+                      targetCell = currentRow.previousElementSibling.cells[2];
+                  }
+                  else if (event.key === 'Delete' && rowIndex < translations.length - 1) {
+                      const currentText = textarea.value.trim();
+                      const nextText = translations[rowIndex + 1];
+                      
+                      translations[rowIndex] = currentText + (currentText ? ' ' : '') + nextText;
+                      translations.splice(rowIndex + 1, 1);
+                      
+                      targetCell = cell;
+                      targetCursorPos = currentText.length;
+                  } else {
+                      // Предохранитель для Backspace в самом начале или Delete в самом конце
+                      cell.textContent = textarea.value.trim() !== '' ? textarea.value.trim() + ' ' : '';
+                      makeCellEditable(cell, cursorPosition);
+                      return;
+                  }
+
+                  // 3. Batch Write: Записываем массив обратно в DOM без мерцаний и тормозов
+                  for (let i = 0; i < rows.length; i++) {
+                      const expected = translations[i] !== undefined ? translations[i] : '';
+                      const expectedFormatted = expected !== '' ? expected + ' ' : '';
+                      
+                      if (i < translations.length) {
+                          if (rows[i].cells[2].textContent !== expectedFormatted) {
+                              rows[i].cells[2].textContent = expectedFormatted;
+                          }
+                      } else {
+                          rows[i].cells[2].textContent = '';
+                      }
+                  }
+
+                  // Если массив стал больше таблицы (переводы ушли вниз) - добавляем строки без оригинала в конец
+                  while (rows.length < translations.length) {
+                      const i = rows.length;
+                      const expected = translations[i] || '';
+                      const expectedFormatted = expected !== '' ? expected + ' ' : '';
+                      const tr = document.createElement('tr');
+                      tr.innerHTML = `<td></td><td></td><td>${expectedFormatted}</td><td><a href="#" onclick="gotoLine(${i + 1})"><i class="fa-solid fa-link"></i></a></td>`;
+                      tbody.appendChild(tr);
+                      rows.push(tr); 
+                  }
+
+                  // Если удалили пустые хвосты снизу (где нет оригинала)
+                  while (rows.length > translations.length) {
+                      const lastRow = rows[rows.length - 1];
+                      if (lastRow.cells[0].textContent.trim() === '') {
+                          lastRow.remove();
+                          rows.pop();
+                      } else {
+                          break; 
+                      }
+                  }
+
+                  // 4. Синхронизируем левое текстовое окно и хранилище
+                  document.getElementById('translationInput').value = translations.join('\n');
+                  saveInputs();
+
+                  // 5. Восстанавливаем фокус
+                  if (!targetCell && event.key === 'Enter' && !event.ctrlKey) {
+                       targetCell = tbody.lastElementChild.cells[2];
+                  }
+                  if (targetCell) {
+                      makeCellEditable(targetCell, targetCursorPos);
+                  }
+              }
+          });
+
+          function shiftCellsUp(startRow) {
+              let rowToMove = startRow;
+              while (rowToMove.nextElementSibling) {
+                  const nextRow = rowToMove.nextElementSibling;
+                  rowToMove.cells[2].textContent = nextRow.cells[2].textContent;
+                  rowToMove = nextRow;
+              }
+              rowToMove.cells[2].textContent = '';
+              
+              let rowToUpdate = startRow;
+              while (rowToUpdate) {
+                  updateSingleTranslationRow(rowToUpdate.cells[2]);
+                  rowToUpdate = rowToUpdate.nextElementSibling;
+              }
+          }
+
+          function updateTranslationInput() {
+              const rows = document.querySelectorAll('tr');
+              const translations = Array.from(rows).map(row => {
+                  let text = row.cells[2].textContent.trimStart();
+                  return text !== '' ? text.trimEnd() + ' ' : '';
+              });
+              translationInput.value = translations.join('\n').replace(/\n$/, '');
+          }
+      }
+
+
+      function updateTranslationTextarea() {
+          const tableRows = document.querySelectorAll('#outputTableBody tr');
+          let updatedTranslation = '';
+          
+          tableRows.forEach(row => {
+              const translationCell = row.cells[2]; 
+              let text = translationCell.textContent.trim();
+              // Добавляем пробел, если строка не пустая
+              updatedTranslation += (text !== '' ? text + ' ' : '') + '\n'; 
+          });
+          
+          // Заменяем trim() на удаление только последнего переноса строки, 
+          // чтобы сохранить конечный пробел в самом конце текста
+          document.getElementById('translationInput').value = updatedTranslation.replace(/\n$/, ''); 
+      }
+
+      function updateSingleTranslationRow(cell) {
+          const currentText = document.getElementById('translationInput').value;
+          const rows = currentText.split('\n');
+          const rowIndex = Array.prototype.indexOf.call(cell.parentElement.parentElement.children, cell.parentElement);
+          
+          let text = cell.textContent.trim();
+          // Обновляем конкретную строку, добавляя пробел, если она не пустая
+          rows[rowIndex] = text !== '' ? text + ' ' : '';
+          
+          document.getElementById('translationInput').value = rows.join('\n');
+      }
+
+      document.addEventListener('DOMContentLoaded', updateTranslationTextarea);
+
+
+    })
+    .catch(error => console.error('Error fetching data:', error.message));
+}
+
+</script>
+
+<script>
+function ifKn(indexValue) {
+  let beforeDot = "";
+  let lettersOnly = "";
+  if (indexValue.includes('snp') || indexValue.includes('ud') || indexValue.includes('dhp') || indexValue.includes('iti')) {
+    lettersOnly = 'kn/' + lettersOnly;
+
+    if (indexValue.includes('snp') || indexValue.includes('ud')) {
+      beforeDot = 'vagga' + firstNumberOnly;
+    } else if (indexValue.includes('dhp')) {
+      beforeDot = '';
+    } else if (indexValue.includes('iti')) {
+      beforeDot = 'vagga' + findItiVagga(firstNumberOnly);
+    }
+  }
+
+  let valueForApi = lettersOnly + "/" + beforeDot + "/" + indexValue;
+  return valueForApi;
+}
+
+function loadPrev() {
+  const texttype = 'sutta';
+  const indexValue = document.getElementById('indexInput').value.trim().toLowerCase();
+  const textPart = indexValue.split('.')[0]; 
+  const book = indexValue.replace(/[^a-zA-Z]/g, ''); 
+  let  valueForApi = book + "/" + textPart + "/" + indexValue;
+
+  const url = "/read/php/api.php?fromjs=" + texttype + "/" + valueForApi + "&type=B";
+  const originalValue = indexValue;
+
+  console.log("Prev URL: ", url);
+  fetch(url)
+      .then(response => response.text()) 
+      .then(data => {
+          console.log("Prev Data: ", data);
+          const newIndexValue = extractIndexValue(data);
+          if (newIndexValue) {
+            const inputField = document.getElementById('indexInput');
+            inputField.value = newIndexValue; 
+            inputField.dispatchEvent(new Event('input')); 
+          }
+          loadText();
+      })
+      .catch(error => {
+          console.error('Error fetching prev data:', error);
+          document.getElementById('indexInput').value = originalValue;
+      });
+}
+
+function loadNext() {
+  const texttype = 'sutta';
+  const indexValue = document.getElementById('indexInput').value.trim().toLowerCase();
+  const textPart = indexValue.split('.')[0]; 
+  const book = indexValue.replace(/[^a-zA-Z]/g, ''); 
+  const valueForApi = book + "/" + textPart + "/" + indexValue;
+  const url = "/read/php/api.php?fromjs=" + texttype + "/" + valueForApi + "&type=A";
+  const originalValue = indexValue;
+
+  console.log("Next URL: ", url);
+  fetch(url)
+      .then(response => response.text()) 
+      .then(data => {
+          console.log("Next Data: ", data);
+          const newIndexValue = extractIndexValue(data);
+          if (newIndexValue) {
+            const inputField = document.getElementById('indexInput');
+            inputField.value = newIndexValue; 
+            inputField.dispatchEvent(new Event('input')); 
+          }
+          loadText();
+      })
+      .catch(error => {
+          console.error('Error fetching next data:', error);
+          document.getElementById('indexInput').value = originalValue;
+          inputField.dispatchEvent(new Event('input')); 
+      });
+}
+
+function extractIndexValue(data) {
+    return data.split(' ')[0]; 
+}
+</script>
+
+<script>
+document.addEventListener('keydown', function(event) {
+    const target = event.target;
+    if ((target.id === 'indexInput' || target.id === 'languageSelect') && event.key === 'Enter') {
+        event.preventDefault(); 
+        loadText(); 
+    }
+});
+
+const customTranslatorCheckbox = document.getElementById('customTranslatorName');
+
+function saveInputs() {
+  localStorage.setItem('indexValue', indexInput.value);
+  localStorage.setItem('translationValue', translationInput.value);
+  localStorage.setItem('customTranslatorCheckboxState', customTranslatorCheckbox.checked);
+}
+
+translationInput.addEventListener('input', function() {
+  saveInputs();
+  localStorage.setItem('translationValue', translationInput.value);
+});
+
+customTranslatorCheckbox.addEventListener('change', saveInputs);
+
+function loadInputs() {
+  const savedCheckboxState = localStorage.getItem('customTranslatorCheckboxState');
+  if (savedCheckboxState !== null) {
+    customTranslatorCheckbox.checked = savedCheckboxState === 'true';
+  }
+	
+  if (localStorage.getItem('indexValue')) { 
+    indexInput.value = localStorage.getItem('indexValue');
+  } else {
+    fetch('/assets/texts/miss_longest')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.text();
+      })
+      .then(data => {
+        const firstLine = data.split('\n')[0];
+        const firstPart = firstLine.split(' ')[0];
+        indexInput.value = firstPart;
+      })
+      .catch(error => {
+        console.error('Ошибка при получении файла:', error);
+        indexInput.value = 'sn37.30';
+      });
+  }
+  translationInput.value = localStorage.getItem('translationValue') || '';
+}
+
+loadInputs();
+indexInput.addEventListener('input', saveInputs);
+translationInput.addEventListener('input', saveInputs);
+lineBreakCheckbox.addEventListener('input', saveInputs);
+ 
+function clearInputs() {
+  if (confirm('Вы действительно хотите очистить перевод?')) {
+    document.getElementById('translationInput').value = '';
+    localStorage.removeItem('translationValue');
+    localStorage.removeItem('lineBreakCheckboxState');
+  }
+}
+</script>
+<script defer src="/assets/js/themeswitch.js"></script>
+<script src="/assets/js/linksru.js"></script>
+	
+<script>
+    document.getElementById('linkButton1').addEventListener('click', function() {
+        var indexValue = document.getElementById('indexInput').value;
+        var url = '/r/?q=' + indexValue;
+        window.open(url, '_blank');
+    });
+</script> 
+	
+<script>
+    document.getElementById('linkButton2').addEventListener('click', function() {
+        var indexValue = document.getElementById('indexInput').value;
+        var found = false;
+
+        for (var i = 0; i < thruLinksData.length; i++) {
+            if (thruLinksData[i][0] === indexValue) {
+                var path = thruLinksData[i][1];
+                window.open('/theravada.ru/Teaching/Canon/Suttanta/Texts/' + path, '_blank');
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            var match = indexValue.match(/(an|sn)(\d+)\.\d+/i);
+            if (match) {
+                var prefix = match[1].toUpperCase();
+                var bookNumber = match[2];
+
+                if (prefix === 'AN') {
+                    var url = '/theravada.ru/Teaching/Canon/Suttanta/AN/anguttara-' + bookNumber + '.htm';
+                } else if (prefix === 'SN') {
+                    var url = '/theravada.ru/Teaching/Canon/Suttanta/SN/samyutta-' + bookNumber + '.htm';
+                }
+                window.open(url, '_blank');
+            } else {
+                var url = '/ru/sc?q=' + indexValue;
+                window.open(url, '_blank');
+            }
+        }
+    });
+</script>
+
+<script>
+$.ajax({
+  url: "/assets/texts/sutta_words.txt",
+  dataType: "text",
+  success: function(data) {
+    var accentMap = {
+      "ā": "a", "ī": "i", "ū": "u", "ḍ": "d", "ḷ": "l", "ṃ": "ṁ", "ṁ": "n", 
+      "ṅ": "n", "ṇ": "n", "ṭ": "t", "ñ": "n", "ññ": "n", "ss": "s", "aa": "a", 
+      "ii": "i", "uu": "u", "dd": "d", "kk": "k", "ḍḍ": "d", "ḷḷ": "l", "ṇṇ": "n", 
+      "ṭṭ": "t", "cc": "c", "pp": "p", "cch": "c", "ch": "c", "kh": "k", "ph": "p", 
+      "th": "t", "ṭh": "t"
+    };
+
+    var normalize = function(term) {
+      var ret = "";
+      for (var i = 0; i < term.length; i++) {
+          ret += accentMap[term.charAt(i)] || term.charAt(i);
+      }
+      return ret;
+    };
+
+    var allWords = data.split('\n');
+
+    $("#indexInput").autocomplete({
+      position: {
+        my: "left bottom",
+        at: "left top",
+        collision: "flip"
+      },
+      minLength: 0,
+      multiple: /[\s\*]/, 
+      source: function(request, response) {
+        var terms = request.term.split(/[\|\s\*]/); 
+        var lastTerm = terms.pop().trim();
+        var otherMinLength = 3;
+
+        if (lastTerm.length < otherMinLength) {
+          response([]);
+          return;
+        }
+
+        var re = $.ui.autocomplete.escapeRegex(lastTerm);
+        var matchbeginonly = new RegExp("^" + re, "i");
+        var matchall = new RegExp(re.replace(/([a-z])\1/gi, "$1$1"), "i");
+
+        var listBeginOnly = $.grep(allWords, function(value) {
+          value = value.label || value.value || value;
+          var results = matchbeginonly.test(value) || matchbeginonly.test(normalize(value));
+          return results;
+        });
+
+        var listAll = $.grep(allWords, function(value) {
+          value = value.label || value.value || value;
+          var results = matchall.test(value) || matchall.test(normalize(value));
+          return results;
+        });
+
+        listAll = listAll.filter(function(el) {
+          return !listBeginOnly.includes(el);
+        });
+
+        var maxRecord = 1000;
+        var resultList = listBeginOnly.concat(listAll).slice(0, maxRecord);
+
+        response(resultList);
+      },
+      focus: function(event, ui) {
+        return false;
+      },
+      select: function(event, ui) {
+        var terms = this.value.split(/([\|\s\*])/);
+        terms.pop();
+  
+        var selectedValue = ui.item.value;
+        if (/\s+\d+$/.test(selectedValue)) {
+            selectedValue = selectedValue.split(/\s+/)[0];
+        }
+        
+        if (/\d+\s+/.test(selectedValue)) {
+            selectedValue = selectedValue.split(/\s+/)[0];
+        }
+        
+        if (/b[ui]pm|b[ui]-pm|pm/.test(selectedValue)) {
+            selectedValue = selectedValue.split(/\s+/)[0];
+        }
+  
+        terms.push(selectedValue);
+					
+        for (var i = 1; i < terms.length; i += 2) {
+          if (terms[i] === "*") {
+            terms[i] = "*";
+          } else if (terms[i] === "|") {
+            terms[i] = "|";
+          } else {
+            terms[i] = " ";
+          }
+        }
+
+        this.value = terms.join("");
+        return false;
+      }
+    }).autocomplete("widget").addClass("fixed-height");
+  }
+});
+</script>
+
+<script>
+    const translationInput = document.getElementById('translationInput');
+    const searchModal = document.getElementById('searchModal');
+    const searchText = document.getElementById('searchText');
+    const replaceText = document.getElementById('replaceText');
+    const findBtn = document.getElementById('findBtn');
+    const replaceOneBtn = document.getElementById('replaceOneBtn');
+    const replaceAllBtn = document.getElementById('replaceAllBtn');
+
+    let lastIndex = 0;
+
+    function openSearchModal() {
+      console.log('Opening search modal');
+      lastIndex = 0; 
+      searchModal.style.display = 'block';
+      searchText.focus();
+    }
+
+    const helpModal = document.getElementById('helpModal');
+
+    function openHelpModal() {
+      console.log('Opening help modal');
+      lastIndex = 0; 
+      helpModal.style.display = 'block';
+    }
+
+function closeModal(modal) {
+  console.log(`Closing ${modal.id}`);
+  modal.style.display = 'none';
+  setTimeout(() => {
+    translationInput.focus(); 
+  }, 0);
+}
+
+const closeBtns = document.querySelectorAll('.closeBtn');
+closeBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const modal = btn.closest('.modal'); 
+    if (modal) {
+      closeModal(modal); 
+    }
+  });
+});
+
+    findBtn.addEventListener('click', function () {
+      const searchValue = searchText.value;
+      if (searchValue) {
+        const content = translationInput.value;
+        lastIndex = content.indexOf(searchValue, lastIndex + 1);
+
+        if (lastIndex !== -1) {
+          console.log(`Text found at index ${lastIndex}`);
+          translationInput.focus();
+          translationInput.setSelectionRange(lastIndex, lastIndex + searchValue.length);
+        } else {
+          alert('Совпадений больше нет');
+          console.log('No more matches found');
+          lastIndex = 0; 
+        }
+      }
+    });
+
+    replaceOneBtn.addEventListener('click', function () {
+      const searchValue = searchText.value;
+      const replaceValue = replaceText.value;
+      if (searchValue) {
+        const content = translationInput.value;
+        lastIndex = content.indexOf(searchValue, lastIndex);
+
+        if (lastIndex !== -1) {
+          translationInput.value = 
+            content.slice(0, lastIndex) + replaceValue + content.slice(lastIndex + searchValue.length);
+          console.log(`Replaced text at index ${lastIndex}`);
+          lastIndex += replaceValue.length;
+          translationInput.focus();
+          translationInput.setSelectionRange(lastIndex, lastIndex);
+        } else {
+          alert('Совпадений больше нет');
+          console.log('No more matches found for replacement');
+          lastIndex = 0;
+        }
+      }
+    });
+
+    replaceAllBtn.addEventListener('click', function () {
+      const searchValue = searchText.value;
+      const replaceValue = replaceText.value;
+      if (searchValue) {
+        const regex = new RegExp(searchValue, 'g');
+        translationInput.value = translationInput.value.replace(regex, replaceValue);
+        console.log('Replaced all occurrences');
+      }
+    });
+
+   document.addEventListener('keydown', function (e) {
+  if (e.ctrlKey && e.shiftKey && (e.code === 'KeyF' || e.code === 'KeyH')) {
+    console.log('Key combination pressed: ', e.code);
+    e.preventDefault();
+    openSearchModal();
+  }
+});
+
+    window.addEventListener('click', function (e) {
+      if (e.target == searchModal) {
+        console.log('Clicked outside the modal');
+        closeSearchModal();
+      }
+    });
+
+const modal = document.getElementById("searchModal");
+const modalHeader = document.getElementById("modalHeader");
+let isDragging = false;
+let offsetX = 0, offsetY = 0;
+
+modalHeader.addEventListener('mousedown', function (e) {
+  isDragging = true;
+  offsetX = e.clientX - modal.offsetLeft;
+  offsetY = e.clientY - modal.offsetTop;
+  document.body.style.cursor = "move"; 
+});
+
+document.addEventListener('mousemove', function (e) {
+  if (isDragging) {
+    modal.style.left = (e.clientX - offsetX) + "px";
+    modal.style.top = (e.clientY - offsetY) + "px";
+  }
+});
+
+document.addEventListener('mouseup', function () {
+  isDragging = false;
+  document.body.style.cursor = "default"; 
+});
+
+document.addEventListener('keydown', function (e) {
+  if (e.ctrlKey && e.shiftKey && (e.code === 'KeyF' || e.code === 'KeyH')) {
+    console.log('Key combination pressed: ', e.code);
+    e.preventDefault();
+    openSearchModal();
+  }
+});
+
+function openSearchModal() {
+  console.log("Opening search modal");
+  modal.style.display = "block";
+}
+
+window.addEventListener('click', function(event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+});
+</script>
+
+<script>
+document.querySelectorAll('button[data-template]').forEach(function(button) {
+    button.addEventListener('click', function() {
+        var translationInput = document.getElementById('translationInput');
+
+        if (!translationInput) {
+            console.error("Element with id 'translationInput' not found");
+            return;
+        }
+
+        var textToInsert = button.getAttribute('data-template');
+
+        if (textToInsert === null || textToInsert === undefined) {
+            console.error("No text found in data-template attribute");
+            return;
+        }
+
+        var startPos = translationInput.selectionStart;
+        var endPos = translationInput.selectionEnd;
+
+        var beforeCursor = translationInput.value.substring(0, startPos);
+        var afterCursor = translationInput.value.substring(endPos, translationInput.value.length);
+        translationInput.value = beforeCursor + textToInsert + afterCursor;
+
+        translationInput.selectionStart = translationInput.selectionEnd = startPos + textToInsert.length;
+        translationInput.focus();
+    });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+        loadText();
+    });
+</script>
+
+<script src="/assets/js/fontawesome.6.6.all.js" defer></script>
+ <script src="/assets/js/smoothScroll.js" defer></script>
+
+<script>
+function syncTextToTable() {
+  const textarea = document.getElementById('translationInput');
+  const tableBody = document.getElementById('outputTableBody');
+  
+  if (!textarea || !tableBody || tableBody.rows.length === 0) return;
+
+  const translationLines = textarea.value.split('\n');
+  const rows = tableBody.rows;
+  const rowCount = rows.length;
+
+  for (let i = 0; i < rowCount; i++) {
+    const currentText = translationLines[i] || '';
+    const cell = rows[i].cells[2]; 
+    
+    if (cell && !cell.querySelector('textarea')) {
+      if (cell.textContent !== currentText) {
+        cell.textContent = currentText;
+      }
+    }
+  }
+}
+
+function init() {
+  const textarea = document.getElementById('translationInput');
+  if (!textarea) {
+    console.error('Textarea not found!');
+    return;
+  }
+
+  let typingTimer; 
+  const typingInterval = 300; 
+
+  function handleKeyPress(event) {
+    const key = event.key || event.keyCode;
+
+    if (key === 'Enter' || key === 'Backspace' || key === 'Delete' || event.keyCode === 13 || event.keyCode === 8 || event.keyCode === 46 || event.keyCode === 32 || event.keyCode === 229) {
+      clearTimeout(typingTimer); 
+      typingTimer = setTimeout(syncTextToTable, typingInterval); 
+    }
+  }
+
+  textarea.addEventListener('keyup', handleKeyPress);
+
+  textarea.addEventListener('input', function() {
+    clearTimeout(typingTimer); 
+    typingTimer = setTimeout(syncTextToTable, typingInterval); 
+  });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+<script>
+document.getElementById("formatButton").addEventListener("click", joinSelectedText);
+
+document.addEventListener("keydown", function(event) {
+    if (event.ctrlKey && event.code === 'KeyQ') {
+        event.preventDefault();
+        joinSelectedText(); // Новая функция для выпрямления
+    }
+});
+
+function formatSelectedText() {
+    const textarea = document.getElementById("translationInput");
+    const selectionStart = textarea.selectionStart;
+    const selectionEnd = textarea.selectionEnd;
+
+    if (selectionStart !== selectionEnd) {
+        // Форматирование для выделенного куска текста
+        const selectedText = textarea.value.substring(selectionStart, selectionEnd);
+        
+        const formattedText = selectedText
+            .replace(/[ \t]+$/gm, '') // Сначала убираем все пробелы и табы на концах строк
+            .replace(/([^\r\n])$/gm, '$1 '); // Добавляем ровно один пробел в конец каждой непустой строки
+
+        const newText = textarea.value.substring(0, selectionStart) + formattedText + textarea.value.substring(selectionEnd);
+        textarea.value = newText;
+
+        syncTextToTable();
+        textarea.setSelectionRange(selectionStart, selectionStart + formattedText.length);
+    } else {
+        // Если ничего не выделено, легковесно и быстро форматируем весь текст
+        const currentPosition = textarea.selectionStart;
+        
+        textarea.value = textarea.value
+            .replace(/[ \t]+$/gm, '')
+            .replace(/([^\r\n])$/gm, '$1 ');
+
+        syncTextToTable();
+        textarea.setSelectionRange(currentPosition, currentPosition);
+    }
+}
+
+
+function joinSelectedText() {
+    const textarea = document.getElementById("translationInput");
+    const selectionStart = textarea.selectionStart;
+    const selectionEnd = textarea.selectionEnd;
+
+    if (selectionStart !== selectionEnd) {
+        const selectedText = textarea.value.substring(selectionStart, selectionEnd);
+        
+        // Превращаем вертикальный список в строку
+        const joinedText = selectedText
+            .replace(/\r?\n|\r/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        const newText = textarea.value.substring(0, selectionStart) + joinedText + textarea.value.substring(selectionEnd);
+        textarea.value = newText;
+
+        syncTextToTable();
+        textarea.setSelectionRange(selectionStart, selectionStart + joinedText.length);
+    }
+}
+
+
+
+document.addEventListener("DOMContentLoaded", function() {
+    let timeoutId;
+    const indexInput = document.getElementById("indexInput");
+
+    indexInput.addEventListener("input", function() {
+        clearTimeout(timeoutId); 
+        timeoutId = setTimeout(function() {
+            const textIndex = indexInput.value;
+            if (textIndex) {
+                document.title = textIndex;
+            }
+        }, 1000); 
+    });
+});
+</script>
+<script src="/assets/js/settings.js"></script>
+</body>
+</html>
