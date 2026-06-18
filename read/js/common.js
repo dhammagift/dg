@@ -48,6 +48,8 @@ window.thanissarotrnranges = [
 'sn56.26',
 'sn56.35',
 'sn56.45',
+'sn56.46',
+'sn56.48',
 'iti26'
 ];
 
