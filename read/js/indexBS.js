@@ -213,17 +213,24 @@ async function buildSutta(slug) {
     const origUrl = window.location.href;
     let dUrl = origUrl.replace("/read/", "/d/");
     let thUrl = origUrl.replace("/read/", "/th/read/");
-    const isWarningClosed = localStorage.getItem('warningClosed');
-    const canShowClose = (parseInt(localStorage.getItem('warningViewCount')) || 0) >= 10;
 
-    const warning = `
-      <div class="warning-container warning-box">
-        <p class='warning'>
-          <strong>Note:</strong><a class='text-decoration-none cursor-pointer' target='' href='${dUrl}'>&nbsp;</a>Translations, dictionaries and commentaries were not made by the Blessed One.<a class='text-decoration-none cursor-pointer' target='' href='${thUrl}'>&nbsp;</a>Cross-check with Pali in 4 main nikayas.
-          ${canShowClose && !isWarningClosed ? `<span class="close-warning">×</span>` : ''} 
-        </p>
-      </div>
-    `;
+      const SHOW_CLOSE_AFTER = 10;
+      let viewCount = parseInt(localStorage.getItem('warningViewCount')) || 0;
+      viewCount++;
+      localStorage.setItem('warningViewCount', viewCount);
+      const canShowClose = viewCount >= SHOW_CLOSE_AFTER;
+      const isWarningClosed = localStorage.getItem('warningClosed');
+
+      const warning = `
+        <div style="max-width: 550px; margin: 0 auto; text-align: center;" class="warning-container">
+          <p class='warning'>
+            <strong>Note:</strong><a style='cursor: pointer;' class='text-decoration-none' target='' href='${dUrl}'>&nbsp;</a>Translations, dictionaries and commentaries were not made by the Blessed One.<a style='cursor: pointer;' class='text-decoration-none' target='' href='${thUrl}'>&nbsp;</a>Cross-check with Pali in 4 main nikayas.
+                 ${canShowClose && !isWarningClosed ? `<span class="close-warning">×</span>` : ''} 
+          </p>
+        </div>
+      `;
+      
+      
 
     suttaArea.innerHTML = `<div id="top-links-container" class="min-h-24"></div><br>` + 
         (!isWarningClosed ? warning : '') + translatorByline + html + translatorByline + 
@@ -231,6 +238,18 @@ async function buildSutta(slug) {
 
     window.dispatchEvent(new Event('suttaLoaded'));
     if (typeof window.setupVariantVisibility === 'function') window.setupVariantVisibility();
+
+
+      // === 2. НАСТРОЙКА ИНТЕРФЕЙСА (ПОКА ТЕКСТ УЖЕ МОЖНО ЧИТАТЬ) ===
+      if (canShowClose && !isWarningClosed) {
+        document.querySelectorAll('.close-warning').forEach(btn => {
+          btn.addEventListener('click', function() {
+            localStorage.setItem('warningClosed', 'true');
+            document.querySelectorAll('.warning-container').forEach(el => el.remove());
+          });
+        });
+      }
+
 
     // Заголовки и мета
     let cleanSlug = slug.replace(/pli-tv-|vb-/g, '');
