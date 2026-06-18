@@ -730,10 +730,10 @@ function loadText() {
       return p1 + ' ' + p2.toUpperCase();
     });
 
-    cleanedTranslation = cleanedTranslation.replace(/(?<![а-яА-Я])то точно также/g, 'точно также');
-    cleanedTranslation = cleanedTranslation.replace(/точно также/g, '\nточно также');
-    cleanedTranslation = cleanedTranslation.replace(/Как ты думаешь, /g, 'Как ты думаешь,\n');
-    cleanedTranslation = cleanedTranslation.replace(/Как вы думаете, /g, 'Как вы думаете,\n');
+    cleanedTranslation = cleanedTranslation.replace(/(?<![a-zA-Z])in the same way/g, 'in the same way');
+    cleanedTranslation = cleanedTranslation.replace(/Just as/g, '\nJust as');
+    cleanedTranslation = cleanedTranslation.replace(/Why is that\? /g, 'Why is that?\n');
+    cleanedTranslation = cleanedTranslation.replace(/What do you think /g, '\nWhat do you think');
     cleanedTranslation = cleanedTranslation.replace(/или как ты считаешь/g, '\nили как ты считаешь');
     cleanedTranslation = cleanedTranslation.replace(/или как вы считаете/g, '\nили как вы считаете');
     cleanedTranslation = cleanedTranslation.replace(/Каки/g, '\nКаки');
