@@ -41,8 +41,13 @@ window.thanissarotrnranges = [
 'sn23.1',
 'sn23.2',
 'sn35.28',
+'sn45.8',
 'sn47.19',
 'sn47.20',
+'sn47.40',
+'sn48.10',
+'sn48.38',
+'sn48.39',
 'sn51.20',
 'sn56.11',
 'sn56.26',
@@ -58,6 +63,7 @@ window.thanissarotrnranges = [
 'sn56.111-113',
 'iti26'
 ];
+
 
 
 function parseSlug(slug) {
