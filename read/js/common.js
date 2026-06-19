@@ -2,6 +2,7 @@
 window.otrnranges = ['sn56.11', 'sn12.2', 'sn54.1'];
 window.thanissarotrnranges = [
 'an3.37',
+'an3.48',
 'an3.70',
 'an3.100',
 'an3.101',
@@ -26,6 +27,7 @@ window.thanissarotrnranges = [
 'sn1.1',
 'sn1.2',
 'sn1.7',
+'sn1.8',
 'sn12.2',
 'sn12.63',
 'sn12.68',
