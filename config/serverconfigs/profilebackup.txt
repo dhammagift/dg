@@ -51,7 +51,16 @@ alias gp="git pull --rebase"
 alias gpall='find . -type d -name ".git" -execdir sh -c "echo \">> Updating \$(pwd)\"; git pull --rebase" \;'
 
 
-alias cf='bash scripts/checkForMTinSCrepo.sh'
+#alias cf='bash scripts/checkForMTinSCrepo.sh'
+
+function cf() {
+echo mv 
+bash scripts/mvNewTextsFromDownloadsThnsBhk.sh	
+echo check
+bash scripts/checkForMTinSCrepo.sh
+
+
+}
 
 #Text convertion related
 alias aksa="python3.12 $basedir/scripts/aksharamukha-adapter.py"
