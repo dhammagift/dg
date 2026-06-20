@@ -55,5 +55,10 @@ exit 0
 
 
 #Update Thanissaro or en_other files for common.js
+echo -n "window.thanissarotrnranges = [" && find ../offline-data/en_other/ -type f -name "*.json" | awk -F/ '{print $NF}' | sed 's/_.*//g' | sort -V | sed "s/.*/'&'/" | paste -sd, - | sed 's/$/];/'
+
+
+
+#Update Thanissaro or en_other files for common.js
 cd offline-data/en_other/
 find . -type f | sort -V | awk -F/ '{print $NF}' | awk -F_ '{print $1}' | sed -e "s/^/'/" -e "s/$/',/"
