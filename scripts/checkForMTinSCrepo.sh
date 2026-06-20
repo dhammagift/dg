@@ -37,7 +37,8 @@ if [ -d $dwnl ]; then
     mv $dwnl/Telegram/*thanissaro.json ../offline_data/en_other/sutta/ 2> /dev/null
 fi
 
-echo Thns Files                                                                                        sed -i "/thanissarotrnranges/c $(echo -n "window.thanissarotrnranges = [" && find ../offline-data/en_other/ -type f -name "*.json" | awk -F/ '{print $NF}' | sed 's/_.*//g' | sort -V | sed "s/.*/'&'/" | paste -sd, - | sed 's/$/];/')" read/js/common.js
+echo Thns Files   
+sed -i "/thanissarotrnranges/c $(echo -n "window.thanissarotrnranges = [" && find ../offline-data/en_other/ -type f -name "*.json" | awk -F/ '{print $NF}' | sed 's/_.*//g' | sort -V | sed "s/.*/'&'/" | paste -sd, - | sed 's/$/];/')" read/js/common.js
 
 
 
