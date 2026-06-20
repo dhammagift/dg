@@ -30,8 +30,20 @@ echo
 #echo "Any key to copy. Ctrl+C to cancel"
 # read x
 
+
+dwnl="/storage/emulated/0/Download"
+if [ -d $dwnl ]; then
+    mv $dwnl/*thanissaro.json ../offline_data/en_other/sutta/ 2> /dev/null
+    mv $dwnl/Telegram/*thanissaro.json ../offline_data/en_other/sutta/ 2> /dev/null
+fi
+
+echo Thns Files                                                                                        sed -i "/thanissarotrnranges/c $(echo -n "window.thanissarotrnranges = [" && find ../offline-data/en_other/ -type f -name "*.json" | awk -F/ '{print $NF}' | sed 's/_.*//g' | sort -V | sed "s/.*/'&'/" | paste -sd, - | sed 's/$/];/')" read/js/common.js
+
+
+
 if [ -z "$DIFF" ]; then
-    echo "No new files. Exit"
+echo
+	echo "No new files. Exit"
     exit 0
 fi
 
@@ -57,6 +69,8 @@ exit 0
 #Update Thanissaro or en_other files for common.js
 echo -n "window.thanissarotrnranges = [" && find ../offline-data/en_other/ -type f -name "*.json" | awk -F/ '{print $NF}' | sed 's/_.*//g' | sort -V | sed "s/.*/'&'/" | paste -sd, - | sed 's/$/];/'
 
+
+sed -i "/thanissarotrnranges/c $(echo -n "window.thanissarotrnranges = [" && find ../offline-data/en_other/ -type f -name "*.json" | awk -F/ '{print $NF}' | sed 's/_.*//g' | sort -V | sed "s/.*/'&'/" | paste -sd, - | sed 's/$/];/')" read/js/common.js
 
 
 #Update Thanissaro or en_other files for common.js
