@@ -216,6 +216,19 @@ table.table-hover td {
   word-break: break-word;
 }
 
+@media (max-width: 768px) {
+  .content-container {
+    flex-direction: column;
+  }
+  .textarea-container {
+    order: 1;
+    max-width: 100%;
+  }
+  .table-container {
+    order: 2;
+    max-width: 100%;
+  }
+}
 
 </style>
 </head>
