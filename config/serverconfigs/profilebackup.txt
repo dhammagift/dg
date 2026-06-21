@@ -54,11 +54,12 @@ alias gpall='find . -type d -name ".git" -execdir sh -c "echo \">> Updating \$(p
 #alias cf='bash scripts/checkForMTinSCrepo.sh'
 
 function cf() {
+apa
 echo mv 
 bash scripts/mvNewTextsFromDownloadsThnsBhk.sh	
 echo check
 bash scripts/checkForMTinSCrepo.sh
-
+cd -
 
 }
 

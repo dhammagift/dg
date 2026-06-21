@@ -9,8 +9,8 @@ cd $downloaddir
 for file in `find . -maxdepth 1 -type f -size +0 -name "*-en-*.json" 2>/dev/null`
 do
 newname=$(echo $file | sed 's@-ru-sv@-en-thanissaro@g')
-echo renamed $file $newname
-mv $file $newname
+#echo renamed $file $newname
+#mv $file $newname
 done
 
 cd - 2>&1 >/dev/null
@@ -39,7 +39,7 @@ else
 booknumber=$(echo $suttaname | sed -E 's/\..*//')
     nikaya=$(echo "$suttaname" | sed -E 's/[0-9]+.*//')
 fi
-
+mkdir -p $trndir/$nikaya/$booknumber/ 2>/dev/null
 mv $file $trndir/$nikaya/$booknumber/
 echo "moved $suttaname to ./$nikaya/$booknumber" 
 done
