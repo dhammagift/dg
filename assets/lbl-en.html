@@ -720,9 +720,7 @@ function downloadJson() {
     })
     .catch(error => console.error('Error fetching data:', error.message));
 }
-</script>
 
-<script>
 function loadText() {
   const language = document.getElementById('languageSelect').value;
   const indexValue = document.getElementById('indexInput').value.trim().toLowerCase();
@@ -846,7 +844,8 @@ function loadText() {
     beforeDot = 'vagga' + findItiVagga(firstNumberOnly);
   } 
   
-  let url;
+  let pliUrl;
+  let enUrl;
   let fileNameBlock;
   
   if (indexValue.includes('bu-') || indexValue.includes('bi-')) {
@@ -858,51 +857,56 @@ function loadText() {
       fileNameBlock = 'pli-tv-' + buOrbi + '-pm';
     } 
     console.log('fileNameBlock ' + fileNameBlock) ;
-    if (language === 'pli') {
-      url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/vinaya/${fileNameBlock}_root-pli-ms.json`;    
-    } else if (language === 'en') {
-      url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/brahmali/vinaya/${fileNameBlock}_translation-en-brahmali.json`;
-    }
-  } else if (language === 'pli') {
-      url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta/${lettersOnly}/${beforeDot}/${indexValue}_root-pli-ms.json`;
-  } else if (language === 'en') {
-      url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${lettersOnly}/${beforeDot}/${indexValue}_translation-en-sujato.json`;
+    pliUrl = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/vinaya/${fileNameBlock}_root-pli-ms.json`;    
+    enUrl = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/brahmali/vinaya/${fileNameBlock}_translation-en-brahmali.json`;
+  } else {
+    pliUrl = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta/${lettersOnly}/${beforeDot}/${indexValue}_root-pli-ms.json`;
+    enUrl = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${lettersOnly}/${beforeDot}/${indexValue}_translation-en-sujato.json`;
   }
   
   if (indexValue.match(/dn|mn/)) {
-    if (language === 'pli') {
-      url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta/${lettersOnly}/${indexValue}_root-pli-ms.json`;
-    } else if (language === 'en') {
-      url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${lettersOnly}/${indexValue}_translation-en-sujato.json`;
-    }
+    pliUrl = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta/${lettersOnly}/${indexValue}_root-pli-ms.json`;
+    enUrl = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${lettersOnly}/${indexValue}_translation-en-sujato.json`;
   }
-  console.log('url ' + url) ;
+  
+  console.log('pliUrl ' + pliUrl) ;
+  console.log('enUrl ' + enUrl) ;
 
-  fetch(url)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
+  // Запрашиваем пали как основу в любом случае, английский - если выбран в селекте
+  Promise.all([
+    fetch(pliUrl).then(response => {
+      if (!response.ok) throw new Error('Network response was not ok for Pali root');
       return response.json();
-    })
-    .then(data => {
+    }),
+    language === 'en' ? fetch(enUrl).then(response => response.ok ? response.json() : {}).catch(() => ({})) : Promise.resolve({})
+  ])
+  .then(([pliData, enData]) => {
       const tableBody = document.getElementById('outputTableBody');
       const translationInput = document.getElementById('translationInput'); 
 
       let tableHtml = '';
-      const dataArray = Object.entries(data);
+      const dataArray = Object.entries(pliData);
       const translationLines = translationInput.value.split('\n'); 
       let rowCounter = 0; 
 
-      dataArray.forEach(([key, value], index) => {
+      dataArray.forEach(([key, pliValue], index) => {
         const translationLine = translationLines[index] || ''; 
         const texts = translationLine.split('\n'); 
+
+        // Логика подстановки Пали в пропущенные строки Английского
+        let sourceText = pliValue.trimEnd();
+        if (language === 'en') {
+            const enValue = enData[key];
+            if (enValue && enValue.trim() !== '') {
+                sourceText = enValue.trimEnd();
+            }
+        }
 
         texts.forEach((text, textIndex) => {
           const currentText = texts[textIndex] || ''; 
           rowCounter++;
           const row = `<tr>
-                        <td class="pli-lang">${value.trimEnd()}</td>
+                        <td class="pli-lang">${sourceText}</td>
                         <td>${key}</td>
                         <td>${currentText}</td>
                         <td><a href="#" title="${key}" onmousedown="gotoLine(${rowCounter})"><i class="fa-solid fa-link"></i></a></td>
@@ -923,7 +927,6 @@ function loadText() {
           tableHtml += extraRow;
         }
       }
-
 
       tableBody.innerHTML = tableHtml;
 
@@ -1004,18 +1007,27 @@ function loadText() {
           }
       }
 
-      document.getElementById('loadFromServerButton').addEventListener('click', function() {
-          findAvailableTranslations(url).then((selectedUrl) => {
+      // Клонируем кнопку загрузки для сброса старых слушателей перед навешиванием нового
+      const loadBtn = document.getElementById('loadFromServerButton');
+      const newLoadBtn = loadBtn.cloneNode(true);
+      loadBtn.parentNode.replaceChild(newLoadBtn, loadBtn);
+
+      newLoadBtn.addEventListener('click', function() {
+          findAvailableTranslations(pliUrl).then((selectedUrl) => {
               if (selectedUrl) {
                   loadFileContent(selectedUrl);  
               }
           });
       });
 
-      document.getElementById('outputTableBody').addEventListener('click', function(event) {
+      // Клонируем таблицу для сброса старых слушателей клика (защита от дублирования событий)
+      const tableBodyEl = document.getElementById('outputTableBody');
+      const newTableBodyEl = tableBodyEl.cloneNode(true);
+      tableBodyEl.parentNode.replaceChild(newTableBodyEl, tableBodyEl);
+
+      newTableBodyEl.addEventListener('click', function(event) {
           let target = event.target;
           
-          // Поднимаемся к TD, если клик был по вложенному элементу
           while (target && target.tagName !== 'TD') {
               target = target.parentElement;
           }
@@ -1023,7 +1035,6 @@ function loadText() {
           if (target && target.tagName === 'TD' && target.cellIndex === 2) {
               let cursorPosition = null;
               
-              // Вычисляем позицию курсора на основе места клика
               const selection = window.getSelection();
               if (selection.rangeCount > 0) {
                   const range = selection.getRangeAt(0);
@@ -1116,7 +1127,6 @@ function loadText() {
               const rows = Array.from(tbody.children);
               const rowIndex = rows.indexOf(currentRow);
 
-              // -- НАВИГАЦИЯ СТРЕЛКАМИ --
               if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
                   if (textarea.selectionStart === textarea.value.length) {
                       event.preventDefault();
@@ -1135,17 +1145,14 @@ function loadText() {
                   }
               }
 
-              // -- ОБРАБОТКА ENTER, BACKSPACE, DELETE (Пакетное обновление) --
               if (event.key === 'Enter' || event.key === 'Backspace' || event.key === 'Delete') {
                   
-                  // Разрешаем стандартное поведение, если курсор не на краях текста или выделен кусок текста
                   if (event.key === 'Backspace' && textarea.selectionStart !== 0) return;
                   if (event.key === 'Delete' && textarea.selectionStart !== textarea.value.length) return;
                   if ((event.key === 'Backspace' || event.key === 'Delete') && textarea.selectionStart !== textarea.selectionEnd) return;
 
                   event.preventDefault();
 
-                  // 1. Batch Read: Быстро собираем все переводы в массив (в память)
                   let translations = rows.map(r => {
                       const c = r.cells[2];
                       if (c.querySelector('textarea')) return textarea.value.trim();
@@ -1156,12 +1163,10 @@ function loadText() {
                   let targetCell = null;
                   let targetCursorPos = 0;
                   
-                  // Отключаем blur, чтобы избежать фантомных записей
                   textarea.removeEventListener('blur', finishEditing);
                   cell.textContent = ''; 
                   cell.style.height = '';
 
-                  // 2. Логика сдвигов в массиве (очень быстро)
                   if (event.key === 'Enter' && !event.ctrlKey) {
                       const textBefore = textarea.value.slice(0, cursorPosition).trim();
                       const textAfter = textarea.value.slice(cursorPosition).trim();
@@ -1208,13 +1213,11 @@ function loadText() {
                       targetCell = cell;
                       targetCursorPos = currentText.length;
                   } else {
-                      // Предохранитель для Backspace в самом начале или Delete в самом конце
                       cell.textContent = textarea.value.trim() !== '' ? textarea.value.trim() + ' ' : '';
                       makeCellEditable(cell, cursorPosition);
                       return;
                   }
 
-                  // 3. Batch Write: Записываем массив обратно в DOM без мерцаний и тормозов
                   for (let i = 0; i < rows.length; i++) {
                       const expected = translations[i] !== undefined ? translations[i] : '';
                       const expectedFormatted = expected !== '' ? expected + ' ' : '';
@@ -1228,7 +1231,6 @@ function loadText() {
                       }
                   }
 
-                  // Если массив стал больше таблицы (переводы ушли вниз) - добавляем строки без оригинала в конец
                   while (rows.length < translations.length) {
                       const i = rows.length;
                       const expected = translations[i] || '';
@@ -1239,7 +1241,6 @@ function loadText() {
                       rows.push(tr); 
                   }
 
-                  // Если удалили пустые хвосты снизу (где нет оригинала)
                   while (rows.length > translations.length) {
                       const lastRow = rows[rows.length - 1];
                       if (lastRow.cells[0].textContent.trim() === '') {
@@ -1250,11 +1251,9 @@ function loadText() {
                       }
                   }
 
-                  // 4. Синхронизируем левое текстовое окно и хранилище
                   document.getElementById('translationInput').value = translations.join('\n');
                   saveInputs();
 
-                  // 5. Восстанавливаем фокус
                   if (!targetCell && event.key === 'Enter' && !event.ctrlKey) {
                        targetCell = tbody.lastElementChild.cells[2];
                   }
@@ -1290,7 +1289,6 @@ function loadText() {
           }
       }
 
-
       function updateTranslationTextarea() {
           const tableRows = document.querySelectorAll('#outputTableBody tr');
           let updatedTranslation = '';
@@ -1298,12 +1296,9 @@ function loadText() {
           tableRows.forEach(row => {
               const translationCell = row.cells[2]; 
               let text = translationCell.textContent.trim();
-              // Добавляем пробел, если строка не пустая
               updatedTranslation += (text !== '' ? text + ' ' : '') + '\n'; 
           });
           
-          // Заменяем trim() на удаление только последнего переноса строки, 
-          // чтобы сохранить конечный пробел в самом конце текста
           document.getElementById('translationInput').value = updatedTranslation.replace(/\n$/, ''); 
       }
 
@@ -1313,7 +1308,6 @@ function loadText() {
           const rowIndex = Array.prototype.indexOf.call(cell.parentElement.parentElement.children, cell.parentElement);
           
           let text = cell.textContent.trim();
-          // Обновляем конкретную строку, добавляя пробел, если она не пустая
           rows[rowIndex] = text !== '' ? text + ' ' : '';
           
           document.getElementById('translationInput').value = rows.join('\n');
@@ -1321,14 +1315,11 @@ function loadText() {
 
       document.addEventListener('DOMContentLoaded', updateTranslationTextarea);
 
-
-    })
-    .catch(error => console.error('Error fetching data:', error.message));
+  })
+  .catch(error => console.error('Error fetching data:', error.message));
 }
 
-</script>
 
-<script>
 function ifKn(indexValue) {
   let beforeDot = "";
   let lettersOnly = "";
