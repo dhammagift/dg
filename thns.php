@@ -31,11 +31,17 @@ if (!empty($treeLines)) {
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thanissaro Bhikkhu Trns Ready</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css" rel="stylesheet">
+
+    <link href="/assets/css/styles.css" rel="stylesheet" />
+    <link href="/assets/css/extrastyles.css" rel="stylesheet" />
+    <link href="/assets/css/lbl.css" rel="stylesheet" />
+    <link rel="icon" type="image/png" href="/assets/img/favico-noglass.png" />
 
     <style>
         body {
@@ -100,7 +106,20 @@ if (!empty($treeLines)) {
 
 <body class="p-3">
 
-<div class="container">
+<div class="mt-3">
+    <div class="align-items-center toggle-switch input-group-append">
+        <div class="input-group">
+            <div style="display: inline-flex;">
+                <top-nav-icons type="read"></top-nav-icons>
+                <a href="https://www.dhammatalks.org/suttas/">DhammaTalks.org </a>
+                &nbsp;
+                <a href="assets/lbl-en.html">Trn Editor </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-4">
 
     <h3 class="mb-3"></h3>
 
@@ -159,6 +178,10 @@ if (!empty($treeLines)) {
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
 
+<script src="/assets/js/nav-component.js" defer></script>
+<script src="/assets/js/fontawesome.6.6.all.js" defer></script>
+<script src="/assets/js/themeswitch.js" defer></script>
+
 <script>
     $(document).ready(function() {
         $('#treeTable').DataTable({
@@ -181,8 +204,9 @@ if (!empty($treeLines)) {
         });
     });
 </script>
+<script defer src="/assets/js/themeswitch.js"></script>
+<script defer src="/assets/js/settings.js"></script>
+
 
 </body>
 </html>
-
-
