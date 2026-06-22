@@ -23,7 +23,7 @@ $treeOutput = shell_exec($treeCmd . " 2>&1") ?? '';
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Offline Repo Viewer</title>
+    <title>Thanissaro Bhikkhu Trns Ready</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -62,7 +62,7 @@ $treeOutput = shell_exec($treeCmd . " 2>&1") ?? '';
 
 <div class="container">
 
-    <h3 class="mb-3">Repo viewer</h3>
+    <h3 class="mb-3">List Texts that are Ready</h3>
 
     <div class="accordion" id="repoAccordion">
 
@@ -85,7 +85,7 @@ $treeOutput = shell_exec($treeCmd . " 2>&1") ?? '';
         <div class="accordion-item">
             <h2 class="accordion-header">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tree">
-                    json tree
+                  Texts Ready 
                 </button>
             </h2>
 
