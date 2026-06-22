@@ -51,13 +51,14 @@ bash install-linux.sh
    
 #### For Android
 
-1. Install Termux from [F-Droid](https://f-droid.org/packages/com.termux/) or [GitHub](https://github.com/termux/termux-app)
+1. Install Termux from [F-Droid](https://f-droid.org/packages/com.termux/) or [GitHub](https://github.com/termux/termux-app). The Play store version doesn't work properly.
 
 1. Run Termux
 
 1. Copy-paste following commands:
 
    ```bash
+   pkg install wget
    wget https://raw.githubusercontent.com/dhammagift/dg/refs/heads/main/scripts/install-android.sh
    bash install-android.sh
    ```
