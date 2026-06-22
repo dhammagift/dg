@@ -1,7 +1,7 @@
 <?php
 
 // базовый путь (относительно текущего файла)
-$repoDir = realpath(__DIR__ . '/../offline-data');
+$repoDir = realpath(__DIR__ . '/../../offline-data');
 
 // безопасный переход в директорию
 if ($repoDir) {
@@ -9,7 +9,7 @@ if ($repoDir) {
 }
 
 // git pull
-$gitCmd = "git -C ../offline-data pull";
+$gitCmd = "cd ../../offline-data; git pull";
 
 // tree + sed 
 $treeCmd = "tree -v -P \"*.json\" --prune ../offline-data/en_other | sed 's/_translation-en-thanissaro\\.json//'";
@@ -113,7 +113,7 @@ if (!empty($treeLines)) {
                 <top-nav-icons type="read"></top-nav-icons>
                 <a href="https://www.dhammatalks.org/suttas/">DhammaTalks.org </a>
                 &nbsp;
-                <a href="assets/lbl-en.html">Trn Editor </a>
+                <a href="/assets/lbl-en.html">Trn Editor </a>
             </div>
         </div>
     </div>
