@@ -37,8 +37,9 @@ alias all="cd $basedir/assets/texts/words"
 alias dwnl="echo $dwnl"
 
 #SSH related
-alias ssssh="ssh -tt a0902785@141.8.192.193"
+#alias ssssh="ssh -tt a0902785@141.8.192.193"
 alias asssh='ssh -i "/storage/emulated/0/Documents/dpd-ui-eu.pem" ubuntu@ec2-3-125-254-158.eu-central-1.compute.amazonaws.com'
+alias ssssh='ssh pasha@163.5.29.37'
 
 alias rsssh="ssh -tt -p1000 root@94.126.201.8"
 alias oldsssh="ssh -tt -p1001 root@94.126.201.8"
