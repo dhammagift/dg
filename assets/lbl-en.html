@@ -241,13 +241,7 @@ table.table-hover td {
                 </div>
                 <a href="./linebyline.html" title="For Mobile" class="ms-1 text-muted" target=""><i class="fa-solid fa-mobile"></i></a>
                 <a href="#" onclick="openHelpModal();" title="Instructions" class="ms-2 text-muted" target=""><i class="fa-solid fa-question"></i></a>
-      
-   <a href="/assets/thns.php" title="Ready" class=" ms-2 me-2 text-muted" target="_blank">
-<i class="fa-solid fa-list"></i>
-   </a>  
-      
-                <a href="/assets/lbl.html" title="Russian " class=" ms-0 me-2 text-muted text-decoration-none">ru</a> 
-                
+                <a href="/assets/lbl.html" title="Russian " class=" ms-2 me-2 text-muted text-decoration-none">ru</a>  
                 
                 <div class="input-group-append ms-1 me-3 mb-2">
                     <div class=" ms-1">
@@ -1480,7 +1474,7 @@ function clearInputs() {
 <script>
     document.getElementById('linkButton1').addEventListener('click', function() {
         var indexValue = document.getElementById('indexInput').value;
-        var url = '/r/?q=' + indexValue;
+        var url = '/multi/?q=' + indexValue;
         window.open(url, '_blank');
     });
 </script> 
