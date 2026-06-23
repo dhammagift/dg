@@ -17,7 +17,8 @@ git clone https://github.com/suttacentral/sc-data.git
 
 echo "downloading offline data"
 cd ..
-git clone git@github.com:dhammagift/offline-data.git offline-data
+#git clone git@github.com:dhammagift/offline-data.git offline-data
+git clone https://github.com/dhammagift/offline-data.git offline-data
 
 echo "optionally you can donwload pali audio data. Run:
 
