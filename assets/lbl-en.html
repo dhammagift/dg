@@ -246,7 +246,7 @@ table.table-hover td {
    </a>  
       
 
-                <a href="/assets/lbl.html" title="Russian " class=" ms-2 me-2 text-muted text-decoration-none">ru</a>  
+                <a href="/assets/lbl.html" title="Russian " class=" ms-0 me-2 text-muted text-decoration-none">ru</a>  
                 
                 <div class="input-group-append ms-1 me-3 mb-2">
                     <div class=" ms-1">
@@ -1499,22 +1499,28 @@ function clearInputs() {
         }
 
         if (!found) {
-            var match = indexValue.match(/(an|sn)(\d+)\.\d+/i);
-            if (match) {
-                var prefix = match[1].toUpperCase();
-                var bookNumber = match[2];
+    var match = indexValue.match(/(an|sn|mn|dn)(\d+)(?:\.\d+)?/i);
 
-                if (prefix === 'AN') {
-                    var url = '/theravada.ru/Teaching/Canon/Suttanta/AN/anguttara-' + bookNumber + '.htm';
-                } else if (prefix === 'SN') {
-                    var url = '/theravada.ru/Teaching/Canon/Suttanta/SN/samyutta-' + bookNumber + '.htm';
-                }
-                window.open(url, '_blank');
-            } else {
-                var url = '/ru/sc?q=' + indexValue;
-                window.open(url, '_blank');
-            }
+    if (match) {
+        var prefix = match[1].toUpperCase();
+
+        var url = 'https://www.dhammatalks.org/suttas/';
+
+        if (prefix === 'an') {
+            url += 'AN/';
+        } else if (prefix === 'sn') {
+            url += 'SN/';
+        } else if (prefix === 'mn') {
+            url += 'MN/';
+        } else if (prefix === 'dn') {
+            url += 'DN/';
         }
+
+        window.open(url, '_blank');
+    } else {
+        window.open('https://www.dhammatalks.org/suttas/', '_blank');
+    }
+}
     });
 </script>
 
