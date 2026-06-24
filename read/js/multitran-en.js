@@ -202,7 +202,7 @@ async function buildSutta(slug) {
           if (id === "o") return '<a href="/assets/common/o-en.html">o</a> from Pali';
           if (id === "sujato") return 'Bhikkhu Sujato';
           if (id === "brahmali") return 'Bhikkhu Brahmali';
-          if (id === "thanissaro") return '<a href=https://dhammatalks.org/suttas/>Thanissaro Bhikkhu</a>';
+          if (id === "thanissaro") return 'Thanissaro Bhikkhu <a href=https://dhammatalks.org/suttas/>source</a>';
           return id;
       }
 
