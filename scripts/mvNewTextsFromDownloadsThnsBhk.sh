@@ -4,6 +4,9 @@ source ./config/script_config.sh --source-only
 #trndir=/media/c/soft/dg/assets/texts/ru/sutta/
 trndir=/data/data/com.termux/files/usr/share/apache2/default-site/htdocs/assets/texts/en_other/sutta/
 thtrndir=/data/data/com.termux/files/usr/share/apache2/default-site/htdocs/assets/texts/en_other/sutta/
+# Добавь это в файл script_config.sh
+lbldir=$apachesitepath/assets/texts/lbl/
+
 
 cd $downloaddir
 for file in `find . -maxdepth 1 -type f -size +0 -name "*-en-*.json" 2>/dev/null`
@@ -17,8 +20,9 @@ cd - 2>&1 >/dev/null
 
 #find "$downloaddir" -maxdepth 1 -type f -size 0 -name "*translation*.json" | xargs rm
 
+
 #en trn 
-for file in `find "$downloaddir" "$downloaddir/Telegram" -maxdepth 1 -type f -size +0 -name "*translation-en-*.json" 2>/dev/null`
+for file in `find "$downloaddir" "$downloaddir/Telegram" "$lbldir" -maxdepth 1 -type f -size +0 -name "*translation-en-*.json" 2>/dev/null`
 do 
 suttaname=$(echo $file | sed -E 's/_translation.*//' | awk -F'/' '{print $NF}')
 
@@ -45,7 +49,7 @@ echo "moved $suttaname to ./$nikaya/$booknumber"
 done
 
 #thai trn
-for file in `find "$downloaddir" "$downloaddir/Telegram" -maxdepth 1 -type f -size +0 -name "*translation-th-*.json" 2>/dev/null`
+for file in `find "$downloaddir" "$downloaddir/Telegram" "$lbldir" -maxdepth 1 -type f -size +0 -name "*translation-th-*.json" 2>/dev/null`
 do 
 suttaname=$(echo $file | sed -E 's/_translation.*//' | awk -F'/' '{print $NF}')
 
@@ -71,8 +75,6 @@ mkdir $thtrndir/$nikaya/$booknumber/ 2>/dev/null
 mv $file $thtrndir/$nikaya/$booknumber/
 echo "moved $suttaname to thai ./$nikaya/$booknumber" 
 done
-
-
 
 if [[ "`uname -a`" != *"Android"* ]]; then 
 exit 0
