@@ -2,8 +2,8 @@ source ./config/script_config.sh --source-only
 
 #downloaddir=/media/c/Users/o28o/Downloads
 #trndir=/media/c/soft/dg/assets/texts/ru/sutta/
-trndir=/data/data/com.termux/files/usr/share/apache2/default-site/htdocs/assets/texts/en_other/sutta/
-thtrndir=/data/data/com.termux/files/usr/share/apache2/default-site/htdocs/assets/texts/en_other/sutta/
+trndir=$apachesitepath/assets/texts/en_other/sutta/
+thtrndir=$apachesitepath/assets/texts/en_other/sutta/
 # Добавь это в файл script_config.sh
 lbldir=$apachesitepath/assets/texts/lbl/
 
