@@ -1400,22 +1400,30 @@ function extractIndexValue(data) {
 </script>
 
 <script>
+// Общий обработчик для элементов с id "indexInput" и "languageSelect"
 document.addEventListener('keydown', function(event) {
     const target = event.target;
+    
+    // Проверяем, если фокус находится на поле indexInput или languageSelect
     if ((target.id === 'indexInput' || target.id === 'languageSelect') && event.key === 'Enter') {
-        event.preventDefault(); 
-        loadText(); 
+        event.preventDefault(); // Отменяем стандартное поведение Enter
+        loadText(); // Запускаем функцию обновления текста
     }
 });
 
 const customTranslatorCheckbox = document.getElementById('customTranslatorName');
+const languageSelect = document.getElementById('languageSelect');
 
+// Функция для сохранения значений
 function saveInputs() {
   localStorage.setItem('indexValue', indexInput.value);
   localStorage.setItem('translationValue', translationInput.value);
   localStorage.setItem('customTranslatorCheckboxState', customTranslatorCheckbox.checked);
+  // Сохраняем состояние списка языков
+  localStorage.setItem('languageSelectValue', languageSelect.value);
 }
 
+// Слушатель для сохранения при каждом изменении translationInput
 translationInput.addEventListener('input', function() {
   saveInputs();
   localStorage.setItem('translationValue', translationInput.value);
@@ -1423,15 +1431,29 @@ translationInput.addEventListener('input', function() {
 
 customTranslatorCheckbox.addEventListener('change', saveInputs);
 
+// Слушатель для автоматического обновления при переключении языка
+languageSelect.addEventListener('change', function() {
+  saveInputs();
+  loadText();
+});
+
+// Функция для загрузки сохраненных значений
 function loadInputs() {
   const savedCheckboxState = localStorage.getItem('customTranslatorCheckboxState');
   if (savedCheckboxState !== null) {
     customTranslatorCheckbox.checked = savedCheckboxState === 'true';
   }
+
+  // Загружаем сохраненный язык
+  const savedLanguage = localStorage.getItem('languageSelectValue');
+  if (savedLanguage) {
+    languageSelect.value = savedLanguage;
+  }
 	
   if (localStorage.getItem('indexValue')) { 
     indexInput.value = localStorage.getItem('indexValue');
   } else {
+    // Выполняем fetch для получения содержимого файла
     fetch('/assets/texts/miss_longest')
       .then(response => {
         if (!response.ok) {
@@ -1440,31 +1462,47 @@ function loadInputs() {
         return response.text();
       })
       .then(data => {
+        // Разделяем содержимое файла на строки и берем первую строку
         const firstLine = data.split('\n')[0];
+        
+        // Получаем первую часть первой строки (до пробела)
         const firstPart = firstLine.split(' ')[0];
+        
+        // Устанавливаем значение в indexInput, если его нет в localStorage
         indexInput.value = firstPart;
       })
       .catch(error => {
         console.error('Ошибка при получении файла:', error);
+        // В случае ошибки использовать значение по умолчанию
         indexInput.value = 'sn37.30';
       });
   }
+
+  // Загружаем другие значения из localStorage
   translationInput.value = localStorage.getItem('translationValue') || '';
 }
 
+// Вызываем функцию загрузки сохраненных значений при загрузке страницы
 loadInputs();
+// Сохраняем значения при изменении инпутов
 indexInput.addEventListener('input', saveInputs);
 translationInput.addEventListener('input', saveInputs);
 lineBreakCheckbox.addEventListener('input', saveInputs);
  
 function clearInputs() {
+  // Показать предупреждение
   if (confirm('Вы действительно хотите очистить перевод?')) {
+    // Если пользователь подтвердил, очищаем значения инпутов
     document.getElementById('translationInput').value = '';
+
+    // Очищаем сохраненные значения в localStorage
     localStorage.removeItem('translationValue');
     localStorage.removeItem('lineBreakCheckboxState');
   }
 }
 </script>
+
+
 <script defer src="/assets/js/themeswitch.js"></script>
 <script src="/assets/js/linksru.js"></script>
 	
