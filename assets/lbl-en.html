@@ -810,6 +810,20 @@ function loadText() {
       } else if (cleanedTranslation.startsWith("Numbered Discourses")) {
           cleanedTranslation = `Numbered Discourses ${indexValue.replace(/[a-z]/g, '')}${cleanedTranslation.substring(cleanedTranslation.indexOf("\n"))}`;
       }
+  } else if (indexValue.includes("mn")) {
+      if (!cleanedTranslation.startsWith("Middle Discourses")) {
+          const additionalLines = `Middle Discourses ${indexValue.replace(/[a-z]/g, '')} \nSutta \n\n\n`;
+          cleanedTranslation = additionalLines + cleanedTranslation;
+      } else if (cleanedTranslation.startsWith("Middle Discourses")) {
+          cleanedTranslation = `Middle Discourses ${indexValue.replace(/[a-z]/g, '')}${cleanedTranslation.substring(cleanedTranslation.indexOf("\n"))}`;
+      }
+  } else if (indexValue.includes("dn")) {
+      if (!cleanedTranslation.startsWith("Long Discourses")) {
+          const additionalLines = `Long Discourses ${indexValue.replace(/[a-z]/g, '')} \nSutta \n\n\n`;
+          cleanedTranslation = additionalLines + cleanedTranslation;
+      } else if (cleanedTranslation.startsWith("Long Discourses")) {
+          cleanedTranslation = `Long Discourses ${indexValue.replace(/[a-z]/g, '')}${cleanedTranslation.substring(cleanedTranslation.indexOf("\n"))}`;
+      }
   } else if (indexValue.includes("snp")) {
       if (!cleanedTranslation.startsWith("Sutta Nipata")) {
           const additionalLines = `Sutta Nipata ${indexValue.replace(/[a-z]/g, '')}\nName\n\n`;
