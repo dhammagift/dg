@@ -333,81 +333,92 @@ table.table-hover td {
             }
         };
 
-    function loadAndCheckRanges() {
-        fetch('/read/js/reader-rus-translations.js')
-            .then(response => response.text())
-            .then(data => {
-                const regex = /let (\w+) = \[([\s\S]+?)\];/g;
-                let match;
-                let variables = {};
+function loadAndCheckRanges() {
+    const inputField = document.getElementById('indexInput');
+    const checkResult = document.getElementById('checkResult');
+    let debounceTimer;
 
-                while ((match = regex.exec(data)) !== null) {
-                    let varName = match[1];
-                    let varValues = match[2].replace(/\s+/g, '').split(',').map(val => val.replace(/['"]/g, ''));
-                    variables[varName] = varValues;
-                }
+    // Функция генерации пути к файлу, повторяющая структуру папок Dhamma.gift
+    function getFileUrl(indexValue, translator) {
+        let lettersOnlyMatch = indexValue.match(/[a-z]+/);
+        if (!lettersOnlyMatch) return null;
+        
+        let lettersOnly = lettersOnlyMatch[0];
+        let beforeDot = indexValue.split('.')[0];
+        let firstNumberOnly = beforeDot.match(/[0-9]+/)?.[0] ?? null;
 
-                const inputField = document.getElementById('indexInput');
-                inputField.addEventListener('input', function () {
-                    const inputValue = this.value.trim().toLowerCase();
-                    console.log('Введенное значение:', inputValue);
+        // Обработка особых случаев для Кхуддака-никаи
+        if (['snp', 'ud', 'dhp', 'iti'].some(kn => indexValue.includes(kn))) {
+            lettersOnly = 'kn/' + lettersOnly;
+            if (indexValue.includes('snp') || indexValue.includes('ud')) {
+                beforeDot = 'vagga' + firstNumberOnly;
+            } else if (indexValue.includes('dhp')) {
+                beforeDot = '';
+            } else if (indexValue.includes('iti') && typeof findItiVagga === 'function') {
+                beforeDot = 'vagga' + findItiVagga(firstNumberOnly);
+            }
+        }
 
-                    let resultMessage = '<i class="fa-solid fa-triangle-exclamation"></i>❌✅Already exists!';
-
-                    if (inputValue.startsWith('an')) {
-                     resultMessage = '<i class="fa-solid fa-triangle-exclamation"></i>❌✅Already exists!';
-                    } else if (inputValue.startsWith('sn')) {
-                        if (variables['snranges'] && variables['snranges'].includes(inputValue)) {
-                            console.log('Найден в snranges:', inputValue);
-                        } else {
-                            console.log('Не найден в snranges:', inputValue);
-                            resultMessage = '';
-                        }
-                    } else if (inputValue.startsWith('mn')) {
-                        if (variables['mnranges'] && variables['mnranges'].includes(inputValue)) {
-                            console.log('Найден в mnranges:', inputValue);
-                        } else {
-                            console.log('Не найден в mnranges:', inputValue);
-                            resultMessage = '';
-                        }
-                    } else if (inputValue.startsWith('dn')) {
-                        if (variables['dnranges'] && variables['dnranges'].includes(inputValue)) {
-                            console.log('Найден в dnranges:', inputValue);
-                        } else {
-                            console.log('Не найден в dnranges:', inputValue);
-                            resultMessage = '';
-                        }
-                    } else if (
-                      inputValue.startsWith('iti') ||
-                      inputValue.startsWith('snp') ||
-                      inputValue.startsWith('dhp')
-                    ) {
-                        if (variables['knranges'] && variables['knranges'].includes(inputValue)) {
-                            console.log('Найден в knranges:', inputValue);
-                        } else {
-                            console.log('Не найден в knranges:', inputValue);
-                            resultMessage = '';
-                        }
-                    } else if (inputValue.startsWith('bu-')) {
-                        if (variables['vinayaranges'] && variables['vinayaranges'].includes(inputValue)) {
-                            console.log('Найден в vinayaranges:', inputValue);
-                        } else {
-                            console.log('Не найден в vinayaranges:', inputValue);
-                            resultMessage = '';
-                        }
-                    } else {
-                        resultMessage = 'Unknown prefix.';
-                    }
-
-                    document.getElementById('checkResult').innerHTML = resultMessage;
-                });
-
-                inputField.dispatchEvent(new Event('input'));
-            })
-            .catch(error => {
-                console.error('Ошибка при загрузке файла:', error);
-            });
+        let baseUrl;
+        // У DN и MN нет подпапок уровня beforeDot
+        if (indexValue.match(/dn|mn/)) {
+            baseUrl = `/assets/texts/en_other/sutta/${lettersOnly}/${indexValue}`;
+        } else {
+            let middlePart = beforeDot ? `${beforeDot}/` : '';
+            baseUrl = `/assets/texts/en_other/sutta/${lettersOnly}/${middlePart}${indexValue}`;
+        }
+        
+        // Очищаем двойные слеши на случай пустого middlePart
+        baseUrl = baseUrl.replace(/([^:]\/)\/+/g, "$1");
+        
+        return `${baseUrl}_translation-${translator}.json`;
     }
+
+    inputField.addEventListener('input', function () {
+        clearTimeout(debounceTimer);
+        const inputValue = this.value.trim().toLowerCase();
+
+        if (!inputValue) {
+            checkResult.innerHTML = '';
+            return;
+        }
+
+        checkResult.innerHTML = '<span class="text-muted"><i class="fa-solid fa-spinner fa-spin"></i> Checking...</span>';
+
+        // Задержка 500мс, чтобы дождаться окончания ввода индекса пользователем
+        debounceTimer = setTimeout(async () => {
+            // Ищем файл перевода Таниссаро, как основную проверку готовности
+            const url = getFileUrl(inputValue, 'en-thanissaro');
+            
+            if (!url) {
+                checkResult.innerHTML = '<span class="text-warning"><i class="fa-solid fa-triangle-exclamation"></i> Invalid format</span>';
+                return;
+            }
+
+            try {
+                // Выполняем HEAD запрос, чтобы проверить статус файла без загрузки его содержимого
+                const response = await fetch(url, { method: 'HEAD' });
+                
+                if (response.ok) {
+                    checkResult.innerHTML = '<span class="text-success"><i class="fa-solid fa-check"></i> Already exists</span>';
+                } else {
+                    checkResult.innerHTML = '<span class="text-secondary"><i class="fa-solid fa-xmark"></i> Not ready yet</span>';
+                }
+            } catch (error) {
+                console.error('Check file error:', error);
+                checkResult.innerHTML = '<span class="text-danger"><i class="fa-solid fa-triangle-exclamation"></i> Check failed</span>';
+            }
+        }, 500); 
+    });
+
+    // Инициируем проверку при первой загрузке скрипта, если инпут уже заполнен
+    if (inputField.value) {
+        inputField.dispatchEvent(new Event('input'));
+    }
+}
+
+// Запускаем функцию
+loadAndCheckRanges();
 
     loadAndCheckRanges();
 
