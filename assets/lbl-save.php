@@ -25,4 +25,7 @@ if (file_put_contents($saveDirectory . $filename, $jsonString)) {
     http_response_code(500);
     echo "Error writing file to: " . $saveDirectory;
 }
-?>
+
+//curl -X POST -H "Content-Type: application/json" -d '{"test": "it works"}' "http://localhost:8080/assets/lbl-save.php?file=test_curl.json"
+
+?> 

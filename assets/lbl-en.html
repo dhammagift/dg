@@ -718,24 +718,43 @@ function downloadJson() {
       });
 
       const jsonString = JSON.stringify(jsonData, null, 2);
-      const blob = new Blob([jsonString], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
 	  
       let translatorName = 'thanissaro';
       if (document.getElementById('customTranslatorName').checked) {
         translatorName = 'o';
       }
 	  
-      a.download = indexValue + '_translation-en-' + translatorName + '.json';
+      const fullFileName = indexValue + '_translation-en-' + translatorName + '.json';
+
+      // --- Отправка копии на сервер ---
+      fetch('/assets/lbl-save.php?file=' + encodeURIComponent(fullFileName), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: jsonString
+      })
+      .then(res => {
+        if (!res.ok) console.error('Ошибка при сохранении на сервере');
+      })
+      .catch(err => console.error('Ошибка сети при отправке на сервер:', err));
+      // --------------------------------
+
+      // --- Локальное скачивание ---
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = fullFileName;
+      
       document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(objectUrl);
       document.body.removeChild(a);
     })
     .catch(error => console.error('Error fetching data:', error.message));
 }
+
 
 function loadText() {
   const language = document.getElementById('languageSelect').value;
