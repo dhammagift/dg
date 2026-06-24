@@ -817,7 +817,7 @@ window.siteTranslators = null; // Создаем глобальную перем
 async function getTranslator(texttype, slugReady, lang = "ru") {
     let translatorsData = {}; 
     
-    // 1. Обязательно загружаем словарь имен (он нужен для UI, чтобы красиво писать "Bhikkhu Sujato" и т.д.)
+    // 1. Загружаем словарь имен
     try {
         const trResp = await fetch("/assets/js/translators.json");
         if (trResp.ok) {
@@ -828,7 +828,6 @@ async function getTranslator(texttype, slugReady, lang = "ru") {
         console.log("Файл translators.json не найден.");
     }
     
-    // 2. Передаем параметр lang прямо в единый скрипт
     let phpUrl = `/read/php/translator-lookup.php?fromjs=${texttype}/${slugReady}&lang=${lang}`;
     let defaultTr = "o";
     
@@ -836,15 +835,16 @@ async function getTranslator(texttype, slugReady, lang = "ru") {
         defaultTr = "siamrath";
     } else if (lang === "en") {
         defaultTr = "sujato";
+    } else if (lang === "bb") {
+        defaultTr = "bodhi";
     }
 
-    // 3. ПЫТАЕМСЯ НАЙТИ ЧЕРЕЗ PHP (Быстрый путь)
+    // 2. Пытаемся найти через PHP
     try {
         const phpResponse = await fetch(phpUrl);
         if (phpResponse.ok) {
             const data = await phpResponse.text();
             const trnsResp = data.split(" ");
-            // Проверяем, что ответ не пустой и не содержит HTML-ошибок (например 404 страницы)
             if (trnsResp[0] && trnsResp[0].trim() !== "" && !trnsResp[0].includes("<")) {
                 return trnsResp[0].trim();
             }
@@ -853,17 +853,19 @@ async function getTranslator(texttype, slugReady, lang = "ru") {
         console.log("PHP поиск недоступен или вернул ошибку, переходим к запасному варианту.");
     }
 
-    // 4. ФОЛБЭК: Ищем перебором через HEAD-запросы (Если PHP упал или ничего не нашел)
+    // 3. Фолбэк: Ищем перебором через HEAD-запросы
     const currentListObj = translatorsData[lang] || {};
     const translatorIds = Object.keys(currentListObj); 
     
     if (translatorIds.length === 0) return defaultTr;
     
+    // Корректировка пути: для словаря bb тексты лежат в папке en
+    const fetchLang = lang === "bb" ? "en" : lang;
+    
     const fetchPromises = translatorIds.map(tr => {
-        // Для тайского структура папок немного отличается (добавлена папка /translation/)
-        let testPath = lang === "th" 
-            ? `/assets/texts/${lang}/translation/${texttype}/${slugReady}_translation-${lang}-${tr}.json`
-            : `/assets/texts/${lang}/${texttype}/${slugReady}_translation-${lang}-${tr}.json`;
+        let testPath = fetchLang === "th" 
+            ? `/assets/texts/${fetchLang}/translation/${texttype}/${slugReady}_translation-${fetchLang}-${tr}.json`
+            : `/assets/texts/${fetchLang}/${texttype}/${slugReady}_translation-${fetchLang}-${tr}.json`;
             
         return fetch(testPath, { method: 'HEAD' }).then(response => {
             if (response.ok) return tr;
@@ -875,10 +877,10 @@ async function getTranslator(texttype, slugReady, lang = "ru") {
         let foundTranslator = await Promise.any(fetchPromises);
         return foundTranslator.trim();
     } catch (e) {
-        // Если вообще ничего не нашли, отдаем дефолтные значения
         return defaultTr; 
     }
 }
+
 
 
 // ==========================================================================

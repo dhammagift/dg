@@ -194,7 +194,7 @@ async function buildSutta(slug) {
     } else if (translator === "brahmali") {
       translatorforuser = 'Bhikkhu Brahmali';
     } else if (translator === "thanissaro") {
-      translatorforuser = 'Thanissaro Bhikkhu';
+      translatorforuser = 'Thanissaro Bhikkhu<br><a href=https://dhammatalks.org/suttas/>DhammaTalks.org</a>';
     }
 
     const translatorByline = `<div id="trn" class="byline">
