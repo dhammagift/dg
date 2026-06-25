@@ -332,21 +332,17 @@ table.table-hover td {
             }
         };
 
-function loadAndCheckRanges() {
+async function loadAndCheckRanges() {
     const inputField = document.getElementById('indexInput');
     const checkResult = document.getElementById('checkResult');
     let debounceTimer;
 
-    // Функция генерации пути к файлу, повторяющая структуру папок Dhamma.gift
-    function getFileUrl(indexValue, translator) {
-        let lettersOnlyMatch = indexValue.match(/[a-z]+/);
-        if (!lettersOnlyMatch) return null;
-        
-        let lettersOnly = lettersOnlyMatch[0];
+    // Вспомогательная функция для генерации пути
+    function getFileUrls(indexValue, translator) {
+        let lettersOnly = indexValue.match(/[a-z]+/)?.[0] ?? '';
         let beforeDot = indexValue.split('.')[0];
         let firstNumberOnly = beforeDot.match(/[0-9]+/)?.[0] ?? null;
 
-        // Обработка особых случаев для Кхуддака-никаи
         if (['snp', 'ud', 'dhp', 'iti'].some(kn => indexValue.includes(kn))) {
             lettersOnly = 'kn/' + lettersOnly;
             if (indexValue.includes('snp') || indexValue.includes('ud')) {
@@ -358,19 +354,14 @@ function loadAndCheckRanges() {
             }
         }
 
-        let baseUrl;
-        // У DN и MN нет подпапок уровня beforeDot
-        if (indexValue.match(/dn|mn/)) {
-            baseUrl = `/assets/texts/en_other/sutta/${lettersOnly}/${indexValue}`;
-        } else {
-            let middlePart = beforeDot ? `${beforeDot}/` : '';
-            baseUrl = `/assets/texts/en_other/sutta/${lettersOnly}/${middlePart}${indexValue}`;
-        }
+        let middlePart = (indexValue.match(/dn|mn/)) ? '' : (beforeDot ? `${beforeDot}/` : '');
+        let fileName = `${indexValue}_translation-${translator}.json`;
         
-        // Очищаем двойные слеши на случай пустого middlePart
-        baseUrl = baseUrl.replace(/([^:]\/)\/+/g, "$1");
-        
-        return `${baseUrl}_translation-${translator}.json`;
+        // Два базовых пути для проверки
+        return [
+            `/assets/texts/en_other/sutta/${lettersOnly}/${middlePart}${fileName}`.replace(/([^:]\/)\/+/g, "$1"),
+            `/assets/texts/lbl/${fileName}`
+        ];
     }
 
     inputField.addEventListener('input', function () {
@@ -384,33 +375,30 @@ function loadAndCheckRanges() {
 
         checkResult.innerHTML = '<span class="text-muted"><i class="fa-solid fa-spinner fa-spin"></i> Checking...</span>';
 
-        // Задержка 500мс, чтобы дождаться окончания ввода индекса пользователем
         debounceTimer = setTimeout(async () => {
-            // Ищем файл перевода Таниссаро, как основную проверку готовности
-            const url = getFileUrl(inputValue, 'en-thanissaro');
-            
-            if (!url) {
-                checkResult.innerHTML = '<span class="text-warning"><i class="fa-solid fa-triangle-exclamation"></i> Invalid format</span>';
-                return;
-            }
+            const urls = getFileUrls(inputValue, 'en-thanissaro');
+            let found = false;
 
-            try {
-                // Выполняем HEAD запрос, чтобы проверить статус файла без загрузки его содержимого
-                const response = await fetch(url, { method: 'HEAD' });
-                
-                if (response.ok) {
-                    checkResult.innerHTML = '<span class="text-success"><i class="fa-solid fa-check"></i> Already exists</span>';
-                } else {
-                    checkResult.innerHTML = '<span class="text-secondary"><i class="fa-solid fa-xmark"></i> Not ready yet</span>';
+            for (const url of urls) {
+                try {
+                    const response = await fetch(url, { method: 'HEAD' });
+                    if (response.ok) {
+                        found = true;
+                        break;
+                    }
+                } catch (error) {
+                    continue;
                 }
-            } catch (error) {
-                console.error('Check file error:', error);
-                checkResult.innerHTML = '<span class="text-danger"><i class="fa-solid fa-triangle-exclamation"></i> Check failed</span>';
+            }
+            
+            if (found) {
+                checkResult.innerHTML = '<span class="text-success"><i class="fa-solid fa-check"></i> Already exists</span>';
+            } else {
+                checkResult.innerHTML = '<span class="text-secondary"><i class="fa-solid fa-xmark"></i> Not ready yet</span>';
             }
         }, 500); 
     });
 
-    // Инициируем проверку при первой загрузке скрипта, если инпут уже заполнен
     if (inputField.value) {
         inputField.dispatchEvent(new Event('input'));
     }

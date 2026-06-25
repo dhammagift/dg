@@ -73,7 +73,7 @@ async def watch_directory(app: Application):
                 
                 # Если файл новый или был изменен
                 if is_new or is_modified:
-                    action_text = "Новый файл" if is_new else "Обновлен файл"
+                    action_text = "New file" if is_new else "Updated file"
                     
                     # Отправка каждому админу из списка
                     for admin_id in ADMIN_IDS:
@@ -82,7 +82,7 @@ async def watch_directory(app: Application):
                                 await app.bot.send_document(
                                     chat_id=admin_id,
                                     document=f,
-                                    caption=f"📄 {action_text} в lbl: {file_name}"
+                                    caption=f"📄 {action_text} in lbl: {file_name}"
                                 )
                             logger.info(f"Успешно отправлен {file_name} ({action_text}) админу {admin_id}")
                         except Exception as e:

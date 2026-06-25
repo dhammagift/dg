@@ -12,7 +12,7 @@ if ($repoDir) {
 $gitCmd = "cd ../../offline-data; git pull";
 
 // tree + sed 
-$treeCmd = "tree -v -P \"*.json\" --prune ../offline-data/en_other | sed 's/_translation-en-thanissaro\\.json//'";
+$treeCmd = "tree -v -P \"*.json\" --prune ../offline-data/lbl ../offline-data/en_other | sed 's/_translation-en-thanissaro\\.json//'";
 
 // выполнение
 $gitOutput = shell_exec($gitCmd . " 2>&1") ?? '';
@@ -128,7 +128,7 @@ if (!empty($treeLines)) {
         <div class="accordion-item">
             <h2 class="accordion-header">
                 <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#tree">
-                  List of the Texts that are Ready
+                  List of the Texts that are Ready. If you can find it here it's Done.
                 </button>
             </h2>
 
@@ -137,7 +137,7 @@ if (!empty($treeLines)) {
                     <table id="treeTable" class="table table-dark table-borderless table-sm w-100">
                         <thead>
                             <tr>
-                                <th>Directory Structure</th>
+                                <th>Unpublished texts (if available) are listed before the main "Sutta" folder </th>
                             </tr>
                         </thead>
                         <tbody>
