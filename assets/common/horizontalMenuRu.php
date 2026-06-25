@@ -105,7 +105,7 @@ echo '<!--
 	               <li>
          <div class="dropdown-item ">Patimokkha 
          <a class="text-reset" target="_blank"   href="' . $linkati . '">ATI</a>
-       <a class="text-reset" target="_blank"  href="/assets/dhammatalks.org/vinaya/bmc/Section0000.html">BMC</a>
+       <a class="text-reset" target="_blank"  href="/dhammatalks.org/vinaya/bmc/Section0000.html">BMC</a>
           <a class="text-reset" target="" href="/assets/materials/bupm_trn_by_nanatusita.pdf">Nanatusita</a>  
        </div>
          </li>
