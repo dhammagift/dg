@@ -238,7 +238,7 @@ table.table-hover td {
 
 .status-badge-text {
   position: absolute; 
-  top: -70px; 
+  top: -10px; 
   left: 110px; 
   white-space: nowrap; 
   font-size: 0.85em;
@@ -1423,8 +1423,8 @@ function loadPrev() {
           if (newIndexValue) {
             const inputField = document.getElementById('indexInput');
             inputField.value = newIndexValue; 
-            inputField.dispatchEvent(new Event('input')); 
           }
+          loadAndCheckRanges();
           loadText();
       })
       .catch(error => {
@@ -1451,8 +1451,8 @@ function loadNext() {
           if (newIndexValue) {
             const inputField = document.getElementById('indexInput');
             inputField.value = newIndexValue; 
-            inputField.dispatchEvent(new Event('input')); 
           }
+          loadAndCheckRanges();
           loadText();
       })
       .catch(error => {
@@ -2052,6 +2052,42 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const indexInput = document.getElementById('indexInput');
+    
+    if (!indexInput) return;
+    
+    const $input = $(indexInput);
+
+    // Вспомогательная функция для генерации события без вызова автокомплита
+    function triggerSilentInput() {
+        $input.autocomplete("disable");
+        indexInput.dispatchEvent(new Event('input'));
+        $input.autocomplete("enable");
+    }
+
+    // 1. Отслеживание выбора элемента в виджете автокомплита
+    $input.on('autocompleteselect', function() {
+        setTimeout(triggerSilentInput, 50); 
+    });
+
+    // 2. Отслеживание нажатия клавиши Enter
+    indexInput.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            $input.autocomplete("close"); // Принудительно закрываем висящую подсказку
+            triggerSilentInput();
+        }
+    });
+
+    // 3. Отслеживание потери фокуса (завершение ручного ввода и клик мыши в другое место)
+    indexInput.addEventListener('blur', function() {
+        triggerSilentInput();
+    });
+});
+</script>
+
+
 <script src="/assets/js/settings.js"></script>
 <div id="statusNotification" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
     <div id="toastMessage" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">
