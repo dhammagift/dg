@@ -238,7 +238,6 @@ table.table-hover td {
                 <div style="display: inline-flex; margin-top: -60px;">
                     <top-nav-icons type="read" show-dict></top-nav-icons>
                 </div>
-                <a href="./linebyline.html" title="для Мобильных" class="ms-1 text-muted" target=""><i class="fa-solid fa-mobile"></i></a>
                 <a href="#" onclick="openHelpModal();" title="Инструкция" class="ms-2 text-muted" target=""><i class="fa-solid fa-question"></i></a>
    <a href="/assets/readylinebyline.html" title="Обновить Список Готовых" class=" ms-2 me-2 text-muted" target="_blank">
 <i class="fa-solid fa-list"></i>
@@ -605,121 +604,145 @@ table.table-hover td {
 
 <script>
 function downloadJson() {
-  const language = document.getElementById('languageSelect').value;
-  const indexValue = document.getElementById('indexInput').value.trim().toLowerCase();
-  const translation = document.getElementById('translationInput').value.trim();
+    const language = document.getElementById('languageSelect').value;
+    const indexValue = document.getElementById('indexInput').value.trim().toLowerCase();
+    const translation = document.getElementById('translationInput').value.trim();
 
-  const translationLines = translation.split('\n');
-  const jsonData = {};
+    const translationLines = translation.split('\n');
+    const jsonData = {};
 
-  let lettersOnly = indexValue.match(/[a-z]+/)[0];
-  let beforeDot = indexValue.split('.')[0];
-  let firstNumberOnly = beforeDot.match(/[0-9]+/)?.[0] ?? null;
+    let lettersOnly = indexValue.match(/[a-z]+/)[0];
+    let beforeDot = indexValue.split('.')[0];
+    let firstNumberOnly = beforeDot.match(/[0-9]+/)?.[0] ?? null;
 
-  if (indexValue.includes('snp') || indexValue.includes('ud') || indexValue.includes('dhp') || indexValue.includes('iti')) {
-    lettersOnly = 'kn/' + lettersOnly;
-  }
-
-  if (indexValue.includes('snp') || indexValue.includes('ud')) {
-    beforeDot = 'vagga' + firstNumberOnly;
-  } else if (indexValue.includes('dhp')) {
-    beforeDot = '';
-  }  
-  
-  if ( indexValue.includes('iti')) {
-    beforeDot = 'vagga' + findItiVagga(firstNumberOnly);
-  } 
-
-  let url;
-  if (indexValue.includes('bu-') || indexValue.includes('bi-')) {
-    let buOrbi = indexValue.split('-')[0]; 
-    let lawIndex = indexValue.split('-')[1]; 
-    let lawType = lawIndex.match(/[a-z]+/)[0];
-    let fileNameBlock = 'pli-tv-' + buOrbi + '-vb/pli-tv-' + buOrbi + '-vb-' + lawType + '/pli-tv-' + buOrbi + '-vb-' + lawIndex;
-
-    if (indexValue.includes('-pm')) {
-      fileNameBlock = 'pli-tv-' + buOrbi + '-pm';
-    } 
-    console.log('fileNameBlock ' + fileNameBlock) ;
-    if (language === 'pli') {
-      url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/vinaya/${fileNameBlock}_root-pli-ms.json`;    
-    } else if (language === 'en') {
-      url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/brahmali/vinaya/${fileNameBlock}_translation-en-brahmali.json`;
+    if (indexValue.includes('snp') || indexValue.includes('ud') || indexValue.includes('dhp') || indexValue.includes('iti')) {
+        lettersOnly = 'kn/' + lettersOnly;
     }
-  } else if (language === 'pli') {
-      url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta/${lettersOnly}/${beforeDot}/${indexValue}_root-pli-ms.json`;
-  } else if (language === 'en') {
-      url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${lettersOnly}/${beforeDot}/${indexValue}_translation-en-sujato.json`;
-  }
 
-  if (indexValue.match(/dn|mn/)) {
-    if (language === 'pli') {
-      url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta/${lettersOnly}/${indexValue}_root-pli-ms.json`;
-    } else if (language === 'en') {
-      url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${lettersOnly}/${indexValue}_translation-en-sujato.json`;
+    if (indexValue.includes('snp') || indexValue.includes('ud')) {
+        beforeDot = 'vagga' + firstNumberOnly;
+    } else if (indexValue.includes('dhp')) {
+        beforeDot = '';
     }
-  }
-  console.log('url ' + url) ;
 
-  const translations = {
-    "Paṭhamaṁ.": "Первая.",
-    "Dutiyaṁ.": "Вторая.",
-    "Tatiyaṁ.": "Третья.",
-    "Catutthaṁ.": "Четвёртая.",
-    "Pañcamaṁ.": "Пятая.",
-    "Chaṭṭhaṁ.": "Шестая.",
-    "Sattamaṁ.": "Седьмая.",
-    "Aṭṭhamaṁ.": "Восьмая.",
-    "Navamaṁ.": "Девятая.",
-    "Dasamaṁ.": "Десятая.",
-    "Ekādasamaṁ.": "Одниннадцатая.",
-    "Dvādasamaṁ.": "Двенадцатая.",
-    "Terasamaṁ.": "Тринадцатая.",
-    "Cuddasamaṁ.": "Четырнадцатая.",
-    "Pannarasamaṁ.": "Пятнадцатая.",
-    "Soḷasamaṁ.": "Шестнадцатая.",
-    "Sattarasamaṁ.": "Семнадцатая.",
-    "Aṭṭhārasamaṁ.": "Восемнадцатая.",
-    "Tiṁsatimaṁ.": "Тридцатая.",
-    "Tassuddānaṁ": "Оглавление"
-  };
+    if (indexValue.includes('iti')) {
+        beforeDot = 'vagga' + findItiVagga(firstNumberOnly);
+    }
 
-  fetch(url)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.json();
-    })
-    .then(data => {
-      const dataArray = Object.entries(data);
+    let url;
+    if (indexValue.includes('bu-') || indexValue.includes('bi-')) {
+        let buOrbi = indexValue.split('-')[0];
+        let lawIndex = indexValue.split('-')[1];
+        let lawType = lawIndex.match(/[a-z]+/)[0];
+        let fileNameBlock = 'pli-tv-' + buOrbi + '-vb/pli-tv-' + buOrbi + '-vb-' + lawType + '/pli-tv-' + buOrbi + '-vb-' + lawIndex;
 
-      dataArray.forEach(([key, value], index) => {
-        let translationLine = translationLines[index] || ''; 
-        if (translations[value.trim()]) {
-          translationLine = translations[value.trim()];
+        if (indexValue.includes('-pm')) {
+            fileNameBlock = 'pli-tv-' + buOrbi + '-pm';
         }
-        jsonData[key] = translationLine;
-      });
+        if (language === 'pli') {
+            url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/vinaya/${fileNameBlock}_root-pli-ms.json`;
+        } else if (language === 'en') {
+            url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/brahmali/vinaya/${fileNameBlock}_translation-en-brahmali.json`;
+        }
+    } else if (language === 'pli') {
+        url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta/${lettersOnly}/${beforeDot}/${indexValue}_root-pli-ms.json`;
+    } else if (language === 'en') {
+        url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${lettersOnly}/${beforeDot}/${indexValue}_translation-en-sujato.json`;
+    }
 
-      const jsonString = JSON.stringify(jsonData, null, 2);
-      const blob = new Blob([jsonString], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-	  
-      let translatorName = 'sv+edited+o';
-      if (document.getElementById('customTranslatorName').checked) {
-        translatorName = 'o';
-      }
-	  
-      a.download = indexValue + '_translation-ru-' + translatorName + '.json';
-      document.body.appendChild(a);
-      a.click();
-      URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    })
-    .catch(error => console.error('Error fetching data:', error.message));
+    if (indexValue.match(/dn|mn/)) {
+        if (language === 'pli') {
+            url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta/${lettersOnly}/${indexValue}_root-pli-ms.json`;
+        } else if (language === 'en') {
+            url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${lettersOnly}/${indexValue}_translation-en-sujato.json`;
+        }
+    }
+
+    const translations = {
+        "Paṭhamaṁ.": "Первая.",
+        "Dutiyaṁ.": "Вторая.",
+        "Tatiyaṁ.": "Третья.",
+        "Catutthaṁ.": "Четвёртая.",
+        "Pañcamaṁ.": "Пятая.",
+        "Chaṭṭhaṁ.": "Шестая.",
+        "Sattamaṁ.": "Седьмая.",
+        "Aṭṭhamaṁ.": "Восьмая.",
+        "Navamaṁ.": "Девятая.",
+        "Dasamaṁ.": "Десятая.",
+        "Ekādasamaṁ.": "Одниннадцатая.",
+        "Dvādasamaṁ.": "Двенадцатая.",
+        "Terasamaṁ.": "Тринадцатая.",
+        "Cuddasamaṁ.": "Четырнадцатая.",
+        "Pannarasamaṁ.": "Пятнадцатая.",
+        "Soḷasamaṁ.": "Шестнадцатая.",
+        "Sattarasamaṁ.": "Семнадцатая.",
+        "Aṭṭhārasamaṁ.": "Восемнадцатая.",
+        "Tiṁsatimaṁ.": "Тридцатая.",
+        "Tassuddānaṁ": "Оглавление"
+    };
+
+    fetch(url)
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            const dataArray = Object.entries(data);
+            dataArray.forEach(([key, value], index) => {
+                let translationLine = translationLines[index] || '';
+                if (translations[value.trim()]) {
+                    translationLine = translations[value.trim()];
+                }
+                jsonData[key] = translationLine;
+            });
+
+            const jsonString = JSON.stringify(jsonData, null, 2);
+            let translatorName = 'sv+edited+o';
+            if (document.getElementById('customTranslatorName').checked) {
+                translatorName = 'o';
+            }
+            const fullFileName = indexValue + '_translation-ru-' + translatorName + '.json';
+
+            // Инициализация Toast
+            const toastEl = document.getElementById('toastMessage');
+            const toastText = document.getElementById('toastText');
+
+            // --- Отправка копии на сервер ---
+            fetch('/assets/lbl-save.php?file=' + encodeURIComponent(fullFileName), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: jsonString
+            })
+            .then(res => {
+                if (res.ok) {
+                    toastEl.classList.remove('bg-danger');
+                    toastEl.classList.add('bg-success');
+                    toastText.textContent = 'File uploaded to server successfully.';
+                    new bootstrap.Toast(toastEl, { autohide: true }).show();
+                } else {
+                    throw new Error('Upload failed');
+                }
+            })
+            .catch(err => {
+                console.error('Network error:', err);
+                toastEl.classList.remove('bg-success');
+                toastEl.classList.add('bg-danger');
+                toastText.textContent = 'Error: Failed to upload file to server.';
+                new bootstrap.Toast(toastEl, { autohide: false }).show();
+            });
+
+            // --- Локальное скачивание ---
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const objectUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = objectUrl;
+            a.download = fullFileName;
+            document.body.appendChild(a);
+            a.click();
+            URL.revokeObjectURL(objectUrl);
+            document.body.removeChild(a);
+        })
+        .catch(error => console.error('Error fetching data:', error.message));
 }
 
 function loadText() {
@@ -1980,5 +2003,15 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 <script src="/assets/js/settings.js"></script>
+<script src="/assets/js/settings.js"></script>
+<div id="statusNotification" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
+    <div id="toastMessage" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div id="toastText" class="toast-body"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

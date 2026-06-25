@@ -475,7 +475,7 @@ DG
        </div>
     </li>  
          
-   <li><a class="dropdown-item" href="javascript:void(0)" target="_blank"  onclick="openWithQuery(event, \'/ru/assets/linebyline.html?q={{q}}\')">Редактировать Перевод</a></li>
+   <li><a class="dropdown-item" href="javascript:void(0)" target="_blank"  onclick="openWithQuery(event, \'/ru/assets/lbl.html?q={{q}}\')">Редактировать Перевод</a></li>
   
   
   
