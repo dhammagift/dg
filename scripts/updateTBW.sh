@@ -42,7 +42,7 @@ read x
 
 cd ..
 diff -qr theBuddhasWords/ ../bwold/
-diff theBuddhasWords/js/pali-lookup-standalone.js  bw/js/pali-lookup-standalone.js 
+diff theBuddhasWords/js/pali-lookup-standalone.js  ../bwold/js/pali-lookup-standalone.js 
 
 exit 0
 
