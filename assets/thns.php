@@ -238,6 +238,24 @@ if (!empty($treeLines)) {
 
         $('#treeTable').DataTable(dtOptions);
         $('#notReadyTable').DataTable(dtOptions);
+
+        // Восстановление состояния аккордеона из localStorage
+        var activeTabId = localStorage.getItem('activeAccordionTab');
+        if (activeTabId) {
+            // Закрываем все вкладки
+            $('.accordion-collapse').removeClass('show');
+            $('.accordion-button').addClass('collapsed');
+            
+            // Открываем сохраненную вкладку
+            $('#' + activeTabId).addClass('show');
+            $('[data-bs-target="#' + activeTabId + '"]').removeClass('collapsed');
+        }
+
+        // Сохранение состояния при открытии вкладки
+        $('#repoAccordion').on('shown.bs.collapse', function (e) {
+            var activeId = $(e.target).attr('id');
+            localStorage.setItem('activeAccordionTab', activeId);
+        });
     });
 </script>
 <script defer src="/assets/js/themeswitch.js"></script>
