@@ -15,7 +15,7 @@ $gitCmd = "cd ../../offline-data; git pull";
 $treeCmd = "tree -v -P \"*-en-*.json\" --prune ../offline-data/lbl ../offline-data/en_other | sed 's/_translation-en-thanissaro\\.json//'";
 
 // not ready suttas
-$notReadyCmd = "cd ../offline-data/en_other ; find sutta/sn sutta/mn sutta/dn -type f | awk -F/ '{print \$NF}' | sed 's/_.*//' | sort -u | grep -Fhxvf - sn.txt mn.txt dn.txt | sort -V";
+$notReadyCmd = "cd ../offline-data/en_other; find sutta/sn sutta/mn sutta/dn sutta/an -type f | awk -F/ '{print \$NF}' | sed 's/_.*//' | sort -u | grep -Fhxvf - an.txt sn.txt mn.txt dn.txt | awk '/^sn/{print \"1 \" \$0;next}/^mn/{print \"2 \" \$0;next}/^dn/{print \"3 \" \$0;next}/^an/{print \"4 \" \$0;next}' | sort -k1,1n -k2,2V | cut -d' ' -f2-";
 
 // выполнение
 $gitOutput = shell_exec($gitCmd . " 2>&1") ?? '';
