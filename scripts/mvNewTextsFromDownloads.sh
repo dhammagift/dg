@@ -3,6 +3,7 @@ source ./config/script_config.sh --source-only
 #downloaddir=/media/c/Users/o28o/Downloads
 #trndir=/media/c/soft/dg/assets/texts/ru/sutta/
 thtrndir=/data/data/com.termux/files/usr/share/apache2/default-site/htdocs/assets/texts/th/translation/sutta/
+lbldir=$apachesitepath/assets/texts/lbl/
 
 cd $downloaddir
 for file in `find . -maxdepth 1 -type f -size +0 -name "*root-pli-ms.json" 2>/dev/null`
@@ -17,7 +18,8 @@ cd - 2>&1 >/dev/null
 #find "$downloaddir" -maxdepth 1 -type f -size 0 -name "*translation*.json" | xargs rm
 
 #ru trn 
-for file in `find "$downloaddir" "$downloaddir/Telegram" -maxdepth 1 -type f -size +0 -name "*translation-ru-*.json" 2>/dev/null`
+for file in `find "$lbldir" -maxdepth 1 -type f -size +0 -name "*translation-ru-*.json" 2>/dev/null`
+#for file in `find "$downloaddir" "$downloaddir/Telegram" -maxdepth 1 -type f -size +0 -name "*translation-ru-*.json" 2>/dev/null`
 do 
 suttaname=$(echo $file | sed -E 's/_translation.*//' | awk -F'/' '{print $NF}')
 

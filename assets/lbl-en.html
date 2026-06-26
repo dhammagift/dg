@@ -1512,10 +1512,17 @@ function loadInputs() {
     customTranslatorCheckbox.checked = savedCheckboxState === 'true';
   }
 
-  // Загружаем сохраненный язык
+  // Загружаем сохраненный язык с проверкой существования опции
   const savedLanguage = localStorage.getItem('languageSelectValue');
   if (savedLanguage) {
-    languageSelect.value = savedLanguage;
+    const optionExists = Array.from(languageSelect.options).some(opt => opt.value === savedLanguage);
+    if (optionExists) {
+      languageSelect.value = savedLanguage;
+    } else {
+      // Если языка нет (например, 'ru' в английской версии), 
+      // визуально ставим 'en', но НЕ перезаписываем localStorage
+      languageSelect.value = 'en';
+    }
   }
 	
   if (localStorage.getItem('indexValue')) { 
