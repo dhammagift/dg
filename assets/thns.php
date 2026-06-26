@@ -12,7 +12,7 @@ if ($repoDir) {
 $gitCmd = "cd ../../offline-data; git pull";
 
 // tree + sed 
-$treeCmd = "tree -v -P \"*.json\" --prune ../offline-data/lbl ../offline-data/en_other | sed 's/_translation-en-thanissaro\\.json//'";
+$treeCmd = "tree -v -P \"*-en-*.json\" --prune ../offline-data/lbl ../offline-data/en_other | sed 's/_translation-en-thanissaro\\.json//'";
 
 // выполнение
 $gitOutput = shell_exec($gitCmd . " 2>&1") ?? '';

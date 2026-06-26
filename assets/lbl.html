@@ -261,12 +261,13 @@ table.table-hover td {
                 </div>
 
                 <div class="input-group-append ms-1">
-                    <select title="Язык исходного файла" class="form-select input-sm" id="languageSelect">
+                    <select title="Язык левой колонки" class="form-select input-sm" id="languageSelect">
                         <option value="pli">Пали</option>
+                        <option value="ru">Русский</option>
                         <option value="en">Англ</option>
                     </select>
                 </div>
-                
+  
                 <div class="input-group-append ms-1 me-3">
                     <button class="btn btn-primary mb-1" title="Открыть текст на dhamma.gift" id="linkButton2">Th.ru</button>
                     <button class="btn btn-primary mb-1" title="Открыть текст на dhamma.gift" id="linkButton1">DG</button>
@@ -639,19 +640,20 @@ function downloadJson() {
         if (indexValue.includes('-pm')) {
             fileNameBlock = 'pli-tv-' + buOrbi + '-pm';
         }
-        if (language === 'pli') {
+        // Добавлено || language === 'ru' для получения палийской основы
+        if (language === 'pli' || language === 'ru') {
             url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/vinaya/${fileNameBlock}_root-pli-ms.json`;
         } else if (language === 'en') {
             url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/brahmali/vinaya/${fileNameBlock}_translation-en-brahmali.json`;
         }
-    } else if (language === 'pli') {
+    } else if (language === 'pli' || language === 'ru') {
         url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta/${lettersOnly}/${beforeDot}/${indexValue}_root-pli-ms.json`;
     } else if (language === 'en') {
         url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${lettersOnly}/${beforeDot}/${indexValue}_translation-en-sujato.json`;
     }
 
     if (indexValue.match(/dn|mn/)) {
-        if (language === 'pli') {
+        if (language === 'pli' || language === 'ru') {
             url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta/${lettersOnly}/${indexValue}_root-pli-ms.json`;
         } else if (language === 'en') {
             url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${lettersOnly}/${indexValue}_translation-en-sujato.json`;
@@ -746,6 +748,71 @@ function downloadJson() {
 }
 
 function loadText() {
+  const translatorsData = {
+    "ru": {
+      "sv+edited+o": "SV theravada.ru с Англ, ред. <a href=/assets/common/o.html>o</a>",
+      "o": "<a href=/assets/common/o.html>o</a> с Пали",
+      "sv": "SV theravada.ru с Англ",
+      "syrkin+edited+o": "<a href=/assets/texts/syrkin.html>А.Я. Сыркин</a> с Пали, ред. <a href=/assets/common/o.html>o</a>",
+      "khantibalo": "Кхантибало Theravada.su",
+      "narinyanievmenenko": "Нариньяни/Евмененко",
+      "narinyanievmenenko+edited+o": "Нариньяни/Евмененко, ред. <a href=/assets/common/o.html>o</a>",
+      "shapovalov+edited+o": "Шаповалов, ред. <a href=/assets/common/o.html>o</a>",
+      "alokananda+edited+o": "Алокананда, ред. <a href=/assets/common/o.html>o</a>",
+      "toporov": "В. Топоров",
+      "syrkin": "<a href=/assets/texts/syrkin.html>А.Я. Сыркин</a> с Пали",
+      "o+in+progress": "<a href=/assets/common/o.html>o</a>, в процессе",
+      "o+experimental": "<a href=/assets/common/o.html>o</a> (экспериментальный)",
+      "o+todo": "<a href=/assets/common/o.html>o</a> (черновик)",
+      "toporov+edited+o": "В. Топоров, ред. <a href=/assets/common/o.html>o</a>",
+      "gerasimov+edited+o": "В. Герасимов, ред. <a href=/assets/common/o.html>o</a>",
+      "gtrasimov+edited+o": "В. Герасимов, ред. <a href=/assets/common/o.html>o</a>",
+      "khemanando+edited+o": "Кхемананда, ред. <a href=/assets/common/o.html>o</a>",
+      "kheminda+edited+o": "Кхеминда, ред. <a href=/assets/common/o.html>o</a>",
+      "khantibalo+edited+o": "Кхантибало, ред. <a href=/assets/common/o.html>o</a>",
+      "pannavaro+edited+o": "Паннаваро, ред. <a href=/assets/common/o.html>o</a>",
+      "tel+edited+o": "Тел, ред. <a href=/assets/common/o.html>o</a>",
+      "translatorMs+edited+o": "Ms, ред. <a href=/assets/common/o.html>o</a>",
+      "myagkih+edited+tr": "К. Мягких с Англ, ред. ТР",
+      "gerasimov": "В. Герасимов",
+      "adelina": "Adel NamaRupa с Англ",
+      "gemini": "Gemini AI"
+    },
+    "en": {
+      "sujato": "Bhikkhu Sujato",
+      "brahmali": "Bhikkhu Brahmali",
+      "o": "<a href=/assets/common/o-en.html>o</a>",
+      "anandajoti": "Anandajoti Bhikkhu",
+      "thanissaro": "Thanissaro Bhikkhu <a href=https://dhammatalks.org/suttas/>source</a>",    
+      "kelly": "John Kelly",
+      "kovilo": "Bhikkhu Kovilo",
+      "patton": "Charles Patton",
+      "soma": "Soma Thera",
+      "suddhaso": "Bhikkhu Suddhaso",
+      "geiger": "Wilhelm Geiger",
+      "horner": "I.B. Horner"
+    },
+    "bb": {
+      "bodhi": "Bhikkhu Bodhi",
+      "thanissaro": "Thanissaro Bhikkhu <a href=https://dhammatalks.org/suttas/>source</a>",
+      "anandajoti": "Anandajoti Bhikkhu",
+      "sujato+walton": "Sujato & Walton",
+      "buddharakkhita": "Acharya Buddharakkhita",
+      "walshe": "Maurice Walshe",
+      "kelly": "John Kelly",
+      "o": "<a href=/assets/common/o-en.html>o</a>"
+    },
+    "th": {
+      "siamrath": "Siam Rath",
+      "siamrath+edited+o": "Siam Rath, ed. o",
+      "jayasaro": "Ajahn Jayasaro",
+      "naratharo": "Phra Naratharo",
+      "o": "o",
+      "ms": "Mahāsaṅgīti",
+      "vri": "Vipassana Research Institute"
+    }
+  };
+
   const language = document.getElementById('languageSelect').value;
   const indexValue = document.getElementById('indexInput').value.trim().toLowerCase();
   let translation = document.getElementById('translationInput').value;
@@ -894,15 +961,37 @@ function loadText() {
   console.log('pliUrl ' + pliUrl) ;
   console.log('enUrl ' + enUrl) ;
 
-  // Запрашиваем пали как основу в любом случае, английский - если выбран в селекте
+  // Функция для последовательного перебора вариантов русского перевода на основе централизованного списка
+  const trimmedUrlForRu = pliUrl.match(/\/(sutta|vinaya)\/.*/)[0];
+  const baseUrlRu = `/assets/texts/ru${trimmedUrlForRu.split('_')[0]}`;
+  
+  const ruTranslatorsKeys = Object.keys(translatorsData.ru);
+  const ruUrlsToTry = ruTranslatorsKeys.map(key => `${baseUrlRu}_translation-ru-${key}.json`);
+
+  async function fetchRuData() {
+      for (const url of ruUrlsToTry) {
+          try {
+              const response = await fetch(url);
+              if (response.ok) {
+                  return await response.json();
+              }
+          } catch (error) {
+              // Игнорируем ошибку и пробуем следующий URL
+          }
+      }
+      return {}; // Возвращаем пустой объект, если ничего не найдено
+  }
+
+  // Запрашиваем пали как основу в любом случае, английский или русский - если выбран в селекте
   Promise.all([
     fetch(pliUrl).then(response => {
       if (!response.ok) throw new Error('Network response was not ok for Pali root');
       return response.json();
     }),
-    language === 'en' ? fetch(enUrl).then(response => response.ok ? response.json() : {}).catch(() => ({})) : Promise.resolve({})
+    language === 'en' ? fetch(enUrl).then(response => response.ok ? response.json() : {}).catch(() => ({})) : Promise.resolve({}),
+    language === 'ru' ? fetchRuData() : Promise.resolve({})
   ])
-  .then(([pliData, enData]) => {
+  .then(([pliData, enData, ruData]) => {
       const tableBody = document.getElementById('outputTableBody');
       const translationInput = document.getElementById('translationInput'); 
 
@@ -915,12 +1004,17 @@ function loadText() {
         const translationLine = translationLines[index] || ''; 
         const texts = translationLine.split('\n'); 
         
-        // Логика подстановки Пали в пропущенные строки Английского
+        // Логика подстановки Пали, Русского или Английского в левую колонку
         let sourceText = pliValue.trimEnd();
         if (language === 'en') {
             const enValue = enData[key];
             if (enValue && enValue.trim() !== '') {
                 sourceText = enValue.trimEnd();
+            }
+        } else if (language === 'ru') {
+            const ruValue = ruData[key];
+            if (ruValue && ruValue.trim() !== '') {
+                sourceText = ruValue.trimEnd();
             }
         }
 
@@ -965,16 +1059,8 @@ function loadText() {
       function generateUrls(originalUrl) {
           const trimmedUrl = originalUrl.match(/\/(sutta|vinaya)\/.*/)[0];
           const baseUrl = `/assets/texts/ru${trimmedUrl.split('_')[0]}`;  
-          return [
-              `${baseUrl}_translation-ru-o.json`,
-              `${baseUrl}_translation-ru-o+in+progress.json`,
-              `${baseUrl}_translation-ru-sv+edited+o.json`,
-              `${baseUrl}_translation-ru-sv.json`,
-              `${baseUrl}_translation-ru-khemanando+edited+o.json`,
-              `${baseUrl}_translation-ru-kheminda+edited+o.json`,
-              `${baseUrl}_translation-ru-microsoftTranslator+edited+o.json`,
-              `${baseUrl}_translation-ru-tel+edited+o.json`
-          ];
+          
+          return ruTranslatorsKeys.map(key => `${baseUrl}_translation-ru-${key}.json`);
       }
 
       async function findAvailableTranslations(originalUrl) {
@@ -1338,7 +1424,6 @@ function loadText() {
   })
   .catch(error => console.error('Error fetching data:', error.message));
 }
-
 
 function ifKn(indexValue) {
   let beforeDot = "";
