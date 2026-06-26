@@ -14,12 +14,17 @@ $gitCmd = "cd ../../offline-data; git pull";
 // tree + sed 
 $treeCmd = "tree -v -P \"*-en-*.json\" --prune ../offline-data/lbl ../offline-data/en_other | sed 's/_translation-en-thanissaro\\.json//'";
 
+// not ready suttas
+$notReadyCmd = "cd ../offline-data/en_other ; find sutta/sn sutta/mn sutta/dn -type f | awk -F/ '{print \$NF}' | sed 's/_.*//' | sort -u | grep -Fhxvf - sn.txt mn.txt dn.txt | sort -V";
+
 // выполнение
 $gitOutput = shell_exec($gitCmd . " 2>&1") ?? '';
 $treeOutput = shell_exec($treeCmd . " 2>&1") ?? '';
+$notReadyOutput = shell_exec($notReadyCmd . " 2>&1") ?? '';
 
 // Разбиваем вывод tree на массив строк
 $treeLines = explode("\n", rtrim($treeOutput));
+$notReadyLines = explode("\n", rtrim($notReadyOutput));
 
 // Удаляем первую строку с названием корневой директории (../offline-data/en_other)
 if (!empty($treeLines)) {
@@ -127,6 +132,34 @@ if (!empty($treeLines)) {
 
         <div class="accordion-item">
             <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#notready">
+                    Texts Pending Completion
+                </button>
+            </h2>
+
+            <div id="notready" class="accordion-collapse collapse" data-bs-parent="#repoAccordion">
+                <div class="accordion-body">
+                    <table id="notReadyTable" class="table table-dark table-borderless table-sm w-100">
+                        <thead>
+                            <tr>
+                                <th>List of the Texts that are Not Ready Yet</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($notReadyLines as $line): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($line, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
                 <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#tree">
                   List of the Texts that are Ready. If you can find it here it's Done.
                 </button>
@@ -184,7 +217,7 @@ if (!empty($treeLines)) {
 
 <script>
     $(document).ready(function() {
-        $('#treeTable').DataTable({
+        var dtOptions = {
             dom: '<"d-flex justify-content-between align-items-center mb-2"Bf>rt<"mt-2"i>',
             buttons: [
                 {
@@ -201,7 +234,10 @@ if (!empty($treeLines)) {
                 infoEmpty: "No data available",
                 zeroRecords: "No matching records found"
             }
-        });
+        };
+
+        $('#treeTable').DataTable(dtOptions);
+        $('#notReadyTable').DataTable(dtOptions);
     });
 </script>
 <script defer src="/assets/js/themeswitch.js"></script>

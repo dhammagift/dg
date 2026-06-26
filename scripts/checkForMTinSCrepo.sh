@@ -77,3 +77,7 @@ sed -i "/thanissarotrnranges/c $(echo -n "window.thanissarotrnranges = [" && fin
 #Update Thanissaro or en_other files for common.js
 cd offline-data/en_other/
 find . -type f | sort -V | awk -F/ '{print $NF}' | awk -F_ '{print $1}' | sed -e "s/^/'/" -e "s/$/',/"
+
+
+#check e.g. sn left 
+find sutta/sn -type f | awk -F/ '{print $NF}' | sed 's/_.*//' | sort -u | grep -Fxvf - sn.txt | sort -V | wc -l
