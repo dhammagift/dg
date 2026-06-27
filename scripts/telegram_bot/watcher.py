@@ -58,6 +58,8 @@ async def watch_directory(app: Application):
         current_files = os.listdir(WATCH_DIR)
         
         for file_name in current_files:
+            if file_name.startswith(".") and file_name.endswith((".swp", ".swo", ".swx")):
+        continue
             file_path = os.path.join(WATCH_DIR, file_name)
             
             if os.path.isfile(file_path):
