@@ -282,12 +282,13 @@ table.table-hover td {
                     <input style="width: 150px;" type="search" onclick="loadAndCheckRanges()" class="form-control input-sm mb-2" id="indexInput" title="Text Index, e.g., sn56.11, an3.70, sn23.1, etc." placeholder="Sutta Number">   
                 </div>
 
-                <div class="input-group-append ms-1">
-                    <select title="Source file language" class="form-select input-sm" id="languageSelect">
-                        <option value="pli">Pali</option>
-                        <option value="en">English</option>
-                    </select>
-                </div>
+<div class="input-group-append ms-1">
+    <select title="Source file language" class="form-select input-sm" id="languageSelect">
+        <option value="pli">Pali</option>
+        <option value="en">English</option>
+        <option value="ru">Russian</option>
+    </select>
+</div>
                 
                 <div class="input-group-append ms-1 me-3">
                     <button class="btn btn-primary mb-1" title="Open text on dhamma.gift" id="linkButton2">DT.org</button>
@@ -634,7 +635,8 @@ loadAndCheckRanges();
 </div>
 
 <script>
-function downloadJson() {
+  
+ function downloadJson() {
     const language = document.getElementById('languageSelect').value;
     const indexValue = document.getElementById('indexInput').value.trim().toLowerCase();
     const translation = document.getElementById('translationInput').value.trim();
@@ -670,19 +672,20 @@ function downloadJson() {
         if (indexValue.includes('-pm')) {
             fileNameBlock = 'pli-tv-' + buOrbi + '-pm';
         }
-        if (language === 'pli') {
+        // Добавлено || language === 'ru' для получения палийской основы
+        if (language === 'pli' || language === 'ru') {
             url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/vinaya/${fileNameBlock}_root-pli-ms.json`;
         } else if (language === 'en') {
             url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/brahmali/vinaya/${fileNameBlock}_translation-en-brahmali.json`;
         }
-    } else if (language === 'pli') {
+    } else if (language === 'pli' || language === 'ru') {
         url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta/${lettersOnly}/${beforeDot}/${indexValue}_root-pli-ms.json`;
     } else if (language === 'en') {
         url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${lettersOnly}/${beforeDot}/${indexValue}_translation-en-sujato.json`;
     }
 
     if (indexValue.match(/dn|mn/)) {
-        if (language === 'pli') {
+        if (language === 'pli' || language === 'ru') {
             url = `/suttacentral.net/sc-data/sc_bilara_data/root/pli/ms/sutta/${lettersOnly}/${indexValue}_root-pli-ms.json`;
         } else if (language === 'en') {
             url = `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${lettersOnly}/${indexValue}_translation-en-sujato.json`;
@@ -737,7 +740,7 @@ function downloadJson() {
             // Инициализация Toast
             const toastEl = document.getElementById('toastMessage');
             const toastText = document.getElementById('toastText');
-            
+
             // --- Отправка копии на сервер ---
             fetch('/assets/lbl-save.php?file=' + encodeURIComponent(fullFileName), {
                 method: 'POST',
@@ -774,7 +777,8 @@ function downloadJson() {
             document.body.removeChild(a);
         })
         .catch(error => console.error('Error fetching data:', error.message));
-}
+} 
+  
 
 function loadText() {
   const language = document.getElementById('languageSelect').value;
@@ -941,453 +945,477 @@ function loadText() {
   console.log('pliUrl ' + pliUrl) ;
   console.log('enUrl ' + enUrl) ;
 
-  // Запрашиваем пали как основу в любом случае, английский - если выбран в селекте
-  Promise.all([
-    fetch(pliUrl).then(response => {
-      if (!response.ok) throw new Error('Network response was not ok for Pali root');
+  // Загружаем список переводчиков из JSON файла
+  fetch('/assets/js/translators.json')
+    .then(response => {
+      if (!response.ok) throw new Error('Failed to load translators.json');
       return response.json();
-    }),
-    language === 'en' ? fetch(enUrl).then(response => response.ok ? response.json() : {}).catch(() => ({})) : Promise.resolve({})
-  ])
-  .then(([pliData, enData]) => {
-      const tableBody = document.getElementById('outputTableBody');
-      const translationInput = document.getElementById('translationInput'); 
+    })
+    .then(translatorsData => {
+      // Функция для последовательного перебора вариантов русского перевода на основе загруженного списка
+      const trimmedUrlForRu = pliUrl.match(/\/(sutta|vinaya)\/.*/)[0];
+      const baseUrlRu = `/assets/texts/ru${trimmedUrlForRu.split('_')[0]}`;
+      
+      const ruTranslatorsKeys = Object.keys(translatorsData.ru || {});
+      const ruUrlsToTry = ruTranslatorsKeys.map(key => `${baseUrlRu}_translation-ru-${key}.json`);
 
-      let tableHtml = '';
-      const dataArray = Object.entries(pliData);
-      const translationLines = translationInput.value.split('\n'); 
-      let rowCounter = 0; 
+      async function fetchRuData() {
+          for (const url of ruUrlsToTry) {
+              try {
+                  const response = await fetch(url);
+                  if (response.ok) {
+                      return await response.json();
+                  }
+              } catch (error) {
+                  // Игнорируем ошибку и пробуем следующий URL
+              }
+          }
+          return {}; // Возвращаем пустой объект, если ничего не найдено
+      }
 
-      dataArray.forEach(([key, pliValue], index) => {
-        const translationLine = translationLines[index] || ''; 
-        const texts = translationLine.split('\n'); 
+      // Запрашиваем пали как основу в любом случае, английский или русский - если выбран в селекте
+      return Promise.all([
+        fetch(pliUrl).then(response => {
+          if (!response.ok) throw new Error('Network response was not ok for Pali root');
+          return response.json();
+        }),
+        language === 'en' ? fetch(enUrl).then(response => response.ok ? response.json() : {}).catch(() => ({})) : Promise.resolve({}),
+        language === 'ru' ? fetchRuData() : Promise.resolve({})
+      ])
+      .then(([pliData, enData, ruData]) => {
+          const tableBody = document.getElementById('outputTableBody');
+          const translationInput = document.getElementById('translationInput'); 
 
-        // Логика подстановки Пали в пропущенные строки Английского
-        let sourceText = pliValue.trimEnd();
-        if (language === 'en') {
-            const enValue = enData[key];
-            if (enValue && enValue.trim() !== '') {
-                sourceText = enValue.trimEnd();
+          let tableHtml = '';
+          const dataArray = Object.entries(pliData);
+          const translationLines = translationInput.value.split('\n'); 
+          let rowCounter = 0; 
+
+          dataArray.forEach(([key, pliValue], index) => {
+            const translationLine = translationLines[index] || ''; 
+            const texts = translationLine.split('\n'); 
+
+            // Логика подстановки Пали в пропущенные строки Английского
+            let sourceText = pliValue.trimEnd();
+            if (language === 'en') {
+                const enValue = enData[key];
+                if (enValue && enValue.trim() !== '') {
+                    sourceText = enValue.trimEnd();
+                }
+            } else if (language === 'ru') {
+                const ruValue = ruData[key];
+                if (ruValue && ruValue.trim() !== '') {
+                    sourceText = ruValue.trimEnd();
+                }
             }
-        }
 
-        texts.forEach((text, textIndex) => {
-          const currentText = texts[textIndex] || ''; 
-          rowCounter++;
-          const row = `<tr>
-                        <td class="pli-lang">${sourceText}</td>
-                        <td>${key}</td>
-                        <td>${currentText}</td>
-                        <td><a href="#" title="${key}" onmousedown="gotoLine(${rowCounter})"><i class="fa-solid fa-link"></i></a></td>
-                      </tr>`;
-          tableHtml += row;
-        });
-      });
-
-      if (translationLines.length > dataArray.length) {
-        for (let i = dataArray.length; i < translationLines.length; i++) {
-          rowCounter++;
-          const extraText = translationLines[i] || ''; 
-          const extraRow = `<tr>
-                            <td></td><td></td>
-                            <td>${extraText}</td>
-                            <td><a href="#" onmousedown="gotoLine(${rowCounter})"><i class="fa-solid fa-link"></i></a></td>
+            texts.forEach((text, textIndex) => {
+              const currentText = texts[textIndex] || ''; 
+              rowCounter++;
+              const row = `<tr>
+                            <td class="pli-lang">${sourceText}</td>
+                            <td>${key}</td>
+                            <td>${currentText}</td>
+                            <td><a href="#" title="${key}" onmousedown="gotoLine(${rowCounter})"><i class="fa-solid fa-link"></i></a></td>
                           </tr>`;
-          tableHtml += extraRow;
-        }
-      }
-
-      tableBody.innerHTML = tableHtml;
-
-      async function checkFileExists(url) {
-          try {
-              const response = await fetch(url, { method: 'HEAD' });
-              return response.ok;  
-          } catch (error) {
-              console.error(`Error fetching ${url}`, error);
-              return false;
-          }
-      }
-
-      function generateUrls(originalUrl) {
-          const trimmedUrl = originalUrl.match(/\/(sutta|vinaya)\/.*/)[0];
-          const baseUrl = `/assets/texts/en_other${trimmedUrl.split('_')[0]}`;  
-          return [
-              `${baseUrl}_translation-ru-o.json`,
-              `${baseUrl}_translation-en-o.json`,
-              `${baseUrl}_translation-en-thanissaro.json`,
-              `${baseUrl}_translation-ru-o+in+progress.json`,
-              `${baseUrl}_translation-ru-sv+edited+o.json`,
-              `${baseUrl}_translation-ru-sv.json`,
-              `${baseUrl}_translation-ru-khemanando+edited+o.json`,
-              `${baseUrl}_translation-ru-kheminda+edited+o.json`,
-              `${baseUrl}_translation-ru-microsoftTranslator+edited+o.json`,
-              `${baseUrl}_translation-ru-tel+edited+o.json`
-          ];
-      }
-
-      async function findAvailableTranslations(originalUrl) {
-          const urls = generateUrls(originalUrl);  
-          const availableUrls = [];
-
-          for (const url of urls) {
-              const exists = await checkFileExists(url);
-              if (exists) {
-                  availableUrls.push(url);  
-              }
-          }
-
-          if (availableUrls.length > 0) {
-              if (availableUrls.length === 1) {
-                  return availableUrls[0]; 
-              }
-              let selectionMessage = 'Select translation:\n';
-              availableUrls.forEach((url, index) => {
-                  selectionMessage += `${index + 1}: ${url}\n`;
-              });
-
-              const userChoice = prompt(selectionMessage);
-              const selectedUrl = availableUrls[userChoice - 1];
-
-              if (selectedUrl) {
-                  return selectedUrl;
-              } else {
-                  alert("Invalid choice.");
-                  return null;
-              }
-          } else {
-              alert("No available translations.");
-              return null;
-          }
-      }
-
-      async function loadFileContent(url) {
-          try {
-              const response = await fetch(url);
-              if (response.ok) {
-                  const content = await response.text();  
-                  document.getElementById('translationInput').value = content;  
-              } else {
-                  alert('Failed to load file.');
-              }
-          } catch (error) {
-              console.error('Error loading file:', error);
-              alert('An error occurred while loading the file.');
-          }
-      }
-
-      // Клонируем кнопку загрузки для сброса старых слушателей перед навешиванием нового
-      const loadBtn = document.getElementById('loadFromServerButton');
-      const newLoadBtn = loadBtn.cloneNode(true);
-      loadBtn.parentNode.replaceChild(newLoadBtn, loadBtn);
-
-      newLoadBtn.addEventListener('click', function() {
-          findAvailableTranslations(pliUrl).then((selectedUrl) => {
-              if (selectedUrl) {
-                  loadFileContent(selectedUrl);  
-              }
+              tableHtml += row;
+            });
           });
-      });
 
-      // Клонируем таблицу для сброса старых слушателей клика (защита от дублирования событий)
-      const tableBodyEl = document.getElementById('outputTableBody');
-      const newTableBodyEl = tableBodyEl.cloneNode(true);
-      tableBodyEl.parentNode.replaceChild(newTableBodyEl, tableBodyEl);
-
-      newTableBodyEl.addEventListener('click', function(event) {
-          let target = event.target;
-          
-          while (target && target.tagName !== 'TD') {
-              target = target.parentElement;
+          if (translationLines.length > dataArray.length) {
+            for (let i = dataArray.length; i < translationLines.length; i++) {
+              rowCounter++;
+              const extraText = translationLines[i] || ''; 
+              const extraRow = `<tr>
+                                <td></td><td></td>
+                                <td>${extraText}</td>
+                                <td><a href="#" onmousedown="gotoLine(${rowCounter})"><i class="fa-solid fa-link"></i></a></td>
+                              </tr>`;
+              tableHtml += extraRow;
+            }
           }
 
-          if (target && target.tagName === 'TD' && target.cellIndex === 2) {
-              let cursorPosition = null;
+          tableBody.innerHTML = tableHtml;
+
+          async function checkFileExists(url) {
+              try {
+                  const response = await fetch(url, { method: 'HEAD' });
+                  return response.ok;  
+              } catch (error) {
+                  console.error(`Error fetching ${url}`, error);
+                  return false;
+              }
+          }
+
+          function generateUrls(originalUrl) {
+              const trimmedUrl = originalUrl.match(/\/(sutta|vinaya)\/.*/)[0];
+              const baseUrl = `/assets/texts/ru${trimmedUrl.split('_')[0]}`;  
               
-              const selection = window.getSelection();
-              if (selection.rangeCount > 0) {
-                  const range = selection.getRangeAt(0);
-                  if (target.contains(range.startContainer)) {
-                      const preCaretRange = range.cloneRange();
-                      preCaretRange.selectNodeContents(target);
-                      preCaretRange.setEnd(range.startContainer, range.startOffset);
-                      cursorPosition = preCaretRange.toString().length;
-                  }
-              }
-              
-              makeCellEditable(target, cursorPosition);
+              return ruTranslatorsKeys.map(key => `${baseUrl}_translation-ru-${key}.json`);
           }
-      });
 
-      function makeCellEditable(cell, cursorPosition = null) {
-          if (cell.querySelector('textarea')) return; 
+          async function findAvailableTranslations(originalUrl) {
+              const urls = generateUrls(originalUrl);  
+              const availableUrls = [];
 
-          const currentOffsetHeight = cell.offsetHeight;
-          const computedStyle = window.getComputedStyle(cell);
-          const paddingTop = parseFloat(computedStyle.paddingTop) || 0;
-          const paddingBottom = parseFloat(computedStyle.paddingBottom) || 0;
-          const innerHeight = currentOffsetHeight - paddingTop - paddingBottom;
-
-          const originalRawLength = cell.textContent.trimEnd().length;
-
-          let originalText = cell.textContent.trimStart(); 
-          if (originalText !== '') {
-              originalText = originalText.trimEnd() + ' ';
-          }
-          
-          const textarea = document.createElement('textarea');
-          textarea.value = originalText;
-          textarea.classList.add('table-textarea'); 
-
-          cell.style.height = `${currentOffsetHeight}px`;
-          
-          textarea.style.width = '100%';
-          textarea.style.height = `${innerHeight}px`;
-          textarea.style.boxSizing = 'border-box';
-          textarea.style.resize = 'none'; 
-          textarea.style.overflowY = 'auto'; 
-          
-          cell.dataset.originalText = originalText;
-          
-          cell.textContent = '';
-          cell.appendChild(textarea);
-          textarea.focus();
-
-          if (cursorPosition !== null) {
-              let position;
-              const textLength = textarea.value.length;
-
-              if (cursorPosition === 'start') {
-                  position = 0;
-              } else if (cursorPosition === 'end') {
-                  position = textLength;
-              } else if (typeof cursorPosition === 'number') {
-                  if (cursorPosition >= originalRawLength) {
-                      position = textLength; 
-                  } else if (cursorPosition >= 0) {
-                      position = Math.min(cursorPosition, textLength); 
-                  } else {
-                      position = Math.max(textLength + cursorPosition, 0); 
+              for (const url of urls) {
+                  const exists = await checkFileExists(url);
+                  if (exists) {
+                      availableUrls.push(url);  
                   }
               }
 
-              textarea.setSelectionRange(position, position); 
-          } else {
-              textarea.setSelectionRange(textarea.value.length, textarea.value.length); 
-          }
-
-          function finishEditing() {
-              let newText = textarea.value.trimStart(); 
-              if (newText !== '') {
-                  newText = newText.trimEnd() + ' ';
-              }
-              cell.textContent = newText; 
-              cell.style.height = ''; 
-              delete cell.dataset.originalText; 
-              updateTranslationTextarea();
-              saveInputs();
-          }
-
-          textarea.addEventListener('blur', finishEditing);
-
-          textarea.addEventListener('keydown', function(event) {
-              const currentRow = cell.parentElement;
-              const tbody = currentRow.parentElement;
-              const rows = Array.from(tbody.children);
-              const rowIndex = rows.indexOf(currentRow);
-
-              if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-                  if (textarea.selectionStart === textarea.value.length) {
-                      event.preventDefault();
-                      const nextRow = currentRow.nextElementSibling;
-                      if (nextRow) makeCellEditable(nextRow.cells[2], 0);
-                      return;
+              if (availableUrls.length > 0) {
+                  if (availableUrls.length === 1) {
+                      return availableUrls[0]; 
                   }
-              }
-
-              if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
-                  if (textarea.selectionStart === 0) {
-                      event.preventDefault();
-                      const prevRow = currentRow.previousElementSibling;
-                      if (prevRow) makeCellEditable(prevRow.cells[2], 'end');
-                      return;
-                  }
-              }
-
-              if (event.key === 'Enter' || event.key === 'Backspace' || event.key === 'Delete') {
-                  
-                  if (event.key === 'Backspace' && textarea.selectionStart !== 0) return;
-                  if (event.key === 'Delete' && textarea.selectionStart !== textarea.value.length) return;
-                  if ((event.key === 'Backspace' || event.key === 'Delete') && textarea.selectionStart !== textarea.selectionEnd) return;
-
-                  event.preventDefault();
-
-                  let translations = rows.map(r => {
-                      const c = r.cells[2];
-                      if (c.querySelector('textarea')) return textarea.value.trim();
-                      return c.textContent.trim();
+                  let selectionMessage = 'Выберите перевод:\n';
+                  availableUrls.forEach((url, index) => {
+                      selectionMessage += `${index + 1}: ${url}\n`;
                   });
 
-                  const cursorPosition = textarea.selectionStart;
-                  let targetCell = null;
-                  let targetCursorPos = 0;
-                  
-                  textarea.removeEventListener('blur', finishEditing);
-                  cell.textContent = ''; 
-                  cell.style.height = '';
+                  const userChoice = prompt(selectionMessage);
+                  const selectedUrl = availableUrls[userChoice - 1];
 
-                  if (event.key === 'Enter' && !event.ctrlKey) {
-                      const textBefore = textarea.value.slice(0, cursorPosition).trim();
-                      const textAfter = textarea.value.slice(cursorPosition).trim();
-                      
-                      translations[rowIndex] = textBefore;
-                      translations.splice(rowIndex + 1, 0, textAfter);
-                      
-                      targetCell = currentRow.nextElementSibling ? currentRow.nextElementSibling.cells[2] : null;
-                      targetCursorPos = 0;
-                  } 
-                  else if (event.key === 'Enter' && event.ctrlKey) {
-                      const textBefore = textarea.value.slice(0, cursorPosition).trim();
-                      const textAfter = textarea.value.slice(cursorPosition).trim();
-                      
-                      translations[rowIndex] = textBefore;
-                      
-                      if (rowIndex + 1 < translations.length) {
-                          const existingNext = translations[rowIndex + 1];
-                          translations[rowIndex + 1] = textAfter + (existingNext ? ' ' : '') + existingNext;
-                      } else {
-                          translations.push(textAfter);
-                      }
-                      
-                      targetCell = currentRow.nextElementSibling ? currentRow.nextElementSibling.cells[2] : null;
-                      targetCursorPos = 0;
-                  }
-                  else if (event.key === 'Backspace' && rowIndex > 0) {
-                      const currentText = textarea.value.trim();
-                      const prevText = translations[rowIndex - 1];
-                      targetCursorPos = prevText.length > 0 ? prevText.length + 1 : 0;
-                      
-                      translations[rowIndex - 1] = prevText + (prevText ? ' ' : '') + currentText;
-                      translations.splice(rowIndex, 1);
-                      
-                      targetCell = currentRow.previousElementSibling.cells[2];
-                  }
-                  else if (event.key === 'Delete' && rowIndex < translations.length - 1) {
-                      const currentText = textarea.value.trim();
-                      const nextText = translations[rowIndex + 1];
-                      
-                      translations[rowIndex] = currentText + (currentText ? ' ' : '') + nextText;
-                      translations.splice(rowIndex + 1, 1);
-                      
-                      targetCell = cell;
-                      targetCursorPos = currentText.length;
+                  if (selectedUrl) {
+                      return selectedUrl;
                   } else {
-                      cell.textContent = textarea.value.trim() !== '' ? textarea.value.trim() + ' ' : '';
-                      makeCellEditable(cell, cursorPosition);
-                      return;
+                      alert("Неверный выбор.");
+                      return null;
                   }
-
-                  for (let i = 0; i < rows.length; i++) {
-                      const expected = translations[i] !== undefined ? translations[i] : '';
-                      const expectedFormatted = expected !== '' ? expected + ' ' : '';
-                      
-                      if (i < translations.length) {
-                          if (rows[i].cells[2].textContent !== expectedFormatted) {
-                              rows[i].cells[2].textContent = expectedFormatted;
-                          }
-                      } else {
-                          rows[i].cells[2].textContent = '';
-                      }
-                  }
-
-                  while (rows.length < translations.length) {
-                      const i = rows.length;
-                      const expected = translations[i] || '';
-                      const expectedFormatted = expected !== '' ? expected + ' ' : '';
-                      const tr = document.createElement('tr');
-                      tr.innerHTML = `<td></td><td></td><td>${expectedFormatted}</td><td><a href="#" onclick="gotoLine(${i + 1})"><i class="fa-solid fa-link"></i></a></td>`;
-                      tbody.appendChild(tr);
-                      rows.push(tr); 
-                  }
-
-                  while (rows.length > translations.length) {
-                      const lastRow = rows[rows.length - 1];
-                      if (lastRow.cells[0].textContent.trim() === '') {
-                          lastRow.remove();
-                          rows.pop();
-                      } else {
-                          break; 
-                      }
-                  }
-
-                  document.getElementById('translationInput').value = translations.join('\n');
-                  saveInputs();
-
-                  if (!targetCell && event.key === 'Enter' && !event.ctrlKey) {
-                       targetCell = tbody.lastElementChild.cells[2];
-                  }
-                  if (targetCell) {
-                      makeCellEditable(targetCell, targetCursorPos);
-                  }
-              }
-          });
-
-          function shiftCellsUp(startRow) {
-              let rowToMove = startRow;
-              while (rowToMove.nextElementSibling) {
-                  const nextRow = rowToMove.nextElementSibling;
-                  rowToMove.cells[2].textContent = nextRow.cells[2].textContent;
-                  rowToMove = nextRow;
-              }
-              rowToMove.cells[2].textContent = '';
-              
-              let rowToUpdate = startRow;
-              while (rowToUpdate) {
-                  updateSingleTranslationRow(rowToUpdate.cells[2]);
-                  rowToUpdate = rowToUpdate.nextElementSibling;
+              } else {
+                  alert("Нет доступных переводов.");
+                  return null;
               }
           }
 
-          function updateTranslationInput() {
-              const rows = document.querySelectorAll('tr');
-              const translations = Array.from(rows).map(row => {
-                  let text = row.cells[2].textContent.trimStart();
-                  return text !== '' ? text.trimEnd() + ' ' : '';
+          async function loadFileContent(url) {
+              try {
+                  const response = await fetch(url);
+                  if (response.ok) {
+                      const content = await response.text();  
+                      document.getElementById('translationInput').value = content;  
+                  } else {
+                      alert('Не удалось загрузить файл.');
+                  }
+              } catch (error) {
+                  console.error('Ошибка загрузки файла:', error);
+                  alert('Произошла ошибка при загрузке файла.');
+              }
+          }
+
+          // Клонируем кнопку загрузки для сброса старых слушателей перед навешиванием нового
+          const loadBtn = document.getElementById('loadFromServerButton');
+          const newLoadBtn = loadBtn.cloneNode(true);
+          loadBtn.parentNode.replaceChild(newLoadBtn, loadBtn);
+
+          newLoadBtn.addEventListener('click', function() {
+              findAvailableTranslations(pliUrl).then((selectedUrl) => {
+                  if (selectedUrl) {
+                      loadFileContent(selectedUrl);  
+                  }
               });
-              translationInput.value = translations.join('\n').replace(/\n$/, '');
-          }
-      }
-
-      function updateTranslationTextarea() {
-          const tableRows = document.querySelectorAll('#outputTableBody tr');
-          let updatedTranslation = '';
-          
-          tableRows.forEach(row => {
-              const translationCell = row.cells[2]; 
-              let text = translationCell.textContent.trim();
-              updatedTranslation += (text !== '' ? text + ' ' : '') + '\n'; 
           });
-          
-          document.getElementById('translationInput').value = updatedTranslation.replace(/\n$/, ''); 
-      }
 
-      function updateSingleTranslationRow(cell) {
-          const currentText = document.getElementById('translationInput').value;
-          const rows = currentText.split('\n');
-          const rowIndex = Array.prototype.indexOf.call(cell.parentElement.parentElement.children, cell.parentElement);
-          
-          let text = cell.textContent.trim();
-          rows[rowIndex] = text !== '' ? text + ' ' : '';
-          
-          document.getElementById('translationInput').value = rows.join('\n');
-      }
+          // Клонируем таблицу для сброса старых слушателей клика (защита от дублирования событий)
+          const tableBodyEl = document.getElementById('outputTableBody');
+          const newTableBodyEl = tableBodyEl.cloneNode(true);
+          tableBodyEl.parentNode.replaceChild(newTableBodyEl, tableBodyEl);
 
-      document.addEventListener('DOMContentLoaded', updateTranslationTextarea);
+          newTableBodyEl.addEventListener('click', function(event) {
+              let target = event.target;
+              
+              while (target && target.tagName !== 'TD') {
+                  target = target.parentElement;
+              }
 
-  })
-  .catch(error => console.error('Error fetching data:', error.message));
+              if (target && target.tagName === 'TD' && target.cellIndex === 2) {
+                  let cursorPosition = null;
+                  
+                  const selection = window.getSelection();
+                  if (selection.rangeCount > 0) {
+                      const range = selection.getRangeAt(0);
+                      if (target.contains(range.startContainer)) {
+                          const preCaretRange = range.cloneRange();
+                          preCaretRange.selectNodeContents(target);
+                          preCaretRange.setEnd(range.startContainer, range.startOffset);
+                          cursorPosition = preCaretRange.toString().length;
+                      }
+                  }
+                  
+                  makeCellEditable(target, cursorPosition);
+              }
+          });
+
+          function makeCellEditable(cell, cursorPosition = null) {
+              if (cell.querySelector('textarea')) return; 
+
+              const currentOffsetHeight = cell.offsetHeight;
+              const computedStyle = window.getComputedStyle(cell);
+              const paddingTop = parseFloat(computedStyle.paddingTop) || 0;
+              const paddingBottom = parseFloat(computedStyle.paddingBottom) || 0;
+              const innerHeight = currentOffsetHeight - paddingTop - paddingBottom;
+
+              const originalRawLength = cell.textContent.trimEnd().length;
+
+              let originalText = cell.textContent.trimStart(); 
+              if (originalText !== '') {
+                  originalText = originalText.trimEnd() + ' ';
+              }
+              
+              const textarea = document.createElement('textarea');
+              textarea.value = originalText;
+              textarea.classList.add('table-textarea'); 
+
+              cell.style.height = `${currentOffsetHeight}px`;
+              
+              textarea.style.width = '100%';
+              textarea.style.height = `${innerHeight}px`;
+              textarea.style.boxSizing = 'border-box';
+              textarea.style.resize = 'none'; 
+              textarea.style.overflowY = 'auto'; 
+              
+              cell.dataset.originalText = originalText;
+              
+              cell.textContent = '';
+              cell.appendChild(textarea);
+              textarea.focus();
+
+              if (cursorPosition !== null) {
+                  let position;
+                  const textLength = textarea.value.length;
+
+                  if (cursorPosition === 'start') {
+                      position = 0;
+                  } else if (cursorPosition === 'end') {
+                      position = textLength;
+                  } else if (typeof cursorPosition === 'number') {
+                      if (cursorPosition >= originalRawLength) {
+                          position = textLength; 
+                      } else if (cursorPosition >= 0) {
+                          position = Math.min(cursorPosition, textLength); 
+                      } else {
+                          position = Math.max(textLength + cursorPosition, 0); 
+                      }
+                  }
+
+                  textarea.setSelectionRange(position, position); 
+              } else {
+                  textarea.setSelectionRange(textarea.value.length, textarea.value.length); 
+              }
+
+              function finishEditing() {
+                  let newText = textarea.value.trimStart(); 
+                  if (newText !== '') {
+                      newText = newText.trimEnd() + ' ';
+                  }
+                  cell.textContent = newText; 
+                  cell.style.height = ''; 
+                  delete cell.dataset.originalText; 
+                  updateTranslationTextarea();
+                  saveInputs();
+              }
+
+              textarea.addEventListener('blur', finishEditing);
+
+              textarea.addEventListener('keydown', function(event) {
+                  const currentRow = cell.parentElement;
+                  const tbody = currentRow.parentElement;
+                  const rows = Array.from(tbody.children);
+                  const rowIndex = rows.indexOf(currentRow);
+
+                  if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+                      if (textarea.selectionStart === textarea.value.length) {
+                          event.preventDefault();
+                          const nextRow = currentRow.nextElementSibling;
+                          if (nextRow) makeCellEditable(nextRow.cells[2], 0);
+                          return;
+                      }
+                  }
+
+                  if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+                      if (textarea.selectionStart === 0) {
+                          event.preventDefault();
+                          const prevRow = currentRow.previousElementSibling;
+                          if (prevRow) makeCellEditable(prevRow.cells[2], 'end');
+                          return;
+                      }
+                  }
+
+                  if (event.key === 'Enter' || event.key === 'Backspace' || event.key === 'Delete') {
+                      
+                      if (event.key === 'Backspace' && textarea.selectionStart !== 0) return;
+                      if (event.key === 'Delete' && textarea.selectionStart !== textarea.value.length) return;
+                      if ((event.key === 'Backspace' || event.key === 'Delete') && textarea.selectionStart !== textarea.selectionEnd) return;
+
+                      event.preventDefault();
+
+                      let translations = rows.map(r => {
+                          const c = r.cells[2];
+                          if (c.querySelector('textarea')) return textarea.value.trim();
+                          return c.textContent.trim();
+                      });
+
+                      const cursorPosition = textarea.selectionStart;
+                      let targetCell = null;
+                      let targetCursorPos = 0;
+                      
+                      textarea.removeEventListener('blur', finishEditing);
+                      cell.textContent = ''; 
+                      cell.style.height = '';
+
+                      if (event.key === 'Enter' && !event.ctrlKey) {
+                          const textBefore = textarea.value.slice(0, cursorPosition).trim();
+                          const textAfter = textarea.value.slice(cursorPosition).trim();
+                          
+                          translations[rowIndex] = textBefore;
+                          translations.splice(rowIndex + 1, 0, textAfter);
+                          
+                          targetCell = currentRow.nextElementSibling ? currentRow.nextElementSibling.cells[2] : null;
+                          targetCursorPos = 0;
+                      } 
+                      else if (event.key === 'Enter' && event.ctrlKey) {
+                          const textBefore = textarea.value.slice(0, cursorPosition).trim();
+                          const textAfter = textarea.value.slice(cursorPosition).trim();
+                          
+                          translations[rowIndex] = textBefore;
+                          
+                          if (rowIndex + 1 < translations.length) {
+                              const existingNext = translations[rowIndex + 1];
+                              translations[rowIndex + 1] = textAfter + (existingNext ? ' ' : '') + existingNext;
+                          } else {
+                              translations.push(textAfter);
+                          }
+                          
+                          targetCell = currentRow.nextElementSibling ? currentRow.nextElementSibling.cells[2] : null;
+                          targetCursorPos = 0;
+                      }
+                      else if (event.key === 'Backspace' && rowIndex > 0) {
+                          const currentText = textarea.value.trim();
+                          const prevText = translations[rowIndex - 1];
+                          targetCursorPos = prevText.length > 0 ? prevText.length + 1 : 0;
+                          
+                          translations[rowIndex - 1] = prevText + (prevText ? ' ' : '') + currentText;
+                          translations.splice(rowIndex, 1);
+                          
+                          targetCell = currentRow.previousElementSibling.cells[2];
+                      }
+                      else if (event.key === 'Delete' && rowIndex < translations.length - 1) {
+                          const currentText = textarea.value.trim();
+                          const nextText = translations[rowIndex + 1];
+                          
+                          translations[rowIndex] = currentText + (currentText ? ' ' : '') + nextText;
+                          translations.splice(rowIndex + 1, 1);
+                          
+                          targetCell = cell;
+                          targetCursorPos = currentText.length;
+                      } else {
+                          cell.textContent = textarea.value.trim() !== '' ? textarea.value.trim() + ' ' : '';
+                          makeCellEditable(cell, cursorPosition);
+                          return;
+                      }
+
+                      for (let i = 0; i < rows.length; i++) {
+                          const expected = translations[i] !== undefined ? translations[i] : '';
+                          const expectedFormatted = expected !== '' ? expected + ' ' : '';
+                          
+                          if (i < translations.length) {
+                              if (rows[i].cells[2].textContent !== expectedFormatted) {
+                                  rows[i].cells[2].textContent = expectedFormatted;
+                              }
+                          } else {
+                              rows[i].cells[2].textContent = '';
+                          }
+                      }
+
+                      while (rows.length < translations.length) {
+                          const i = rows.length;
+                          const expected = translations[i] || '';
+                          const expectedFormatted = expected !== '' ? expected + ' ' : '';
+                          const tr = document.createElement('tr');
+                          tr.innerHTML = `<td></td><td></td><td>${expectedFormatted}</td><td><a href="#" onclick="gotoLine(${i + 1})"><i class="fa-solid fa-link"></i></a></td>`;
+                          tbody.appendChild(tr);
+                          rows.push(tr); 
+                      }
+
+                      while (rows.length > translations.length) {
+                          const lastRow = rows[rows.length - 1];
+                          if (lastRow.cells[0].textContent.trim() === '') {
+                              lastRow.remove();
+                              rows.pop();
+                          } else {
+                              break; 
+                          }
+                      }
+
+                      document.getElementById('translationInput').value = translations.join('\n');
+                      saveInputs();
+
+                      if (!targetCell && event.key === 'Enter' && !event.ctrlKey) {
+                           targetCell = tbody.lastElementChild.cells[2];
+                      }
+                      if (targetCell) {
+                          makeCellEditable(targetCell, targetCursorPos);
+                      }
+                  }
+              });
+
+              function shiftCellsUp(startRow) {
+                  let rowToMove = startRow;
+                  while (rowToMove.nextElementSibling) {
+                      const nextRow = rowToMove.nextElementSibling;
+                      rowToMove.cells[2].textContent = nextRow.cells[2].textContent;
+                      rowToMove = nextRow;
+                  }
+                  rowToMove.cells[2].textContent = '';
+                  
+                  let rowToUpdate = startRow;
+                  while (rowToUpdate) {
+                      updateSingleTranslationRow(rowToUpdate.cells[2]);
+                      rowToUpdate = rowToUpdate.nextElementSibling;
+                  }
+              }
+
+              function updateTranslationInput() {
+                  const rows = document.querySelectorAll('tr');
+                  const translations = Array.from(rows).map(row => {
+                      let text = row.cells[2].textContent.trimStart();
+                      return text !== '' ? text.trimEnd() + ' ' : '';
+                  });
+                  translationInput.value = translations.join('\n').replace(/\n$/, '');
+              }
+          }
+
+          function updateTranslationTextarea() {
+              const tableRows = document.querySelectorAll('#outputTableBody tr');
+              let updatedTranslation = '';
+              
+              tableRows.forEach(row => {
+                  const translationCell = row.cells[2]; 
+                  let text = translationCell.textContent.trim();
+                  updatedTranslation += (text !== '' ? text + ' ' : '') + '\n'; 
+              });
+              
+              document.getElementById('translationInput').value = updatedTranslation.replace(/\n$/, ''); 
+          }
+
+          function updateSingleTranslationRow(cell) {
+              const currentText = document.getElementById('translationInput').value;
+              const rows = currentText.split('\n');
+              const rowIndex = Array.prototype.indexOf.call(cell.parentElement.parentElement.children, cell.parentElement);
+              
+              let text = cell.textContent.trim();
+              rows[rowIndex] = text !== '' ? text + ' ' : '';
+              
+              document.getElementById('translationInput').value = rows.join('\n');
+          }
+
+          document.addEventListener('DOMContentLoaded', updateTranslationTextarea);
+
+      });
+    })
+    .catch(error => console.error('Error loading translators.json:', error));
 }
-
 
 function ifKn(indexValue) {
   let beforeDot = "";
