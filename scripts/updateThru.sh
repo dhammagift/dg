@@ -18,13 +18,11 @@ find . -name "*.htm" -type f | sort -V | while read -r i; do
     fi
 done
 
-cd ..
-cd theravada.ru/Teaching/ 
+cd Teaching/ 
 rm -rf  Lectures/ Works/ Books/
-cd ../../
 
 echo "--- Этап 2: Внедрение ссылок, CSS и JS ---"
-cd theravada.ru/Teaching/Canon/ 
+cd Canon/ 
 
 
 # Ищем файлы с текстами сутт
