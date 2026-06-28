@@ -2100,6 +2100,21 @@ document.addEventListener("DOMContentLoaded", function() {
         </div>
     </div>
 </div>
+<script>
+    // Блокировка кнопки TTS на странице lbl-en
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (node.classList && node.classList.contains('dynamic-tts-btn')) {
+                    node.remove();
+                }
+            });
+        });
+    });
+
+    observer.observe(document.body, { childList: true });
+</script>
+
 
 </body>
 </html>

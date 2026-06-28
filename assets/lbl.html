@@ -2031,7 +2031,6 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 <script src="/assets/js/settings.js"></script>
-<script src="/assets/js/settings.js"></script>
 <div id="statusNotification" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
     <div id="toastMessage" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="d-flex">
@@ -2040,6 +2039,23 @@ document.addEventListener("DOMContentLoaded", function() {
         </div>
     </div>
 </div>
+
+
+<script>
+    // Блокировка кнопки TTS на странице lbl-en
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (node.classList && node.classList.contains('dynamic-tts-btn')) {
+                    node.remove();
+                }
+            });
+        });
+    });
+
+    observer.observe(document.body, { childList: true });
+</script>
+
 
 </body>
 </html>
