@@ -218,6 +218,8 @@ if (!empty($treeLines)) {
 <script>
     $(document).ready(function() {
         var dtOptions = {
+            stateSave: true, // Включает сохранение фильтров, пагинации и т.д.
+            //stateDuration: 60 * 60 * 24, // Состояние сохраняется на 24 часа
             dom: '<"d-flex justify-content-between align-items-center mb-2"Bf>rt<"mt-2"i>',
             buttons: [
                 {
@@ -242,11 +244,9 @@ if (!empty($treeLines)) {
         // Восстановление состояния аккордеона из localStorage
         var activeTabId = localStorage.getItem('activeAccordionTab');
         if (activeTabId) {
-            // Закрываем все вкладки
             $('.accordion-collapse').removeClass('show');
             $('.accordion-button').addClass('collapsed');
             
-            // Открываем сохраненную вкладку
             $('#' + activeTabId).addClass('show');
             $('[data-bs-target="#' + activeTabId + '"]').removeClass('collapsed');
         }
