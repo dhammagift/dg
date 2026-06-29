@@ -210,8 +210,8 @@ if (newUrl !== window.location.href) {
         <header class="bg-primary text-white text-center">
             <div class="container d-flex align-items-center flex-column pt-3 pb-3">
 
-                        
-<form method="GET" action="" class="justify-content-center">
+
+<form method="GET" action="/" class="justify-content-center">
 <div class="mb-0 form-group input-group ui-widget dropup rounded-pill">
 <label class="sr-only dropup rounded-pill" for="paliauto"></label>
 
@@ -236,7 +236,6 @@ if (isset($_GET['q'])) {
   </button>
 </div>
 
-
 <div class="input-group-append mt-2">
 <button onclick="document.getElementById( 'spinner' ).style.display = 'block'" type="submit" id="searchbtn" class="btn btn-primary mainbutton ms-1 me-1 rounded-pill ">
 <i class="fas fa-search fa-flip-horizontal" aria-hidden="true"></i>
@@ -249,7 +248,6 @@ if (isset($_GET['q'])) {
 
  <div class="text-start text-muted form-check-inline cursor-pointer" id="searchbar-help"  data-bs-toggle="tooltip"data-bs-placement="bottom" data-bs-html="true" title="<?php echo $tooltipsearchbar;?>">*</div>
 </div>
-
 
 </div>
 
