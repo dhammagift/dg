@@ -203,11 +203,15 @@
   }
 
   /* На маленьких мобильных: показываем только номер */
-  #navigation {
-    display: flex;
-    gap: 8px; 
-    overflow: hidden;
-  }
+#navigation {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 8px; 
+  overflow: hidden;
+  max-width: 45rem;
+  margin: 0 auto;
+}
 
   #previous2,
   #next2 {

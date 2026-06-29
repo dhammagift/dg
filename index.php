@@ -906,7 +906,7 @@ foreach ($slides as $index => $slide) {
   <h4 class="page-section-heading text-center text-white"><?php echo $basics;?></h4>
   </div>
              
-<img class="img-fluid" src="assets/img/portfolio/dhammawheelgreen.webp" alt="Search in Pali Suttas and Vinaya" loading="lazy" />
+<img class="img-fluid" src="assets/img/portfolio/hatthiratana.webp" alt="Search in Pali Suttas and Vinaya" loading="lazy" />
 		</div>					             
                
               
