@@ -29,6 +29,9 @@ from telegram.ext import (
     CallbackContext,
 )
 
+from watcher import attach_watcher
+
+
 # === Сообщения ===
 WELCOME_MESSAGES = {
     "en": (
@@ -403,7 +406,8 @@ def main():
     app.add_handler(CallbackQueryHandler(toggle_language, pattern=r"^(inline_)?toggle_lang:"))
     app.add_handler(InlineQueryHandler(inline_query))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    
+
+    attach_watcher(app, config)   # включить наблюдатель
     app.run_polling()
 
 if __name__ == "__main__":
