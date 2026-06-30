@@ -398,8 +398,7 @@ def main():
     os.makedirs("assets", exist_ok=True)
 
     app = Application.builder().token(TOKEN).post_init(create_watcher_post_init(config)).build()
-    app = Application.builder().token(TOKEN).build()
-    
+  
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("extra", extra_command))
     app.add_handler(CallbackQueryHandler(handle_language_selection, pattern="^lang_set:"))
