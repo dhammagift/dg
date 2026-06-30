@@ -205,7 +205,7 @@ async function buildSutta(slug) {
     const mtUrl = window.location.href.replace("/read/", "/multi/");
     
     let scLink = `<p class="sc-link">
-    <a title="Multi Tran" href="${mtUrl}">E+E</a>
+    <a title="Multi Tran (Alt+2)" href="${mtUrl}">E+E</a>
     <a title="Russian (Alt+1)" href="${ruUrl}">Ru</a>
     `;
 

@@ -787,10 +787,20 @@ function updateDemoLinks() {
     standardBaseUrl = window.location.origin + "/read/";
   }
 
-  // 4. Карта ссылок
+// Определяем, является ли текущая страница русскоязычной
+  const isRussian = window.location.pathname.includes('/r/') ||
+                    window.location.pathname.includes('/ru/') |
+                    window.location.pathname.includes('/mt/') ||
+                    window.location.pathname.includes('/ml/');
+
+  // Для русских – /mt/, для остальных – // (можно заменить на любой другой путь)
+  const mtUrl = isRussian
+    ? window.location.origin + "/mt/"
+    : window.location.origin + "/multi/";
+
   const linksMap = {
-    stDemo: standardBaseUrl, 
-    mtDemo: window.location.origin + "/mt/",
+    stDemo: standardBaseUrl,
+    mtDemo: mtUrl,                    
     memDemo: window.location.origin + "/memorize/",
     dDemo: window.location.origin + "/d/",
     mlDemo: window.location.origin + "/ml/",
@@ -799,7 +809,6 @@ function updateDemoLinks() {
     frDemo: window.location.origin + "/frev/",
     mlthDemo: window.location.origin + "/mlth/"
   };
-
   // 5. Обновляем href элементов
   const hash = window.location.hash || ''; // Сохраняем якорь, если есть
 

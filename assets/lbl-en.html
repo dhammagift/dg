@@ -591,9 +591,9 @@ function loadText() {
     cleanedTranslation = cleanedTranslation.replace(/Just as/g, '\nJust as');
     cleanedTranslation = cleanedTranslation.replace(/Why is that\? /g, 'Why is that?\n');
     cleanedTranslation = cleanedTranslation.replace(/What do you think /g, '\nWhat do you think');
-    cleanedTranslation = cleanedTranslation.replace(/или как ты считаешь/g, '\nили как ты считаешь');
-    cleanedTranslation = cleanedTranslation.replace(/или как вы считаете/g, '\nили как вы считаете');
-    cleanedTranslation = cleanedTranslation.replace(/Каки/g, '\nКаки');
+    cleanedTranslation = cleanedTranslation.replace(/said, “/g, 'said, \n“');
+    cleanedTranslation = cleanedTranslation.replace(/I have heard that/g, 'I have heard\nthatили');
+    cleanedTranslation = cleanedTranslation.replace(/discerned that \‘/g, 'discerned that \n\‘');
     cleanedTranslation = cleanedTranslation.replace(/В каких/g, '\nВ каких');
     cleanedTranslation = cleanedTranslation.replace(/\[Благословенный сказал\]:/gm, '');
     cleanedTranslation = cleanedTranslation.replace(/\[Благословенный сказал:/gm, '');
