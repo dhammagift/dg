@@ -29,7 +29,7 @@ from telegram.ext import (
     CallbackContext,
 )
 
-from watcher import attach_watcher
+from watcher import create_watcher_post_init
 
 
 # === Сообщения ===
@@ -394,9 +394,10 @@ async def toggle_language(update: Update, context: CallbackContext):
         parse_mode="HTML", 
         disable_web_page_preview=True
     )
-
 def main():
     os.makedirs("assets", exist_ok=True)
+
+    app = Application.builder().token(TOKEN).post_init(create_watcher_post_init(config)).build()
     app = Application.builder().token(TOKEN).build()
     
     app.add_handler(CommandHandler("start", start))
@@ -407,7 +408,6 @@ def main():
     app.add_handler(InlineQueryHandler(inline_query))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    attach_watcher(app, config)   # включить наблюдатель
     app.run_polling()
 
 if __name__ == "__main__":

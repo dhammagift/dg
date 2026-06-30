@@ -4,6 +4,7 @@ import logging
 from telegram.ext import Application
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 async def _watch_directory(app: Application, watch_dir: str, admin_ids: list):
     """Фоновая задача: отслеживает изменения в папке и отправляет файлы админам."""
@@ -24,7 +25,6 @@ async def _watch_directory(app: Application, watch_dir: str, admin_ids: list):
 
         current_files = os.listdir(watch_dir)
         for file_name in current_files:
-            # Игнорируем временные файлы редакторов
             if (file_name.endswith((".swp", ".swo", ".swx")) or
                 file_name.endswith("~") or
                 file_name.startswith(".")):
@@ -55,18 +55,18 @@ async def _watch_directory(app: Application, watch_dir: str, admin_ids: list):
                             logger.error(f"Ошибка при отправке файла {file_name} админу {admin_id}: {e}")
                     seen_files[file_name] = current_mtime
 
-def attach_watcher(app: Application, config: dict):
+def create_watcher_post_init(config: dict):
     """
-    Подключает фоновую задачу наблюдения к приложению Telegram-бота.
-    Параметры читаются из config: WATCH_DIR, ADMIN_ID.
+    Возвращает функцию post_init для запуска наблюдателя.
+    Вызывается один раз при инициализации бота.
 
     Использование:
-        from watcher import attach_watcher
-        attach_watcher(app, config)   # одна строка в main.py
+        from watcher import create_watcher_post_init
+        app = Application.builder().token(TOKEN).post_init(create_watcher_post_init(config)).build()
     """
     watch_dir = config.get("WATCH_DIR", "/var/www/html/assets/texts/lbl/")
     raw_admin_ids = config.get("ADMIN_ID", [])
-    
+
     if isinstance(raw_admin_ids, int):
         admin_ids = [raw_admin_ids]
     elif isinstance(raw_admin_ids, list):
@@ -76,17 +76,12 @@ def attach_watcher(app: Application, config: dict):
 
     if not admin_ids:
         logger.warning("Наблюдатель не включён: ADMIN_ID не задан в конфиге.")
-        return
+        async def noop(app: Application):
+            pass
+        return noop
 
-    # Определяем внутреннюю функцию, которая будет вызвана после инициализации бота
-    async def _post_init(app: Application):
+    async def post_init(app: Application):
+        logger.info("✅ Запуск наблюдателя за папкой...")
         asyncio.create_task(_watch_directory(app, watch_dir, admin_ids))
 
-    # Если у app уже есть post_init, объединяем с новым, чтобы не потерять существующий
-    original_post_init = app.post_init
-    async def combined_post_init(app: Application):
-        if original_post_init:
-            await original_post_init(app)
-        await _post_init(app)
-
-    app.post_init = combined_post_init
+    return post_init
