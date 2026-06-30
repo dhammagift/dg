@@ -56,9 +56,9 @@ async def _watch_directory(app: Application, watch_dir: str, admin_ids: list):
                                     document=f,
                                     caption=f"📄 {action_text} in lbl: {file_name}"
                                 )
-                            logger.info(f"✅ Успешно отправлен {file_name} админу {admin_id}")
+                            logger.info(f"✅ Успешно отправлен {file_name} админу ")
                         except Exception as e:
-                            logger.error(f"❌ Ошибка при отправке файла {file_name} админу {admin_id}: {e}")
+                            logger.error(f"❌ Ошибка при отправке файла {file_name} админу: {e}")
 
                     seen_files[file_name] = current_mtime
                     logger.info(f"🔄 Обновлён кеш для {file_name}")

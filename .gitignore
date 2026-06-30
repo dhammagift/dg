@@ -3,6 +3,7 @@ assets/audio
 nohup.out
 result
 scripts/api/__pycache__
+**/__pycache__
 helpdocs
 .well-known
 config/sync-config.json
