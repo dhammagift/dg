@@ -96,7 +96,6 @@ echo '<!--
          </div>
          </li>
  <li><a class="dropdown-item" target="_blank" href="' . $linktbwOnMain . '">
-   <i class="' . $iconimportant . '"></i>
  The Buddha\'s Words</a></li> 
 
 
