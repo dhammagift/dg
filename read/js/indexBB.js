@@ -553,7 +553,6 @@ More search options available from the main page.</p>`;
 
 // Отправка запроса по адресу http://localhost:8080/ru/?q= с использованием значения slug
 var xhr = new XMLHttpRequest();
-var xhr = new XMLHttpRequest();
 xhr.open("GET", "/?p=-kn&q=" + encodeURIComponent(slug), true);
 xhr.send();
 
