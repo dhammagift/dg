@@ -21,7 +21,8 @@ $adapterscriptlocation = '/data/data/com.termux/files/usr/bin/python3.12 /data/d
 //
 //Offline laptop or server for apache default /var/www/html e.g. Linux Mint / Ubuntu
 //
-$mode = 'offline';
+$mode = 'online';
+//$mode = 'offline';
 
 //$mode = 'online';
 #$fontawesomejs = '<script src="/assets/js/fontawesome.6.1.all.js" ></script>';
