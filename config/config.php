@@ -110,9 +110,10 @@ $linktextbookru = '/assets/materials/pali_textbook_rus.pdf';
 } else if ( preg_match('/online/', $mode)  ) {
   //online specific
 $linklearnpali = 'https://palistudies.blogspot.com/2019/04/intro-kaya-section-satipatthana-sutta.html?m=1';
-$linktbw = '/bw';
-$linktbwOnMain = '/bw/home/index.html';
-//$linktbw = 'https://thebuddhaswords.net';
+//$linktbw = '/bw';
+//$linktbwOnMain = '/bw/home/index.html';
+$linktbwOnMain = 'https://thebuddhaswords.net';
+$linktbw = 'https://thebuddhaswords.net';
 
 $mainpagethrflink =  "https://xn--80aaaglc1fo1a.xn--p1ai/palicanon/%D1%81%D1%83%D1%82%D1%82%D0%B0%D0%BD%D1%82%D0%B0";
 $mainpagethrfvinayalink = "http://xn--80aaaglc1fo1a.xn--p1ai/palicanon/%d0%b2%d0%b8%d0%bd%d0%b0%d1%8f"; 
