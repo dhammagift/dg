@@ -15,7 +15,11 @@ $gitCmd = "cd ../../offline-data; git pull";
 $treeCmd = "tree -v -P \"*-en-*.json\" --prune ../offline-data/lbl ../offline-data/en_other | sed 's/_translation-en-thanissaro\\.json//'";
 
 // not ready suttas
-$notReadyCmd = "cd ../offline-data/en_other; find ../lbl sutta/sn sutta/mn sutta/an -type f | awk -F/ '{print \$NF}' | sed 's/_.*//' | sort -u | grep -Fhxvf - an.txt sn.txt mn.txt | awk '/^sn/{print \"1 \" \$0;next}/^mn/{print \"2 \" \$0;next}/^dn/{print \"3 \" \$0;next}/^an/{print \"4 \" \$0;next}' | sort -k1,1n -k2,2V | cut -d' ' -f2-";
+$notReadyCmd = "cd ../offline-data/en_other; (
+find ../lbl -type f | awk -F/ '{sub(/_.*/, \"\", \$NF); printf \"0 <a href=\\\"/assets/texts/lbl/%s_translation-en-thanissaro.json\\\">%s</a>\n\", \$NF, \$NF}' | sort -u;
+find sutta/sn sutta/mn sutta/an -type f | awk -F/ '{print \$NF}' | sed 's/_.*//' | sort -u | grep -Fhxvf - an.txt sn.txt mn.txt | awk '/^sn/{print \"1 \" \$0;next}/^mn/{print \"2 \" \$0;next}/^dn/{print \"3 \" \$0;next}/^an/{print \"4 \" \$0;next}'
+) | sort -k1,1n -k2,2V | cut -d' ' -f2-";
+
 
 // выполнение
 $gitOutput = shell_exec($gitCmd . " 2>&1") ?? '';
@@ -148,7 +152,23 @@ if (!empty($treeLines)) {
                         <tbody>
                             <?php foreach ($notReadyLines as $line): ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($line, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></td>
+<?php
+$id = trim($line);
+
+if (preg_match('/^([a-z]+)([\d.]+)$/i', $id, $m)) {
+    $nikaya = strtoupper($m[1]);
+    $num = str_replace('.', '_', $m[2]);
+    $url = "https://dhammatalks.org/suttas/{$nikaya}/{$nikaya}{$num}.html";
+} else {
+    $url = '#';
+}
+?>
+
+<td>
+    <a href="<?= htmlspecialchars($url) ?>" target="_blank">
+        <?= htmlspecialchars($id, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>
+    </a>
+</td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -176,7 +196,11 @@ if (!empty($treeLines)) {
                         <tbody>
                             <?php foreach ($treeLines as $line): ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($line, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></td>
+<td>
+    <a href="/assets/texts/lbl/<?= rawurlencode($line) ?>_translation-en-thanissaro.json">
+        <?= htmlspecialchars($line, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>
+    </a>
+</td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
