@@ -13,8 +13,8 @@ $gitCmd = "cd ../../offline-data; git pull";
 
 $treeCmd =
 "(
-    find ../offline-data/lbl -name \"*-en-*.json\" -printf 'lbl|%f\n';
-    find ../offline-data/en_other -name \"*-en-*.json\" -printf 'other|%f\n'
+    find ../offline-data/lbl -name \"*-en-*.json\" -printf 'lbl|%f\n' | sort -V ;
+    find ../offline-data/en_other -name \"*-en-*.json\" -printf 'other|%f\n' | sort -V
 ) \
 | awk -F'|' '{
     sub(/_translation-en-thanissaro\\.json$/, \"\", $2);
@@ -24,8 +24,7 @@ $treeCmd =
     } else {
         print $2;
     }
-}' \
-| sort -u";
+}' ";
 
 // not ready suttas
 $notReadyCmd = "cd ../offline-data/en_other; find ../lbl sutta/sn sutta/mn sutta/an -type f | awk -F/ '{print \$NF}' | sed 's/_.*//' | sort -u | grep -Fhxvf - an.txt sn.txt mn.txt | awk '/^sn/{print \"1 \" \$0;next}/^mn/{print \"2 \" \$0;next}/^dn/{print \"3 \" \$0;next}/^an/{print \"4 \" \$0;next}' | sort -k1,1n -k2,2V | cut -d' ' -f2-";
