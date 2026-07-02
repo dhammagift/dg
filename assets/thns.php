@@ -89,7 +89,7 @@ $notReadyLines = array_filter(explode("\n", trim($notReadyOutput)));
                     <thead><tr><th>Pending Texts</th></tr></thead>
                     <tbody>
                         <?php foreach ($notReadyLines as $line): ?>
-                            <tr><td><a href="https://dhammatalks.org/suttas/<?= strtoupper(preg_replace('/[\d.]+/', '', $line)) ?>/<?= strtoupper(str_replace('.', '_', preg_replace('/[a-z]+/i', '', $line))) ?>.html" target="_blank"><?= htmlspecialchars($line) ?></a></td></tr>
+                            <tr><td><a href="https://dhammatalks.org/suttas/<?= strtoupper(preg_replace('/[\d.]+/', '', $line)) ?>/<?= strtoupper(preg_replace('/[\d.]+/', '', $line)) ?><?= strtoupper(str_replace('.', '_', preg_replace('/[a-z]+/i', '', $line))) ?>.html" target="_blank"><?= htmlspecialchars($line) ?></a></td></tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
@@ -99,7 +99,7 @@ $notReadyLines = array_filter(explode("\n", trim($notReadyOutput)));
 
     <!-- 2. Unpublished (LBL) -->
     <div class="accordion-item">
-        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#unpublished">Unpublished (LBL)</button></h2>
+        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#unpublished">Unpublished</button></h2>
         <div id="unpublished" class="accordion-collapse collapse" data-bs-parent="#repoAccordion">
             <div class="accordion-body">
                 <table id="unpublishedTable" class="table table-dark table-borderless table-sm">
@@ -172,5 +172,9 @@ $notReadyLines = array_filter(explode("\n", trim($notReadyOutput)));
         });
     });
 </script>
+<script src="/assets/js/nav-component.js" defer></script>
+<script src="/assets/js/fontawesome.6.6.all.js" defer></script>
+<script defer src="/assets/js/themeswitch.js"></script>
+<script defer src="/assets/js/settings.js"></script>
 </body>
 </html>
