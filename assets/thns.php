@@ -11,23 +11,35 @@ if ($repoDir) {
 // git pull
 $gitCmd = "cd ../../offline-data; git pull";
 
-// tree + sed 
-$treeCmd = "tree -v -P \"*-en-*.json\" --prune ../offline-data/lbl ../offline-data/en_other | sed 's/_translation-en-thanissaro\\.json//'";
+$treeCmd =
+"(
+    find ../offline-data/lbl -name \"*-en-*.json\" -printf 'lbl|%f\n';
+    find ../offline-data/en_other -name \"*-en-*.json\" -printf 'other|%f\n'
+) \
+| awk -F'|' '{
+    sub(/_translation-en-thanissaro\\.json$/, \"\", $2);
+
+    if ($1 == \"lbl\") {
+        print \"<a href=\\\"/assets/texts/lbl/\" $2 \"_translation-en-thanissaro.json\\\">\" $2 \"</a>\";
+    } else {
+        print $2;
+    }
+}' \
+| sort -u";
 
 // not ready suttas
-$notReadyCmd = "cd ../offline-data/en_other; (
-find ../lbl -type f | awk -F/ '{sub(/_.*/, \"\", \$NF); printf \"0 <a href=\\\"/assets/texts/lbl/%s_translation-en-thanissaro.json\\\">%s</a>\n\", \$NF, \$NF}' | sort -u;
-find sutta/sn sutta/mn sutta/an -type f | awk -F/ '{print \$NF}' | sed 's/_.*//' | sort -u | grep -Fhxvf - an.txt sn.txt mn.txt | awk '/^sn/{print \"1 \" \$0;next}/^mn/{print \"2 \" \$0;next}/^dn/{print \"3 \" \$0;next}/^an/{print \"4 \" \$0;next}'
-) | sort -k1,1n -k2,2V | cut -d' ' -f2-";
-
+$notReadyCmd = "cd ../offline-data/en_other; find ../lbl sutta/sn sutta/mn sutta/an -type f | awk -F/ '{print \$NF}' | sed 's/_.*//' | sort -u | grep -Fhxvf - an.txt sn.txt mn.txt | awk '/^sn/{print \"1 \" \$0;next}/^mn/{print \"2 \" \$0;next}/^dn/{print \"3 \" \$0;next}/^an/{print \"4 \" \$0;next}' | sort -k1,1n -k2,2V | cut -d' ' -f2-";
 
 // выполнение
 $gitOutput = shell_exec($gitCmd . " 2>&1") ?? '';
 $treeOutput = shell_exec($treeCmd . " 2>&1") ?? '';
 $notReadyOutput = shell_exec($notReadyCmd . " 2>&1") ?? '';
 
+
+
+
 // Разбиваем вывод tree на массив строк
-$treeLines = explode("\n", rtrim($treeOutput));
+$treeLines = array_filter(explode("\n", trim($treeOutput)));
 $notReadyLines = explode("\n", rtrim($notReadyOutput));
 
 // Удаляем первую строку с названием корневой директории (../offline-data/en_other)
@@ -190,16 +202,14 @@ if (preg_match('/^([a-z]+)([\d.]+)$/i', $id, $m)) {
                     <table id="treeTable" class="table table-dark table-borderless table-sm w-100">
                         <thead>
                             <tr>
-                                <th>Unpublished texts (if available) are listed before the main "Sutta" folder </th>
+                                <th>Unpublished listed first (if available). Click to check. </th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($treeLines as $line): ?>
                                 <tr>
 <td>
-    <a href="/assets/texts/lbl/<?= rawurlencode($line) ?>_translation-en-thanissaro.json">
-        <?= htmlspecialchars($line, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>
-    </a>
+        <?= $line ?>
 </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -288,3 +298,4 @@ if (preg_match('/^([a-z]+)([\d.]+)$/i', $id, $m)) {
 
 </body>
 </html>
+
