@@ -1,6 +1,6 @@
 :root {
   --textarea-default-height: 600px;
-  --textarea-max-height: 1200px;
+  --textarea-max-height: 2000px;
 }
 
 body {
@@ -41,7 +41,7 @@ body {
 /* --- Десктопы (на всю высоту экрана) --- */
 @media (min-width: 1025px) {
   .content-container {
-    height: calc(100vh - 300px); 
+    height: calc(100vh - 150px); 
   }
   
   .table-container,

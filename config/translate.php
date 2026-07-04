@@ -411,8 +411,8 @@ $anamesdiff = 'Сравнить Две Сутты';
 $anametools = 'Инстр.';
 
 $aboutheader = 'О Проекте';
-$aboutprp = '<div class="col-lg-4 ms-auto"><p class="lead">Dhamma.Gift это поисковая система Освобождения. Точный Поиск в текстах Дхаммы и Винаи Палийского Канона с результатами в удобных таблицах с построчными переводами и ссылками на другие сайты. Вы можете искать понятия, определения, метафоры, объяснения, людей, места и другое описанное в Суттах и Винае на Пали, Русском, Тайском и Английском.</p></div>
-<div class="col-lg-4 me-auto"><p class="lead">Если вы разработчик или просто хотите помочь с развитием сайта - будем вам крайне рады.<br><br>Проект не нуждается, в материальной помощи, но если вы хотите поучаствовать в оплате за доменное имя, пожалуйста, свяжитесь через Telegram, по почте или через Github - ссылки внизу страницы, блок "Контакты". </p></div>';
+$aboutprp = '<div class="col-lg-4 ms-auto"><p class="lead">Dhamma.Gift — это поисковая система Освобождения. Точный Поиск в текстах Дхаммы и Винаи, в ядре Палийского Канона с результатами в удобных таблицах с построчными переводами и ссылками на другие сайты. Вы можете искать и отфильтровывать понятия, определения, метафоры, объяснения, людей, места и другое описанное в Суттах и Винае на Пали, Русском, Английском и Тайском. Или читать и слушать тексты полностью. </p></div>
+<div class="col-lg-4 me-auto"><p class="lead">Если вы разработчик или просто хотите помочь с развитием сайта - будем вам рады.<br><br>Проект не нуждается, в материальной помощи, но если вы хотите поучаствовать в оплате за доменное имя, пожалуйста, свяжитесь удобным вам способом из блока "Контакты". </p></div>';
 $prongh = ' Проект на GitHub';
 $premail = ' Особенности Dhamma.Gift';
 $prekeyfeatures = 'keyFeaturesRu.html';
@@ -1191,7 +1191,7 @@ $anamesdiff = 'Sutta Difference';
 $anametools = 'Tools';
 
 $aboutheader = 'About Project';
-$aboutprp = '<div class="col-lg-4 ms-auto"><p class="lead">Dhamma.Gift is a Liberation Search Engine for Dhamma and Vinaya, core of the Pali Canon. </br></br>Search results in informative tables with line by line translations and external links. You can search in Pali, English, Russian, Thai for meanings, definitions, metaphors, explanations, people, places, and more as described in the Suttas and Vinaya. </p></div>
+$aboutprp = '<div class="col-lg-4 ms-auto"><p class="lead">Dhamma.Gift is a Liberation Search Engine for Dhamma and Vinaya, core of the Pali Canon. </br></br>Search results in informative filterable tables with line by line translations and external links. You can search in Pali, English, Russian, Thai for meanings, definitions, metaphors, explanations, people, places, and more as described in the Suttas and Vinaya. Or read and listen whole text.</p></div>
 <div class="col-lg-4 me-auto"><p class="lead">
 Software developers, contributors, or anyone willing to help are warmly welcomed.
 <br><br>

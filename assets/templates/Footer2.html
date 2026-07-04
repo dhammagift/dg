@@ -119,38 +119,230 @@ var mobileDom = '<"row"<"col-sm-6"l><"col-sm-6"f>><"row"<"col-sm-12"p>>rt<"row"<
   {
     extend: 'collection',
     text: 'Export',
-    className: 'btn btn-link', // можно заменить на свою стилизацию
+    className: 'btn btn-link',
     buttons: [
       {
         extend: 'copyHtml5',
 	      exportOptions: {
-  columns: ':visible',
-  modifier: {
-    search: 'applied'
-  }
-}
-
+          columns: function (idx, data, node) {
+            return $('#pali').DataTable().column(idx).visible();
+          },
+          modifier: {
+            search: 'applied'
+          }
+        }
       },
       {
         extend: 'excelHtml5',
 	      exportOptions: {
-  columns: ':visible',
-  modifier: {
-    search: 'applied'
-  }
-}
-
+          columns: function (idx, data, node) {
+            return $('#pali').DataTable().column(idx).visible();
+          },
+          modifier: {
+            search: 'applied'
+          }
+        }
       },
       {
         extend: 'csvHtml5',
 	      exportOptions: {
-  columns: ':visible',
-  modifier: {
-    search: 'applied'
-  }
-}
+          columns: function (idx, data, node) {
+            return $('#pali').DataTable().column(idx).visible();
+          },
+          modifier: {
+            search: 'applied'
+          }
+        }
+      },
+      {
+        text: 'TXT',
+        action: function (e, dt, node, config) {
+          var data = dt.buttons.exportData({
+            columns: function (idx) {
+              return dt.column(idx).visible();
+            },
+            modifier: { search: 'applied' }
+          });
+          
+          var textContent = [];
+          
+          textContent.push(data.header.join('\t'));
+          
+          data.body.forEach(function(row) {
+            var cleanRow = row.map(function(cell) {
+              return typeof cell === 'string' ? cell.replace(/\r?\n|\r/g, ' ') : cell;
+            });
+            textContent.push(cleanRow.join('\t'));
+          });
+          
+          var filename = document.title !== '' ? document.title : 'Export';
+          filename = filename.replace(/[^a-zA-Z0-9_\u00A1-\uFFFF\.,\-_ !\(\)]/g, "");
+          
+          var blob = new Blob([textContent.join('\n')], { type: 'text/plain;charset=utf-8' });
+          var url = URL.createObjectURL(blob);
+          
+          var a = document.createElement('a');
+          a.href = url;
+          a.download = filename + '.txt';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }
+      },
+         {
+        text: 'PDF',
+        title: '*', 
+        filename: '*', 
+        exportOptions: {
+          columns: function (idx, data, node) {
+            return $('#pali').DataTable().column(idx).visible();
+          },
+          modifier: { search: 'applied' },
+          format: {
+            body: function (data, row, column, node) {
+              if (data === null || data === undefined) return '';
+              
+              var text = String(data);
+              var temp = document.createElement('div');
+              temp.innerHTML = text;
+              
+              // 1. Сохраняем ссылки
+              var links = temp.querySelectorAll('a');
+              links.forEach(function(a) {
+                var url = a.href;
+                var linkText = a.textContent || a.innerText;
+                var placeholder = document.createTextNode('LINK_START|' + url + '|' + linkText + '|LINK_END');
+                a.parentNode.replaceChild(placeholder, a);
+              });
 
+              // 2. Сохраняем тег strong (используется для Пали в колонке Title)
+              var strongs = temp.querySelectorAll('strong');
+              strongs.forEach(function(s) {
+                var placeholder = document.createTextNode('BOLD_START|' + (s.textContent || s.innerText) + '|BOLD_END');
+                s.parentNode.replaceChild(placeholder, s);
+              });
+              
+              // 3. Сохраняем абзацы и переносы строк для колонки Quote
+              var brs = temp.querySelectorAll('br');
+              brs.forEach(function(br) {
+                br.parentNode.replaceChild(document.createTextNode('\n'), br);
+              });
+              var ps = temp.querySelectorAll('p');
+              ps.forEach(function(p) {
+                p.insertAdjacentText('beforeend', '\n');
+              });
+              
+              // Удаляем весь остальной HTML и обрезаем пробелы
+              return (temp.textContent || temp.innerText || '').trim();
+            }
+          }
+        },
+        customize: function (doc) {
+          doc.defaultStyle.font = 'NotoSans';
+          doc.pageOrientation = 'landscape';
+          
+          var body = doc.content[1].table.body;
+          body.forEach(function(row) {
+            row.forEach(function(cell) {
+              if (typeof cell.text === 'string') {
+                // Если в ячейке есть наш маркер жирного шрифта, значит это колонка Title
+                var hasBold = cell.text.includes('BOLD_START|');
+                var lines = cell.text.split('\n');
+                var formattedCell = [];
+                
+                lines.forEach(function(line, lineIdx) {
+                  // Сохраняем пустые строки между абзацами
+                  if (line === '') {
+                      if (lineIdx < lines.length - 1) formattedCell.push({ text: '\n' });
+                      return;
+                  }
+                  
+                  // Разбиваем строку на спец-маркеры и обычный текст
+                  var parts = line.split(/(BOLD_START\|.*?\|BOLD_END|LINK_START\|.*?\|.*?\|LINK_END)/g);
+                  
+                  parts.forEach(function(part) {
+                    if (!part) return;
+                    
+                    if (part.startsWith('LINK_START|')) {
+                      var match = part.split('|');
+                      formattedCell.push({ 
+                        text: match[2], 
+                        link: match[1], 
+                        color: '#0d6efd', 
+                        decoration: 'underline' 
+                      });
+                    } else if (part.startsWith('BOLD_START|')) {
+                      var match = part.split('|');
+                      formattedCell.push({ 
+                        text: match[1], 
+                        bold: true,
+                        color: '#000000' // Черный цвет для Пали
+                      });
+                    } else {
+                      // ЛОГИКА ЗАТЕМНЕНИЯ ВТОРОГО ЯЗЫКА:
+                      // Если это Title (hasBold = true), то весь текст без маркера - это перевод (тусклый).
+                      // Если это Quote (hasBold = false), то первая строка - Пали (черный), остальные - перевод (тусклый).
+                      var isDim = hasBold ? true : (lineIdx > 0);
+                      formattedCell.push({ 
+                        text: part,
+                        color: isDim ? '#666666' : '#000000'
+                      });
+                    }
+                  });
+                  
+                  // Добавляем перенос после каждой обработанной строки
+                  if (lineIdx < lines.length - 1) {
+                      formattedCell.push({ text: '\n' });
+                  }
+                });
+                
+                cell.text = formattedCell;
+              }
+            });
+          });
+        },
+        action: function (e, dt, node, config) {
+          var buttonContext = this;
+          
+          var triggerPdfExport = function() {
+            pdfMake.fonts = {
+              NotoSans: {
+                normal: 'NotoSans-Regular.ttf',
+                bold: 'NotoSans-Bold.ttf',
+                italics: 'NotoSans-Italic.ttf',
+                bolditalics: 'NotoSans-BoldItalic.ttf'
+              }
+            };
+
+            var pdfConfig = $.extend(true, {}, $.fn.dataTable.ext.buttons.pdfHtml5, config);
+            $.fn.dataTable.ext.buttons.pdfHtml5.action.call(buttonContext, e, dt, node, pdfConfig);
+          };
+          
+          if (typeof pdfMake === 'undefined') {
+            var originalText = node.text();
+            node.text('Loading...'); 
+            
+            var loadScript = function(url, callback) {
+              var script = document.createElement('script');
+              script.type = 'text/javascript';
+              script.src = url;
+              script.onload = callback;
+              document.head.appendChild(script);
+            };
+
+            loadScript('/assets/js/pdfmake.min.js', function() {
+              loadScript('/assets/js/vfs_fonts.js', function() {
+                node.text(originalText); 
+                triggerPdfExport();
+              });
+            });
+          } else {
+            triggerPdfExport();
+          }
+        }
       }
+
     ]
   },
   {
@@ -187,9 +379,6 @@ var mobileDom = '<"row"<"col-sm-6"l><"col-sm-6"f>><"row"<"col-sm-12"p>>rt<"row"<
     text: 'Visibility'
   }
 ],
-
-
-	     
                         
       "search": {
     "caseInsensitive": true,
