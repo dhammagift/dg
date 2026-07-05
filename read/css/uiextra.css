@@ -590,13 +590,14 @@
     transition: opacity 0.4s ease-in-out; /* 0.4 секунды — достаточно плавно и приятно */
 }
 
-/* Появление ссылок при наведении на строку */
-.pli-lang:hover .copyLink-start,
-.rus-lang:hover .copyLink-start,
-.eng-lang:hover .copyLink-start,
-.tha-lang:hover .copyLink-start,
-.variant:hover .copyLink-start {
-    opacity: 0.9;
+@media (hover: hover) and (pointer: fine) {
+  .pli-lang:hover .copyLink-start,
+  .rus-lang:hover .copyLink-start,
+  .eng-lang:hover .copyLink-start,
+  .tha-lang:hover .copyLink-start,
+  .variant:hover .copyLink-start {
+      opacity: 0.9;
+  }
 }
 
   h1.sutta-title > span,
@@ -1319,3 +1320,66 @@ smart TOC
   color: #666;
 }
 
+/*меню ссылок copylink*/
+
+/* --- СТИЛИ ВЫПАДАЮЩЕГО МЕНЮ (НАЖАТИЕ НА ✦) --- */
+#segment-context-menu {
+  position: absolute;
+  z-index: 100000;
+  background: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 16px; /* Более округлые углы */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  min-width: 150px;
+}
+
+.dark #segment-context-menu {
+  background: #333333;
+  border-color: #555555;
+  color: #e0e0e0;
+}
+
+.segment-menu-hidden {
+  display: none !important;
+}
+
+#segment-context-menu ul {
+  list-style: none;
+  margin: 0;
+  padding: 8px 0;
+}
+
+#segment-context-menu li {
+  padding: 10px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: sans-serif;
+  font-size: 1rem;
+}
+
+#segment-context-menu li:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+.dark #segment-context-menu li:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.menu-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.5; /* Делает черные иконки серыми */
+}
+
+.dark .menu-icon {
+  filter: invert(1);
+  opacity: 0.7; /* Светло-серые иконки в темной теме */
+}
+
+@media (max-width: 768px) {
+  #sutta {
+    padding-left: 5px;
+  }
+}
