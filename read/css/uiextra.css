@@ -462,12 +462,14 @@
       position: relative;
       display: inline-block;
       vertical-align: middle;
+      bottom: 0.2em;
       -webkit-tap-highlight-color: transparent;
     /*   touch-action: manipulation;
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none; */
   }
+
 
   .copyLink::after {
       content: "";
@@ -590,15 +592,17 @@
     transition: opacity 0.4s ease-in-out; /* 0.4 секунды — достаточно плавно и приятно */
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 992px) {
   .pli-lang:hover .copyLink-start,
   .rus-lang:hover .copyLink-start,
   .eng-lang:hover .copyLink-start,
   .tha-lang:hover .copyLink-start,
   .variant:hover .copyLink-start {
-      opacity: 0.9;
+    opacity: 0.9;
   }
 }
+
+
 
   h1.sutta-title > span,
   header ul li > span {
@@ -1383,3 +1387,46 @@ smart TOC
     padding-left: 5px;
   }
 }
+
+/* Общие стили для скрытия дублирующих иконок во втором языке */
+.trn-title-icon { 
+    display: none !important; 
+}
+
+#sutta.hide-pali .trn-title-icon { 
+    display: inline-block !important; 
+}
+
+.title-play-btn {
+    display: inline-block;
+    vertical-align: middle;
+    font-size: 1.1em;
+    line-height: 1;
+    margin-right: 8px;
+    position: relative;
+    bottom: 0.2em;
+    user-select: none;
+    cursor: pointer;
+}
+
+/* === ССЫЛКА 🔗 В СТРОКЕ 0.1 === */
+[id="0.1"] .copy-Link-special {
+    display: inline-block !important;
+    opacity: 1 !important;
+    font-size: 1.1em !important;
+    margin-left: 8px;
+}
+
+[id="0.1"] .copy-Link-special::before {
+    content: '🔗' !important;
+}
+
+/* Сохраняем логику скрытия/показа для оригинальной ссылки */
+[id="0.1"] .copy-Link-special.trn-title-icon {
+    display: none !important;
+}
+
+#sutta.hide-pali [id="0.1"] .copy-Link-special.trn-title-icon {
+    display: inline-block !important;
+}
+
