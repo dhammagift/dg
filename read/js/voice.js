@@ -2848,3 +2848,84 @@ window.convertPaliToDevanagari = function(str) {
     }
     return res;
 };
+
+// --- Централизованное управление плеером с клавиатуры ---
+document.addEventListener('keydown', (e) => {
+    // Игнорируем нажатия, если фокус находится в текстовом поле
+    const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable;
+    if (isInput) return;
+
+    // Проверяем, развернут ли/активен ли плеер в данный момент
+    const player = document.getElementById('voice-player-container');
+    const isActive = player && player.classList.contains('active');
+    if (!isActive) return;
+
+    // Перехватываем клавиши ТОЛЬКО если включен автоскролл
+    if (!ttsState.autoScroll) return;
+
+    switch(e.code) {
+        case 'Space':
+            e.preventDefault();
+            const playBtn = document.querySelector('.play-main-button');
+            if (playBtn) playBtn.click();
+            break;
+
+        case 'ArrowLeft':
+        case 'ArrowUp':
+            e.preventDefault();
+            const prevBtn = document.querySelector('.prev-main-button');
+            if (prevBtn) prevBtn.click();
+            break;
+
+        case 'ArrowRight':
+        case 'ArrowDown':
+            e.preventDefault();
+            const nextBtn = document.querySelector('.next-main-button');
+            if (nextBtn) nextBtn.click();
+            break;
+    }
+});
+
+// --- Закрытие настроек плеера при клике в пустое место ---
+document.addEventListener('click', (e) => {
+    // 1. Настройки основного плеера
+    const panel = document.getElementById('tts-settings-panel');
+    
+    if (panel && panel.classList.contains('visible')) {
+        if (!e.target.closest('#tts-settings-panel') && !e.target.closest('#tts-settings-toggle')) {
+            
+            panel.classList.remove('visible');
+            
+            const icon = document.getElementById('tts-settings-icon');
+            if (icon) icon.style.transform = 'rotate(0deg)';
+            
+            const advSettings = document.getElementById('tts-advanced-settings');
+            if (advSettings) advSettings.classList.remove('visible');
+            
+            const basicPanel = document.getElementById('tts-basic-settings');
+            if (basicPanel) {
+                basicPanel.style.maxHeight = '200px';
+                basicPanel.style.opacity = '1';
+            }
+            
+            const delayLabel = document.querySelector('.tts-delay-label')?.parentElement;
+            if (delayLabel) {
+                delayLabel.style.display = 'flex';
+            }
+        }
+    } 
+
+    // 2. Настройки A-B цикла (Memo)
+    const abPanel = document.getElementById('memorize-panel');
+    
+    if (abPanel && abPanel.classList.contains('visible')) {
+        if (!e.target.closest('#memorize-panel') && !e.target.closest('#ab-loop-toggle-btn')) {
+            
+            abPanel.classList.remove('visible');
+            
+            // Сбрасываем визуальный статус кнопок выбора (если был активен pickMode)
+            const pickingBtns = abPanel.querySelectorAll('.mem-pick-btn.picking');
+            pickingBtns.forEach(btn => btn.classList.remove('picking'));
+        }
+    }
+});
