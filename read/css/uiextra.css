@@ -1344,10 +1344,14 @@ smart TOC
   z-index: 100000;
   background: #ffffff;
   border: 1px solid #ccc;
-  border-radius: 16px; /* Более округлые углы */
+  border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  min-width: 150px;
+  min-width: 160px;
+  
+  /* Добавляем это для стабильности */
+  margin-top: 8px; 
 }
+
 
 .dark #segment-context-menu {
   background: #333333;
