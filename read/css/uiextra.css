@@ -561,6 +561,8 @@
 
   .copyLink {
         opacity: 0;
+        cursor: pointer;
+      transition: opacity 0.3s ease;
   }
 
   .copyLink-start {
@@ -583,7 +585,7 @@
 
 
 /* Базовое состояние для ссылок: прозрачность 0 и плавный переход */
-.copyLink-start {
+.copyLink .copyLink-start {
     opacity: 0;
     transition: opacity 0.4s ease-in-out; /* 0.4 секунды — достаточно плавно и приятно */
 }
