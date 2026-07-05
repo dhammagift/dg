@@ -867,6 +867,19 @@
     border-color: #ccc;
 }
 
+.smart-btn {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    color: inherit;
+}
+
+.smart-btn img {
+    flex-shrink: 0;
+}
+
+
 
 /* Специальный зеленый варнинг для Devanagari и Memorize */
 .warning-green {
