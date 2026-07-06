@@ -1,4 +1,4 @@
-const isRu = window.location.pathname.match(/\/(ru|r|ml)(\/|$)/) || localStorage.getItem('siteLanguage') === 'ru';
+const isRu = window.location.pathname.match(/\/(ru|r|ml)(\/|$)/) ; //|| localStorage.getItem('siteLanguage') === 'ru';
 
 // Выносим тексты в отдельный объект для глобального доступа
 const translations = isRu ? {
