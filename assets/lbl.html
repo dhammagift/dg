@@ -779,85 +779,106 @@ function loadText() {
 
           tableBody.innerHTML = tableHtml;
 
-          async function checkFileExists(url) {
-              try {
-                  const response = await fetch(url, { method: 'HEAD' });
-                  return response.ok;  
-              } catch (error) {
-                  console.error(`Error fetching ${url}`, error);
-                  return false;
-              }
-          }
-
-          function generateUrls(originalUrl) {
-              const trimmedUrl = originalUrl.match(/\/(sutta|vinaya)\/.*/)[0];
-              const baseUrl = `/assets/texts/ru${trimmedUrl.split('_')[0]}`;  
-              
-              return ruTranslatorsKeys.map(key => `${baseUrl}_translation-ru-${key}.json`);
-          }
-
-          async function findAvailableTranslations(originalUrl) {
-              const urls = generateUrls(originalUrl);  
-              const availableUrls = [];
-
-              for (const url of urls) {
-                  const exists = await checkFileExists(url);
-                  if (exists) {
-                      availableUrls.push(url);  
-                  }
-              }
-
-              if (availableUrls.length > 0) {
-                  if (availableUrls.length === 1) {
-                      return availableUrls[0]; 
-                  }
-                  let selectionMessage = 'Выберите перевод:\n';
-                  availableUrls.forEach((url, index) => {
-                      selectionMessage += `${index + 1}: ${url}\n`;
-                  });
-
-                  const userChoice = prompt(selectionMessage);
-                  const selectedUrl = availableUrls[userChoice - 1];
-
-                  if (selectedUrl) {
-                      return selectedUrl;
-                  } else {
-                      alert("Неверный выбор.");
-                      return null;
-                  }
-              } else {
-                  alert("Нет доступных переводов.");
-                  return null;
-              }
-          }
-
-          async function loadFileContent(url) {
-              try {
-                  const response = await fetch(url);
-                  if (response.ok) {
-                      const content = await response.text();  
-                      document.getElementById('translationInput').value = content;  
-                  } else {
-                      alert('Не удалось загрузить файл.');
-                  }
-              } catch (error) {
-                  console.error('Ошибка загрузки файла:', error);
-                  alert('Произошла ошибка при загрузке файла.');
-              }
-          }
-
-          // Клонируем кнопку загрузки для сброса старых слушателей перед навешиванием нового
+          // Клонируем кнопку загрузки для очистки дублей событий
           const loadBtn = document.getElementById('loadFromServerButton');
           const newLoadBtn = loadBtn.cloneNode(true);
           loadBtn.parentNode.replaceChild(newLoadBtn, loadBtn);
 
-          newLoadBtn.addEventListener('click', function() {
-              findAvailableTranslations(pliUrl).then((selectedUrl) => {
-                  if (selectedUrl) {
-                      loadFileContent(selectedUrl);  
+          // Вспомогательная функция для проверки существования файла
+          async function checkFileExists(url) {
+              try {
+                  const response = await fetch(url, { method: 'HEAD' });
+                  return response.ok;
+              } catch (error) {
+                  return false;
+              }
+          }
+
+          newLoadBtn.addEventListener('click', async function() {
+              // Формируем базовый путь для русских текстов на основе палийского урла
+              const trimmedUrl = pliUrl.match(/\/(sutta|vinaya)\/.*/)[0];
+              const baseUrl = `/assets/texts/ru${trimmedUrl.split('_')[0]}`;
+              
+              // Создаем массив путей для проверки, опираясь на загруженный translators.json
+              let urlsToTest = ruTranslatorsKeys.map(key => ({
+                  name: key,
+                  url: `${baseUrl}_translation-ru-${key}.json`
+              }));
+
+              // Визуальный индикатор поиска на кнопке
+              const originalBtnHtml = newLoadBtn.innerHTML;
+              newLoadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+              // Проверяем, какие из сгенерированных путей реально есть на сервере
+              let availableOptions = [];
+              for (const item of urlsToTest) {
+                  if (await checkFileExists(item.url)) {
+                      availableOptions.push(item);
                   }
-              });
+              }
+
+              newLoadBtn.innerHTML = originalBtnHtml; // Возвращаем иконку
+
+              if (availableOptions.length === 0) {
+                  alert('Переводы для этого текста не найдены на сервере.');
+                  return;
+              }
+
+              let selectedUrl = null;
+
+              if (availableOptions.length === 1) {
+                  // Если файл всего один, скачиваем его без лишних вопросов
+                  selectedUrl = availableOptions[0].url;
+              } else {
+                  // Выводим системный prompt, если вариантов несколько
+                  let selectionMessage = 'Выберите перевод:\n';
+                  availableOptions.forEach((option, index) => {
+                      selectionMessage += `${index + 1}: ${option.name}\n`;
+                  });
+
+                  const userChoice = prompt(selectionMessage);
+                  
+                  if (userChoice === null) return; // Нажали "Отмена"
+                  
+                  const choiceIndex = parseInt(userChoice) - 1;
+                  if (choiceIndex >= 0 && choiceIndex < availableOptions.length) {
+                      selectedUrl = availableOptions[choiceIndex].url;
+                  } else {
+                      alert("Неверный выбор.");
+                      return;
+                  }
+              }
+
+              // Непосредственно скачивание выбранного JSON
+              if (selectedUrl) {
+                  try {
+                      newLoadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                      const response = await fetch(selectedUrl);
+                      if (response.ok) {
+                          const content = await response.text(); // Забираем как сырой текст
+                          document.getElementById('translationInput').value = content;
+                          
+                          // Уведомление (Toast) об успехе
+                          const toastEl = document.getElementById('toastMessage');
+                          const toastText = document.getElementById('toastText');
+                          if (toastEl && toastText) {
+                              toastEl.classList.remove('bg-danger');
+                              toastEl.classList.add('bg-success');
+                              toastText.textContent = `Загружен: ${selectedUrl.split('/').pop()}`;
+                              new bootstrap.Toast(toastEl, { autohide: true }).show();
+                          }
+                      } else {
+                          throw new Error('Network response was not ok');
+                      }
+                  } catch (error) {
+                      console.error('Ошибка загрузки файла:', error);
+                      alert('Произошла ошибка при загрузке файла.');
+                  } finally {
+                      newLoadBtn.innerHTML = originalBtnHtml;
+                  }
+              }
           });
+
 
           // Клонируем таблицу для сброса старых слушателей клика (защита от дублирования событий)
           const tableBodyEl = document.getElementById('outputTableBody');
