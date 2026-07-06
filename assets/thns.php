@@ -70,9 +70,9 @@ $notReadyLines = array_filter(explode("\n", trim($notReadyOutput)));
         <div class="input-group">
             <div style="display: inline-flex;">
                 <top-nav-icons type="read"></top-nav-icons>
-                <a href="https://www.dhammatalks.org/suttas/">DhammaTalks.org </a>
+                <a target=_blank href="https://www.dhammatalks.org/suttas/">DhammaTalks.org </a>
                 &nbsp;
-                <a href="/assets/lbl-en.html">Trn Editor </a>
+                <a target=_blank href="/assets/lbl-en.html">Trn Editor </a>
             </div>
         </div>
     </div>
