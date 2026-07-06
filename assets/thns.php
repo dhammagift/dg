@@ -13,8 +13,9 @@ $gitCmd = "cd ../../offline-data; git pull";
 
 
 // Раздельные команды для опубликованных и неопубликованных
-$unpublishedCmd = "find ../offline-data/lbl -name \"*-en-*.json\" -printf '%f\n' | sort -V | awk '{sub(/_translation-en-thanissaro\\.json$/, \"\", $1); print \"<a href=\\\"/assets/texts/lbl/\" $1 \"_translation-en-thanissaro.json\\\">\" $1 \"</a>\"}'";
-$publishedCmd = "find ../offline-data/en_other -name \"*-en-*.json\" -printf '%f\n' | sort -V | awk '{sub(/_translation-en-thanissaro\\.json$/, \"\", $1); print $1}'";
+$unpublishedCmd = "find ../offline-data/lbl -name \"*-en-*.json\" -printf '%f\n' | sort -V | awk '{sub(/_translation-en-thanissaro\\.json$/, \"\", $1); print \"<a target=_blank href=\\\"/assets/texts/lbl/\" $1 \"_translation-en-thanissaro.json\\\">\" $1 \"</a>\"}'";
+$publishedCmd = "find ../offline-data/en_other -name \"*-en-*.json\" -printf '%f\n' | sort -V | awk '{sub(/_translation-en-thanissaro\\.json$/, \"\", $1); print \"<a target=_blank href=\\\"/multi/?q=\" $1 \"\\\">\" $1 \"</a>\"}'";
+//$publishedCmd = "find ../offline-data/en_other -name \"*-en-*.json\" -printf '%f\n' | sort -V | awk '{sub(/_translation-en-thanissaro\\.json$/, \"\", $1); print $1}'";
 
 // Not ready остается как была
 $notReadyCmd = "cd ../offline-data/en_other; find ../lbl sutta/sn sutta/mn sutta/an -type f | awk -F/ '{print \$NF}' | sed 's/_.*//' | sort -u | grep -Fhxvf - an.txt sn.txt mn.txt | awk '/^sn/{print \"1 \" \$0;next}/^mn/{print \"2 \" \$0;next}/^dn/{print \"3 \" \$0;next}/^an/{print \"4 \" \$0;next}' | sort -k1,1n -k2,2V | cut -d' ' -f2-";
@@ -89,7 +90,7 @@ $notReadyLines = array_filter(explode("\n", trim($notReadyOutput)));
                     <thead><tr><th>Pending Texts</th></tr></thead>
                     <tbody>
                         <?php foreach ($notReadyLines as $line): ?>
-                            <tr><td><a href="https://dhammatalks.org/suttas/<?= strtoupper(preg_replace('/[\d.]+/', '', $line)) ?>/<?= strtoupper(preg_replace('/[\d.]+/', '', $line)) ?><?= strtoupper(str_replace('.', '_', preg_replace('/[a-z]+/i', '', $line))) ?>.html" target="_blank"><?= htmlspecialchars($line) ?></a></td></tr>
+                            <tr><td><a target=_blank href="https://dhammatalks.org/suttas/<?= strtoupper(preg_replace('/[\d.]+/', '', $line)) ?>/<?= strtoupper(preg_replace('/[\d.]+/', '', $line)) ?><?= strtoupper(str_replace('.', '_', preg_replace('/[a-z]+/i', '', $line))) ?>.html" target="_blank"><?= htmlspecialchars($line) ?></a></td></tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
