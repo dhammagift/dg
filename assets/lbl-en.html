@@ -812,85 +812,107 @@ function loadText() {
 
           tableBody.innerHTML = tableHtml;
 
-          async function checkFileExists(url) {
-              try {
-                  const response = await fetch(url, { method: 'HEAD' });
-                  return response.ok;  
-              } catch (error) {
-                  console.error(`Error fetching ${url}`, error);
-                  return false;
-              }
-          }
-
-          function generateUrls(originalUrl) {
-              const trimmedUrl = originalUrl.match(/\/(sutta|vinaya)\/.*/)[0];
-              const baseUrl = `/assets/texts/ru${trimmedUrl.split('_')[0]}`;  
-              
-              return ruTranslatorsKeys.map(key => `${baseUrl}_translation-ru-${key}.json`);
-          }
-
-          async function findAvailableTranslations(originalUrl) {
-              const urls = generateUrls(originalUrl);  
-              const availableUrls = [];
-
-              for (const url of urls) {
-                  const exists = await checkFileExists(url);
-                  if (exists) {
-                      availableUrls.push(url);  
-                  }
-              }
-
-              if (availableUrls.length > 0) {
-                  if (availableUrls.length === 1) {
-                      return availableUrls[0]; 
-                  }
-                  let selectionMessage = 'Выберите перевод:\n';
-                  availableUrls.forEach((url, index) => {
-                      selectionMessage += `${index + 1}: ${url}\n`;
-                  });
-
-                  const userChoice = prompt(selectionMessage);
-                  const selectedUrl = availableUrls[userChoice - 1];
-
-                  if (selectedUrl) {
-                      return selectedUrl;
-                  } else {
-                      alert("Неверный выбор.");
-                      return null;
-                  }
-              } else {
-                  alert("Нет доступных переводов.");
-                  return null;
-              }
-          }
-
-          async function loadFileContent(url) {
-              try {
-                  const response = await fetch(url);
-                  if (response.ok) {
-                      const content = await response.text();  
-                      document.getElementById('translationInput').value = content;  
-                  } else {
-                      alert('Не удалось загрузить файл.');
-                  }
-              } catch (error) {
-                  console.error('Ошибка загрузки файла:', error);
-                  alert('Произошла ошибка при загрузке файла.');
-              }
-          }
-
-          // Клонируем кнопку загрузки для сброса старых слушателей перед навешиванием нового
+                  // Клонируем кнопку загрузки для сброса старых слушателей перед навешиванием нового
           const loadBtn = document.getElementById('loadFromServerButton');
           const newLoadBtn = loadBtn.cloneNode(true);
           loadBtn.parentNode.replaceChild(newLoadBtn, loadBtn);
 
-          newLoadBtn.addEventListener('click', function() {
-              findAvailableTranslations(pliUrl).then((selectedUrl) => {
-                  if (selectedUrl) {
-                      loadFileContent(selectedUrl);  
+          // Вспомогательная функция для проверки существования файла
+          async function checkFileExists(url) {
+              try {
+                  const response = await fetch(url, { method: 'HEAD' });
+                  return response.ok;
+              } catch (error) {
+                  return false;
+              }
+          }
+
+          newLoadBtn.addEventListener('click', async function() {
+              try {
+
+                  const isVinaya = indexValue.includes('bu-') || indexValue.includes('bi-');
+                  let urlsToTest = [];
+
+                  if (isVinaya) {
+                      urlsToTest.push({ name: "Brahmali", url: `/suttacentral.net/sc-data/sc_bilara_data/translation/en/brahmali/vinaya/${fileNameBlock}_translation-en-brahmali.json` });
+                  } else {
+                      let scMiddlePath = indexValue.match(/dn|mn/) ? `${lettersOnly}/` : `${lettersOnly}/${beforeDot}/`;
+                      scMiddlePath = scMiddlePath.replace(/\/+/g, '/'); // защита от двойных слешей
+
+                      urlsToTest.push({ name: "Thanissaro", url: `/assets/texts/en_other/sutta/${scMiddlePath}${indexValue}_translation-en-thanissaro.json` });
+                      urlsToTest.push({ name: "o", url: `/assets/texts/en/sutta/${scMiddlePath}${indexValue}_translation-en-o.json` });
+                      urlsToTest.push({ name: "Sujato", url: `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${scMiddlePath}${indexValue}_translation-en-sujato.json` });
                   }
-              });
+
+
+                  // Визуальный индикатор поиска на кнопке
+                  const originalBtnHtml = newLoadBtn.innerHTML;
+                  newLoadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+                  // Ищем, какие файлы реально существуют
+                  let availableOptions = [];
+                  for (const item of urlsToTest) {
+                      let exists = await checkFileExists(item.url);
+                      if (exists) {
+                          availableOptions.push(item);
+                      }
+                  }
+
+                  newLoadBtn.innerHTML = originalBtnHtml; // Возвращаем иконку
+
+
+                  if (availableOptions.length === 0) {
+                      return;
+                  }
+
+                  let selectedUrl = null;
+
+                  if (availableOptions.length === 1) {
+                      selectedUrl = availableOptions[0].url;
+                  } else {
+                      let selectionMessage = 'Choose translation:\n';
+                      availableOptions.forEach((option, index) => {
+                          selectionMessage += `${index + 1}: ${option.name}\n`;
+                      });
+
+                      const userChoice = prompt(selectionMessage);
+                      
+                      if (userChoice === null) return; 
+                      
+                      const choiceIndex = parseInt(userChoice) - 1;
+                      if (choiceIndex >= 0 && choiceIndex < availableOptions.length) {
+                          selectedUrl = availableOptions[choiceIndex].url;
+                      } else {
+                          return;
+                      }
+                  }
+
+                  // Загружаем выбранный файл
+                  if (selectedUrl) {
+                      newLoadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                      const response = await fetch(selectedUrl);
+                      if (response.ok) {
+                          const content = await response.text();
+                          document.getElementById('translationInput').value = content;
+                          
+                          // Уведомление об успехе
+                          const toastEl = document.getElementById('toastMessage');
+                          const toastText = document.getElementById('toastText');
+                          if (toastEl && toastText) {
+                              toastEl.classList.remove('bg-danger');
+                              toastEl.classList.add('bg-success');
+                              toastText.textContent = `Loaded: ${selectedUrl.split('/').pop()}`;
+                              new bootstrap.Toast(toastEl, { autohide: true }).show();
+                          }
+                      } else {
+                      }
+                      newLoadBtn.innerHTML = originalBtnHtml;
+                  }
+              } catch (err) {
+               //   alert('КРИТИЧЕСКАЯ ОШИБКА: ' + err.message);
+              }
           });
+
 
           // Клонируем таблицу для сброса старых слушателей клика (защита от дублирования событий)
           const tableBodyEl = document.getElementById('outputTableBody');
