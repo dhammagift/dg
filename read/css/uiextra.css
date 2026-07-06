@@ -597,6 +597,7 @@
   .eng-lang:hover .copyLink-start,
   .tha-lang:hover .copyLink-start,
   .variant:hover .copyLink-start {
+      /* Цвет с прозрачностью 30% (0.3) */
     opacity: 0.9;
   }
 }
@@ -734,28 +735,26 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     border: 1px solid #ccc;
     
-    /* --- ДОБАВЬ ЭТИ ТРИ СТРОКИ --- */
-    max-height: calc(100vh - 80px); /* 80px — запас, чтобы панель не упиралась в края экрана */
-    overflow-y: auto;               /* Включаем скролл, если контент не влезает */
-    -webkit-overflow-scrolling: touch; /* Плавный скролл для мобильных устройств */
-    /* ----------------------------- */
-
+    max-height: calc(100vh - 80px); 
+    overflow-y: auto;               
+    -webkit-overflow-scrolling: touch; 
+    
     opacity: 0;
     visibility: hidden;
     transform: scale(0.9);
     transform-origin: top right;
     transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    
-    /* ВАЖНО: Скрытая панель не должна ловить клики */
     pointer-events: none;
+
+    font-family: sans-serif;
+    font-size: 1rem;
+    color: #535353;
 }
 
 #smart-panel.active {
     opacity: 1;
     visibility: visible;
     transform: scale(1);
-    
-    /* ВАЖНО: Активная панель начинает ловить клики */
     pointer-events: auto;
 }
 
@@ -766,6 +765,14 @@
     padding: 5px;
     border-radius: 8px;
     transition: background 0.2s;
+    
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
 }
 
 .smart-btn:hover {
@@ -773,6 +780,7 @@
 }
 
 .smart-btn img {
+    flex-shrink: 0;
     width: 24px;
     height: 24px;
 }
@@ -780,13 +788,27 @@
 .dark #smart-panel {
     background-color: #333;
     border-color: #555;
+    /* Цвет шрифта для темной темы */
+    color: #909090;
 }
+
 .dark .smart-btn img {
     filter: invert(1);
 }
+
 .dark .smart-btn:hover {
     background-color: rgba(255,255,255,0.1);
 }
+
+/* Новые классы для замены инлайн-стилей из JS */
+.hidden-toc {
+    display: none !important;
+}
+
+.toc-item span {
+    cursor: pointer;
+}
+
 
 #dict-select {
   width: 140px;
