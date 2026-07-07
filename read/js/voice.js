@@ -2,6 +2,14 @@
 window.TRIAL_KEY = ""; 
 const TRIAL_BLOCK_KEY = 'tts_block_trial_key'; 
 
+// --- Утилиты ---
+
+// Глобальная проверка на русский контекст
+function isRuContext() {
+    return !!window.location.pathname.match(/\/(ru|r|mt|ml)\//);
+}
+
+
 (async function loadTrialKey() {
     // 0. LEGACY CHECK: Если это старая страница, мы просто не грузим ключ.
     // Функция isLegacyPage() "поднимется" (hoisting), поэтому её можно вызвать здесь.
@@ -1744,21 +1752,39 @@ function getPlayerHtml() {
       currentRatesList = [...currentRatesList, initialRate].sort((a,b) => a - b);
   }
 
-  const pathLang = location.pathname.split('/')[1];
-  const isRuLike = ['ru', 'r', 'ml'].includes(pathLang);
+  const isRu = typeof isRuContext === 'function' ? isRuContext() : false;
 
-  const helpUrl = isRuLike 
+  const helpUrl = isRu 
     ? '/assets/common/ttsHelp.html#tts-help-ru' 
     : '/assets/common/ttsHelp.html#tts-help-en';
 
-  const modeLabels = isRuLike
+  const modeLabels = isRu
     ? { 'pi': 'Пали', 'pi-trn': 'Пали + Рус', 'trn': 'Перевод', 'trn-pi': 'Рус + Пали' }
     : { 'pi': 'Pāḷi', 'pi-trn': 'Pāḷi + Trn', 'trn': 'Trn', 'trn-pi': 'Trn + Pāḷi' };
+
+  // Объект с переводами интерфейса
+  const t = {
+    settings: isRu ? "Настройки" : "Settings",
+    scroll: isRu ? "Скролл" : "Scroll",
+    autoplay: isRu ? "Автостарт" : "Autoplay",
+    delay: isRu ? "Задержка" : "Delay",
+    sec: isRu ? "сек" : "sec",
+    paliVoice: isRu ? "Голос Пали:" : "Pāḷi Voice:",
+    trnVoice: isRu ? "Голос Перевода:" : "Trn Voice:",
+    native: isRu ? "Нативный" : "Native",
+    speedPali: isRu ? "Скорость (Пали)" : "Speed (Pali)",
+    speedTrn: isRu ? "Скорость (Перевод)" : "Speed (Translation)",
+    delayTitle: isRu ? "Пауза между фразами (секунды)" : "Pause between phrases (seconds)",
+    apiKeyTitle: isRu ? "Введите API-ключ Google Cloud TTS" : "Enter Google Cloud TTS API Key for premium voices",
+    refreshVoices: isRu ? "Обновить список" : "Refresh Voice List",
+    resetTts: isRu ? "Полный сброс (очистить данные)" : "Full Reset (Clear Data)",
+    help: isRu ? "Помощь" : "Help"
+  };
 
   return `
     <div class="tts-container-inner">
        <div class="tts-main-row">
-        <a href="javascript:void(0)" id="tts-settings-toggle" class="tts-top-btn tts-settings-btn" title="Settings">
+        <a href="javascript:void(0)" id="tts-settings-toggle" class="tts-top-btn tts-settings-btn" title="${t.settings}">
             <svg id="tts-settings-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
                 <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
             </svg>
@@ -1787,7 +1813,7 @@ function getPlayerHtml() {
                 ).join('')}
               </select>
 
-              <select id="tts-rate-select" class="tts-rate-select" title="${savedMode === 'pi' ? 'Speed (Pali)' : 'Speed (Translation)'}">
+              <select id="tts-rate-select" class="tts-rate-select" title="${savedMode === 'pi' ? t.speedPali : t.speedTrn}">
                 ${currentRatesList.map(r =>
                   `<option value="${r}" ${initialRate == r ? 'selected' : ''}>${r}x</option>`
                 ).join('')}
@@ -1798,21 +1824,21 @@ function getPlayerHtml() {
               <div class="tts-toggles-row">
                 <label class="tts-checkbox-custom">
                   <input title="on/off (S)" type="checkbox" id="tts-scroll-toggle" ${ttsState.autoScroll ? 'checked' : ''}>
-                  Scroll
+                  ${t.scroll}
                 </label>
                 <label class="tts-checkbox-custom">
                   <input type="checkbox" id="tts-autoplay-toggle" ${localStorage.getItem('ttsMode') === 'true' ? 'checked' : ''}>
-                  Autoplay
+                  ${t.autoplay}
                 </label>
               </div>
           </div>
 
           <div class="tts-delay-row">
-              <label class="tts-delay-label" title="Пауза между фразами (секунды)">
+              <label class="tts-delay-label" title="${t.delayTitle}">
                   <img src="/assets/svg/hourglass-regular-full.svg" width="14" height="14" alt="timer">
-                  Delay
+                  ${t.delay}
                   <span id="tts-segment-delay-input" class="tts-editable-span" contenteditable="true" inputmode="decimal" spellcheck="false">${localStorage.getItem('dg_tts_segment_delay') || 0}</span>
-                  sec
+                  ${t.sec}
               </label>
           </div>
 
@@ -1826,7 +1852,7 @@ function getPlayerHtml() {
             
             <span id="audio-file-link-placeholder"></span>
             
-            <a href="${helpUrl}" target="_blank" class="tts-link tts-help-link" title="Help">?</a>
+            <a href="${helpUrl}" target="_blank" class="tts-link tts-help-link" title="${t.help}">?</a>
           </div>
 
           <div id="tts-advanced-settings">
@@ -1834,21 +1860,21 @@ function getPlayerHtml() {
                 <input type="password" id="google-api-key-input" 
                        value="${savedKey}" 
                        placeholder="Google API Key" 
-                       title="Enter Google Cloud TTS API Key for premium voices">
-                <button id="refresh-voices-btn" class="refresh-api-btn" title="Refresh Voice List">
+                       title="${t.apiKeyTitle}">
+                <button id="refresh-voices-btn" class="refresh-api-btn" title="${t.refreshVoices}">
                     <img src="/assets/svg/rotate-right-solid-full.svg" width="16" height="16" alt="Refresh">     
                 </button>
-                <button id="reset-tts-btn" class="reset-tts-btn" title="Full Reset (Clear Data)">
+                <button id="reset-tts-btn" class="reset-tts-btn" title="${t.resetTts}">
                     <img src="/assets/svg/trash-can-regular-full.svg" width="16" height="16" alt="Reset">
                 </button>
               </div>
 
               <div id="google-voice-settings-container">
                   <div class="google-voice-select-group">
-                       <div class="google-voice-label">Pāḷi Voice: 
+                       <div class="google-voice-label">${t.paliVoice} 
                            <label class="tts-checkbox-custom tts-native-label">
                               <input type="checkbox" id="native-pali-toggle" ${isNativePali ? 'checked' : ''}>
-                              Native
+                              ${t.native}
                            </label>
                        </div>
                       <div id="pali-google-dropdowns">
@@ -1858,10 +1884,10 @@ function getPlayerHtml() {
                   </div>
 
                   <div class="google-voice-select-group">
-                      <div class="google-voice-label">Trn Voice:
+                      <div class="google-voice-label">${t.trnVoice}
                           <label class="tts-checkbox-custom tts-native-label">
                               <input type="checkbox" id="native-trn-toggle" ${isNativeTrn ? 'checked' : ''}>
-                              Native
+                              ${t.native}
                           </label>
                       </div>
                       <div id="trn-google-dropdowns">
@@ -1972,12 +1998,10 @@ async function handleTTSSettingChange(e) {
   if (e.target.id === 'reset-tts-btn') {
       e.preventDefault();
 
-      const pathLang = location.pathname.split('/')[1];
-      const isRuLike = ['ru', 'r', 'ml'].includes(pathLang);
-
-const resetMessage = isRuLike
-  ? 'Сбросить настройки голоса: отключить Google TTS, удалить API-ключ и включить системные голоса?'
-  : 'Reset voice settings: disable Google TTS, remove the API key, and use system voices?';
+      const resetMessage = isRuContext()
+        ? 'Сбросить настройки голоса: отключить Google TTS, удалить API-ключ и включить системные голоса?'
+        : 'Reset voice settings: disable Google TTS, remove the API key, and use system voices?';
+        
       if (confirm(resetMessage)) {
           // 1. Список ключей для удаления (чистим старое)
           const keysToRemove = [
@@ -2146,7 +2170,7 @@ const resetMessage = isRuLike
     // 6. Autoplay (связка с ttsMode)
   if (e.target.id === 'tts-autoplay-toggle') {
      const isChecked = e.target.checked;
-     const isRu = window.location.pathname.match(/\/(ru|r|ml)\//);
+     const isRu = isRuContext();
      
      if (isChecked) {
          localStorage.setItem('ttsMode', 'true');
@@ -2860,8 +2884,12 @@ document.addEventListener('keydown', (e) => {
     const isActive = player && player.classList.contains('active');
     if (!isActive) return;
 
-    // Определяем язык для бабл-уведомлений
-    const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
+    // Игнорируем нажатия с зажатыми модификаторами (Alt, Ctrl, Cmd/Win), 
+    // чтобы не перебивать глобальные горячие клавиши
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+
+    // Используем глобальную функцию
+    const isRu = isRuContext();
 
     // 1. Горячая клавиша: S (Автоскролл)
     if (e.code === 'KeyS') {
@@ -2881,15 +2909,15 @@ document.addEventListener('keydown', (e) => {
         return;
     }
 
-    // 2. Горячие клавиши: 1, 2, 3, 4 (Режимы TTS)
-    if (['Digit1', 'Digit2', 'Digit3', 'Digit4'].includes(e.code)) {
+    // 2. Горячие клавиши: 1, 2, 3, 4 (Режимы TTS) + Numpad
+    if (['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Numpad1', 'Numpad2', 'Numpad3', 'Numpad4'].includes(e.code)) {
         e.preventDefault();
         
         let newMode = '';
-        if (e.code === 'Digit1') newMode = 'pi';
-        else if (e.code === 'Digit2') newMode = 'pi-trn';
-        else if (e.code === 'Digit3') newMode = 'trn';
-        else if (e.code === 'Digit4') newMode = 'trn-pi';
+        if (e.code === 'Digit1' || e.code === 'Numpad1') newMode = 'pi';
+        else if (e.code === 'Digit2' || e.code === 'Numpad2') newMode = 'pi-trn';
+        else if (e.code === 'Digit3' || e.code === 'Numpad3') newMode = 'trn';
+        else if (e.code === 'Digit4' || e.code === 'Numpad4') newMode = 'trn-pi';
 
         if (newMode) {
             localStorage.setItem(MODE_STORAGE_KEY, newMode);
@@ -2910,8 +2938,8 @@ document.addEventListener('keydown', (e) => {
         return;
     }
 
-    // 3. Горячие клавиши: -, + (Скорость) и R (Сброс скорости)
-    if (['Minus', 'Equal', 'KeyR'].includes(e.code)) {
+    // 3. Горячие клавиши: -, + (Скорость) и R (Сброс скорости) + Numpad
+    if (['Minus', 'Equal', 'KeyR', 'NumpadSubtract', 'NumpadAdd'].includes(e.code)) {
         e.preventDefault();
         const rateSelect = document.getElementById('tts-rate-select');
         if (rateSelect) {
@@ -2920,8 +2948,8 @@ document.addEventListener('keydown', (e) => {
             
             let nextIndex = currentIndex;
             
-            if (e.code === 'Minus') nextIndex = Math.max(0, currentIndex - 1);
-            else if (e.code === 'Equal') nextIndex = Math.min(options.length - 1, currentIndex + 1);
+            if (e.code === 'Minus' || e.code === 'NumpadSubtract') nextIndex = Math.max(0, currentIndex - 1);
+            else if (e.code === 'Equal' || e.code === 'NumpadAdd') nextIndex = Math.min(options.length - 1, currentIndex + 1);
             else if (e.code === 'KeyR') {
                 // Ищем индекс для 1.0, если его нет — берем средний или первый
                 const defaultIdx = options.indexOf(1.0);
