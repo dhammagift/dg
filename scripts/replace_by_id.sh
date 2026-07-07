@@ -52,3 +52,27 @@ done < <(awk '{print $2}' "$list")
 
 
 #while read -r id; do   file=$(grep -rl $id .);    echo "$id";    [ -n "$file" ] && sed -i "/$id/ s/ там / здесь /" "$file"; done < "$dwnl/id.txt"
+
+
+
+exit 0
+
+
+#сравнить два файла 
+
+awk '
+{
+    match($0, /"[a-z0-9\.-]+:[0-9\.]+":/)
+    if (RSTART > 0) {
+        key = substr($0, RSTART, RLENGTH)
+        if (NR == FNR) {
+            pali[key] = $0
+        } else {
+            if (key in pali) {
+                print pali[key]
+                print $0
+                print "---"
+            }
+        }
+    }
+}' "$dwnl/mograpur" "$dwnl/mograpurRu"
