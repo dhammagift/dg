@@ -839,6 +839,7 @@ function loadText() {
                       let scMiddlePath = indexValue.match(/dn|mn/) ? `${lettersOnly}/` : `${lettersOnly}/${beforeDot}/`;
                       scMiddlePath = scMiddlePath.replace(/\/+/g, '/'); // защита от двойных слешей
 
+                      urlsToTest.push({ name: "Unpublished", url: `/assets/texts/lbl/sutta/${scMiddlePath}${indexValue}_translation-en-thanissaro.json` });
                       urlsToTest.push({ name: "Thanissaro", url: `/assets/texts/en_other/sutta/${scMiddlePath}${indexValue}_translation-en-thanissaro.json` });
                       urlsToTest.push({ name: "o", url: `/assets/texts/en/sutta/${scMiddlePath}${indexValue}_translation-en-o.json` });
                       urlsToTest.push({ name: "Sujato", url: `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${scMiddlePath}${indexValue}_translation-en-sujato.json` });
