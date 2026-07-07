@@ -829,7 +829,6 @@ function loadText() {
 
           newLoadBtn.addEventListener('click', async function() {
               try {
-
                   const isVinaya = indexValue.includes('bu-') || indexValue.includes('bi-');
                   let urlsToTest = [];
 
@@ -844,7 +843,6 @@ function loadText() {
                       urlsToTest.push({ name: "o", url: `/assets/texts/en/sutta/${scMiddlePath}${indexValue}_translation-en-o.json` });
                       urlsToTest.push({ name: "Sujato", url: `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${scMiddlePath}${indexValue}_translation-en-sujato.json` });
                   }
-
 
                   // Визуальный индикатор поиска на кнопке
                   const originalBtnHtml = newLoadBtn.innerHTML;
@@ -861,56 +859,107 @@ function loadText() {
 
                   newLoadBtn.innerHTML = originalBtnHtml; // Возвращаем иконку
 
-
                   if (availableOptions.length === 0) {
+                      alert('Translations for this text were not found on the server.');
                       return;
                   }
 
-                  let selectedUrl = null;
-
                   if (availableOptions.length === 1) {
-                      selectedUrl = availableOptions[0].url;
+                      // Если файл всего один, загружаем сразу
+                      loadSelectedFile(availableOptions[0].url);
                   } else {
-                      let selectionMessage = 'Choose translation:\n';
-                      availableOptions.forEach((option, index) => {
-                          selectionMessage += `${index + 1}: ${option.name}\n`;
+                      // Показываем модальное окно выбора
+                      showModernSelectionModal(availableOptions);
+                  }
+
+               // Функция генерации и показа модального окна
+              function showModernSelectionModal(options) {
+                  // Удаляем старое окно, если оно почему-то осталось в DOM
+                  const existingModal = document.getElementById('modernFileSelectModal');
+                  if (existingModal) existingModal.remove();
+
+                  // Создаем чистую структуру окна
+                  const modalHtml = `
+                  <div class="modal fade" id="modernFileSelectModal" tabindex="-1" aria-hidden="true">
+                      <div class="modal-dialog modal-dialog-centered">
+                          <div class="modal-content">
+                              <div class="modal-header border-bottom-0">
+                                  <h5 class="modal-title">Выберите версию перевода</h5>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body pt-0">
+                                  <ul class="server-file-list" id="serverFileList">
+                                      ${options.map(opt => `
+                                          <li data-url="${opt.url}">
+                                              <i class="fa-solid fa-file-code"></i>
+                                              <span>Переводчик: <strong>${opt.name}</strong></span>
+                                          </li>
+                                      `).join('')}
+                                  </ul>
+                              </div>
+                          </div>
+                      </div>
+                  </div>`;
+
+                  // Вставляем окно в конец body
+                  document.body.insertAdjacentHTML('beforeend', modalHtml);
+                  const modalElement = document.getElementById('modernFileSelectModal');
+                  const bsModal = new bootstrap.Modal(modalElement);
+
+                  // Обработка клика по элементу списка
+                  const listItems = modalElement.querySelectorAll('#serverFileList li');
+                  listItems.forEach(item => {
+                      item.addEventListener('click', function() {
+                          const selectedUrl = this.getAttribute('data-url');
+                          bsModal.hide(); // Прячем окно
+                          loadSelectedFile(selectedUrl); // Запускаем загрузку
                       });
+                  });
 
-                      const userChoice = prompt(selectionMessage);
-                      
-                      if (userChoice === null) return; 
-                      
-                      const choiceIndex = parseInt(userChoice) - 1;
-                      if (choiceIndex >= 0 && choiceIndex < availableOptions.length) {
-                          selectedUrl = availableOptions[choiceIndex].url;
-                      } else {
-                          return;
-                      }
-                  }
+                  // Полная очистка DOM после закрытия окна
+                  modalElement.addEventListener('hidden.bs.modal', function () {
+                      modalElement.remove();
+                  });
 
-                  // Загружаем выбранный файл
-                  if (selectedUrl) {
-                      newLoadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-                      const response = await fetch(selectedUrl);
-                      if (response.ok) {
-                          const content = await response.text();
-                          document.getElementById('translationInput').value = content;
-                          
-                          // Уведомление об успехе
-                          const toastEl = document.getElementById('toastMessage');
-                          const toastText = document.getElementById('toastText');
-                          if (toastEl && toastText) {
-                              toastEl.classList.remove('bg-danger');
-                              toastEl.classList.add('bg-success');
-                              toastText.textContent = `Loaded: ${selectedUrl.split('/').pop()}`;
-                              new bootstrap.Toast(toastEl, { autohide: true }).show();
+                  bsModal.show();
+              }
+
+                  // Функция загрузки файла и обновления интерфейса
+                  async function loadSelectedFile(selectedUrl) {
+                      try {
+                          newLoadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                          const response = await fetch(selectedUrl);
+                          if (response.ok) {
+                              const content = await response.text();
+                              document.getElementById('translationInput').value = content;
+                              
+                              // Уведомление об успехе
+                              const toastEl = document.getElementById('toastMessage');
+                              const toastText = document.getElementById('toastText');
+                              if (toastEl && toastText) {
+                                  toastEl.classList.remove('bg-danger');
+                                  toastEl.classList.add('bg-success');
+                                  toastText.textContent = `Loaded: ${selectedUrl.split('/').pop()}`;
+                                  new bootstrap.Toast(toastEl, { autohide: true }).show();
+                              }
+
+                              // Обновляем таблицу, если функция доступна
+                              if (typeof syncTextToTable === 'function') {
+                                  syncTextToTable();
+                              }
+                          } else {
+                              throw new Error('Network response was not ok');
                           }
-                      } else {
+                      } catch (error) {
+                          console.error('File load error:', error);
+                          alert('An error occurred while loading the file.');
+                      } finally {
+                          newLoadBtn.innerHTML = originalBtnHtml;
                       }
-                      newLoadBtn.innerHTML = originalBtnHtml;
                   }
+
               } catch (err) {
-               //   alert('КРИТИЧЕСКАЯ ОШИБКА: ' + err.message);
+                  console.error('CRITICAL ERROR: ', err.message);
               }
           });
 

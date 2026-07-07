@@ -28,6 +28,16 @@
 <meta name="theme-color" content="#000000">
 
   <title>Dhamma.gift Read - Buddha Dhamma in Pali Suttas and Vinaya</title>
+  <script>
+  (function() {
+    const q = new URLSearchParams(window.location.search).get('q');
+    if (q) {
+      const cleanSlug = q.replace(/pli-tv-|vb-/g, '');
+      document.title = cleanSlug;
+    }
+  })();
+</script>
+
 <link rel="manifest" href="/manifest.php">
   
   <meta name="description" content="Precise Search in Buddhas Teaching in Pali Suttas and Vinaya. Liberation Search Engine. Search in Pali Suttanta and Vinaya" />

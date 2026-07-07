@@ -268,21 +268,7 @@ async function buildSutta(slug) {
         });
       }
 
-      const pageTitleElement = document.querySelector("h1.sutta-title");
-      let pageTitle = '';
-      if (pageTitleElement) {
-        let text = pageTitleElement.textContent;
-        const paliLettersRegex = /[a-zāīūṭḍñṃṁṅṇśṣ\s]/gi;
-        const filtered = text.match(paliLettersRegex);
-        if (filtered) {
-          pageTitle = filtered.join('');
-        }
-      }
-
-      let cleanSlug = slug.replace(/pli-tv-|vb-/g, '');
-      document.title = `${cleanSlug} ${pageTitle}`.trim();
-
-      // Вызов функции из common.js без локальных конфликтов
+        // Вызов функции из common.js без локальных конфликтов
       if (typeof window.toggleThePali === 'function') {
           window.toggleThePali();
       }

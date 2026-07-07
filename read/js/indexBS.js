@@ -250,11 +250,6 @@ async function buildSutta(slug) {
         });
       }
 
-
-    // Заголовки и мета
-    let cleanSlug = slug.replace(/pli-tv-|vb-/g, '');
-    document.title = `${cleanSlug}`;
-    
     toggleThePali();
     if (typeof generateThirdPartyLinks === 'function') {
       scLink += generateThirdPartyLinks(slug, slugReady, texttype, translator);

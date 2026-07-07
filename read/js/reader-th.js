@@ -291,32 +291,7 @@ async function buildSutta(slug) {
         });
       }
 
-      const pageTitleElement = document.querySelector("h1.sutta-title");
-      let pageTitle = '';
-
-      if (pageTitleElement) {
-        let text = pageTitleElement.textContent;
-        const paliLettersRegex = /[a-zāīūṭḍñṃṁṅṇśṣ\s]/gi;
-        const filtered = text.match(paliLettersRegex);
-        if (filtered) {
-          pageTitle = filtered.join('');
-        }
-      }
-
-      let cleanSlug = slug.replace(/pli-tv-|vb-/g, '');
-      document.title = `${cleanSlug} ${pageTitle}`.trim();
-
-      var metaDescription = document.createElement('meta');
-      metaDescription.name = 'description';
-      metaDescription.content = document.title;
-      document.head.appendChild(metaDescription);
-
-      var ogDescriptionMeta = document.createElement('meta');
-      ogDescriptionMeta.property = 'og:description';
-      ogDescriptionMeta.content = document.title;
-      document.head.appendChild(ogDescriptionMeta);
-
-      toggleThePali();
+          toggleThePali();
 
       if (typeof generateThirdPartyLinks === 'function') {
           scLink += generateThirdPartyLinks(slug, slugReady, texttype, translator);

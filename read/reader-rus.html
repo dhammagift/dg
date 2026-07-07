@@ -27,7 +27,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#000000">
 
-  <title>Dhamma.gift Read - Учение Будды. Дхамма, Сутты, Виная</title>
+<title>Dhamma.gift Read - Учение Будды. Дхамма, Сутты, Виная</title>
+<script>
+  (function() {
+    const q = new URLSearchParams(window.location.search).get('q');
+    if (q) {
+      const cleanSlug = q.replace(/pli-tv-|vb-/g, '');
+      document.title = cleanSlug;
+    }
+  })();
+</script>
 <link rel="manifest" href="/ru/manifest.php">
   <meta name="keywords" content="Будда, Buddha, Дхамма, Дхарма, Виная, поиск, Сутта, Сутты, Суттапитака, Винаяпитака, suttapitaka, vinayapitaka Пали, Палийский канон, буддизм, dhamma, sutta, Buddhism, pali Canon, патимоккха, пратимокша, patimokkha, pratimoksasutra, ">
   <meta name="description" content="Точный поиск в Учении Будды, в Пали Суттах и Винае. Поисковый Сайт Освобождения." />

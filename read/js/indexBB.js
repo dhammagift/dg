@@ -476,30 +476,6 @@ if (typeof window.setupVariantVisibility === 'function') {
         });
       }
 
-      const pageTitleElement = document.querySelector("h1.sutta-title");
-      let pageTitle = '';
-      if (pageTitleElement) {
-        let text = pageTitleElement.textContent;
-        const paliLettersRegex = /[a-zāīūṭḍñṃṁṅṇśṣ\s]/gi;
-        const filtered = text.match(paliLettersRegex);
-        if (filtered) pageTitle = filtered.join('');
-      }
-
-      if (typeof slug === 'string') {
-        let cleanSlug = slug.replace(/pli-tv-|vb-/g, '');
-        document.title = `${cleanSlug} ${pageTitle}`.trim();
-      }
-          
-      var metaDescription = document.createElement('meta');
-      metaDescription.name = 'description';
-      metaDescription.content = document.title;
-      document.head.appendChild(metaDescription);
-
-      var ogDescriptionMeta = document.createElement('meta');
-      ogDescriptionMeta.property = 'og:description';
-      ogDescriptionMeta.content = document.title;
-      document.head.appendChild(ogDescriptionMeta);
-
       toggleThePali();
 
       // === ГЕНЕРАЦИЯ ССЫЛОК (DPR, BJT, SC, BB, TBW, Th.ru, Th.su) ИЗ COMMON.JS ===

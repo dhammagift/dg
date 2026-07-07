@@ -687,6 +687,7 @@ function loadText() {
   console.log('pliUrl ' + pliUrl) ;
   console.log('enUrl ' + enUrl) ;
 
+
   // Загружаем список переводчиков из JSON файла
   fetch('/assets/js/translators.json')
     .then(response => {
@@ -694,12 +695,18 @@ function loadText() {
       return response.json();
     })
     .then(translatorsData => {
-      // Функция для последовательного перебора вариантов русского перевода на основе загруженного списка
+      // Функция для последовательного перебора вариантов русского перевода
       const trimmedUrlForRu = pliUrl.match(/\/(sutta|vinaya)\/.*/)[0];
-      const baseUrlRu = `/assets/texts/ru${trimmedUrlForRu.split('_')[0]}`;
+      const pathPart = trimmedUrlForRu.split('_')[0];
       
       const ruTranslatorsKeys = Object.keys(translatorsData.ru || {});
-      const ruUrlsToTry = ruTranslatorsKeys.map(key => `${baseUrlRu}_translation-ru-${key}.json`);
+      
+      // Формируем список путей для левой колонки (и ru, и ru_other)
+      let ruUrlsToTry = [];
+      ruTranslatorsKeys.forEach(key => {
+          ruUrlsToTry.push(`/assets/texts/ru${pathPart}_translation-ru-${key}.json`);
+          ruUrlsToTry.push(`/assets/texts/ru_other${pathPart}_translation-ru-${key}.json`);
+      });
 
       async function fetchRuData() {
           for (const url of ruUrlsToTry) {
@@ -795,15 +802,21 @@ function loadText() {
           }
 
           newLoadBtn.addEventListener('click', async function() {
-              // Формируем базовый путь для русских текстов на основе палийского урла
               const trimmedUrl = pliUrl.match(/\/(sutta|vinaya)\/.*/)[0];
-              const baseUrl = `/assets/texts/ru${trimmedUrl.split('_')[0]}`;
+              const pathPart = trimmedUrl.split('_')[0];
               
-              // Создаем массив путей для проверки, опираясь на загруженный translators.json
-              let urlsToTest = ruTranslatorsKeys.map(key => ({
-                  name: key,
-                  url: `${baseUrl}_translation-ru-${key}.json`
-              }));
+              // Создаем массив путей для проверки, включая обе папки
+              let urlsToTest = [];
+              ruTranslatorsKeys.forEach(key => {
+                  urlsToTest.push({
+                      name: `${key} (ru)`,
+                      url: `/assets/texts/ru${pathPart}_translation-ru-${key}.json`
+                  });
+                  urlsToTest.push({
+                      name: `${key} (ru_other)`,
+                      url: `/assets/texts/ru_other${pathPart}_translation-ru-${key}.json`
+                  });
+              });
 
               // Визуальный индикатор поиска на кнопке
               const originalBtnHtml = newLoadBtn.innerHTML;
@@ -824,38 +837,73 @@ function loadText() {
                   return;
               }
 
-              let selectedUrl = null;
-
               if (availableOptions.length === 1) {
                   // Если файл всего один, скачиваем его без лишних вопросов
-                  selectedUrl = availableOptions[0].url;
+                  loadSelectedFile(availableOptions[0].url);
               } else {
-                  // Выводим системный prompt, если вариантов несколько
-                  let selectionMessage = 'Выберите перевод:\n';
-                  availableOptions.forEach((option, index) => {
-                      selectionMessage += `${index + 1}: ${option.name}\n`;
-                  });
-
-                  const userChoice = prompt(selectionMessage);
-                  
-                  if (userChoice === null) return; // Нажали "Отмена"
-                  
-                  const choiceIndex = parseInt(userChoice) - 1;
-                  if (choiceIndex >= 0 && choiceIndex < availableOptions.length) {
-                      selectedUrl = availableOptions[choiceIndex].url;
-                  } else {
-                      alert("Неверный выбор.");
-                      return;
-                  }
+                  // Если вариантов несколько, показываем современное модальное окно
+                  showModernSelectionModal(availableOptions);
               }
 
-              // Непосредственно скачивание выбранного JSON
-              if (selectedUrl) {
+              // Функция генерации и показа модального окна
+              function showModernSelectionModal(options) {
+                  // Удаляем старое окно, если оно почему-то осталось в DOM
+                  const existingModal = document.getElementById('modernFileSelectModal');
+                  if (existingModal) existingModal.remove();
+
+                  // Создаем чистую структуру окна
+                  const modalHtml = `
+                  <div class="modal fade" id="modernFileSelectModal" tabindex="-1" aria-hidden="true">
+                      <div class="modal-dialog modal-dialog-centered">
+                          <div class="modal-content">
+                              <div class="modal-header border-bottom-0">
+                                  <h5 class="modal-title">Выберите версию перевода</h5>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body pt-0">
+                                  <ul class="server-file-list" id="serverFileList">
+                                      ${options.map(opt => `
+                                          <li data-url="${opt.url}">
+                                              <i class="fa-solid fa-file-code"></i>
+                                              <span>Переводчик: <strong>${opt.name}</strong></span>
+                                          </li>
+                                      `).join('')}
+                                  </ul>
+                              </div>
+                          </div>
+                      </div>
+                  </div>`;
+
+                  // Вставляем окно в конец body
+                  document.body.insertAdjacentHTML('beforeend', modalHtml);
+                  const modalElement = document.getElementById('modernFileSelectModal');
+                  const bsModal = new bootstrap.Modal(modalElement);
+
+                  // Обработка клика по элементу списка
+                  const listItems = modalElement.querySelectorAll('#serverFileList li');
+                  listItems.forEach(item => {
+                      item.addEventListener('click', function() {
+                          const selectedUrl = this.getAttribute('data-url');
+                          bsModal.hide(); // Прячем окно
+                          loadSelectedFile(selectedUrl); // Запускаем загрузку
+                      });
+                  });
+
+                  // Полная очистка DOM после закрытия окна
+                  modalElement.addEventListener('hidden.bs.modal', function () {
+                      modalElement.remove();
+                  });
+
+                  bsModal.show();
+              }
+
+              // Функция загрузки выбранного файла
+              async function loadSelectedFile(selectedUrl) {
                   try {
                       newLoadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
                       const response = await fetch(selectedUrl);
                       if (response.ok) {
-                          const content = await response.text(); // Забираем как сырой текст
+                          const content = await response.text(); 
                           document.getElementById('translationInput').value = content;
                           
                           // Уведомление (Toast) об успехе
@@ -867,6 +915,12 @@ function loadText() {
                               toastText.textContent = `Загружен: ${selectedUrl.split('/').pop()}`;
                               new bootstrap.Toast(toastEl, { autohide: true }).show();
                           }
+
+                          // Синхронизация текста в таблицу, если это необходимо
+                          if (typeof syncTextToTable === 'function') {
+                              syncTextToTable();
+                          }
+                          
                       } else {
                           throw new Error('Network response was not ok');
                       }
@@ -1179,6 +1233,7 @@ function loadText() {
     })
     .catch(error => console.error('Error loading translators.json:', error));
 }
+
 
 function ifKn(indexValue) {
   let beforeDot = "";
