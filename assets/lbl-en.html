@@ -838,7 +838,7 @@ function loadText() {
                       let scMiddlePath = indexValue.match(/dn|mn/) ? `${lettersOnly}/` : `${lettersOnly}/${beforeDot}/`;
                       scMiddlePath = scMiddlePath.replace(/\/+/g, '/'); // защита от двойных слешей
 
-                      urlsToTest.push({ name: "Unpublished", url: `/assets/texts/lbl/sutta/${scMiddlePath}${indexValue}_translation-en-thanissaro.json` });
+                      urlsToTest.push({ name: "Unpublished", url: `/assets/texts/lbl/${indexValue}_translation-en-thanissaro.json` });
                       urlsToTest.push({ name: "Thanissaro", url: `/assets/texts/en_other/sutta/${scMiddlePath}${indexValue}_translation-en-thanissaro.json` });
                       urlsToTest.push({ name: "o", url: `/assets/texts/en/sutta/${scMiddlePath}${indexValue}_translation-en-o.json` });
                       urlsToTest.push({ name: "Sujato", url: `/suttacentral.net/sc-data/sc_bilara_data/translation/en/sujato/sutta/${scMiddlePath}${indexValue}_translation-en-sujato.json` });
@@ -884,7 +884,7 @@ function loadText() {
                       <div class="modal-dialog modal-dialog-centered">
                           <div class="modal-content">
                               <div class="modal-header border-bottom-0">
-                                  <h5 class="modal-title">Выберите версию перевода</h5>
+                                  <h5 class="modal-title">Choose trn version</h5>
                                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                               </div>
                               <div class="modal-body pt-0">
@@ -892,7 +892,7 @@ function loadText() {
                                       ${options.map(opt => `
                                           <li data-url="${opt.url}">
                                               <i class="fa-solid fa-file-code"></i>
-                                              <span>Переводчик: <strong>${opt.name}</strong></span>
+                                              <span>Translatiion: <strong>${opt.name}</strong></span>
                                           </li>
                                       `).join('')}
                                   </ul>

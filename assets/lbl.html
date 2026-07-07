@@ -801,12 +801,29 @@ function loadText() {
               }
           }
 
-          newLoadBtn.addEventListener('click', async function() {
+             newLoadBtn.addEventListener('click', async function() {
               const trimmedUrl = pliUrl.match(/\/(sutta|vinaya)\/.*/)[0];
               const pathPart = trimmedUrl.split('_')[0];
               
-              // Создаем массив путей для проверки, включая обе папки
               let urlsToTest = [];
+
+              // 1. Проверяем папку lbl на наличие файлов от всех известных переводчиков
+              ruTranslatorsKeys.forEach(key => {
+                  urlsToTest.push({
+                      name: `${key} (lbl)`,
+                      url: `/assets/texts/lbl/${indexValue}_translation-ru-${key}.json`
+                  });
+              });
+
+              // 2. Добавляем специфичные варианты сохранения в lbl (если их нет в общем списке)
+              if (!ruTranslatorsKeys.includes('o')) {
+                  urlsToTest.push({ name: `o (lbl)`, url: `/assets/texts/lbl/${indexValue}_translation-ru-o.json` });
+              }
+              if (!ruTranslatorsKeys.includes('sv+edited+o')) {
+                  urlsToTest.push({ name: `sv+edited+o (lbl)`, url: `/assets/texts/lbl/${indexValue}_translation-ru-sv+edited+o.json` });
+              }
+
+              // 3. Проверяем основные папки ru и ru_other
               ruTranslatorsKeys.forEach(key => {
                   urlsToTest.push({
                       name: `${key} (ru)`,
@@ -932,7 +949,6 @@ function loadText() {
                   }
               }
           });
-
 
           // Клонируем таблицу для сброса старых слушателей клика (защита от дублирования событий)
           const tableBodyEl = document.getElementById('outputTableBody');
