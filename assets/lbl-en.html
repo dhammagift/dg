@@ -54,7 +54,7 @@
                 </div>
                 
                 <div>
-                    <input style="width: 150px;" type="search" onclick="loadAndCheckRanges()" class="form-control input-sm mb-2" id="indexInput" title="Text Index, e.g., sn56.11, an3.70, sn23.1, etc." placeholder="Sutta Number">   
+                    <input style="width: 150px;" type="search" onclick="loadAndCheckRanges()" class="form-control input-sm mb-2" id="indexInput" title="Text Index, e.g., sn56.11, an3.70, sn23.1, etc." placeholder="Sutta Number" autofocus>   
                 </div>
 
 <div class="input-group-append ms-1">
@@ -1813,9 +1813,9 @@ function syncTextToTable() {
 
   const translationLines = textarea.value.split('\n');
   const rows = tableBody.rows;
-  const rowCount = rows.length;
 
-  for (let i = 0; i < rowCount; i++) {
+  // Обновляем существующие ряды
+  for (let i = 0; i < rows.length; i++) {
     const currentText = translationLines[i] || '';
     const cell = rows[i].cells[2]; 
     
@@ -1823,6 +1823,25 @@ function syncTextToTable() {
       if (cell.textContent !== currentText) {
         cell.textContent = currentText;
       }
+    }
+  }
+
+  // Добавляем новые ряды для дополнительных строк из текстового окна
+  while (rows.length < translationLines.length) {
+    const i = rows.length;
+    const extraText = translationLines[i] || '';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td></td><td></td><td>${extraText}</td><td><a href="#" onmousedown="gotoLine(${i + 1})"><i class="fa-solid fa-link"></i></a></td>`;
+    tableBody.appendChild(tr);
+  }
+
+  // Удаляем ряды с конца, если строк стало меньше и это пустые ряды (без оригинального текста)
+  while (rows.length > translationLines.length) {
+    const lastRow = rows[rows.length - 1];
+    if (lastRow.cells[0].textContent.trim() === '') {
+        lastRow.remove();
+    } else {
+        break; 
     }
   }
 }

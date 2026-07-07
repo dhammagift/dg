@@ -1765,23 +1765,23 @@ function getPlayerHtml() {
         </a>
 
         <div class="tts-controls-row">
-            <a href="javascript:void(0)" class="prev-main-button tts-icon-btn">
+            <a href="javascript:void(0)" title="← ↑" class="prev-main-button tts-icon-btn">
                 <img src="/assets/svg/backward-step.svg" class="tts-icon backward" width="20">
             </a>
-            <a href="javascript:void(0)" class="play-main-button tts-icon-btn large">
+            <a href="javascript:void(0)" title="Space" class="play-main-button tts-icon-btn large">
                 <img src="/assets/svg/play-grey.svg" class="tts-icon play" width="34">
             </a>
-            <a href="javascript:void(0)" class="next-main-button tts-icon-btn">
+            <a href="javascript:void(0)" title="→ ↓" class="next-main-button tts-icon-btn">
                 <img src="/assets/svg/forward-step.svg" class="tts-icon forward" width="20">
             </a>
         </div>
 
-        <a href="javascript:void(0)" class="tts-top-btn close-tts-btn">&times;</a>
+        <a href="javascript:void(0)" title="Esc" class="tts-top-btn close-tts-btn">&times;</a>
     </div>
     
     <div id="tts-settings-panel">
           <div id="tts-basic-settings">
-              <select id="tts-mode-select" class="tts-mode-select">
+              <select title="Num Key (1-4)" id="tts-mode-select" class="tts-mode-select">
                 ${Object.entries(modeLabels).map(([val, label]) =>
                   `<option value="${val}" ${savedMode === val ? 'selected' : ''}>${label}</option>`
                 ).join('')}
@@ -1797,7 +1797,7 @@ function getPlayerHtml() {
 
               <div class="tts-toggles-row">
                 <label class="tts-checkbox-custom">
-                  <input type="checkbox" id="tts-scroll-toggle" ${ttsState.autoScroll ? 'checked' : ''}>
+                  <input title="on/off (S)" type="checkbox" id="tts-scroll-toggle" ${ttsState.autoScroll ? 'checked' : ''}>
                   Scroll
                 </label>
                 <label class="tts-checkbox-custom">
@@ -2860,7 +2860,87 @@ document.addEventListener('keydown', (e) => {
     const isActive = player && player.classList.contains('active');
     if (!isActive) return;
 
-    // Перехватываем клавиши ТОЛЬКО если включен автоскролл
+    // Определяем язык для бабл-уведомлений
+    const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
+
+    // 1. Горячая клавиша: S (Автоскролл)
+    if (e.code === 'KeyS') {
+        e.preventDefault();
+        ttsState.autoScroll = !ttsState.autoScroll;
+        localStorage.setItem(SCROLL_STORAGE_KEY, ttsState.autoScroll);
+        
+        const scrollToggle = document.getElementById('tts-scroll-toggle');
+        if (scrollToggle) scrollToggle.checked = ttsState.autoScroll;
+        
+        if (typeof showBubbleNotification === 'function') {
+            const msg = ttsState.autoScroll 
+                ? (isRu ? 'Автоскролл: Вкл' : 'Autoscroll: On') 
+                : (isRu ? 'Автоскролл: Выкл' : 'Autoscroll: Off');
+            showBubbleNotification(msg);
+        }
+        return;
+    }
+
+    // 2. Горячие клавиши: 1, 2, 3, 4 (Режимы TTS)
+    if (['Digit1', 'Digit2', 'Digit3', 'Digit4'].includes(e.code)) {
+        e.preventDefault();
+        
+        let newMode = '';
+        if (e.code === 'Digit1') newMode = 'pi';
+        else if (e.code === 'Digit2') newMode = 'pi-trn';
+        else if (e.code === 'Digit3') newMode = 'trn';
+        else if (e.code === 'Digit4') newMode = 'trn-pi';
+
+        if (newMode) {
+            localStorage.setItem(MODE_STORAGE_KEY, newMode);
+            const modeSelect = document.getElementById('tts-mode-select');
+            
+            if (modeSelect) {
+                modeSelect.value = newMode;
+                modeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            if (typeof showBubbleNotification === 'function') {
+                const modeLabelsRu = { 'pi': 'Пали', 'pi-trn': 'Пали + Рус', 'trn': 'Перевод', 'trn-pi': 'Рус + Пали' };
+                const modeLabelsEn = { 'pi': 'Pāḷi', 'pi-trn': 'Pāḷi + Trn', 'trn': 'Translation', 'trn-pi': 'Trn + Pāḷi' };
+                const msg = isRu ? ('Режим: ' + modeLabelsRu[newMode]) : ('Mode: ' + modeLabelsEn[newMode]);
+                showBubbleNotification(msg);
+            }
+        }
+        return;
+    }
+
+    // 3. Горячие клавиши: -, + (Скорость) и R (Сброс скорости)
+    if (['Minus', 'Equal', 'KeyR'].includes(e.code)) {
+        e.preventDefault();
+        const rateSelect = document.getElementById('tts-rate-select');
+        if (rateSelect) {
+            const options = Array.from(rateSelect.options).map(o => parseFloat(o.value));
+            const currentIndex = options.indexOf(parseFloat(rateSelect.value));
+            
+            let nextIndex = currentIndex;
+            
+            if (e.code === 'Minus') nextIndex = Math.max(0, currentIndex - 1);
+            else if (e.code === 'Equal') nextIndex = Math.min(options.length - 1, currentIndex + 1);
+            else if (e.code === 'KeyR') {
+                // Ищем индекс для 1.0, если его нет — берем средний или первый
+                const defaultIdx = options.indexOf(1.0);
+                nextIndex = defaultIdx !== -1 ? defaultIdx : 0;
+            }
+            
+            if (nextIndex !== currentIndex) {
+                rateSelect.value = options[nextIndex];
+                rateSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                
+                if (typeof showBubbleNotification === 'function') {
+                    showBubbleNotification((isRu ? 'Скорость: ' : 'Speed: ') + rateSelect.value + 'x');
+                }
+            }
+        }
+        return;
+    }
+
+    // 4. Стандартное управление плеером
     if (!ttsState.autoScroll) return;
 
     switch(e.code) {
@@ -2885,6 +2965,7 @@ document.addEventListener('keydown', (e) => {
             break;
     }
 });
+
 
 // --- Закрытие настроек плеера при клике в пустое место ---
 document.addEventListener('click', (e) => {
