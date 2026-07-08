@@ -3,6 +3,7 @@
 # https://drive.google.com/drive/folders/17DZmO3PaN_bXPyDuQGRkX4dcYQ0tXhe8
 #or
 # git clone https://github.com/thebuddhaswords/BW1
+#git clone https://github.com/sasanarakkha/tbw-ebt.git
 
 #from /var/www/html or other DG rootdir
 cd ../offline-data/
@@ -11,11 +12,22 @@ mkdir theBuddhasWords
 cd  theBuddhasWords
 git clone https://github.com/thebuddhaswords/BW1 ./ 
 rm -rf .git*
+rm -rf .claude/
+rm -rf .agents
+rm CLAUDE.md
+rm AGENTS.md
+
+#check it out
+https://github.com/frankksutta/s.4nt
 
 #fix control panel
 grep "top: 15px" css/css.css
 sed -i  "s@top: 15px@bottom: 15px@" css/css.css
 grep "bottom: 15px" css/css.css
+
+#fix colors for dark AMOLED style
+sed -i "s/2A1E14/000/g" css/css.css
+sed -i "s/3D2B1A/000/g" css/css.css
 
 #fix font
 grep 'font: normal normal 1.15em/1.3em "URWPalladioITU", serif;' css/css.css
@@ -33,7 +45,7 @@ textindex=$(echo "$i" | awk -F'/' '{print $NF}' | sed 's/.html//g');
 
 sed -i \
   -e '/<\/body>/i\<script>document.addEventListener("click",e=>{if(e.target.closest("a.dg-link")){e.preventDefault();const s=new URLSearchParams(window.location.search).get("s");window.location.href=e.target.closest("a").href+(s?`&s=${encodeURIComponent(s)}`:"");}})<\/script>' \
-  -e "/<li>.*Translated/s|<li>|<li><a class=\"dg-link\" href=\"/r/?q=$textindex\">DG</a> <a class=\"dg-link\" href=\"/b/?q=$textindex\">BB</a> <a href=\"https://thebuddhaswords.net/$i\">TBW</a> <a href=\"https://suttacentral.net/$textindex\">SC</a> |" \
+  -e "/<li>.*Translated/s|<li>|<li><a class=\"dg-link\" href=\"/r/?q=$textindex\">DG</a> <a class=\"dg-link\" href=\"/b/?q=$textindex\">BB</a> <a href=\"https://thebuddhaswords.net/$i\">TBW</a> |" \
   "$i"
 done
 
