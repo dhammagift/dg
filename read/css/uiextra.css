@@ -286,12 +286,21 @@
         font-weight: bold;
   }  
 
+  .common-size-icon3 {
+    margin-top: -3px; 
+  margin-left: 0px;	
+    height: 25px; 
+    width: 22px;
+  }
+
+
   .common-size-icon4 {
     margin-top: -3px; 
   margin-left: 6px;	
     height: 25px; 
     width: 22px;
   }
+
 
 
 /* === Базовые стили для всех режимов === */

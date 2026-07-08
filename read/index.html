@@ -174,9 +174,11 @@ function cleanPaliText(text) {
         </a>
     </div>
 
-    <div class="d-none">
-        <a id="toggle-compass" href="javascript:void(0);" onclick="toggleQuickModal()"></a>
-    </div>
+<div class="icon-button">
+    <a id="toggle-compass" title="Favorites / History (Alt+P)" href="javascript:void(0);" onclick="toggleQuickModal()">
+        <img class="common-size-icon3" src="/assets/svg/compass.svg" alt="Favorites">
+    </a>
+</div>
 
     <a alt="Settings" title="Settings (Alt+S)" id="settingsButton" data-bs-toggle="modal" data-bs-target="#settings" href="javascript:void(0);" class="toggle-icon text-decoration-none text-muted">
       <img id="gearRead" src="/assets/svg/gear.svg" class="common-size-icon4">
@@ -282,6 +284,18 @@ Enable/disable dictionary. Click on a word to activate. <a href="/assets/common/
 </div>
 
 <div class="row align-items-center mb-2">
+  <div class="col-auto">
+    <img src="/assets/svg/compass.svg" class="common-size-icon4">
+  </div>
+  <div class="col-auto">
+    <strong>Alt+P</strong>
+  </div>
+  <div class="col">
+    Toggle Favorites / History Multi-Tool window
+  </div>
+</div>
+
+<div class="row align-items-center mb-2">
 <div class="col-auto">
 <img id="" src="/assets/svg/gear.svg" class="common-size-icon4"></img>
 </div>
@@ -380,8 +394,8 @@ Activate search bar
 <h3 class="text-start mt-2">Links Menu</h3>
 <div class="mb-2">
 <div class="row align-items-center mb-2">
-<div class="col-3"><a href="#">R+E</a></div>
-<div class="col-9">read in Pali, Russian, English</div>
+<div class="col-3"><a href="#">E+E</a></div>
+<div class="col-9">read in Pali, English, English other variant</div>
 </div>
 <div class="row align-items-center mb-2">
 <div class="col-3"><a href="#">Ru / En</a></div>
@@ -389,16 +403,23 @@ Activate search bar
 </div>
 <div class="row align-items-center mb-2">
 <div class="col-3"><a href="#">DPR</a></div>
-<div class="col-9">open on DigitalPaliReader.online</div>
+<div class="col-9">open Thai and Myanmar editions on DigitalPaliReader.online</div>
 </div>
+<div class="row align-items-center mb-2">
+<div class="col-3"><a href="#">BJT</a></div>
+<div class="col-9">open Sri Lankian edition on Tipitaka.lk</div>
+</div>
+
+<div class="row align-items-center mb-2">
+<div class="col-3"><a href="#">Voice</a></div>
+<div class="col-9">Listen Pali and translations Text-to-speech</div>
+</div>
+
 <div class="row align-items-center mb-2">
 <div class="col-3"><a href="#">SC.net</a></div>
 <div class="col-9">on SuttaCentral.net</div>
 </div>
-<div class="row align-items-center mb-2">
-<div class="col-3"><a href="#">Voice</a></div>
-<div class="col-9">Listen Pali and other TTS (Text-to-speech) options</div>
-</div>
+
 <div class="row align-items-center mb-2">
 <div class="col-3"><a href="#">TBW</a></div>
 <div class="col-9">on TheBuddhasWords.net</div>
@@ -417,7 +438,7 @@ Variant abbreviations: <strong>ms, pts1ed, sya-all, mr</strong> etc. in <a href=
 </button>
   
 <button class="btn btn-sm btn-light border-secondary mb-2 rounded-pill" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInterfaces" aria-expanded="false" aria-controls="collapseInterfaces">
-More help
+Links Description
 </button>
 <button type="button" class="btn mb-2 btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Close</button>
 </div>

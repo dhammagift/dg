@@ -1041,8 +1041,8 @@ document.addEventListener("keydown", (event) => {
  
     // Обработчик для Alt+P в любой раскладке
   // Проверяем Alt и физическое расположение клавиши P (код KeyP)
-  if (event.altKey && event.code === "KeyP") {
-    event.preventDefault();
+if (event.altKey && (event.code === "KeyP" || event.code === "KeyY")) { 
+  event.preventDefault();
     toggleQuickModal();
   }
 

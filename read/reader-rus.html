@@ -154,8 +154,10 @@ function cleanPaliText(text) {
     </a>
 </div>
 
-<div class="d-none">
-    <a id="toggle-compass" href="javascript:void(0);" onclick="toggleQuickModal()"></a>
+<div class="icon-button">
+    <a id="toggle-compass" title="Избранное / История (Alt+P)" href="javascript:void(0);" onclick="toggleQuickModal()">
+        <img class="common-size-icon3" src="/assets/svg/compass.svg" alt="Избранное">
+    </a>
 </div>
 
 <a title="Настройки (Alt+S)" id="settingsButton" data-bs-toggle="modal" data-bs-target="#settings" href="javascript:void(0);" class="toggle-icon text-decoration-none text-muted">
@@ -262,6 +264,19 @@ function cleanPaliText(text) {
 </div>
 
 <div class="row align-items-center mb-2">
+  <div class="col-auto">
+    <img src="/assets/svg/compass.svg" class="common-size-icon4">
+  </div>
+  <div class="col-auto">
+    <strong>Alt+P</strong>
+  </div>
+  <div class="col">
+    Показать/Скрыть мульти функциональное окно "Избранное / История"
+  </div>
+</div>
+
+
+<div class="row align-items-center mb-2">
 <div class="col-auto">
 <img id="" src="/assets/svg/gear.svg" class="common-size-icon4"></img>
 </div>
@@ -361,6 +376,11 @@ function cleanPaliText(text) {
 <div class="mb-2">
 
 <div class="row align-items-center mb-2">
+<div class="col-3"><a href="#">R+R</a></div>
+<div class="col-9">читать на Пали + Рус + Рус доп вариант</div>
+</div>
+
+<div class="row align-items-center mb-2">
 <div class="col-3"><a href="#">R+E</a></div>
 <div class="col-9">читать на Пали + Рус + Англ</div>
 </div>
@@ -372,17 +392,24 @@ function cleanPaliText(text) {
 
 <div class="row align-items-center mb-2">
 <div class="col-3"><a href="#">DPR</a></div>
-<div class="col-9">открыть в DigitalPaliReader.online</div>
+<div class="col-9">Тайская и Бирманская редакции Пали Канона на DigitalPaliReader.online</div>
+</div>
+
+<div class="row align-items-center mb-2">
+<div class="col-3"><a href="#">BJT</a></div>
+<div class="col-9">Шри Ланкийская редакция Пали Канона на Tipitaka.lk</div>
+</div>
+
+<div class="row align-items-center mb-2">
+<div class="col-3"><a href="#">Voice</a></div>
+<div class="col-9">Слушать Пали и Переводы Текст-в-речь (Text-to-speech)</div>
 </div>
 
 <div class="row align-items-center mb-2">
 <div class="col-3"><a href="#">SC.net</a></div>
 <div class="col-9">на SuttaCentral.net</div>
 </div>
-<div class="row align-items-center mb-2">
-<div class="col-3"><a href="#">Voice</a></div>
-<div class="col-9">Слушать Пали и др TTS (Text-to-speech) опции</div>
-</div>
+
 <div class="row align-items-center mb-2">
 <div class="col-3"><a href="#">TBW</a></div>
 <div class="col-9">на TheBuddhasWords.net</div>
@@ -399,7 +426,7 @@ function cleanPaliText(text) {
 <div class="modal-footer">
 <div class="text-end">
  <button type="button" class="btn mb-2 btn-secondary btn-sm rounded-pill"><a class="text-decoration-none text-reset" href="/ru/#contacts">Нашли ошибку?</a></button>
-<button class="btn mb-2 btn-sm btn-light border-secondary rounded-pill" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInterfaces" aria-expanded="false" aria-controls="collapseInterfaces">Еще помощь</button>
+<button class="btn mb-2 btn-sm btn-light border-secondary rounded-pill" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInterfaces" aria-expanded="false" aria-controls="collapseInterfaces">Описание Ссылок</button>
 <button type="button" class="btn mb-2 btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Закрыть</button>
 </div>
 </div>

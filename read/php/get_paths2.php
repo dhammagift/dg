@@ -199,14 +199,14 @@ if (file_exists($trJsonPath)) {
 
 
 echo json_encode([
-    'slug' => $slug,
-    'slugReady' => $slugReady,
-    'texttype' => $texttype,
+    'slug' => $slug, // виная не работает. возвращает полный слаг но не возвращает пути и тп. и нужно будет чтобы принимало и полный и короткие слаги по винае. pj1 bu-pj1 pli-tv-bu-vb-pj1, для бхиккхуни начиная с bi-
+  //  'slugReady' => $slugReady,
+    'texttype' => $texttype, //где это пригодится? 
     'html' => $htmlUrl,
     'pali_main' => $rootPali,
-    'pali_alt' => $altPali,
-    'variant_local' => $varLocalUrl,
-    'variant_sc' => $varScUrl,
+    'pali_alt' => $altPali,   //может отдавать сразу? 
+    'variant_local' => $varLocalUrl, //возможно нужно отдавать только один. 
+    'variant_sc' => $varScUrl, //убрать sc из параметров
     'translations' => [
         'ru' => $ruTranslations,
         'en' => $enTranslations,
