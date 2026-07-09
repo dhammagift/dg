@@ -1,0 +1,199 @@
+const fs = require('fs').promises;
+const path = require('path');
+
+// === Конфигурация ===
+const rootPath = '/var/www/html/suttacentral.net/sc-data/sc_bilara_data/root/';
+const translationPath = '/var/www/html/suttacentral.net/sc-data/sc_bilara_data/translation/';
+const htmlPath = '/var/www/html/suttacentral.net/sc-data/sc_bilara_data/html/';
+const variantPath = '/var/www/html/suttacentral.net/sc-data/sc_bilara_data/variant/';
+const textInfoPath = '/var/www/html/new/nodejs/textinfo.js'; 
+const outputFile = path.join(__dirname, 'dg_db.json');
+
+const targetLanguages = ['en', 'ru', 'de', 'ko'];
+
+async function loadTextInfo(filePath) {
+    try {
+        const content = await fs.readFile(filePath, 'utf8');
+        const jsonString = content.replace(/^(var|let|const)\s+\w+\s*=\s*/, '').replace(/;[\s]*$/, '');
+        return JSON.parse(jsonString);
+    } catch (error) {
+        console.warn(`Файл textinfo.js не найден или ошибка парсинга:`, error.message);
+        return {};
+    }
+}
+
+async function compileLocalDatabase() {
+    const db = {}; 
+    const textInfoData = await loadTextInfo(textInfoPath);
+
+    async function walkDirectory(currentDir, callback) {
+        let items;
+        try {
+            // Читаем директорию без withFileTypes, получаем только имена
+            items = await fs.readdir(currentDir);
+        } catch (error) {
+            return;
+        }
+
+        for (const item of items) {
+            const fullPath = path.join(currentDir, item);
+            try {
+                // fs.stat автоматически переходит по символическим ссылкам
+                const stat = await fs.stat(fullPath);
+                
+                if (stat.isDirectory()) {
+                    await walkDirectory(fullPath, callback);
+                } else if (stat.isFile() && fullPath.endsWith('.json')) {
+                    await callback(fullPath, item);
+                }
+            } catch (err) {
+                // Игнорируем битые симлинки и проблемы с правами доступа
+            }
+        }
+    }
+
+    async function readJson(filePath) {
+        try {
+            const content = await fs.readFile(filePath, 'utf8');
+            return JSON.parse(content);
+        } catch (e) {
+            return {};
+        }
+    }
+
+    console.log('1. Обработка корневых текстов (Root), определение заголовков и категорий...');
+    await walkDirectory(rootPath, async (fullPath, fileName) => {
+        const suttaId = fileName.split('_')[0];
+        
+        if (!db[suttaId]) {
+            db[suttaId] = { 
+                category: 'other', 
+                titleSegmentId: '', 
+                titles: {}, 
+                mr: 0, 
+                segments: {} 
+            };
+            
+            if (textInfoData[suttaId] && textInfoData[suttaId].mtph) {
+                db[suttaId].mr = parseInt(textInfoData[suttaId].mtph, 10) || 0;
+            }
+        }
+
+        if (fullPath.includes('/vinaya/')) db[suttaId].category = 'vinaya';
+        else if (fullPath.includes('/sutta/kn/')) db[suttaId].category = 'khudakka';
+        else if (fullPath.includes('/sutta/')) db[suttaId].category = 'dhamma';
+        else if (fullPath.includes('/abhidhamma/')) db[suttaId].category = 'abhidhamma';
+
+        const data = await readJson(fullPath);
+        
+        let lastZeroSegment = '';
+        let foundText = false;
+
+        for (const [segmentId, text] of Object.entries(data)) {
+            if (typeof text === 'string' && text.trim()) {
+                db[suttaId].segments[segmentId] = {
+                    segment: segmentId,
+                    root_text: text, 
+                    html: '',
+                    variant: '',
+                    translations: {}
+                };
+
+                if (!foundText) {
+                    if (segmentId.match(/:0(?:\.\d+)?$/)) {
+                        lastZeroSegment = segmentId;
+                    } else if (segmentId.match(/:[1-9]/)) {
+                        foundText = true;
+                        if (lastZeroSegment) {
+                            db[suttaId].titleSegmentId = lastZeroSegment;
+                            db[suttaId].titles['root'] = data[lastZeroSegment];
+                        }
+                    }
+                }
+            }
+        }
+        
+        if (!foundText && lastZeroSegment && !db[suttaId].titleSegmentId) {
+            db[suttaId].titleSegmentId = lastZeroSegment;
+            db[suttaId].titles['root'] = data[lastZeroSegment];
+        }
+    });
+
+    console.log('2. Обработка HTML-разметки...');
+    await walkDirectory(htmlPath, async (fullPath, fileName) => {
+        const suttaId = fileName.split('_')[0];
+        if (!db[suttaId]) return;
+        const data = await readJson(fullPath);
+        for (const [segmentId, htmlTag] of Object.entries(data)) {
+            if (db[suttaId].segments[segmentId]) {
+                db[suttaId].segments[segmentId].html = htmlTag;
+            }
+        }
+    });
+
+    console.log('3. Обработка вариантов (Variants)...');
+    await walkDirectory(variantPath, async (fullPath, fileName) => {
+        const suttaId = fileName.split('_')[0];
+        if (!db[suttaId]) return;
+        const data = await readJson(fullPath);
+        for (const [segmentId, variantText] of Object.entries(data)) {
+            if (db[suttaId].segments[segmentId]) {
+                db[suttaId].segments[segmentId].variant = variantText;
+            }
+        }
+    });
+
+    console.log('4. Обработка переводов (Translations)...');
+    await walkDirectory(translationPath, async (fullPath, fileName) => {
+        const suttaId = fileName.split('_')[0];
+        if (!db[suttaId]) return;
+
+        const nameParts = fileName.replace('.json', '').split('-');
+        if (nameParts.length < 3) return;
+        
+        const langCode = nameParts[1];
+        if (targetLanguages.length > 0 && !targetLanguages.includes(langCode)) return; 
+
+        const transKey = `${langCode}_${nameParts.slice(2).join('-')}`;
+        const data = await readJson(fullPath);
+        
+        for (const [segmentId, transText] of Object.entries(data)) {
+            if (db[suttaId].segments[segmentId] && transText) {
+                db[suttaId].segments[segmentId].translations[transKey] = transText;
+            }
+            if (segmentId === db[suttaId].titleSegmentId && transText) {
+                db[suttaId].titles[transKey] = transText;
+            }
+        }
+    });
+
+    console.log('5. Форматирование и сортировка базы данных...');
+    const finalDatabase = {};
+    
+    const sortedSuttas = Object.keys(db).sort((a, b) => 
+        a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+    );
+
+    for (const suttaId of sortedSuttas) {
+        const segmentsArray = Object.values(db[suttaId].segments).sort((a, b) => 
+            a.segment.localeCompare(b.segment, undefined, { numeric: true, sensitivity: 'base' })
+        );
+        
+        if (segmentsArray.length > 0) {
+            finalDatabase[suttaId] = {
+                category: db[suttaId].category,
+                titles: db[suttaId].titles,
+                mr: db[suttaId].mr,
+                segments: segmentsArray
+            };
+        }
+    }
+
+    console.log(`Запись файла данных в ${outputFile}...`);
+    await fs.writeFile(outputFile, JSON.stringify(finalDatabase), 'utf8');
+    console.log('Сборка успешно завершена!');
+}
+
+compileLocalDatabase().catch(err => console.error('Критическая ошибка:', err));
+
+
