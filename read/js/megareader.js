@@ -588,7 +588,7 @@ window.addEventListener('popstate', (e) => {
 // ИНИЦИАЛИЗАЦИЯ И МАРШРУТИЗАЦИЯ (SPA Routing)
 // ==========================================
 async function initReader() {
-    // 1. Загрузка базы данных (как мы делали ранее)
+    // 1. Загрузка базы данных
     try {
         const response = await fetch('/nodejs/dg_db.json');
         window.MOBILE_DB = await response.json();
@@ -598,45 +598,38 @@ async function initReader() {
     }
 
     // 2. Читаем URL
-    // Получаем путь после домена, убираем первый слеш. 
-    // Пример: из "dhamma.gift/mn1" получим "mn1"
-    const pathQuery = window.location.pathname.substring(1).toLowerCase().trim();
-    
-    // Также оставляем поддержку старых ссылок с ?q=
+    // Игнорируем путь, если используется параметр ?q=, 
+    // либо берем корректную часть пути, если у вас ЧПУ
     const urlParams = new URLSearchParams(window.location.search);
     const searchParam = urlParams.get("q");
 
-    // Итоговый запрос: либо чистый путь, либо параметр ?q=
-    const query = pathQuery || searchParam;
+    // Если есть параметр ?q=, используем его, иначе пытаемся распарсить путь
+    const query = searchParam || window.location.pathname.split('/').filter(Boolean).pop();
 
     if (query) {
         // Заполняем инпут для удобства
-        if (typeof citation !== 'undefined') citation.value = query;
+        const citation = document.getElementById("paliauto");
+        if (citation) citation.value = query;
 
-        // 3. ЛОГИКА ВЫБОРА: Текст или Поиск?
-        // Нормализуем запрос (превращаем pj1 в bu-pj1 и т.д.)
+        // 3. ЛОГИКА ВЫБОРА: Текст или Поиск
         const normalizedSlug = window.normalizeSlugToDbKey ? window.normalizeSlugToDbKey(query) : query;
 
-        // Проверяем, есть ли такой точный ключ (слаг) в базе сутт
         if (window.MOBILE_DB[normalizedSlug]) {
-            // Это сутта! Строим текст.
             console.log("Открываем сутту:", normalizedSlug);
             window.buildSutta(normalizedSlug);
         } else {
-            // Точного совпадения по слагу нет. Значит, это поисковый запрос!
             console.log("Запускаем поиск по слову:", query);
-            
-            // Здесь ты вызываешь функцию, которая делает fetch к твоему fdg.js API
-            // и строит таблицу DataTables
             if (typeof window.executeGlobalSearch === 'function') {
                 window.executeGlobalSearch(query);
+<<<<<<< HEAD
+=======
             } else {
                 console.lot(`Поиск по слову "${query}" (Функция в разработке)`);
             //    alert(`Поиск по слову "${query}" (Функция в разработке)`);
+>>>>>>> 9548c832aa6aee8fbe2be79aab7ac7b0a6eac0d0
             }
         }
     } else {
-        // URL пустой (просто dhamma.gift) - показываем главную страницу
         if (typeof window.getInstructionHTML === 'function') {
             document.getElementById("sutta").innerHTML = window.getInstructionHTML(pathLang);
         }
