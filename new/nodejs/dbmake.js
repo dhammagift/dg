@@ -1,10 +1,11 @@
 // exclude *blurbs  *name files
 //
 
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
+const fsSync = require('fs');
 
-const isTermux = fs.existsSync('/data/data/com.termux/files/usr');
+const isTermux = fsSync.existsSync('/data/data/com.termux/files/usr');
 
 const BASE = isTermux
     ? '/data/data/com.termux/files/usr/share/apache2/default-site/htdocs'
@@ -14,11 +15,14 @@ const rootPath = `${BASE}/suttacentral.net/sc-data/sc_bilara_data/root/`;
 const translationPath = `${BASE}/suttacentral.net/sc-data/sc_bilara_data/translation/`;
 const htmlPath = `${BASE}/suttacentral.net/sc-data/sc_bilara_data/html/`;
 const variantPath = `${BASE}/suttacentral.net/sc-data/sc_bilara_data/variant/`;
-const textInfoPath = `${BASE}/new/nodejs/textinfo.js`;
+const textInfoPath = `${BASE}/new/nodejs/textinfo.json`;
 
 const outputFile = path.join(__dirname, 'dg_db.json');
 
 const targetLanguages = ['en', 'ru', 'de', 'ko'];
+
+// Список исключений (папки и файлы, содержащие эти строки, будут пропущены)
+const excludePatterns = ['xplayground', 'name', 'site', 'blurbs'];
 
 async function loadTextInfo(filePath) {
     try {
@@ -38,16 +42,19 @@ async function compileLocalDatabase() {
     async function walkDirectory(currentDir, callback) {
         let items;
         try {
-            // Читаем директорию без withFileTypes, получаем только имена
             items = await fs.readdir(currentDir);
         } catch (error) {
             return;
         }
 
         for (const item of items) {
+            // Пропускаем элементы, если они есть в списке исключений
+            if (excludePatterns.some(pattern => item.includes(pattern))) {
+                continue;
+            }
+
             const fullPath = path.join(currentDir, item);
             try {
-                // fs.stat автоматически переходит по символическим ссылкам
                 const stat = await fs.stat(fullPath);
                 
                 if (stat.isDirectory()) {
@@ -88,10 +95,11 @@ async function compileLocalDatabase() {
             }
         }
 
+        // Определение категорий согласно требованиям
         if (fullPath.includes('/vinaya/')) db[suttaId].category = 'vinaya';
         else if (fullPath.includes('/sutta/kn/')) db[suttaId].category = 'khudakka';
         else if (fullPath.includes('/sutta/')) db[suttaId].category = 'dhamma';
-        else if (fullPath.includes('/abhidhamma/')) db[suttaId].category = 'abhidhamma';
+        else if (fullPath.includes('/abhidhamma/')) db[suttaId].category = 'abhi';
 
         const data = await readJson(fullPath);
         
@@ -204,5 +212,7 @@ async function compileLocalDatabase() {
 }
 
 compileLocalDatabase().catch(err => console.error('Критическая ошибка:', err));
+
+
 
 

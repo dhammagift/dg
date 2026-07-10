@@ -99,7 +99,8 @@ async function searchInDatabase(dbPath, keyword) {
 
 // === КОНФИГУРАЦИЯ И ЗАПУСК ===
 const databaseFile = path.join(__dirname, 'dg_db.json');
-const searchWord = 'paṭigh'; 
+//const searchWord = 'paṭigh'; 
+const searchWord = 'dukkh'; 
 
 searchInDatabase(databaseFile, searchWord)
     .then(result => {
