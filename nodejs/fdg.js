@@ -8,8 +8,11 @@
 // по метафорам 
 // топ 10 или топ 5 ???
 
+//добавить чтобы scope понимал также category чтобы можно было сказать dhamma - и это были бы 4 никаи. khudakka и тп . включая 'dhamma' 'vinaya' 'khudakk'  'abhi' а не только названия книг
+// для поиска возвращать html сегмент не нужно. лишная трата трафика 
 
-console.log('Пример: http://localhost:3000/search?q=pa%E1%B9%ADigh&lb=1&la=2');
+console.log('Пример: http://localhost:3000/search?q=pa%E1%B9%ADigh&lb=1&la=2&scope=dhamma,abhi');
+console.log('Пример: https://dhamma.gift/search?q=kacchapa&lb=1&la=2&scope=dhamma');
 
 const express = require('express');
 const fs = require('fs').promises;
@@ -39,7 +42,7 @@ async function searchInDatabase(dbPath, keyword, searchScope = 'default', lb = 0
         const searchResults = {};
         let totalMatchesCounter = 0;
 
-        // Настройка фильтра префиксов
+        // Настройка фильтра префиксов и категорий
         let allowedPrefixes = [];
         if (!searchScope || searchScope === 'default') {
             allowedPrefixes = ['dn', 'mn', 'sn', 'an', 'ud', 'snp', 'dhp', 'thag', 'thig', 'iti', 'bu-', 'bi-', 'pli-tv-', 'kd', 'pvr'];
@@ -53,13 +56,18 @@ async function searchInDatabase(dbPath, keyword, searchScope = 'default', lb = 0
 
         for (const [suttaId, suttaData] of Object.entries(database)) {
 
-            // Строгая фильтрация по префиксам (исключает ложные срабатывания вроде mnd для mn)
+            // Строгая фильтрация по префиксам и категориям
             if (!allowedPrefixes.includes('all')) {
                 const isAllowed = allowedPrefixes.some(prefix => {
+                    // 1. Проверяем точное совпадение по категории (dhamma, vinaya, khudakka, abhi)
+                    if (suttaData.category === prefix) return true;
+                    
+                    // 2. Проверяем точное совпадение слага
                     if (suttaId === prefix) return true;
+                    
+                    // 3. Проверяем префикс слага (с отсечением смежных букв, например mnd для mn)
                     if (suttaId.startsWith(prefix)) {
                         const nextChar = suttaId.charAt(prefix.length);
-                        // После префикса должна идти цифра, точка или дефис (отсекаем буквы)
                         return /[0-9.-]/.test(nextChar);
                     }
                     return false;
@@ -71,7 +79,6 @@ async function searchInDatabase(dbPath, keyword, searchScope = 'default', lb = 0
             let suttaMatchesCount = 0;
             const uniqueWordsSet = new Set();
 
-            // Итерация классическим циклом for для доступа к соседним индексам (lb и la)
             for (let i = 0; i < suttaData.segments.length; i++) {
                 const segmentObj = suttaData.segments[i];
                 let maxMatchesInSegment = 0;
@@ -101,12 +108,19 @@ async function searchInDatabase(dbPath, keyword, searchScope = 'default', lb = 0
                 }
 
                 if (segmentHasMatch) {
-                    // Извлечение контекста вокруг найденной строки
-                    const contextBefore = lb > 0 ? suttaData.segments.slice(Math.max(0, i - lb), i) : [];
-                    const contextAfter = la > 0 ? suttaData.segments.slice(i + 1, Math.min(suttaData.segments.length, i + 1 + la)) : [];
+                    // Извлечение контекста вокруг найденной строки с удалением свойства html
+                    const contextBefore = lb > 0 
+                        ? suttaData.segments.slice(Math.max(0, i - lb), i).map(({ html, ...rest }) => rest) 
+                        : [];
+                    const contextAfter = la > 0 
+                        ? suttaData.segments.slice(i + 1, Math.min(suttaData.segments.length, i + 1 + la)).map(({ html, ...rest }) => rest) 
+                        : [];
+
+                    // Удаляем html из самого найденного сегмента
+                    const { html, ...segmentWithoutHtml } = segmentObj;
 
                     matchedSegments.push({
-                        ...segmentObj,
+                        ...segmentWithoutHtml,
                         matchCount: maxMatchesInSegment,
                         lb_context: contextBefore,
                         la_context: contextAfter
@@ -152,8 +166,8 @@ async function searchInDatabase(dbPath, keyword, searchScope = 'default', lb = 0
 app.get('/search', async (req, res) => {
     const keyword = req.query.q;
     const scope = req.query.scope || 'default';
-    const lb = parseInt(req.query.lb) || 0; // Строки до
-    const la = parseInt(req.query.la) || 0; // Строки после
+    const lb = parseInt(req.query.lb) || 0; 
+    const la = parseInt(req.query.la) || 0; 
 
     if (!keyword) {
         return res.status(400).json({ error: 'Параметр "q" (поисковое слово) обязателен.' });
@@ -173,5 +187,3 @@ app.get('/search', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Сервер поиска запущен. API доступно по адресу: http://localhost:${PORT}/search`);
 });
-
-

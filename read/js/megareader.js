@@ -573,58 +573,6 @@ window.buildSutta = async function(rawSlug) {
     if (typeof window.addToSearchHistory === 'function') window.addToSearchHistory();
 };
 
-// ==========================================
-// ИНИЦИАЛИЗАЦИЯ ПРИ СТАРТЕ
-// ==========================================
-async function initReader() {
-    try {
-        const response = await fetch('/new/nodejs/dg_db.json');
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        window.MOBILE_DB = await response.json();
-    } catch (error) {
-        console.error('Ошибка загрузки базы данных:', error);
-        suttaArea.innerHTML = `<p>Ошибка загрузки базы данных. Проверьте путь к dg_db.json и настройки сервера.</p>`;
-        return;
-    }
-
-    if (document.location.search) {
-        let params = new URLSearchParams(document.location.search);
-        let slug = params.get("q");
-        let lang = params.get("lang");
-
-        if (slug) {
-            if (citation) citation.value = slug;
-            window.buildSutta(slug);
-        }
-        
-        if (lang) {
-            window.setLanguage(lang);
-        } else if (localStorage.paliToggle) {
-            window.setLanguage(localStorage.paliToggle);
-        } 
-    } else {
-        if (typeof window.getInstructionHTML === 'function') {
-            suttaArea.innerHTML = window.getInstructionHTML(pathLang);
-            
-            const abbreviations = document.querySelectorAll("span.abbr");
-            abbreviations.forEach(book => {
-                book.addEventListener("click", e => {
-                    citation.value = e.target.innerHTML;
-                    citation.focus();
-                });
-            });
-        } else {
-            suttaArea.innerHTML = `<p>Инструкции загружаются...</p>`;
-        }
-    }
-}
-
-initReader();
-
 window.addEventListener('popstate', (e) => {
     if (e.state && e.state.page) {
         window.buildSutta(e.state.page);
@@ -635,3 +583,63 @@ window.addEventListener('popstate', (e) => {
         if (slug) window.buildSutta(slug);
     }
 });
+
+// ==========================================
+// ИНИЦИАЛИЗАЦИЯ И МАРШРУТИЗАЦИЯ (SPA Routing)
+// ==========================================
+async function initReader() {
+    // 1. Загрузка базы данных (как мы делали ранее)
+    try {
+        const response = await fetch('/nodejs/dg_db.json');
+        window.MOBILE_DB = await response.json();
+    } catch (error) {
+        console.error('Ошибка загрузки базы:', error);
+        return;
+    }
+
+    // 2. Читаем URL
+    // Получаем путь после домена, убираем первый слеш. 
+    // Пример: из "dhamma.gift/mn1" получим "mn1"
+    const pathQuery = window.location.pathname.substring(1).toLowerCase().trim();
+    
+    // Также оставляем поддержку старых ссылок с ?q=
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchParam = urlParams.get("q");
+
+    // Итоговый запрос: либо чистый путь, либо параметр ?q=
+    const query = pathQuery || searchParam;
+
+    if (query) {
+        // Заполняем инпут для удобства
+        if (typeof citation !== 'undefined') citation.value = query;
+
+        // 3. ЛОГИКА ВЫБОРА: Текст или Поиск?
+        // Нормализуем запрос (превращаем pj1 в bu-pj1 и т.д.)
+        const normalizedSlug = window.normalizeSlugToDbKey ? window.normalizeSlugToDbKey(query) : query;
+
+        // Проверяем, есть ли такой точный ключ (слаг) в базе сутт
+        if (window.MOBILE_DB[normalizedSlug]) {
+            // Это сутта! Строим текст.
+            console.log("Открываем сутту:", normalizedSlug);
+            window.buildSutta(normalizedSlug);
+        } else {
+            // Точного совпадения по слагу нет. Значит, это поисковый запрос!
+            console.log("Запускаем поиск по слову:", query);
+            
+            // Здесь ты вызываешь функцию, которая делает fetch к твоему fdg.js API
+            // и строит таблицу DataTables
+            if (typeof window.executeGlobalSearch === 'function') {
+                window.executeGlobalSearch(query);
+            } else {
+                alert(`Поиск по слову "${query}" (Функция в разработке)`);
+            }
+        }
+    } else {
+        // URL пустой (просто dhamma.gift) - показываем главную страницу
+        if (typeof window.getInstructionHTML === 'function') {
+            document.getElementById("sutta").innerHTML = window.getInstructionHTML(pathLang);
+        }
+    }
+}
+
+initReader();
