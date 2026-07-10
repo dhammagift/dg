@@ -1477,13 +1477,14 @@ smart TOC
     display: inline-block !important;
 }
 
-/* Новые стили для SVG иконок */
 .title-svg-icon {
     width: 1em;
     height: 1em;
     opacity: 0.5;
     vertical-align: -0.1em;
-    transition: opacity 0.2s ease;
+
+    transition: none !important;
+    animation: none !important;
 }
 
 .title-play-btn:hover .title-svg-icon,

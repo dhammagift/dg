@@ -1,3 +1,13 @@
+// transform to API for app and web
+// add word endpoint or just sorting???? grouped by words count matech, count texts, add available texts 
+// add html response of full datatable response????
+// добавить опции для выбор книг  общий набор:
+// an sn dn mn + ud dhp iti snp thag thig + vinaya?
+// возможность передавать отедльные наборы текстов? 
+// доп опция - префильтр по определениям
+// по метафорам 
+// топ 10 или топ 5 ???
+
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -89,7 +99,7 @@ async function searchInDatabase(dbPath, keyword) {
 
 // === КОНФИГУРАЦИЯ И ЗАПУСК ===
 const databaseFile = path.join(__dirname, 'dg_db.json');
-const searchWord = 'усилие'; 
+const searchWord = 'paṭigh'; 
 
 searchInDatabase(databaseFile, searchWord)
     .then(result => {

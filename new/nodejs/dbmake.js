@@ -1,12 +1,21 @@
-const fs = require('fs').promises;
+// exclude *blurbs  *name files
+//
+
+const fs = require('fs');
 const path = require('path');
 
-// === Конфигурация ===
-const rootPath = '/var/www/html/suttacentral.net/sc-data/sc_bilara_data/root/';
-const translationPath = '/var/www/html/suttacentral.net/sc-data/sc_bilara_data/translation/';
-const htmlPath = '/var/www/html/suttacentral.net/sc-data/sc_bilara_data/html/';
-const variantPath = '/var/www/html/suttacentral.net/sc-data/sc_bilara_data/variant/';
-const textInfoPath = '/var/www/html/new/nodejs/textinfo.js'; 
+const isTermux = fs.existsSync('/data/data/com.termux/files/usr');
+
+const BASE = isTermux
+    ? '/data/data/com.termux/files/usr/share/apache2/default-site/htdocs'
+    : '/var/www/html';
+
+const rootPath = `${BASE}/suttacentral.net/sc-data/sc_bilara_data/root/`;
+const translationPath = `${BASE}/suttacentral.net/sc-data/sc_bilara_data/translation/`;
+const htmlPath = `${BASE}/suttacentral.net/sc-data/sc_bilara_data/html/`;
+const variantPath = `${BASE}/suttacentral.net/sc-data/sc_bilara_data/variant/`;
+const textInfoPath = `${BASE}/new/nodejs/textinfo.js`;
+
 const outputFile = path.join(__dirname, 'dg_db.json');
 
 const targetLanguages = ['en', 'ru', 'de', 'ko'];

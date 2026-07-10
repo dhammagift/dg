@@ -100,8 +100,16 @@ async function agnosticSearch(baseDir, keyword, extensions) {
     };
 }
 
+
+
+const isTermux = fs.existsSync('/data/data/com.termux/files/usr');
+
+const BASE = isTermux
+    ? '/data/data/com.termux/files/usr/share/apache2/default-site/htdocs'
+    : '/var/www/html';
+
 // === КОНФИГУРАЦИЯ И ЗАПУСК ===
-const searchPath = '/var/www/offline-data/theravada.ru/Teaching/Canon/Suttanta/Texts/'; 
+const searchPath = `${BASE}/theravada.ru/Teaching/Canon/Suttanta/Texts/`; 
 const searchWord = 'усилие'; 
 const targetExtensions = ['.html', '.htm', '.php', '.txt', '.md']; 
 
