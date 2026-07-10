@@ -19,7 +19,23 @@ const outputFile = path.join(__dirname, 'dg_db.json');
 const targetLanguages = ['en', 'ru', 'de', 'ko'];
 
 // Список исключений (папки и файлы, содержащие эти строки, будут пропущены)
-const excludePatterns = ['xplayground', 'name', 'site', 'blurbs'];
+//const excludePatterns = ['xplayground', 'name', 'site', 'blurbs'];
+// 1. Заменяем массив строк на массив регулярных выражений (масок)
+// Флаг /i/ означает регистронезависимость
+const excludePatterns = [
+    /xplayground/i,
+    /name/i, 
+    /site/i,       // Эта маска уже полностью отрезает папку site и всё внутри неё
+    /blurbs/i,
+    
+    // Новые исключения с использованием масок:
+    /dukkh/i,
+    /subjects/i,
+    /terminology/i,
+    /similes/i,
+    /-guide-/i,        // Маска: ловит sn-guide-sujato, mn-guide-sujato, dn-guide-sujato
+    /an-introduction/i // Маска: ловит an-introduction-bodhi, introduction и любые другие variations
+];
 
 async function loadTextInfo(filePath) {
     try {
@@ -36,20 +52,22 @@ async function compileLocalDatabase() {
     const db = {}; 
     const textInfoData = await loadTextInfo(textInfoPath);
 
-    async function walkDirectory(currentDir, callback) {
-        let items;
-        try {
-            items = await fs.readdir(currentDir);
-        } catch (error) {
-            return;
-        }
 
-        for (const item of items) {
-            // Пропускаем элементы, если они есть в списке исключений
-            if (excludePatterns.some(pattern => item.includes(pattern))) {
-                continue;
-            }
 
+async function walkDirectory(currentDir, callback) {
+     let items;
+     try {
+         items = await fs.readdir(currentDir);
+     } catch (error) {
+         return;
+     }
+     for (const item of items) {
+         
+         // 2. Меняем проверку: вместо .includes() используем .test() для регулярных выражений
+         if (excludePatterns.some(pattern => pattern.test(item))) {
+             continue;
+         }
+         
             const fullPath = path.join(currentDir, item);
             try {
                 const stat = await fs.stat(fullPath);

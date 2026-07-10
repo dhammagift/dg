@@ -1,15 +1,15 @@
-// transform to API for app and web
+//отлично. спасибо. каким образом мы можем делать default + vinaya поиск? 
+//http://localhost:8080/nodejs/result/?q=kacchap&lb=1&la=2&scope=vinaya,default так он выдает только vinaya.  
+
+
 // add word endpoint or just sorting???? grouped by words count matech, count texts, add available texts 
-// add html response of full datatable response????
 // добавить опции для выбор книг  общий набор:
 // an sn dn mn + ud dhp iti snp thag thig + vinaya?
 // возможность передавать отедльные наборы текстов? 
-// доп опция - префильтр по определениям
-// по метафорам 
+// доп опция - префильтр по определениям???
+// по метафорам ???
 // топ 10 или топ 5 ???
-
 //добавить чтобы scope понимал также category чтобы можно было сказать dhamma - и это были бы 4 никаи. khudakka и тп . включая 'dhamma' 'vinaya' 'khudakk'  'abhi' а не только названия книг
-// для поиска возвращать html сегмент не нужно. лишная трата трафика 
 
 console.log('Пример: http://localhost:3000/search?q=pa%E1%B9%ADigh&lb=1&la=2&scope=dhamma,abhi');
 console.log('Пример: https://dhamma.gift/search?q=kacchapa&lb=1&la=2&scope=dhamma');
