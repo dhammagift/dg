@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+</head>
+<body>
+    <header>
+        <img src="/assets/svg/home-icon.svg" alt="Home">
+        <h1>{{title}}</h1>
+    </header>
+
+    <main>
+        <!-- Help & Hotkeys Section -->
+        <section id="help">
+            <h2>{{help}}</h2>
+            <h3>{{reading}} | {{search}}</h3>
+            
+            <h3>{{hotkeys}}</h3>
+            <ul class="hotkeys-list">
+                <li><strong>{{pali_rus_switch}}</strong> - {{switch_language}}</li>
+                <li><strong>Alt+T</strong> - {{themes}}</li>
+                <li><strong>Alt+C</strong> - {{columns}}</li>
+                <li><strong>Alt+V</strong> - {{{variants_desc}}}</li>
+                <li><strong>Alt+A</strong> - {{{dict_desc}}}</li>
+                <li><strong>Alt+J</strong> - {{select_words}}</li>
+                <li><strong>Alt+P</strong> - {{toggle_fav}}</li>
+                <li><strong>Alt+S</strong> - {{show_settings}}</li>
+                <li><strong>Alt+H</strong> - {{show_help}}</li>
+                <li><strong>Alt+1 to 7</strong> - {{switch_modes}}</li>
+                <li><strong>Ctrl + ← →</strong> - {{prev_next}}</li>
+                <li><strong>Alt + L</strong> - {{switch_script}}</li>
+                <li><strong>Alt + M / .</strong> - {{toggle_punct}}</li>
+                <li><strong>Alt+B</strong> - {{toggle_dict_mode}}</li>
+                <li><strong>Alt + N</strong> - {{open_word_new}}</li>
+                <li><strong>/</strong> - {{activate_search}}</li>
+                <li><strong>✦</strong> - {{invisible_links}}</li>
+            </ul>
+
+            <h3>{{links_menu}}</h3>
+            <ul class="links-list">
+                <li><a href="#">[E+E]</a> - {{link_ee}}</li>
+                <li><a href="#">[Ru / En]</a> - {{link_ru_en}}</li>
+                <li><a href="#">[DPR]</a> - {{link_dpr}}</li>
+                <li><a href="#">[BJT]</a> - {{link_bjt}}</li>
+                <li><a href="#">[Voice]</a> - {{link_voice}}</li>
+                <li><a href="#">[SC.net]</a> - {{link_sc}}</li>
+                <li><a href="#">[TBW]</a> - {{link_tbw}}</li>
+                <li><a href="#">[Th.ru / Th.su]</a> - {{link_th}}</li>
+            </ul>
+            <p class="abbr-info">{{{abbr_desc}}}</p>
+            <p><a href="/#contacts">{{report_error}}</a></p>
+            <button class="close-btn">{{close}}</button>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings">
+            <h2>{{settings}}</h2>
+            
+            <div class="setting-group">
+                <label>{{script_system}}</label>
+                <select>
+                    <option>ISO</option><option>Pali</option><option>Devanagari</option><option>Thai</option>
+                </select>
+            </div>
+
+            <div class="setting-group">
+                <label>{{dictionary}}</label>
+                <select id="dict-select">
+                    <!-- Options will be populated dynamically or via template loop -->
+                </select>
+            </div>
+
+            <div class="setting-group">
+                <label>{{font_size}}</label>
+                <input type="range" min="80" max="150" value="100">
+            </div>
+
+            <div class="setting-group">
+                <label><input type="checkbox"> {{remove_punct}}</label>
+            </div>
+
+            <h3>{{select_reading_mode}}</h3>
+            <ul class="modes-list">
+                <li><input type="radio" name="mode"> <strong>{{mode_standard}}</strong> - {{mode_standard_desc}}</li>
+                <li><input type="radio" name="mode"> <strong>{{mode_multi_trn}}</strong> - {{mode_multi_trn_desc}}</li>
+                <li><input type="radio" name="mode"> <strong>{{mode_memorize}}</strong> - {{mode_memorize_desc}}</li>
+                <li><input type="radio" name="mode"> <strong>{{mode_devanagari}}</strong> - {{mode_devanagari_desc}}</li>
+                <li><input type="radio" name="mode"> <strong>{{mode_multi_lang}}</strong> - {{mode_multi_lang_desc}}</li>
+                <li><input type="radio" name="mode"> <strong>{{mode_thai}}</strong> - {{mode_thai_desc}}</li>
+                <li><input type="radio" name="mode"> <strong>{{mode_reverse}}</strong> - {{mode_reverse_desc}}</li>
+                <li><input type="radio" name="mode"> <strong>{{mode_full_reverse}}</strong> - {{mode_full_reverse_desc}}</li>
+            </ul>
+            <p class="mode-hint">{{click_title_desc}}</p>
+
+            <div class="actions">
+                <button>{{more_modes}}</button>
+                <button>{{reset}}</button>
+                <button>{{apply}}</button>
+                <button>{{close}}</button>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p><a href="/#copyrightnote">{{copyright}}</a> © Dhamma.gift 2022-</p>
+        <nav class="bottom-nav">
+            <span title="{{theme}}"><img src="/assets/svg/circle-half-stroke.svg" alt=""></span>
+            <span title="{{column_view}}"><img src="/assets/svg/align-left.svg" alt=""></span>
+            <span title="{{variants}}"><img src="/assets/svg/eye.svg" alt=""></span>
+            <span title="{{multi_select}}"><img src="/assets/svg/select-slash.svg" alt=""></span>
+            <span title="{{bookmark}}"><img src="/assets/svg/star.svg" alt=""></span>
+            <span title="{{history}}"><img src="/assets/svg/compass.svg" alt=""></span>
+            <span title="{{memo}}"><img src="/assets/svg/memo.svg" alt=""></span>
+            <span title="{{settings}}"><img src="/assets/svg/gear.svg" alt=""></span>
+            <span title="{{home}}"><img src="/assets/svg/home-icon.svg" alt=""></span>
+        </nav>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // 1. Определяем язык по URL
+            const path = window.location.pathname;
+            // Если путь начинается с /ru/ или равен /ru, выбираем русский
+            const lang = (path.startsWith('/ru/') || path === '/ru') ? 'ru' : 'en';
+            
+            // Обновляем атрибут lang в теге <html>
+            document.documentElement.lang = lang;
+
+            // 2. Загружаем соответствующий JSON файл
+            fetch(`/config/lang_${lang}.json`)
+                .then(response => {
+                    if (!response.ok) throw new Error(`Не удалось загрузить lang_${lang}.json`);
+                    return response.json();
+                })
+                .then(translations => {
+                    // 3. Функция применения переводов к DOM
+                    
+                    // Шаг А: Заменяем {{{ключ}}} на HTML-контент (например, ссылки)
+                    document.body.innerHTML = document.body.innerHTML.replace(/\{\{\{(.*?)\}\}\}/g, (match, key) => {
+                        return translations[key] !== undefined ? translations[key] : match;
+                    });
+
+                    // Шаг Б: Заменяем {{ключ}} в тексте и атрибутах (title, alt и т.д.)
+                    // Используем TreeWalker, чтобы не сломать HTML-структуру
+                    const walker = document.createTreeWalker(
+                        document.body, 
+                        NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, 
+                        null, 
+                        false
+                    );
+                    
+                    let node;
+                    while (node = walker.nextNode()) {
+                        if (node.nodeType === Node.TEXT_NODE) {
+                            node.nodeValue = node.nodeValue.replace(/\{\{(.*?)\}\}/g, (match, key) => {
+                                return translations[key] !== undefined ? translations[key] : match;
+                            });
+                        } else if (node.nodeType === Node.ELEMENT_NODE) {
+                            for (let attr of node.attributes) {
+                                attr.value = attr.value.replace(/\{\{(.*?)\}\}/g, (match, key) => {
+                                    return translations[key] !== undefined ? translations[key] : match;
+                                });
+                            }
+                        }
+                    }
+
+                    // Шаг В: Обновляем заголовок вкладки (title)
+                    document.title = document.title.replace(/\{\{(.*?)\}\}/g, (match, key) => {
+                        return translations[key] !== undefined ? translations[key] : match;
+                    });
+                })
+                .catch(error => {
+                    console.error("Ошибка загрузки языкового пакета:", error);
+                });
+        });
+    </script>
+
+</body>
+</html>

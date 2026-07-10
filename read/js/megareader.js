@@ -410,7 +410,7 @@ window.buildSutta = async function(rawSlug) {
     }
 
     // ТЕСТОВЫЙ АЛЕРТ: Выводим результаты логики приоритетов
-    alert(`Слаг: ${slug}\nСегментов: ${suttaData.segments.length}\nНайдено ключей: ${debugAvailableKeys.join(', ')}\nВыбранный приоритет: ${globalTargetKey || 'нет русских переводов'}`);
+ //   alert(`Слаг: ${slug}\nСегментов: ${suttaData.segments.length}\nНайдено ключей: ${debugAvailableKeys.join(', ')}\nВыбранный приоритет: ${globalTargetKey || 'нет русских переводов'}`);
 
     // 3. Собираем сегменты, используя только выбранный глобальный ключ
     for (const seg of suttaData.segments) {
@@ -631,7 +631,8 @@ async function initReader() {
             if (typeof window.executeGlobalSearch === 'function') {
                 window.executeGlobalSearch(query);
             } else {
-                alert(`Поиск по слову "${query}" (Функция в разработке)`);
+                console.lot(`Поиск по слову "${query}" (Функция в разработке)`);
+            //    alert(`Поиск по слову "${query}" (Функция в разработке)`);
             }
         }
     } else {
