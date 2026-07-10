@@ -614,9 +614,10 @@ $(document).ready(function() {
         if (!keyword) return;
 
         try {
-            const fetchUrl = `http://localhost:3000/search?q=${keyword}&scope=${scope}&lb=${lb}&la=${la}`;
+            //const fetchUrl = `http://localhost:3000/search?q=${keyword}&scope=${scope}&lb=${lb}&la=${la}`;
+            const fetchUrl = `/search?q=${keyword}&scope=${scope}&lb=${lb}&la=${la}`;
             const response = await fetch(fetchUrl);
-            
+           
             if (!response.ok) throw new Error("Ошибка сети при получении данных");
             
             const json = await response.json();

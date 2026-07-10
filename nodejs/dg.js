@@ -11,8 +11,9 @@
 // топ 10 или топ 5 ???
 //добавить чтобы scope понимал также category чтобы можно было сказать dhamma - и это были бы 4 никаи. khudakka и тп . включая 'dhamma' 'vinaya' 'khudakk'  'abhi' а не только названия книг
 
-console.log('Пример: http://localhost:3000/search?q=pa%E1%B9%ADigh&lb=1&la=2&scope=dhamma,abhi');
-console.log('Пример: https://dhamma.gift/search?q=kacchapa&lb=1&la=2&scope=dhamma');
+console.log('api: http://localhost:3000/search?q=pa%E1%B9%ADigh&lb=1&la=2&scope=dhamma,abhi');
+console.log('api: https://dhamma.gift/search?q=kacchapa&lb=1&la=2&scope=dhamma');
+console.log('demo: https://dhamma.gift/nodejs/res/?q=pa%E1%B9%ADigh&lb=1&la=2&scope=dhamma,abhi');
 
 const express = require('express');
 const fs = require('fs').promises;
