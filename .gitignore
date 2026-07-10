@@ -1,4 +1,4 @@
-/var/www/html/assets/texts/ru/vinaya/nohup.out
+**/nohup.out
 assets/audio
 nohup.out
 result
@@ -10,3 +10,5 @@ helpdocs
 config/sync-config.json
 config/tts-config.json
 config/*.json
+
+**/node_modules

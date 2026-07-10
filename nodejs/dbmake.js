@@ -15,7 +15,7 @@ const rootPath = `${BASE}/suttacentral.net/sc-data/sc_bilara_data/root/`;
 const translationPath = `${BASE}/suttacentral.net/sc-data/sc_bilara_data/translation/`;
 const htmlPath = `${BASE}/suttacentral.net/sc-data/sc_bilara_data/html/`;
 const variantPath = `${BASE}/suttacentral.net/sc-data/sc_bilara_data/variant/`;
-const textInfoPath = `${BASE}/new/nodejs/textinfo.json`;
+const textInfoPath = `${BASE}/nodejs/textinfo.json`;
 
 const outputFile = path.join(__dirname, 'dg_db.json');
 
