@@ -1,5 +1,8 @@
 <!--
+Неравноменрые отсупы между переводавми в цитатах. добавил br но удлинился разрыв между другими переводами. 
+
 to do now
+* не отображаются доп строки при параметрах la lb хотя они есть в ответе от сервера
 * не работает сортировка дхамма кн виная абхидхамма
 * сортировка языков переводов поумолчанию англ. или главный язык  -главный будем определять по localstorage и урл /ru.
  
@@ -123,9 +126,25 @@ https://dhamma.gift/nodejs/res/?q=pa%E1%B9%ADigh&lb=1&la=2&scope=dhamma,abhi
 
 <div class="container-fluid mt-2">    
 
-    <h3 class="pl-2 resultheader ml-2">$title</h3>
+    <h3 class="pl-2 resultheader ml-2" id="dynamicHeader"></h3>
+    <script>
+        (function() {
+            let params = new URLSearchParams(window.location.search);
+            let q = params.get('q') || params.get('s');
+            let pathSegments = window.location.pathname.split('/').filter(s => s);
+            let lastSegment = pathSegments.pop();
+            
+            if (!q && lastSegment && !['search', 'index.html', 'result', 'nodejs'].includes(lastSegment.toLowerCase())) {
+                q = lastSegment;
+            }
+            if (q) {
+                let displayWord = decodeURIComponent(q).replace(/ṃ/g, "ṁ");
+                document.getElementById('dynamicHeader').textContent = displayWord.charAt(0).toUpperCase() + displayWord.slice(1) + "...";
+            }
+        })();
+    </script>
 
-           <a href='HOMEVAR'>
+           <a href='/' class="text-decoration-none">
             <button class="btn btn-light mb-1" type="button">
     <img class="table-home-icon" src="/assets/svg/home-icon.svg"></img>   
       </button>  
@@ -615,11 +634,14 @@ https://dhamma.gift/nodejs/res/?q=pa%E1%B9%ADigh&lb=1&la=2&scope=dhamma,abhi
         </table>
     </div>
 
-
-
 <script type='text/javascript'>
-// Глобальное определение языка сайта
-window.isRu = window.location.pathname.match(/\/(ru|r|ml|mt)\//) || localStorage.getItem('siteLanguage') === 'ru';
+// Автоматически ставим язык по умолчанию для тестов, если он еще не выбран
+if (!localStorage.getItem('siteLanguage')) {
+    localStorage.setItem('siteLanguage', 'ru');
+}
+
+// Глобальная переменная текущего языка сайта (динамическая, без хардкода)
+window.siteLanguage = localStorage.getItem('siteLanguage') || 'en';
 
 $(document).ready(function() {
     DataTable.util.diacritics(d => d);
@@ -632,7 +654,6 @@ $(document).ready(function() {
     };
 
     // Регистрируем кастомную сортировку для категорий
-    // Добавлен String() и trim() для железной надежности
     $.fn.dataTable.ext.type.order['category-pre'] = function (d) {
         if (!d) return 5;
         let cat = String(d).toLowerCase().trim();
@@ -676,15 +697,13 @@ $(document).ready(function() {
         if (!keyword) return;
 
         try {
-          
-                    
-          const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+            const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
-const fetchUrl = isLocal
-  ? `http://localhost:3000/search?q=${encodeURIComponent(keyword)}&scope=${scope}&lb=${lb}&la=${la}`
-  : `/search?q=${encodeURIComponent(keyword)}&scope=${scope}&lb=${lb}&la=${la}`;
+            const fetchUrl = isLocal
+              ? `http://localhost:3000/search?q=${encodeURIComponent(keyword)}&scope=${scope}&lb=${lb}&la=${la}`
+              : `/search?q=${encodeURIComponent(keyword)}&scope=${scope}&lb=${lb}&la=${la}`;
   
-              const response = await fetch(fetchUrl);
+            const response = await fetch(fetchUrl);
            
             if (!response.ok) throw new Error("Ошибка сети при получении данных");
             
@@ -692,7 +711,11 @@ const fetchUrl = isLocal
             const dataArray = Object.values(json.data);
             
             let scopeText = json.metadata.scope === 'default' || !json.metadata.scope ? '4 Nikaya Pali' : json.metadata.scope;
-            let newTitle = `${json.metadata.query} ${json.metadata.totalFiles} texts and ${json.metadata.totalMatches} matches in ${scopeText}`;
+            
+            let qStr = json.metadata.query || "";
+            let capitalizedQuery = qStr ? qStr.charAt(0).toUpperCase() + qStr.slice(1) : "";
+            
+            let newTitle = `${capitalizedQuery} ${json.metadata.totalFiles} texts and ${json.metadata.totalMatches} matches in ${scopeText}`;
             
             document.title = newTitle + " - Dhamma.gift";
             $('.resultheader').text(newTitle);
@@ -710,6 +733,8 @@ const fetchUrl = isLocal
         var tableDom = $(window).width() > 768 ? desktopDom : mobileDom;
 
         const regexHighlight = new RegExp(highlightWord, 'gi');
+        
+        let baseUrl = window.location.origin + "/nr/";
 
         var table = $('#pali').DataTable({
             data: dataArray,
@@ -718,7 +743,11 @@ const fetchUrl = isLocal
                 {
                     data: 'sutta_id',
                     render: function (data) {
-                        return `<a class="fdgLink mainLink" target="_blank" href="/?q=${data}&s=${encodeURIComponent(highlightWord)}">${data}</a>`;
+                        let textUrl = typeof findFdgTextUrl === 'function' 
+                            ? findFdgTextUrl(data, encodeURIComponent(highlightWord), baseUrl) 
+                            : `${baseUrl}?s=${encodeURIComponent(highlightWord)}&q=${data}`;
+                            
+                        return `<a class="fdgLink mainLink" target="_blank" href="${textUrl}" data-slug="${data}">${data}</a>`;
                     }
                 },
                 // 1: Title
@@ -726,15 +755,29 @@ const fetchUrl = isLocal
                     data: 'titles',
                     render: function (data, type, row) {
                         if (!data) return '';
+                        
                         var titlePali = data.root || row.sutta_id;
-                        var titleEnglish = data.en_sujato || '';
-                        var titleRussian = data.ru_o || data.ru_sv || '';
+                        var titleText = '';
+                        var langClass = 'eng-lang';
                         
-                        // Используем глобальную window.isRu
-                        var titleText = window.isRu && titleRussian ? titleRussian : titleEnglish;
+                        var transKeys = Object.keys(data).filter(k => k !== 'root');
                         
-                        // Обернули перевод в eng-lang, чтобы он скрывался вместе с остальным переводом
-                        return `<strong class="pli-lang inputscript-ISOPali">${titlePali}</strong> <span class="eng-lang text-muted">${titleText}</span>`;
+                        var secondLangKey = transKeys.find(k => k.startsWith(window.siteLanguage + '_'));
+                        var enKey = transKeys.find(k => k.startsWith('en_'));
+                        
+                        if (window.siteLanguage !== 'en' && secondLangKey) {
+                            titleText = data[secondLangKey];
+                            langClass = window.siteLanguage + '-lang'; 
+                        } else if (enKey) {
+                            titleText = data[enKey];
+                            langClass = 'eng-lang';
+                        } else if (transKeys.length > 0) {
+                            var fallbackKey = transKeys[0];
+                            titleText = data[fallbackKey];
+                            langClass = fallbackKey.split('_')[0] + '-lang';
+                        }
+                        
+                        return `<strong class="pli-lang inputscript-ISOPali">${titlePali}</strong> <span class="${langClass} text-muted">${titleText}</span>`;
                     }
                 },
                 // 2: Words
@@ -742,31 +785,35 @@ const fetchUrl = isLocal
                     data: 'unique_words',
                     render: function (data) {
                         if (!data || !data.length) return '';
-                        let wordsStr = data.join(', ');
+                        let wordsStr = data.join(' ');
                         if (highlightWord) {
                             wordsStr = wordsStr.replace(regexHighlight, match => `<b class="match finder">${match}</b>`);
                         }
                         return `<span class="pli-lang inputscript-ISOPali">${wordsStr}</span>`;
                     }
                 },
-                // 3: Ct (Count)
+                // 3: Ct
                 { data: 'count' },
-                // 4: Mr (Metaphors)
+                // 4: Mr
                 { data: 'mr' },
-                // 5: Links (Не переносим строки, Ru только для русской версии)
+                // 5: Links
                 {
                     data: 'sutta_id',
                     orderable: false,
-                    className: 'text-nowrap', // Запрет переноса строк
+                    className: 'text-nowrap',
                     render: function (data) {
-                        let ruLinkHtml = window.isRu ? `<a class='ruLink' href='javascript:void(0)' data-slug='${data}' onclick="if(typeof openRu === 'function') openRu('${data}'); return false;">Ru</a>` : '';
+                        let secondLangLinkHtml = '';
+                        if (window.siteLanguage !== 'en') {
+                            let langLabel = window.siteLanguage.charAt(0).toUpperCase() + window.siteLanguage.slice(1);
+                            secondLangLinkHtml = `<a class='${window.siteLanguage}Link' href='javascript:void(0)' data-slug='${data}' onclick="if(typeof openRu === 'function') openRu('${data}'); return false;">${langLabel}</a>`;
+                        }
                         
                         return `<a href='javascript:void(0)' onclick="if(typeof openDpr === 'function') openDpr('${data}'); return false;">Pi</a> 
                                 <a class='bwLink' href='javascript:void(0)' data-slug='${data}' onclick="if(typeof openBw === 'function') openBw('${data}'); return false;">En</a> 
-                                ${ruLinkHtml}`;
+                                ${secondLangLinkHtml}`;
                     }
                 },
-                // 6: Type (Category)
+                // 6: Type
                 { data: 'category' },
                 // 7: Quote
                 {
@@ -783,26 +830,32 @@ const fetchUrl = isLocal
                                 paliText = paliText.replace(regexHighlight, match => `<b class="match finder">${match}</b>`);
                             }
 
-                            // Генерация ссылок-якорей
-                            let urlwithanchor = seg.segment.replace(':', '#');
                             let segmentHash = seg.segment.includes(':') ? seg.segment.split(':')[1] : seg.segment;
+                            let urlwithanchor = row.sutta_id + "#" + segmentHash;
                             
-                            // Формируем готовые теги ссылок с передачей s=keyword
-                            let textUrl = `/read/?q=${row.sutta_id}&s=${encodeURIComponent(highlightWord)}#${segmentHash}`;
+                            let textUrl = typeof findFdgTextUrl === 'function' 
+                                ? findFdgTextUrl(urlwithanchor, encodeURIComponent(highlightWord), baseUrl) 
+                                : `${baseUrl}?s=${encodeURIComponent(highlightWord)}&q=${urlwithanchor}`;
+                            
                             let unhiddenlink = `<a target="_blank" class="fdgLink quoteLink-start text-reset text-decoration-none" href="${textUrl}" data-slug="${urlwithanchor}"></a>`;
-                            let hiddenlink = `<a target="_blank" class="fdgLink quoteLink text-white text-decoration-none" href="${textUrl}" data-slug="${urlwithanchor}">&#8202;</a>`;
+                            let hiddenlink = `<a target="_blank" class="fdgLink quoteLink text-white text-decoration-none" href="${textUrl}" data-slug="${urlwithanchor}"></a>`;
 
-                            quoteHtml += `
-                                <span class="pli-lang inputscript-ISOPali" lang="pi">${unhiddenlink}${paliText}${hiddenlink}</span><br class="btwntrn">
-                            `;
+                            quoteHtml += `<span class="pli-lang quote" lang="pi">${unhiddenlink} ${paliText} ${hiddenlink}</span><br class="styled pli-lang quote" lang="pi">`;
 
-                            // Сортировка переводов
                             if (seg.translations) {
                                 let transKeys = Object.keys(seg.translations);
-                                let primaryPrefix = window.isRu ? 'ru_' : 'en_';
                                 
-                                let primaryKeys = transKeys.filter(k => k.startsWith(primaryPrefix));
-                                let otherKeys = transKeys.filter(k => !k.startsWith(primaryPrefix));
+                                // Логика предпочитаемых языков: сайт-язык, затем en
+                                let preferredLanguages = [window.siteLanguage, 'en']; 
+                                let sortedTransKeys = [];
+                                
+                                preferredLanguages.forEach(lang => {
+                                    let keysForLang = transKeys.filter(k => k.startsWith(lang + '_'));
+                                    sortedTransKeys.push(...keysForLang);
+                                });
+                                
+                                let remainingKeys = transKeys.filter(k => !sortedTransKeys.includes(k));
+                                sortedTransKeys.push(...remainingKeys);
 
                                 const appendTrans = (key) => {
                                     let transText = seg.translations[key];
@@ -811,13 +864,12 @@ const fetchUrl = isLocal
                                         transText = transText.replace(regexHighlight, match => `<b class="match finder">${match}</b>`);
                                     }
                                     let langCode = key.split('_')[0];
+                                    let htmlclass = (langCode === 'en') ? "eng-lang text-muted font-weight-light" : langCode + "-lang text-muted font-weight-light";
                                     
-                                    // Обернуто в невидимые якоря так же, как пали текст
-                                    quoteHtml += `<span class="eng-lang text-muted font-weight-light" lang="${langCode}">${unhiddenlink}${transText}${hiddenlink}</span><br class="btwntrn">`;
+                                    quoteHtml += `<span class="${htmlclass} quote" lang="${langCode}">${unhiddenlink} ${transText} ${hiddenlink}</span><br class="styled ${htmlclass} quote" lang="${langCode}"><br>`;
                                 };
 
-                                primaryKeys.forEach(appendTrans);
-                                otherKeys.forEach(appendTrans);
+                                sortedTransKeys.forEach(appendTrans);
                             }
                         });
 
@@ -829,8 +881,12 @@ const fetchUrl = isLocal
             stateSaveParams: function(settings, data) {
                 data.search.search = ''; 
             },
+            stateLoadParams: function (settings, data) {
+                data.order = [[6, 'asc'], [0, 'asc']];
+            },
             dom: tableDom,
             language: {
+                url: `/config/lang_${window.siteLanguage}.json`,
                 search: '',
                 lengthMenu: '_MENU_ per page',
                 searchPlaceholder: 'Filter...'
@@ -942,7 +998,6 @@ const fetchUrl = isLocal
                                         var temp = document.createElement('div');
                                         temp.innerHTML = text;
                                         
-                                        // 1. Сохраняем ссылки
                                         var links = temp.querySelectorAll('a');
                                         links.forEach(function(a) {
                                             var url = a.href;
@@ -951,14 +1006,12 @@ const fetchUrl = isLocal
                                             a.parentNode.replaceChild(placeholder, a);
                                         });
 
-                                        // 2. Сохраняем тег strong
                                         var strongs = temp.querySelectorAll('strong');
                                         strongs.forEach(function(s) {
                                             var placeholder = document.createTextNode('BOLD_START|' + (s.textContent || s.innerText) + '|BOLD_END');
                                             s.parentNode.replaceChild(placeholder, s);
                                         });
                                         
-                                        // 3. Сохраняем абзацы и переносы строк
                                         var brs = temp.querySelectorAll('br');
                                         brs.forEach(function(br) {
                                             br.parentNode.replaceChild(document.createTextNode('\n'), br);
@@ -1116,11 +1169,11 @@ const fetchUrl = isLocal
             'pageLength': 10,
             'lengthMenu': [10, 30, 50, 100, 1000],
             'columnDefs': [
-                { type: 'natural', targets: 0 },
-                { width: '20%', targets: 1 }, // Сужаем заголовок
+                { type: 'natural', targets: 0, className: 'text-nowrap' }, 
+                { targets: 1, className: 'text-nowrap' }, 
+                { targets: [3, 4, 5, 6], className: 'text-nowrap' }, 
+                { type: 'category', targets: 6, visible: false }, 
                 { type: "html", targets: [0, 1, 2, 7] },
-                // Строго применяем кастомную сортировку и прячем колонку
-                { type: 'category-pre', targets: 6, visible: false }, 
                 {
                     targets: [3],
                     orderData: [3, 4],
@@ -1132,22 +1185,18 @@ const fetchUrl = isLocal
                     orderSequence: ['desc', 'asc'] 
                 }
             ],
-            // Сортировка по типу(индекс 6), затем по слогу
             "order": [[6, 'asc'], [0, 'asc']],
             'initComplete': function(){
                 var api = this.api();
                 
-                // Handle click on "Expand All" button
                 $('#btn-show-all-children').on('click', function(){
                     table.rows(':not(.parent)').nodes().to$().find('td:first-child').trigger('click');
                 });
                 
-                // Handle click on "Collapse All" button
                 $('#btn-hide-all-children').on('click', function(){
                     table.rows('.parent').nodes().to$().find('td:first-child').trigger('click');
                 });
 
-                // Populate a dataset for autocomplete functionality
                 api.cells('tr', [0, 2, 3, 4, 5]).every(function(){
                     var data = $('<div>').html(this.data()).text();
                     if(dataSrc.indexOf(data) === -1){ dataSrc.push(data); }
@@ -1155,7 +1204,6 @@ const fetchUrl = isLocal
             }
         }); 
 
-        // предустановка фильтра из get param ?f=
         if (filterValue) {
             table.search(filterValue).draw();
             var currentUrl = new URL(window.location.href);
@@ -1164,12 +1212,9 @@ const fetchUrl = isLocal
         }
     }
 
-    // Запуск процесса при загрузке документа
     initSearchApp();
 });
 </script>
-
-
         <script src="/assets/js/openFdg.js"></script>
 	  <script src="/assets/js/smoothScroll.js" defer></script>
     <script defer type="module" src="/assets/js/langswitch.js"></script>     

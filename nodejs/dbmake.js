@@ -1,3 +1,7 @@
+// составить конфиги json с разбивкой поиск, ридер, сайт... сейчас в се в куче
+// решить как будет работать поиск и база. только пали с путямы - это хорошо. если будет 3-4 вида пали. база станет большой. 
+// и ка кбыть с переводами? 
+
 const fs = require('fs').promises;
 const path = require('path');
 const fsSync = require('fs');
@@ -43,7 +47,7 @@ async function loadTextInfo(filePath) {
         const jsonString = content.replace(/^(var|let|const)\s+\w+\s*=\s*/, '').replace(/;[\s]*$/, '');
         return JSON.parse(jsonString);
     } catch (error) {
-        console.warn(`Файл textinfo.js не найден или ошибка парсинга:`, error.message);
+        console.warn(`File textinfo.js not found or parcing error:`, error.message);
         return {};
     }
 }
@@ -92,7 +96,7 @@ async function walkDirectory(currentDir, callback) {
         }
     }
 
-    console.log('1. Обработка корневых текстов (Root), определение заголовков и категорий...');
+    console.log('1. Parcing Root texts, setting headers and categories...');
     await walkDirectory(rootPath, async (fullPath, fileName) => {
         const suttaId = fileName.split('_')[0];
         
@@ -151,7 +155,7 @@ async function walkDirectory(currentDir, callback) {
         }
     });
 
-    console.log('2. Обработка HTML-разметки...');
+    console.log('2. Parcing HTML...');
     await walkDirectory(htmlPath, async (fullPath, fileName) => {
         const suttaId = fileName.split('_')[0];
         if (!db[suttaId]) return;
@@ -163,7 +167,7 @@ async function walkDirectory(currentDir, callback) {
         }
     });
 
-    console.log('3. Обработка вариантов (Variants)...');
+    console.log('3. Parcing Variants...');
     await walkDirectory(variantPath, async (fullPath, fileName) => {
         const suttaId = fileName.split('_')[0];
         if (!db[suttaId]) return;
@@ -175,7 +179,7 @@ async function walkDirectory(currentDir, callback) {
         }
     });
 
-    console.log('4. Обработка переводов (Translations)...');
+    console.log('4. Parcing Translations...');
     await walkDirectory(translationPath, async (fullPath, fileName) => {
         const suttaId = fileName.split('_')[0];
         if (!db[suttaId]) return;
@@ -199,7 +203,7 @@ async function walkDirectory(currentDir, callback) {
         }
     });
 
-    console.log('5. Форматирование и сортировка базы данных...');
+    console.log('5. Formatting and sorting Data Base...');
     const finalDatabase = {};
     
     const sortedSuttas = Object.keys(db).sort((a, b) => 
@@ -221,12 +225,12 @@ async function walkDirectory(currentDir, callback) {
         }
     }
 
-    console.log(`Запись файла данных в ${outputFile}...`);
+    console.log(`Saving DB into ${outputFile}...`);
     await fs.writeFile(outputFile, JSON.stringify(finalDatabase), 'utf8');
-    console.log('Сборка успешно завершена!');
+    console.log('Build done.!');
 }
 
-compileLocalDatabase().catch(err => console.error('Критическая ошибка:', err));
+compileLocalDatabase().catch(err => console.error('Critical error:', err));
 
 
 

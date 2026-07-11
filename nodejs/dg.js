@@ -17,9 +17,8 @@
 // топ 10 или топ 5 ???
 //добавить чтобы scope понимал также category чтобы можно было сказать dhamma - и это были бы 4 никаи. khudakka и тп . включая 'dhamma' 'vinaya' 'khudakk'  'abhi' а не только названия книг
 
-console.log('api: http://localhost:3000/search?q=pa%E1%B9%ADigh&lb=1&la=2&scope=dhamma,abhi');
-console.log('api: https://dhamma.gift/search?q=kacchapa&lb=1&la=2&scope=dhamma');
-console.log('demo: https://dhamma.gift/nodejs/res/?q=pa%E1%B9%ADigh&lb=1&la=2&scope=dhamma,abhi');
+console.log('api:\nhttp://localhost:3000/search?q=pa%E1%B9%ADigh&lb=1&la=2&scope=dhamma,abhi\nhttps://dhamma.gift/search?q=kacchapa&lb=1&la=2&scope=dhamma');
+console.log('demo:\nhttps://dhamma.gift/nodejs/res/?q=pa%E1%B9%ADigh&lb=1&la=2&scope=dhamma,abhi\nhttp://localhost:8080/nodejs/res/?q=kacchapa&lb=1&la=2&scope=dhamma\n\n');
 
 const express = require('express');
 const fs = require('fs').promises;
@@ -164,7 +163,7 @@ async function searchInDatabase(dbPath, keyword, searchScope = 'default', lb = 0
             data: searchResults
         };
     } catch (error) {
-        console.error(`Ошибка при поиске:`, error.message);
+        console.error(`Search Error:`, error.message);
         return null;
     }
 }
@@ -177,7 +176,7 @@ app.get('/search', async (req, res) => {
     const la = parseInt(req.query.la) || 0; 
 
     if (!keyword) {
-        return res.status(400).json({ error: 'Параметр "q" (поисковое слово) обязателен.' });
+        return res.status(400).json({ error: 'Parameter "q" (search work) is mandatory.' });
     }
 
     const databaseFile = path.join(__dirname, 'dg_db.json');
@@ -186,11 +185,11 @@ app.get('/search', async (req, res) => {
     if (result) {
         res.json(result);
     } else {
-        res.status(500).json({ error: 'Внутренняя ошибка сервера при поиске.' });
+        res.status(500).json({ error: 'Search Error. Internal Server Error.' });
     }
 });
 
 // Запуск сервера
 app.listen(PORT, () => {
-    console.log(`Сервер поиска запущен. API доступно по адресу: http://localhost:${PORT}/search`);
+    console.log(`Search Server started. To access API use: http://localhost:${PORT}/search?q=`);
 });

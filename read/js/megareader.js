@@ -621,12 +621,9 @@ async function initReader() {
             console.log("Запускаем поиск по слову:", query);
             if (typeof window.executeGlobalSearch === 'function') {
                 window.executeGlobalSearch(query);
-<<<<<<< HEAD
-=======
             } else {
                 console.lot(`Поиск по слову "${query}" (Функция в разработке)`);
             //    alert(`Поиск по слову "${query}" (Функция в разработке)`);
->>>>>>> 9548c832aa6aee8fbe2be79aab7ac7b0a6eac0d0
             }
         }
     } else {
