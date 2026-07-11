@@ -904,6 +904,9 @@ $(document).ready(function() {
             stateSaveParams: function(settings, data) {
                 data.search.search = ''; 
             },
+            stateLoadParams: function (settings, data) {
+                data.order = [[6, 'asc'], [0, 'asc']];
+            },
             dom: tableDom,
             language: {
                 url: `/config/lang_${window.siteLanguage}.json`,
