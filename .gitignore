@@ -4,7 +4,7 @@ nohup.out
 result
 scripts/api/__pycache__
 **/__pycache__
-**/dg_db.json
+**/dg_db*.json
 helpdocs
 .well-known
 config/sync-config.json

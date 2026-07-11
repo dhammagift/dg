@@ -1,4 +1,7 @@
+
 <!--
+корректно показывать с иконкой что есть варианты. 
+добавить варианты в ответ. 
 Неравноменрые отсупы между переводавми в цитатах. добавил br но удлинился разрыв между другими переводами. 
 
 to do now
@@ -668,6 +671,8 @@ $(document).ready(function() {
     var filterValue = new URLSearchParams(window.location.search).get('f');
 
     // Главная функция запуска поиска
+
+
     async function initSearchApp() {
         let urlParams = new URLSearchParams(window.location.search);
         
@@ -680,7 +685,6 @@ $(document).ready(function() {
             keyword = lastSegment;
         }
 
-        // Совместимость с полем .keyword
         let keywordElement = document.querySelector('.keyword');
         let divKeyword = keywordElement ? keywordElement.textContent.trim().replace(/ṃ/g, "ṁ") : "";
         if (!keyword && divKeyword) {
@@ -721,11 +725,30 @@ $(document).ready(function() {
             $('.resultheader').text(newTitle);
             $('.forshellscript a').attr('href', `/w.php?s=${json.metadata.query}&d=${json.metadata.scope}`);
 
+            // Логика управления видимостью вариантов
+            let variantDiv = document.getElementById('variants');
+            if (variantDiv) {
+                if (json.metadata.hasVariantMatch) {
+                    variantDiv.style.display = 'block';
+                    let variantLink = variantDiv.querySelector('a');
+                    if (variantLink) {
+                        let currentHref = variantLink.getAttribute('href');
+                        // Если атрибут содержит плейсхолдер, заменяем его на слово
+                        if (currentHref.includes('$wordLinkToReplace')) {
+                            variantLink.setAttribute('href', currentHref.replace('$wordLinkToReplace', encodeURIComponent(highlightWord)));
+                        }
+                    }
+                } else {
+                    variantDiv.style.display = 'none';
+                }
+            }
+
             buildDataTable(dataArray, highlightWord);
         } catch (error) {
             console.error('Ошибка при поиске:', error);
         }
     }
+
 
     function buildDataTable(dataArray, highlightWord) {
         var desktopDom = '<"row"<"col-sm-12 col-md-4"l><"col-sm-12 col-md-5"p><"col-sm-12 col-md-3"f>>rt<"row"<"col-sm-12 col-md-4"i><"col-sm-12 col-md-8"p>><""Q><"footerlike"B>';
