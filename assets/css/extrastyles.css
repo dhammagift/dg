@@ -190,6 +190,13 @@ margin-top: -10px;
   color: #D5D6D5;
 }
 
+.table-wrapper {
+    /* Значение 1600px или 1800px можно изменить под твое понимание "супер-широкого" монитора */
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+
 .table-home-icon {
   margin-top: -3px; 
   margin-left: -3px; 

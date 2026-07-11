@@ -1,4 +1,12 @@
 
+
+
+window.notEn= /^\/(ru|r|ml|mt)(\/|$)/.test(window.location.pathname)
+    || (localStorage.getItem('siteLanguage') || 'en') !== 'en';    
+
+window.isRu = window.notEn;
+
+
     // Проверяем, ГДЕ мы находимся. 
     // Запускаем логику редиректа ТОЛЬКО если мы НЕ на локальном сервере.
     if (window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost') {
@@ -43,8 +51,8 @@
                 loadingEl.className = 'dict-loading-indicator';
                 document.body.appendChild(loadingEl);
             }
-            const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/');
-            loadingEl.textContent = customText || (isRu ? 'Словарь загружается...' : 'Dictionary is loading...');
+            
+            loadingEl.textContent = customText || (window.notEn ? 'Словарь загружается...' : 'Dictionary is loading...');
             
             setTimeout(() => loadingEl.classList.add('show'), 10);
         } else {
@@ -142,11 +150,9 @@ window.addEventListener('suttaRenderedCentral', () => {
                 const lang = isDictRu ? 'ru' : 'en';
 
                 // Для локализации самой плашки тоже берем готовую переменную из словаря, если она есть
-                const isRuInterface = typeof isRussian !== 'undefined' ? isRussian : (window.location.pathname.includes('/r') || window.location.pathname.includes('/ml/'));
-
-                lazyLoadStandaloneScripts(lang).then((dbWasSlow) => {
+                                lazyLoadStandaloneScripts(lang).then((dbWasSlow) => {
                     if (scriptWasSlow || dbWasSlow) {
-                        window.dg_toggleNativeLoader(true, isRuInterface ? 'Словарь загружен.' : 'Dictionary is loaded.');
+                        window.dg_toggleNativeLoader(true, window.notEn ? 'Словарь загружен.' : 'Dictionary is loaded.');
                         
                         setTimeout(() => {
                             window.dg_toggleNativeLoader(false);
@@ -199,8 +205,8 @@ window.addEventListener('suttaRenderedCentral', () => {
             loadingEl = document.createElement('div');
             loadingEl.id = 'voice-loader';
             loadingEl.className = 'dict-loading-indicator';
-            const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/');
-            loadingEl.textContent = isRu ? 'Инициализация аудио...' : 'Initializing audio...';
+            
+            loadingEl.textContent = window.notEn ? 'Инициализация аудио...' : 'Initializing audio...';
             document.body.appendChild(loadingEl);
             setTimeout(() => loadingEl.classList.add('show'), 10);
         }
@@ -787,14 +793,9 @@ function updateDemoLinks() {
     standardBaseUrl = window.location.origin + "/read/";
   }
 
-// Определяем, является ли текущая страница русскоязычной
-  const isRussian = window.location.pathname.includes('/r/') ||
-                    window.location.pathname.includes('/ru/') |
-                    window.location.pathname.includes('/mt/') ||
-                    window.location.pathname.includes('/ml/');
 
   // Для русских – /mt/, для остальных – // (можно заменить на любой другой путь)
-  const mtUrl = isRussian
+  const mtUrl = window.notEn
     ? window.location.origin + "/mt/"
     : window.location.origin + "/multi/";
 
@@ -1813,7 +1814,7 @@ document.addEventListener("keydown", function (event) {
 
   const key = "preferredLanguage";
   const savedLang = localStorage.getItem(key);
-  const isRuCurrent = currentPath.includes("/ru/") || currentPath.includes("/r/");
+  
 
   // Функция: получить URL для заданного языка и страницы
   function makeUrl(lang, isHomepage) {
@@ -1834,11 +1835,11 @@ document.addEventListener("keydown", function (event) {
 
     if (isCurrentTarget) {
       // Уже на целевой странице — делаем toggle
-      nextLang = isRuCurrent ? "en" : "ru";
+      nextLang = window.notEn ? "en" : "ru";
       localStorage.setItem(key, nextLang);
     } else {
       // С других страниц — просто используем сохранённое предпочтение
-      nextLang = savedLang || (isRuCurrent ? "ru" : "en");
+      nextLang = savedLang || (window.notEn ? "ru" : "en");
       if (!savedLang) localStorage.setItem(key, nextLang); // сохранить при первом запуске
     }
 
@@ -2043,12 +2044,9 @@ function saveExactScrollPosition() {
             // 3. Определяем язык для уведомления
             const path = window.location.pathname;
             // Если путь содержит /ru/, /r/ или /ml/ — показываем по-русски
-            const isRu = path.includes('/ru/') || 
-                         path.includes('/r/') || 
-                         path.includes('/ml/');
             
             // Выбираем текст
-            const label = isRu ? 'Размер' : 'Font size';
+            const label = window.notEn ? 'Размер' : 'Font size';
 
             // 4. Показываем Bubble-уведомление
             if (typeof showBubbleNotification === 'function') {
@@ -2264,10 +2262,10 @@ function toggleFavoriteGlobal(itemData) {
     if (itemData.id) itemData.id = formatSlug(itemData.id);
 
     const currentPath = window.location.pathname;
-    const isRu = currentPath.includes('/ru/') || currentPath.includes('/r/') || currentPath.includes('/ml/');
     
-    const textRemoved = isRu ? "Удалено из избранного" : "Removed from favorites";
-    const textSaved = isRu ? "Сохранено в избранное" : "Saved to favorites";
+    
+    const textRemoved = window.notEn ? "Удалено из избранного" : "Removed from favorites";
+    const textSaved = window.notEn ? "Сохранено в избранное" : "Saved to favorites";
 
     let favs = getFavorites();
     const existingIndex = favs.findIndex(fav => fav.slug === itemData.slug);
@@ -2325,8 +2323,8 @@ document.addEventListener("DOMContentLoaded", () => {
             loadingEl = document.createElement('div');
             loadingEl.id = 'quick-modal-loader';
             loadingEl.className = 'dict-loading-indicator';
-            const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/');
-            loadingEl.textContent = isRu ? 'Загрузка меню...' : 'Loading menu...';
+            
+            loadingEl.textContent = window.notEn ? 'Загрузка меню...' : 'Loading menu...';
             document.body.appendChild(loadingEl);
             setTimeout(() => loadingEl.classList.add('show'), 10);
         }
@@ -2442,10 +2440,10 @@ window.getAnonymousDeviceName = function() {
 
 // УДАЛЕНИЕ ЧУЖОЙ СЕССИИ (Кнопка Крестик)
 window.terminateRemoteSession = async function(sessionId) {
-    const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
+    
     
     // 1. Спрашиваем подтверждение
-    const confirmMsg = isRu 
+    const confirmMsg = window.notEn 
         ? "Вы уверены, что хотите принудительно завершить эту сессию? Устройство будет отключено от облака, а локальные данные на нем будут стерты." 
         : "Are you sure you want to forcibly terminate this session? The device will be disconnected and its local data will be wiped.";
 
@@ -2460,12 +2458,12 @@ window.terminateRemoteSession = async function(sessionId) {
         
         // 3. Показываем красивое уведомление об успехе
         if (typeof showBubbleNotification === 'function') {
-            showBubbleNotification(isRu ? "Устройство отключено" : "Device disconnected");
+            showBubbleNotification(window.notEn ? "Устройство отключено" : "Device disconnected");
         }
     } catch (e) { 
         console.error("Error terminating session", e); 
         if (typeof showBubbleNotification === 'function') {
-            showBubbleNotification(isRu ? "❌ Ошибка при отключении" : "❌ Error disconnecting");
+            showBubbleNotification(window.notEn ? "❌ Ошибка при отключении" : "❌ Error disconnecting");
         }
     }
 };
@@ -2768,12 +2766,12 @@ window.triggerSelfDestruct = async function(reason = "terminated") {
     if (savedTheme) localStorage.setItem('theme', savedTheme);
 
     if (typeof showBubbleNotification === 'function') {
-        const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
-        let msg = isRu ? "Сессия удалена. Данные очищены." : "Session terminated. Data wiped.";
+        
+        let msg = window.notEn ? "Сессия удалена. Данные очищены." : "Session terminated. Data wiped.";
         
         // Кастомное сообщение, если аккаунт удален целиком
         if (reason === "deleted") {
-            msg = isRu ? "Аккаунт был удален. Доступ закрыт." : "Account deleted. Access revoked.";
+            msg = window.notEn ? "Аккаунт был удален. Доступ закрыт." : "Account deleted. Access revoked.";
         }
         
         showBubbleNotification(msg, 5000);
@@ -3017,13 +3015,13 @@ window.syncLogout = async function() {
 window.syncDeleteData = async function() {
     const uid = typeof getUid === 'function' ? getUid() : null;
     const currentDb = typeof db !== 'undefined' ? db : window.db;
-    const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
+    
 
     if (uid && currentDb) {
         try {
             // Меняем текст кнопки, так как физическое удаление может занять 1-2 секунды
             const btnDelete = document.getElementById('lbl-delete');
-            if (btnDelete) btnDelete.textContent = isRu ? "Стираем базу..." : "Wiping data...";
+            if (btnDelete) btnDelete.textContent = window.notEn ? "Стираем базу..." : "Wiping data...";
 
             // Функция физического пакетного удаления коллекции (у Firestore лимит 500 за раз)
             const deleteCollection = async (colName) => {
@@ -3076,13 +3074,13 @@ window.syncDeleteData = async function() {
 };
 
 window.updateGlobalSyncButtons = function(user, phraseId) {
-    const isRu = window.location.pathname.match(/\/(ru|r|ml)\//) || localStorage.getItem('siteLanguage') === 'ru';
+    
     const promoBtn = document.getElementById('global-btn-login-promo');
     const syncBtn = document.getElementById('global-btn-sync-now');
     
     if (promoBtn && syncBtn) {
-        promoBtn.innerHTML = isRu ? '<i class="fa-solid fa-cloud"></i> Включить облако' : '<i class="fa-solid fa-cloud"></i> Enable Sync';
-        syncBtn.innerHTML = isRu ? '<i class="fa-solid fa-rotate"></i> Синхронизировать' : '<i class="fa-solid fa-rotate"></i> Sync Data';
+        promoBtn.innerHTML = window.notEn ? '<i class="fa-solid fa-cloud"></i> Включить облако' : '<i class="fa-solid fa-cloud"></i> Enable Sync';
+        syncBtn.innerHTML = window.notEn ? '<i class="fa-solid fa-rotate"></i> Синхронизировать' : '<i class="fa-solid fa-rotate"></i> Sync Data';
         promoBtn.style.display = (user || phraseId) ? 'none' : 'inline-block';
         syncBtn.style.display = (user || phraseId) ? 'inline-block' : 'none';
     }

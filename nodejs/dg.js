@@ -1,7 +1,13 @@
-//отлично. спасибо. каким образом мы можем делать default + vinaya поиск? 
+//TODO now 
+// отлично. спасибо. каким образом мы можем делать default + vinaya поиск? 
+// нужно иметь anydistance mode два три и несколько файлов .
+// каким образом запускать поиск с начала слова или с концом слова. раньше с грепом было \bслово\b
+
 //http://localhost:8080/nodejs/result/?q=kacchap&lb=1&la=2&scope=vinaya,default так он выдает только vinaya.  
 
 
+
+//LOG
 // add word endpoint or just sorting???? grouped by words count matech, count texts, add available texts 
 // добавить опции для выбор книг  общий набор:
 // an sn dn mn + ud dhp iti snp thag thig + vinaya?

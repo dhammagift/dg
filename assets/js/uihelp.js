@@ -108,8 +108,7 @@ function initUiHelp() {
     // === Логика всплывающих подсказок-тостов ===
     function showHint(settings) {
         // 1. Определяем язык (по URL или настройке)
-        const isRu = path.includes('/ru/') || path.includes('/r/') || path.includes('/ml/') || localStorage.getItem('siteLanguage') === 'ru';
-        
+
         // 2. Определяем тип страницы и ключ для localStorage
         let hintKey, hintType;
         const searchParams = new URLSearchParams(window.location.search);
@@ -128,7 +127,7 @@ function initUiHelp() {
       
         // 3. Показываем тост, если еще не показывали
         if (!localStorage.getItem(hintKey)) {
-            const hintText = settings[hintType][isRu ? 'ru' : 'en'];
+            const hintText = settings[hintType][window.isRu ? 'ru' : 'en'];
             
             const notification = document.createElement('div');
             notification.className = 'dg-bottom-toast';

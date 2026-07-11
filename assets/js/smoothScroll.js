@@ -237,9 +237,8 @@ const ScrollManager = {
         this.hideProgressNotification(); 
         this.isWaitingForToast = true;
 
-        const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/');
-        const textBtn = isRu ? "Продолжить чтение" : "Continue reading";
-        const textCheckbox = isRu ? "Больше не спрашивать" : "Don't ask again";
+        const textBtn = window.isRu ? "Продолжить чтение" : "Continue reading";
+        const textCheckbox = window.isRu ? "Больше не спрашивать" : "Don't ask again";
 
         const toast = document.createElement('div');
         toast.id = 'progress-toast';

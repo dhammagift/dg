@@ -4,10 +4,6 @@ const isMobileLike = (
         );
 const isLocalhost = window.location.href.includes('localhost') || window.location.href.includes('127.0.0.1');
 
-let isRussian = window.location.pathname.includes('/ru/') ||
-                         window.location.pathname.includes('/r/') ||
-                         window.location.pathname.includes('/ml/') ||
-                         localStorage.getItem('siteLanguage') === 'ru';
 
 const currentHost = window.location.origin; 
 
@@ -84,7 +80,7 @@ window.addEventListener('message', function(event) {
         const newLang = event.data.lang; 
         
         // ВАЖНО: Обновляем язык на лету
-        isRussian = (newLang === 'ru');
+        window.isRu = (newLang === 'ru');
         localStorage.setItem('siteLanguage', newLang);
 
         let currentSavedDict = localStorage.getItem('selectedDict') || "standalone";
@@ -170,10 +166,10 @@ function applyDictConfig(newDict) {
 
     // Принудительно меняем сохраненный словарь в зависимости от текущего языка
     if (savedDict === "standalone" || savedDict === "standaloneru") {
-        savedDict = isRussian ? "standaloneru" : "standalone";
+        savedDict = window.isRu ? "standaloneru" : "standalone";
         localStorage.setItem('selectedDict', savedDict);
     } else if (savedDict === "newwindow" || savedDict === "newwindowru") {
-        savedDict = isRussian ? "newwindowru" : "newwindow";
+        savedDict = window.isRu ? "newwindowru" : "newwindow";
         localStorage.setItem('selectedDict', savedDict);
     } else if (savedDict === "machinetranslation") {
         inNewWindow = true;
@@ -181,7 +177,7 @@ function applyDictConfig(newDict) {
 
     // --- МАГИЯ ОЧИСТКИ ДЛЯ КОРРЕКТНОГО ПЕРЕКЛЮЧЕНИЯ ---
     // Определяем путь скрипта, который нам БОЛЬШЕ НЕ НУЖЕН
-    const oldLangScriptUrl = isRussian 
+    const oldLangScriptUrl = window.isRu 
         ? '/assets/js/standalone-dpd/dpd_ebts.js' 
         : '/assets/js/standalone-dpd/ru/dpd_ebts.js';
     
@@ -223,7 +219,7 @@ function applyDictConfig(newDict) {
         externalDict = true;
         dictUrl = "mdict://mdict.cn/search?text=";
     } else if (savedDict === "newwindow" || savedDict === "newwindowru") {
-        dictUrl = `https://dict.dhamma.gift/${isRussian ? "ru/" : ""}?silent&theme=${theme}&q=`;
+        dictUrl = `https://dict.dhamma.gift/${window.isRu ? "ru/" : ""}?silent&theme=${theme}&q=`;
     } else if (savedDict === "standaloneru") {
         dictUrl = "standaloneru"; 
     } else if (savedDict === "standalone") {
@@ -327,9 +323,9 @@ async function handleWordLookup(word, event) {
     const currentTheme = getEffectiveTheme();
     
     if (savedDict.includes("full")) {
-        dictUrl = `https://dict.dhamma.gift/${isRussian ? "ru/" : ""}?silent&theme=${currentTheme}&q=`;
+        dictUrl = `https://dict.dhamma.gift/${window.isRu ? "ru/" : ""}?silent&theme=${currentTheme}&q=`;
     } else if (savedDict === "newwindow" || savedDict === "newwindowru") {
-        dictUrl = `https://dict.dhamma.gift/${isRussian ? "ru/" : ""}?silent&theme=${currentTheme}&q=`;
+        dictUrl = `https://dict.dhamma.gift/${window.isRu ? "ru/" : ""}?silent&theme=${currentTheme}&q=`;
     }
 
     const { popup, overlay, iframe } = getPopup();
@@ -338,7 +334,7 @@ async function handleWordLookup(word, event) {
 
     // --- Ждем базы перед поиском ---
     if (dictUrl === "standalone" || dictUrl === "standaloneru" || savedDict === "standalone" || savedDict === "standaloneru") {
-        const lang = isRussian ? "ru" : "en";
+        const lang = window.isRu ? "ru" : "en";
         await lazyLoadStandaloneScripts(lang);
     }
     // -------------------------------
@@ -394,9 +390,9 @@ async function handleWordLookup(word, event) {
 
     if ((dictUrl === "standalone" || dictUrl === "standaloneru") && !translation) {
         const wordLink = `<strong>${createClickableLink(word)}</strong>`;
-        const fallbackUrl = `${currentHost}${isRussian ? "/ru" : ""}/?p=-kn&q=${encodeURIComponent(word)}`;
+        const fallbackUrl = `${currentHost}${window.isRu ? "/ru" : ""}/?p=-kn&q=${encodeURIComponent(word)}`;
 
-        translation = isRussian ?
+        translation = window.isRu ?
             `<div style="padding: 10px;">
                 ${wordLink} не найдено во встроенном словаре.
                 <br><br>
@@ -574,8 +570,7 @@ function lazyLoadStandaloneScripts(lang = 'en') {
             const loadingEl = document.createElement('div');
             loadingEl.id = loadingId;
             loadingEl.className = 'dict-loading-indicator';
-            const isRu = window.location.pathname.includes('/ru/') || window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/');
-            loadingEl.textContent = isRu ? 'Словарь загружается...' : 'Dictionary is loading...';
+            loadingEl.textContent = window.isRu ? 'Словарь загружается...' : 'Dictionary is loading...';
             document.body.appendChild(loadingEl);
             setTimeout(() => loadingEl.classList.add('show'), 10);
         }, 150);
@@ -984,9 +979,9 @@ document.addEventListener("keydown", (event) => {
     if (event.altKey && event.code === "KeyB") {
 
         const modes = {
-            standalone: isRussian ? "standaloneru" : "standalone",
+            standalone: window.isRu ? "standaloneru" : "standalone",
             full: "dpdfull",
-            newWindow: isRussian ? "newwindowru" : "newwindow"
+            newWindow: window.isRu ? "newwindowru" : "newwindow"
         };
 
         const currentDict = localStorage.getItem('selectedDict');
@@ -995,12 +990,12 @@ document.addEventListener("keydown", (event) => {
 
         if (isMobileLike) {
             newDict = currentDict === modes.full ? modes.standalone : modes.full;
-            notificationText = isRussian ?
+            notificationText = window.isRu ?
                 `Словарь: ${newDict === modes.full ? "Полный" : "Встроенный"}` :
                 `Dictionary: ${newDict === modes.full ? "Full" : "Standalone"}`;
         } else {
             newDict = currentDict === modes.newWindow ? modes.standalone : modes.newWindow;
-            notificationText = isRussian ?
+            notificationText = window.isRu ?
                 `Словарь: ${newDict === modes.newWindow ? "В новом окне" : "Встроенный"}` :
                 `Dictionary: ${newDict === modes.newWindow ? "New Window" : "Standalone"}`;
         }
