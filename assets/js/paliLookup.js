@@ -1232,6 +1232,7 @@ function cleanWord(word) {
     return word
         .replace(/^[\s'‘—.–।|…"“”]+/, ' ') 
         .replace(/^[0-9]+/, ' ') 
+        .replace(/·/g, "")
         .replace(/[\s'‘,—.—–।|"“…:;”]+$/, ' ') 
         .replace(/[‘'’‘"“””]+/g, "'") 
         .trim()
