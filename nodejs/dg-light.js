@@ -76,7 +76,7 @@ app.use((req, res, next) => {
     next();
 });
 
-async function searchWithGrep(keyword, searchScope, exactMatch, targetLangs, lb, la) {
+async function searchWithGrep(keyword, searchScope, exactMatch, targetLangs, lb = 0, la = 0) {
     const grepArgs = ['-ri'];
     if (exactMatch) grepArgs.push('-w'); 
     grepArgs.push(keyword);
@@ -192,7 +192,7 @@ async function searchWithGrep(keyword, searchScope, exactMatch, targetLangs, lb,
     const wordExtractionRegex = new RegExp(`[^\\s,.:;!?\"'“”‘’()\\[\\]{}]*${keyword}[^\\s,.:;!?\"'“”‘’()\\[\\]{}]*`, 'gi');
     
     let globalTotalMatches = 0;
-    let globalHasVariants = false; // Переменная для отслеживания совпадений в вариантах
+    let globalHasVariants = false; 
 
     for (const suttaId in searchResults) {
         const suttaRes = searchResults[suttaId];
@@ -249,20 +249,29 @@ async function searchWithGrep(keyword, searchScope, exactMatch, targetLangs, lb,
             }
         }
 
+        const rootKeys = Object.keys(rootData);
+        const enrichedSegments = [];
+
         for (let seg of suttaRes.segments) {
             const sId = seg.segment;
-            seg.root_text = rootData[sId] || "";
-            seg.variant = variantData[sId] || "";
-            seg.html = skeletonDB[suttaId]?.html?.[sId] || "";
+            const sIdx = rootKeys.indexOf(sId);
             
-            seg.translations = {};
-            for (const tKey in translationsData) {
-                if (translationsData[tKey][sId]) {
-                    seg.translations[tKey] = translationsData[tKey][sId];
+            const buildSegData = (id) => {
+                const tr = {};
+                for (const tKey in translationsData) {
+                    if (translationsData[tKey][id]) tr[tKey] = translationsData[tKey][id];
                 }
-            }
+                return {
+                    segment: id,
+                    root_text: rootData[id] || "",
+                    variant: variantData[id] || "",
+                    html: skeletonDB[suttaId]?.html?.[id] || "",
+                    translations: tr
+                };
+            };
 
-            // Добавлен флаг isVariant для обнаружения совпадений в поле variant
+            const mainSeg = buildSegData(sId);
+
             const processTextForMatches = (text, isVariant = false) => {
                 if (!text) return;
                 const matches = text.match(regex);
@@ -277,11 +286,30 @@ async function searchWithGrep(keyword, searchScope, exactMatch, targetLangs, lb,
                 }
             };
 
-            processTextForMatches(seg.root_text, false);
-            processTextForMatches(seg.variant, true); // Проверяем варианты
-            Object.values(seg.translations).forEach(t => processTextForMatches(t, false));
+            processTextForMatches(mainSeg.root_text, false);
+            processTextForMatches(mainSeg.variant, true); 
+            Object.values(mainSeg.translations).forEach(t => processTextForMatches(t, false));
+            
+            mainSeg.lb_context = [];
+            mainSeg.la_context = [];
+            
+            if (sIdx !== -1) {
+                if (lb > 0) {
+                    for (let i = Math.max(0, sIdx - lb); i < sIdx; i++) {
+                        mainSeg.lb_context.push(buildSegData(rootKeys[i]));
+                    }
+                }
+                if (la > 0) {
+                    for (let i = sIdx + 1; i <= Math.min(rootKeys.length - 1, sIdx + la); i++) {
+                        mainSeg.la_context.push(buildSegData(rootKeys[i]));
+                    }
+                }
+            }
+            
+            enrichedSegments.push(mainSeg);
         }
 
+        suttaRes.segments = enrichedSegments;
         suttaRes.count = exactSuttaMatchCount; 
         globalTotalMatches += exactSuttaMatchCount;
         suttaRes.unique_words = Array.from(uniqueWordsSet); 
@@ -317,11 +345,32 @@ async function searchWithGrep(keyword, searchScope, exactMatch, targetLangs, lb,
             exactMatch: exactMatch,
             totalFiles: Object.keys(sortedData).length,
             totalMatches: globalTotalMatches,
-            hasVariantMatch: globalHasVariants // Возвращаем результат поиска в вариантах
+            hasVariantMatch: globalHasVariants 
         },
         data: sortedData
     };
 }
+
+app.get('/search', async (req, res) => {
+    const keyword = req.query.q;
+    const scope = req.query.scope || 'default';
+    const exact = req.query.exact === 'true'; 
+    const langsParam = req.query.langs || 'ru,en'; 
+    const targetLangs = langsParam.split(',').map(l => l.trim());
+    const lb = parseInt(req.query.lb) || 0; 
+    const la = parseInt(req.query.la) || 0; 
+
+    if (!keyword) {
+        return res.status(400).json({ error: 'Parameter "q" (search word) is mandatory.' });
+    }
+
+    try {
+        const result = await searchWithGrep(keyword, scope, exact, targetLangs, lb, la);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: 'Search Error. Internal Server Error.' });
+    }
+});
 
 app.get('/search', async (req, res) => {
     const keyword = req.query.q;

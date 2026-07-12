@@ -749,7 +749,6 @@ $(document).ready(function() {
         }
     }
 
-
     function buildDataTable(dataArray, highlightWord) {
         var desktopDom = '<"row"<"col-sm-12 col-md-4"l><"col-sm-12 col-md-5"p><"col-sm-12 col-md-3"f>>rt<"row"<"col-sm-12 col-md-4"i><"col-sm-12 col-md-8"p>><""Q><"footerlike"B>';
         var mobileDom = '<"row"<"col-sm-6"l><"col-sm-6"f>><"row"<"col-sm-12"p>>rt<"row"<"col-sm-12"i><"col-sm-12"p>><""Q><"footerlike"B>';
@@ -823,7 +822,6 @@ $(document).ready(function() {
                 {
                     data: 'sutta_id',
                     orderable: false,
-                    className: 'text-nowrap',
                     render: function (data) {
                         let secondLangLinkHtml = '';
                         if (window.siteLanguage !== 'en') {
@@ -846,11 +844,18 @@ $(document).ready(function() {
                         if (!data || data.length === 0) return '';
                         let quoteHtml = '';
 
-                        data.forEach(seg => {
-                            let paliText = seg.root_text || '';
+                        let baseUrl = window.location.origin + "/nr/";
 
-                            if (highlightWord && paliText) {
+                        const renderSegment = (seg, isContext = false) => {
+                            let html = '';
+                            let paliText = seg.root_text || '';
+                            let variantText = seg.variant || '';
+
+                            if (highlightWord && paliText && !isContext) {
                                 paliText = paliText.replace(regexHighlight, match => `<b class="match finder">${match}</b>`);
+                            }
+                            if (highlightWord && variantText && !isContext) {
+                                variantText = variantText.replace(regexHighlight, match => `<b class="match finder">${match}</b>`);
                             }
 
                             let segmentHash = seg.segment.includes(':') ? seg.segment.split(':')[1] : seg.segment;
@@ -863,12 +868,20 @@ $(document).ready(function() {
                             let unhiddenlink = `<a target="_blank" class="fdgLink quoteLink-start text-reset text-decoration-none" href="${textUrl}" data-slug="${urlwithanchor}"></a>`;
                             let hiddenlink = `<a target="_blank" class="fdgLink quoteLink text-white text-decoration-none" href="${textUrl}" data-slug="${urlwithanchor}"></a>`;
 
-                            quoteHtml += `<span class="pli-lang quote" lang="pi">${unhiddenlink} ${paliText} ${hiddenlink}</span><br class="styled pli-lang quote" lang="pi">`;
+                            if (paliText) {
+                                // Убран класс text-muted для пали контекста, оставлена только прозрачность
+                                let contextClass = isContext ? "opacity-90" : "";
+                                html += `<span class="pli-lang quote ${contextClass}" lang="pi">${unhiddenlink} ${paliText} ${hiddenlink}</span><br class="styled pli-lang quote" lang="pi">`;
+                            }
+                            
+                            if (variantText) {
+                                // Убран класс text-muted для пали контекста, оставлена только прозрачность
+                                let contextClass = isContext ? "opacity-90" : "";
+                                html += `<span class="pli-lang variant quote ${contextClass}" lang="pi">${unhiddenlink} ${variantText} ${hiddenlink}</span><br class="styled pli-lang variant quote" lang="pi">`;
+                            }
 
                             if (seg.translations) {
                                 let transKeys = Object.keys(seg.translations);
-                                
-                                // Логика предпочитаемых языков: сайт-язык, затем en
                                 let preferredLanguages = [window.siteLanguage, 'en']; 
                                 let sortedTransKeys = [];
                                 
@@ -880,19 +893,36 @@ $(document).ready(function() {
                                 let remainingKeys = transKeys.filter(k => !sortedTransKeys.includes(k));
                                 sortedTransKeys.push(...remainingKeys);
 
-                                const appendTrans = (key) => {
+                                sortedTransKeys.forEach(key => {
                                     let transText = seg.translations[key];
                                     if (!transText) return;
-                                    if (highlightWord) {
+                                    if (highlightWord && !isContext) {
                                         transText = transText.replace(regexHighlight, match => `<b class="match finder">${match}</b>`);
                                     }
                                     let langCode = key.split('_')[0];
+                                    // Переводы остаются приглушенными (text-muted)
                                     let htmlclass = (langCode === 'en') ? "eng-lang text-muted font-weight-light" : langCode + "-lang text-muted font-weight-light";
+                                    if (isContext) htmlclass += " opacity-75"; 
                                     
-                                    quoteHtml += `<span class="${htmlclass} quote" lang="${langCode}">${unhiddenlink} ${transText} ${hiddenlink}</span><br class="styled ${htmlclass} quote" lang="${langCode}"><br>`;
-                                };
+                                    html += `<span class="${htmlclass} quote" lang="${langCode}">${unhiddenlink} ${transText} ${hiddenlink}</span><br class="styled ${htmlclass} quote" lang="${langCode}">`;
+                                });
+                            }
+                            return html + (isContext ? '' : '<br>'); 
+                        };
 
-                                sortedTransKeys.forEach(appendTrans);
+                        data.forEach(seg => {
+                            if (seg.lb_context && seg.lb_context.length > 0) {
+                                seg.lb_context.forEach(ctxSeg => {
+                                    quoteHtml += renderSegment(ctxSeg, true);
+                                });
+                            }
+                            
+                            quoteHtml += renderSegment(seg, false);
+                            
+                            if (seg.la_context && seg.la_context.length > 0) {
+                                seg.la_context.forEach(ctxSeg => {
+                                    quoteHtml += renderSegment(ctxSeg, true);
+                                });
                             }
                         });
 
@@ -905,12 +935,6 @@ $(document).ready(function() {
                 data.search.search = ''; 
             },
             dom: tableDom,
-            language: {
-                url: `/config/lang_${window.siteLanguage}.json`,
-                search: '',
-                lengthMenu: '_MENU_ per page',
-                searchPlaceholder: 'Filter...'
-            },
             searchBuilder: {
                 preDefined: {
                     criteria:[
@@ -1190,7 +1214,8 @@ $(document).ready(function() {
             'lengthMenu': [10, 30, 50, 100, 1000],
             'columnDefs': [
                 { type: 'natural', targets: 0, className: 'text-nowrap' }, 
-                { targets: 1, className: 'text-nowrap' }, 
+                { targets: 1, width: '40%' }, 
+                { targets: 2, width: '30%' }, 
                 { targets: [3, 4, 5, 6], className: 'text-nowrap' }, 
                 { type: 'category', targets: 6, visible: false }, 
                 { type: "html", targets: [0, 1, 2, 7] },
@@ -1231,6 +1256,7 @@ $(document).ready(function() {
             history.replaceState({}, '', currentUrl);
         }
     }
+
 
     initSearchApp();
 });
