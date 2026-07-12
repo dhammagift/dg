@@ -50,3 +50,10 @@ git merge upstream/main
 git push origin main
 
 
+
+
+#delete latest commit
+cd /var/www/offline-data/4nt
+git reset --hard HEAD~1
+git push origin HEAD --force
+
