@@ -1,15 +1,14 @@
 #!/bin/bash
 
 echo -n adding buttons
-
 # Директория с HTML файлами (по умолчанию текущая)
 TARGET_DIR="${1:-.}"
 
-# HTML код кнопок с очисткой пути от папки /4nt для оригинального сайта
-BUTTONS="<a href=\"/ru\" id=\"fdg-button\" class=\"icon-btn\" title=\"Искать в Суттах (Ctrl+1)\" rel=\"noreferrer\"><img src=\"/assets/img/gray-white.png\" alt=\"Поиск\" style=\"width:18px; display:block;\"></a><a title=\"Всплывающий по клику словарь (Alt+A)\" class=\"icon-btn toggle-dict-btn\"><img src=\"/assets/svg/comment.svg\" alt=\"Словарь\" style=\"width:18px; height:18px; display:block;\"></a><a id=\"orig-site-btn\" href=\"#\" title=\"Оригинальный сайт s.4nt.org\" class=\"icon-btn\" onclick=\"this.href='https://s.4nt.org'+location.pathname.replace(/^\/4nt/, '')+location.search+location.hash\" target=\"_blank\" style=\"font-size:12px; display:flex; align-items:center; justify-content:center;\">🌐</a>"
+# HTML код кнопок. Использована строковая замена .replace('/4nt', '')
+BUTTONS="<a href=\"/ru\" id=\"fdg-button\" class=\"icon-btn\" title=\"Искать в Суттах (Ctrl+1)\" rel=\"noreferrer\"><img src=\"/assets/img/gray-white.png\" alt=\"Поиск\" style=\"width:18px; display:block;\"></a><a title=\"Всплывающий по клику словарь (Alt+A)\" class=\"icon-btn toggle-dict-btn\"><img src=\"/assets/svg/comment.svg\" alt=\"Словарь\" style=\"width:18px; height:18px; display:block;\"></a><a id=\"orig-site-btn\" href=\"#\" title=\"Оригинальный сайт s.4nt.org\" class=\"icon-btn\" onclick=\"this.href='https://s.4nt.org'+location.pathname.replace('/4nt', '')+location.search+location.hash\" target=\"_blank\" style=\"font-size:12px; display:flex; align-items:center; justify-content:center;\">🌐</a>"
 
 find "$TARGET_DIR" -type f -name "*.html" -print0 | while IFS= read -r -d '' file; do
-
+    
     # 1. Патчим основной текст для работы словаря
     sed -i "s/const ct=mk('span','ct grw');/const ct=mk('span','ct grw' + (key==='pali' ? ' pli-lang' : '')); if(key==='pali') ct.setAttribute('lang', 'pi');/g" "$file"
 
@@ -27,13 +26,12 @@ find "$TARGET_DIR" -type f -name "*.html" -print0 | while IFS= read -r -d '' fil
     fi
 
 done
-
 echo -n " done"
 
 echo
- echo -n editing styles 
+ echo -n editing styles
 
-grep  -ril debabel-logo-1k.jpg  * | grep html | xargs sed -i 's/debabel-logo-1k.jpg/headerlogo.png/g'                                                                                               
-grep -ril "#1a1612" *.html | grep html | xargs sed -i 's/#1a1612/#000/g'                          
+grep  -ril debabel-logo-1k.jpg  * | grep html | xargs sed -i 's/debabel-logo-1k.jpg/headerlogo.png/g'  
+grep -ril "#1a1612" *.html | grep html | xargs sed -i 's/#1a1612/#000/g'
 
 echo " done"
