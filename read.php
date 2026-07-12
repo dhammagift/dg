@@ -3090,7 +3090,7 @@ clearBtn.style.display = 'block';
 
 		 
 		 <div class="mt-3">
- <span class="level5" id="sn12.2"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn12.2">sn12.2</a> Vibhaṅgasutta <?php echo $ifRuLitTrn;?></span>
+ <span class="level5" id="sn12.2"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn12.2">sn12.2</a> Vibhaṅgasutta <?php echo $ifRuLitTrn ;?><?php echo $ifEnLitTrn ;?></span>
  </div>
 
 		 
@@ -10651,7 +10651,7 @@ clearBtn.style.display = 'block';
 
 		 
 		 <div class="mt-3">
- <span class="level5" id="sn54.1"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn54.1">sn54.1</a> Ekadhammasutta <?php echo $ifRuLitTrn;?></span>
+ <span class="level5" id="sn54.1"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn54.1">sn54.1</a> Ekadhammasutta <?php echo $ifRuLitTrn;?><?php echo $ifEnLitTrn ;?></span>
  </div>
 
 		 
@@ -11215,7 +11215,7 @@ clearBtn.style.display = 'block';
 
 		 
 		 <div class="mt-3">
- <span class="level5" id="sn56.11"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn56.11">sn56.11</a> Dhammacakkappavattanasutta <?php echo $ifRuLitTrn;?></span>
+ <span class="level5" id="sn56.11"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn56.11">sn56.11</a> Dhammacakkappavattanasutta <?php echo $ifRuLitTrn;?><?php echo $ifEnLitTrn ;?></span>
  </div>
 
 		 
