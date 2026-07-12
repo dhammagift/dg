@@ -95,13 +95,15 @@ echo '<!--
         <a class="text-reset" target="_blank"  href="' . $linksclegacy . '">Legacy</a>
          </div>
          </li>
- <li><a class="dropdown-item" target="_blank" href="' . $linktbwOnMain . '">
- The Buddha\'s Words</a></li> 
 
+                 <li>
+         <div class="dropdown-item ">
+         <a class="text-reset" target="_blank"  href="/4nt" >S.4nt.org</a> 
+        <a class="text-reset" target="_blank"  href="' . $linktbwOnMain . '">The Buddha\'s Words</a>
+         </div>
+         </li>
+         
 
-<!-- <li><a class="dropdown-item" href="https://github.com/digitalpalidictionary/digitalpalidictionary/releases">' . $anamedpd . '</a></li>  -->
-
- <li>
 
          <div class="dropdown-item ">Patimokkha 
 

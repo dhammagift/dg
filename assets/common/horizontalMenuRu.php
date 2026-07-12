@@ -66,7 +66,7 @@ echo '<!--
     <a class="text-reset" target="_blank"  href="https://open.tipitaka.lk/" title="Редакция Шри Ланки Buddha Jhayanti">BJT</a>
     <a class="text-reset" target="_blank"  href="https://84000.org/" title="Тайская Типитака на 84000.org">Thai</a>
     <a class="text-reset" target="_blank"  href="https://tipitaka.org/romn" title="Типитака VRI на Tipitaka.org">VRI</a>  
-    <a class="text-reset" target="_blank"  href="https://gretil.sub.uni-goettingen.de/gretil.html#Suttapit" title="Типитака PTS на GRETIL">PTS</a>  
+    <a class="text-reset" target="_blank"  href="https://gretil.sub.uni-goettingen.de/gretil.html#Suttapit" title="Типитака PTS на GRETIL">PTS</a> 
     <a class="text-reset" target="_blank"  href="https://suttacentral.net/pitaka/sutta?lang=en" title="Типитака Mahāsaṅgīti на SuttaCentral.net">MS</a>
   </div>
 </li>
@@ -96,10 +96,15 @@ echo '<!--
         <a class="text-reset" target="_blank"  href="' . $linksclegacy . '">Legacy</a>
          </div>
          </li>
-        <li><a class="dropdown-item" target="_blank" href="' . $linktbwOnMain . '">
-
-        The Buddha\'s Words</a></li>  
-	  
+         
+                 <li>
+         <div class="dropdown-item ">
+         <a class="text-reset" target="_blank"  href="/4nt" >S.4nt.org</a> 
+        <a class="text-reset" target="_blank"  href="' . $linktbwOnMain . '">The Buddha\'s Words</a>
+         </div>
+         </li>
+         
+        
 	               <li>
          <div class="dropdown-item ">Patimokkha 
          <a class="text-reset" target="_blank"   href="' . $linkati . '">ATI</a>

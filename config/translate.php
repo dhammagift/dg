@@ -877,6 +877,8 @@ $privacy = '<a class="text-muted text-decoration-none" href="https://dhamma.gift
 $copyrightnote = 'The materials on this website are distributed under the <a class="text-white text-decoration-none me-0" href="' . $cclink . '" target="_blank" title="' . $cctitle . '">CC BY-NC-SA 4.0</a> license, but Pali texts and English Translations from SuttaCentra.net, the works of A. Y. Syrkin and TheBuddhasWords.net are subject to different terms. Please check with the copyright holders for their usage conditions.';
 
 $ifRuLitTrn = '';
+$ifEnLitTrn = '(<a href="/assets/common/o-en.html" class="translation-link">o</a>)';
+$ifEnThanTrn = '(Thanissaro Bh)';
 $gearbutton = 'extra settings';
 
 $maintitle = 'Precise Search in Pali Suttas and Vinaya';
