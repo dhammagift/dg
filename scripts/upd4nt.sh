@@ -9,8 +9,8 @@ BUTTONS="<a href=\"/ru\" id=\"fdg-button\" class=\"icon-btn\" title=\"Искат
 
 find "$TARGET_DIR" -type f -name "*.html" -print0 | while IFS= read -r -d '' file; do
     
-    # 1. Патчим основной текст для работы словаря (добавлен санскрит)
-    sed -i "s/const ct=mk('span','ct grw');/const ct=mk('span','ct grw' + (key==='pali' || key==='san' ? ' pli-lang' : '')); if(key==='pali' || key==='san') ct.setAttribute('lang', 'pi');/g" "$file"
+    # 1. Патчим основной текст для работы словаря (добавлен санскрит и китайский)
+    sed -i "s/const ct=mk('span','ct grw');/const ct=mk('span','ct grw' + (key==='pali' || key==='san' || key==='lzh' || key==='zh' ? ' pli-lang' : '')); if(key==='pali' || key==='san' || key==='lzh' || key==='zh') ct.setAttribute('lang', 'pi');/g" "$file"
 
     # 2. Патчим оглавление для работы словаря
     sed -i "s/const snippet=mk('span','tr-pali');/const snippet=mk('span','tr-pali pli-lang'); snippet.setAttribute('lang', 'pi');/g" "$file"
