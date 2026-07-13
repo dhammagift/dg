@@ -20,8 +20,10 @@ $manifest = '/manifest-ru.json'; // для русской версии
 
 
 $ifRuLitTrn = '<span class="text-xs text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Сквозная терминология, дословный перевод">(<a href="/assets/common/o.html" class="translation-link">o</a>)</span>';
-$ifRuSvOTrn = '<span class="text-xs text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с англ. SV. Часть отредактирована в соответствии с пали О">sv ред. o</a></span>';
-$ifRuSvTrn = '<span class="text-xs text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с англ. SV.">sv</a></span>';
+$ifRuSvOTrn = '<span class="text-xs text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с англ. SV. Часть отредактирована в соответствии с пали О">SV ред. o</a></span>';
+$ifRuSvTrn = '<span class="text-xs text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с англ. SV.">SV</a></span>';
+$ifRuAYSOTrn = '<span class="text-xs text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с пали. А.Я. Сыркин. Часть отредактирована сквозной терминологией О">Сыркин ред. o</a></span>';
+$ifRuAYSTrn = '<span class="text-xs text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с Пали А.Я. Сыркин.">Сыркин</a></span>';
 
 $gearbutton = 'дополнительные настройки';
 $linksothermat = 'https://drive.google.com/drive/u/1/folders/1UU-y5idRNpfcVTripRUtyTVcOgdwjMGN';
