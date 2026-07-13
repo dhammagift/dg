@@ -18,7 +18,7 @@ $toggleLang = 'Переключить Рус/Англ (Ctrl + 1)';
 $showall = 'Показать Все';
 $manifest = '/manifest-ru.json'; // для русской версии
 
-$ifRuLitTrn = '<span class="small text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Сквозная терминология, дословный перевод с Пали редакуия Махасангити">(<a href="/assets/common/o.html" class="translation-link">o</a>)</span>';
+$ifRuLitTrn = '<span class="small text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Сквозная терминология, дословный перевод с Пали">(<a href="/assets/common/o.html" class="translation-link">o</a>)</span>';
 $ifRuSvOTrn = '<span data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с англ. SV. Часть изменена согласно сквозной терминологии, пали О"><a class="text-decoration-none small text-muted">SV ред. o</a></span>';
 $ifRuSvTrn = '<span data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с англ. SV."><a class="text-decoration-none small text-muted">SV</a></span>';
 $ifRuAYSOTrn = '<span data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с пали. А.Я. Сыркин. Часть изменена согласно сквозной терминологии О"><a class="text-decoration-none small text-muted"> Сыркин ред. o</a></span>';
