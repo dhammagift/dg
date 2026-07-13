@@ -19,11 +19,11 @@ $showall = 'Показать Все';
 $manifest = '/manifest-ru.json'; // для русской версии
 
 
-$ifRuLitTrn = '<span class="text-xs text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Сквозная терминология, дословный перевод">(<a href="/assets/common/o.html" class="translation-link">o</a>)</span>';
-$ifRuSvOTrn = '<span class="text-xs text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с англ. SV. Часть отредактирована в соответствии с пали О">SV ред. o</a></span>';
-$ifRuSvTrn = '<span class="text-xs text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с англ. SV.">SV</a></span>';
-$ifRuAYSOTrn = '<span class="text-xs text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с пали. А.Я. Сыркин. Часть отредактирована сквозной терминологией О">Сыркин ред. o</a></span>';
-$ifRuAYSTrn = '<span class="text-xs text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с Пали А.Я. Сыркин.">Сыркин</a></span>';
+$ifRuLitTrn = '<span class="small text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Сквозная терминология, дословный перевод">(<a href="/assets/common/o.html" class="translation-link">o</a>)</span>';
+$ifRuSvOTrn = '<span class="small text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с англ. SV. Часть отредактирована в соответствии с пали О">SV ред. o</a></span>';
+$ifRuSvTrn = '<span class="small text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с англ. SV.">SV</a></span>';
+$ifRuAYSOTrn = '<span class="small text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с пали. А.Я. Сыркин. Часть отредактирована сквозной терминологией О">Сыркин ред. o</a></span>';
+$ifRuAYSTrn = '<span class="small text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с Пали А.Я. Сыркин.">Сыркин</a></span>';
 
 $gearbutton = 'дополнительные настройки';
 $linksothermat = 'https://drive.google.com/drive/u/1/folders/1UU-y5idRNpfcVTripRUtyTVcOgdwjMGN';
@@ -884,9 +884,9 @@ $copyrightnote = 'The materials on this website are distributed under the <a cla
 $ifRuLitTrn = '';
 //$ifEnLitTrn = '(<a href="/assets/common/o-en.html" class="translation-link">o</a>)';
 
-$ifEnLitTrn = '<span class="text-xs text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Throughout Terminology, word-for-word Translation"><a href="/assets/common/o-en.html" class="translation-link">o</a></span>';
-$ifEnThanTrn = '<span class="text-xs text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Thanissaro Bhikkhu">tb</span>';
-$ifEnSujTrn = '<span class="text-xs text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Bhikkhu Sujato">bs</span>';
+$ifEnLitTrn = '<span class="small text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Throughout Terminology, word-for-word Translation"><a href="/assets/common/o-en.html" class="translation-link">o</a></span>';
+$ifEnThanTrn = '<span class="small text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Thanissaro Bhikkhu">TB</span>';
+$ifEnSujTrn = '<span class="small text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Bhikkhu Sujato">BS</span>';
 
 
 $gearbutton = 'extra settings';
