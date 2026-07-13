@@ -35,3 +35,25 @@ grep  -ril debabel-logo-1k.jpg  * | grep html | xargs sed -i 's/debabel-logo-1k.
 grep -ril "#1a1612" *.html | grep html | xargs sed -i 's/#1a1612/#000/g'
 
 echo " done"
+
+exit 0
+
+
+git remote add upstream https://github.com/frankksutta/s.4nt.git
+
+git fetch upstream
+git branch -a
+
+
+git checkout main
+git merge upstream/main
+git push origin main
+
+
+
+
+#delete latest commit
+cd /var/www/offline-data/4nt
+git reset --hard HEAD~1
+git push origin HEAD --force
+
