@@ -38,6 +38,8 @@ echo " done"
 
 exit 0
 
+# git clone git@github.com:dhammagift/4nt.git . 
+# git clone https://github.com/dhammagift/4nt.git .
 
 git remote add upstream https://github.com/frankksutta/s.4nt.git
 
