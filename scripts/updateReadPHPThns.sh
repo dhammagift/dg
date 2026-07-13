@@ -40,5 +40,6 @@ fi
 
 # Если не было ошибок, создаем/обновляем state_file
 if [[ $error_found -eq 0 ]]; then
-  touch $REFERENCE_FILE
+  #touch $REFERENCE_FILE
+  echo
 fi

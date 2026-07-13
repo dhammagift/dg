@@ -18,7 +18,10 @@ $toggleLang = 'Переключить Рус/Англ (Ctrl + 1)';
 $showall = 'Показать Все';
 $manifest = '/manifest-ru.json'; // для русской версии
 
-$ifRuLitTrn = '(<a href="/assets/common/o.html" class="translation-link">o</a>)';
+
+$ifRuLitTrn = '<span class="text-xs text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Сквозная терминология, дословный перевод">(<a href="/assets/common/o.html" class="translation-link">o</a>)</span>';
+$ifRuSvOTrn = '<span class="text-xs text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с англ. SV. Часть отредактирована в соответствии с пали О">sv ред. o</a></span>';
+$ifRuSvTrn = '<span class="text-xs text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с англ. SV.">sv</a></span>';
 
 $gearbutton = 'дополнительные настройки';
 $linksothermat = 'https://drive.google.com/drive/u/1/folders/1UU-y5idRNpfcVTripRUtyTVcOgdwjMGN';
@@ -877,8 +880,13 @@ $privacy = '<a class="text-muted text-decoration-none" href="https://dhamma.gift
 $copyrightnote = 'The materials on this website are distributed under the <a class="text-white text-decoration-none me-0" href="' . $cclink . '" target="_blank" title="' . $cctitle . '">CC BY-NC-SA 4.0</a> license, but Pali texts and English Translations from SuttaCentra.net, the works of A. Y. Syrkin and TheBuddhasWords.net are subject to different terms. Please check with the copyright holders for their usage conditions.';
 
 $ifRuLitTrn = '';
-$ifEnLitTrn = '(<a href="/assets/common/o-en.html" class="translation-link">o</a>)';
-$ifEnThanTrn = '(Thanissaro Bh)';
+//$ifEnLitTrn = '(<a href="/assets/common/o-en.html" class="translation-link">o</a>)';
+
+$ifEnLitTrn = '<span class="text-xs text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Throughout Terminology, word-for-word Translation"><a href="/assets/common/o-en.html" class="translation-link">o</a></span>';
+$ifEnThanTrn = '<span class="text-xs text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Thanissaro Bhikkhu">tb</span>';
+$ifEnSujTrn = '<span class="text-xs text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Bhikkhu Sujato">bs</span>';
+
+
 $gearbutton = 'extra settings';
 
 $maintitle = 'Precise Search in Pali Suttas and Vinaya';
