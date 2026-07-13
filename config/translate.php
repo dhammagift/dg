@@ -18,8 +18,8 @@ $toggleLang = 'Переключить Рус/Англ (Ctrl + 1)';
 $showall = 'Показать Все';
 $manifest = '/manifest-ru.json'; // для русской версии
 
-$ifRuLitTrn = '<span class="small text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Сквозная терминология, дословный перевод">(<a href="/assets/common/o.html" class="translation-link">o</a>)</span>';
-$ifRuSvOTrn = '<span data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с англ. SV. Часть отредактирована в соответствии с пали О"><a class="text-decoration-none small text-muted">SV ред. o</a></span>';
+$ifRuLitTrn = '<span class="small text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Сквозная терминология, дословный перевод с Пали редакуия Махасангити">(<a href="/assets/common/o.html" class="translation-link">o</a>)</span>';
+$ifRuSvOTrn = '<span data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с англ. SV. Часть изменена согласно сквозной терминологии, пали О"><a class="text-decoration-none small text-muted">SV ред. o</a></span>';
 $ifRuSvTrn = '<span data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с англ. SV."><a class="text-decoration-none small text-muted">SV</a></span>';
 $ifRuAYSOTrn = '<span data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с пали. А.Я. Сыркин. Часть изменена согласно сквозной терминологии О"><a class="text-decoration-none small text-muted"> Сыркин ред. o</a></span>';
 $ifRuAYSTrn = '<span data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с Пали А.Я. Сыркин."><a class="text-decoration-none small text-muted">Сыркин</a></span>';
@@ -884,8 +884,8 @@ $ifRuLitTrn = '';
 //$ifEnLitTrn = '(<a href="/assets/common/o-en.html" class="translation-link">o</a>)';
 
 $ifEnLitTrn = '<span class="small text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Throughout Terminology, word-for-word Translation"><a href="/assets/common/o-en.html" class="translation-link">o</a></span>';
-$ifEnThanTrn = '<span data-bs-toggle="tooltip" data-bs-placement="top" title="Thanissaro Bhikkhu. Translation from Pali Thai Royal Edition"><a class="text-decoration-none small text-muted">TB</a></span>';
-$ifEnSujTrn = '<span data-bs-toggle="tooltip" data-bs-placement="top" title="Bhikkhu Sujato. Translation from Pali Masasangiti Edition"><a class="text-decoration-none small text-muted">BS</a></span>';
+$ifEnThanTrn = '<span data-bs-toggle="tooltip" data-bs-placement="top" title="Thanissaro Bhikkhu. Translation from Thai Royal Edition of the Pali Canon"><a class="text-decoration-none small text-muted">TB</a></span>';
+$ifEnSujTrn = '<span data-bs-toggle="tooltip" data-bs-placement="top" title="Bhikkhu Sujato. Translation from Masasangiti Edition of the Pali Canon"><a class="text-decoration-none small text-muted">BS</a></span>';
 
 
 $gearbutton = 'extra settings';
