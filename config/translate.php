@@ -18,11 +18,10 @@ $toggleLang = 'Переключить Рус/Англ (Ctrl + 1)';
 $showall = 'Показать Все';
 $manifest = '/manifest-ru.json'; // для русской версии
 
-
 $ifRuLitTrn = '<span class="small text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Сквозная терминология, дословный перевод">(<a href="/assets/common/o.html" class="translation-link">o</a>)</span>';
 $ifRuSvOTrn = '<span class="small text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с англ. SV. Часть отредактирована в соответствии с пали О">SV ред. o</a></span>';
 $ifRuSvTrn = '<span class="small text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с англ. SV.">SV</a></span>';
-$ifRuAYSOTrn = '<span class="small text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с пали. А.Я. Сыркин. Часть отредактирована сквозной терминологией О">Сыркин ред. o</a></span>';
+$ifRuAYSOTrn = '<span class="small text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с пали. А.Я. Сыркин. Часть изменена согласно сквозной терминологии О">Сыркин ред. o</a></span>';
 $ifRuAYSTrn = '<span class="small text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Пер с Пали А.Я. Сыркин.">Сыркин</a></span>';
 
 $gearbutton = 'дополнительные настройки';
