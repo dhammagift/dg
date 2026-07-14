@@ -817,13 +817,13 @@ function loadText() {
 
               // 1. Папка 1 (lbl и ru) и пул
               priorityKeys.forEach(key => {
-                  group1.push({ name: `${key} (lbl)`, url: `/assets/texts/lbl/${indexValue}_translation-ru-${key}.json` });
+                  group1.push({ name: `${key} (Неопублик)`, url: `/assets/texts/lbl/${indexValue}_translation-ru-${key}.json` });
                   group1.push({ name: `${key} (ru)`, url: `/assets/texts/ru${pathPart}_translation-ru-${key}.json` });
               });
 
               // 2. Папка 1 (lbl и ru) и остальные
               otherKeys.forEach(key => {
-                  group2.push({ name: `${key} (lbl)`, url: `/assets/texts/lbl/${indexValue}_translation-ru-${key}.json` });
+                  group2.push({ name: `${key} (Неопублик)`, url: `/assets/texts/lbl/${indexValue}_translation-ru-${key}.json` });
                   group2.push({ name: `${key} (ru)`, url: `/assets/texts/ru${pathPart}_translation-ru-${key}.json` });
               });
 

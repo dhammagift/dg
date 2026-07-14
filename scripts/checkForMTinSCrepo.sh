@@ -33,12 +33,12 @@ echo
 
 dwnl="/storage/emulated/0/Download"
 if [ -d $dwnl ]; then
-    mv $dwnl/*thanissaro.json ../offline_data/en_other/sutta/ 2> /dev/null
-    mv $dwnl/Telegram/*thanissaro.json ../offline_data/en_other/sutta/ 2> /dev/null
+    mv $dwnl/*thanissaro.json ../offline-data/dhammagift/en_other/sutta/ 2> /dev/null
+    mv $dwnl/Telegram/*thanissaro.json ../offline-data/dhammagift/en_other/sutta/ 2> /dev/null
 fi
 
 echo Thns Files   
-sed -i "/thanissarotrnranges/c $(echo -n "window.thanissarotrnranges = [" && find ../offline-data/en_other/ -type f -name "*.json" | awk -F/ '{print $NF}' | sed 's/_.*//g' | sort -V | sed "s/.*/'&'/" | paste -sd, - | sed 's/$/];/')" ../offline-data/dhammagift/common.js
+sed -i "/thanissarotrnranges/c $(echo -n "window.thanissarotrnranges = [" && find ../offline-data/dhammagift/en_other/ -type f -name "*.json" | awk -F/ '{print $NF}' | sed 's/_.*//g' | sort -V | sed "s/.*/'&'/" | paste -sd, - | sed 's/$/];/')" ../offline-data/dhammagift/common.js
 
 
 
@@ -68,14 +68,14 @@ exit 0
 
 
 #Update Thanissaro or en_other files for common.js
-echo -n "window.thanissarotrnranges = [" && find ../offline-data/en_other/ -type f -name "*.json" | awk -F/ '{print $NF}' | sed 's/_.*//g' | sort -V | sed "s/.*/'&'/" | paste -sd, - | sed 's/$/];/'
+echo -n "window.thanissarotrnranges = [" && find ../offline-data/dhammagift/en_other/ -type f -name "*.json" | awk -F/ '{print $NF}' | sed 's/_.*//g' | sort -V | sed "s/.*/'&'/" | paste -sd, - | sed 's/$/];/'
 
 
-sed -i "/thanissarotrnranges/c $(echo -n "window.thanissarotrnranges = [" && find ../offline-data/en_other/ -type f -name "*.json" | awk -F/ '{print $NF}' | sed 's/_.*//g' | sort -V | sed "s/.*/'&'/" | paste -sd, - | sed 's/$/];/')" ../offline-data/dhammagift/common.js
+sed -i "/thanissarotrnranges/c $(echo -n "window.thanissarotrnranges = [" && find ../offline-data/dhammagift/en_other/ -type f -name "*.json" | awk -F/ '{print $NF}' | sed 's/_.*//g' | sort -V | sed "s/.*/'&'/" | paste -sd, - | sed 's/$/];/')" ../offline-data/dhammagift/common.js
 
 
 #Update Thanissaro or en_other files for common.js
-cd offline-data/en_other/
+cd offline-data/dhammagift/en_other/
 find . -type f | sort -V | awk -F/ '{print $NF}' | awk -F_ '{print $1}' | sed -e "s/^/'/" -e "s/$/',/"
 
 
