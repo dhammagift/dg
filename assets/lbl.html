@@ -688,7 +688,6 @@ function loadText() {
   console.log('pliUrl ' + pliUrl) ;
   console.log('enUrl ' + enUrl) ;
 
-
   // Загружаем список переводчиков из JSON файла
   fetch('/assets/js/translators.json')
     .then(response => {
@@ -696,18 +695,23 @@ function loadText() {
       return response.json();
     })
     .then(translatorsData => {
-      // Функция для последовательного перебора вариантов русского перевода
       const trimmedUrlForRu = pliUrl.match(/\/(sutta|vinaya)\/.*/)[0];
       const pathPart = trimmedUrlForRu.split('_')[0];
       
       const ruTranslatorsKeys = Object.keys(translatorsData.ru || {});
+      const priorityKeys = ['o', 'sv+edited+o', 'sv'];
+      const otherKeys = ruTranslatorsKeys.filter(key => !priorityKeys.includes(key));
       
-      // Формируем список путей для левой колонки (и ru, и ru_other)
       let ruUrlsToTry = [];
-      ruTranslatorsKeys.forEach(key => {
-          ruUrlsToTry.push(`/assets/texts/ru${pathPart}_translation-ru-${key}.json`);
-          ruUrlsToTry.push(`/assets/texts/ru_other${pathPart}_translation-ru-${key}.json`);
-      });
+      
+      // 1. Папка 1 (ru) и пул
+      priorityKeys.forEach(key => ruUrlsToTry.push(`/assets/texts/ru${pathPart}_translation-ru-${key}.json`));
+      // 2. Папка 1 (ru) и остальные
+      otherKeys.forEach(key => ruUrlsToTry.push(`/assets/texts/ru${pathPart}_translation-ru-${key}.json`));
+      // 3. Папка 2 (ru_other) и пул
+      priorityKeys.forEach(key => ruUrlsToTry.push(`/assets/texts/ru_other${pathPart}_translation-ru-${key}.json`));
+      // 4. Папка 2 (ru_other) и остальные
+      otherKeys.forEach(key => ruUrlsToTry.push(`/assets/texts/ru_other${pathPart}_translation-ru-${key}.json`));
 
       async function fetchRuData() {
           for (const url of ruUrlsToTry) {
@@ -802,50 +806,62 @@ function loadText() {
               }
           }
 
-             newLoadBtn.addEventListener('click', async function() {
+          newLoadBtn.addEventListener('click', async function() {
               const trimmedUrl = pliUrl.match(/\/(sutta|vinaya)\/.*/)[0];
               const pathPart = trimmedUrl.split('_')[0];
               
-              let urlsToTest = [];
+              const group1 = [];
+              const group2 = [];
+              const group3 = [];
+              const group4 = [];
 
-              // 1. Проверяем папку lbl на наличие файлов от всех известных переводчиков
-              ruTranslatorsKeys.forEach(key => {
-                  urlsToTest.push({
-                      name: `${key} (lbl)`,
-                      url: `/assets/texts/lbl/${indexValue}_translation-ru-${key}.json`
-                  });
+              // 1. Папка 1 (lbl и ru) и пул
+              priorityKeys.forEach(key => {
+                  group1.push({ name: `${key} (lbl)`, url: `/assets/texts/lbl/${indexValue}_translation-ru-${key}.json` });
+                  group1.push({ name: `${key} (ru)`, url: `/assets/texts/ru${pathPart}_translation-ru-${key}.json` });
               });
 
-              // 2. Добавляем специфичные варианты сохранения в lbl (если их нет в общем списке)
-              if (!ruTranslatorsKeys.includes('o')) {
-                  urlsToTest.push({ name: `o (lbl)`, url: `/assets/texts/lbl/${indexValue}_translation-ru-o.json` });
-              }
-              if (!ruTranslatorsKeys.includes('sv+edited+o')) {
-                  urlsToTest.push({ name: `sv+edited+o (lbl)`, url: `/assets/texts/lbl/${indexValue}_translation-ru-sv+edited+o.json` });
-              }
-
-              // 3. Проверяем основные папки ru и ru_other
-              ruTranslatorsKeys.forEach(key => {
-                  urlsToTest.push({
-                      name: `${key} (ru)`,
-                      url: `/assets/texts/ru${pathPart}_translation-ru-${key}.json`
-                  });
-                  urlsToTest.push({
-                      name: `${key} (ru_other)`,
-                      url: `/assets/texts/ru_other${pathPart}_translation-ru-${key}.json`
-                  });
+              // 2. Папка 1 (lbl и ru) и остальные
+              otherKeys.forEach(key => {
+                  group2.push({ name: `${key} (lbl)`, url: `/assets/texts/lbl/${indexValue}_translation-ru-${key}.json` });
+                  group2.push({ name: `${key} (ru)`, url: `/assets/texts/ru${pathPart}_translation-ru-${key}.json` });
               });
+
+              // 3. Папка 2 (ru_other) и пул
+              priorityKeys.forEach(key => {
+                  group3.push({ name: `${key} (ru_other)`, url: `/assets/texts/ru_other${pathPart}_translation-ru-${key}.json` });
+              });
+
+              // 4. Папка 2 (ru_other) и остальные
+              otherKeys.forEach(key => {
+                  group4.push({ name: `${key} (ru_other)`, url: `/assets/texts/ru_other${pathPart}_translation-ru-${key}.json` });
+              });
+
+              // Функция для параллельной проверки массива ссылок
+              async function checkBatch(urls) {
+                  const checks = urls.map(async item => {
+                      if (await checkFileExists(item.url)) return item;
+                      return null;
+                  });
+                  const results = await Promise.all(checks);
+                  return results.filter(item => item !== null);
+              }
 
               // Визуальный индикатор поиска на кнопке
               const originalBtnHtml = newLoadBtn.innerHTML;
               newLoadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
-              // Проверяем, какие из сгенерированных путей реально есть на сервере
-              let availableOptions = [];
-              for (const item of urlsToTest) {
-                  if (await checkFileExists(item.url)) {
-                      availableOptions.push(item);
-                  }
+              // Выполняем поиск по группам, прерываем, если нашли вариант
+              let availableOptions = await checkBatch(group1);
+              
+              if (availableOptions.length === 0) {
+                  availableOptions = await checkBatch(group2);
+              }
+              if (availableOptions.length === 0) {
+                  availableOptions = await checkBatch(group3);
+              }
+              if (availableOptions.length === 0) {
+                  availableOptions = await checkBatch(group4);
               }
 
               newLoadBtn.innerHTML = originalBtnHtml; // Возвращаем иконку
@@ -1250,7 +1266,6 @@ function loadText() {
     })
     .catch(error => console.error('Error loading translators.json:', error));
 }
-
 
 function ifKn(indexValue) {
   let beforeDot = "";
