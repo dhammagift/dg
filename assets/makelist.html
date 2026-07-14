@@ -7,9 +7,12 @@
     <title>Make List from Text</title>
     <link href="/assets/css/bootstrap.5.3.1.min.css" rel="stylesheet" />
     <link href="/assets/css/extrastyles.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/css/paliLookup.css">
+    
     <link rel="icon" type="image/png" href="/assets/img/favico-noglass.png" />
     <script src="/assets/js/jquery-3.7.0.min.js"></script>
     <script src="/assets/js/bootstrap.bundle.5.3.1.min.js"></script>
+    <script src="/assets/js/nav-component.js" defer></script>
 
     <style>
         .table {
@@ -28,53 +31,13 @@
         .copy-button {
             margin-right: 5px;
         }
-
-        .copy-success {
-		z-index:1000;
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            padding: 10px;
-            background-color: #28a745;
-            color: #fff;
-            font-weight: bold;
-            border-radius: 5px;
-            display: none;
-        }
-
-        .toggle-switch {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-        }
     </style>
 </head>
 
 <body>
     <div class="container mt-5">
-        <div class="align-items-center align-items-center toggle-switch input-group-append">
-            <div id="" class="input-group">
-                <a href="../../read.php" title="Sutta and Vinaya reading" rel="noreferrer" class="me-1">
-                    <svg fill="#979797" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="26px" viewBox="0 0 547.596 547.596" xml:space="preserve" stroke="#979797">
-                        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#CCCCCC" stroke-width="3.285576"></g>
-                        <g id="SVGRepo_iconCarrier">
-                            <g>
-                                <path d="M540.76,254.788L294.506,38.216c-11.475-10.098-30.064-10.098-41.386,0L6.943,254.788 c-11.475,10.098-8.415,18.284,6.885,18.284h75.964v221.773c0,12.087,9.945,22.108,22.108,22.108h92.947V371.067 c0-12.087,9.945-22.108,22.109-22.108h93.865c12.239,0,22.108,9.792,22.108,22.108v145.886h92.947 c12.24,0,22.108-9.945,22.108-22.108v-221.85h75.965C549.021,272.995,552.081,264.886,540.76,254.788z"></path>
-                            </g>
-                        </g>
-                    </svg>
-                </a>
-
-                <a href="../../" title="Sutta and Vinaya search" rel="noreferrer" class="me-1">
-                    <img width="24px" alt="dhamma.gift icon" src="/assets/img/gray-white.png">
-                </a>
-
-                <div class="ms-1 form-check form-switch">
-                    <input type="checkbox" class="form-check-input" id="darkSwitch">
-                </div>
-            </div>
+        <div class="mb-4" style="display: inline-flex;">
+            <top-nav-icons type="read" show-dict></top-nav-icons>
         </div>
 
         <div class="row">
@@ -140,10 +103,6 @@
 
     </div>
 
-    <div class="copy-success">Copied to Clipboard</div>
-
-
-    </div>
     <script>
         // --- LOCAL STORAGE FUNCTIONS ---
 
@@ -286,7 +245,7 @@
                 rowCsv.push(escapeCommas(paliPart));
                 rowCsv.push(escapeCommas(otherPart));
                 
-                // Для TSV (копирования) оставляем текст как есть, это чище для блокнота
+                // Для TSV (копирования) оставляем текст как есть
                 rowTsv.push(paliPart);
                 rowTsv.push(otherPart);
 
@@ -306,7 +265,7 @@
             generatedCsvContent = csv;
             generatedTsvContent = tsv;
 
-            var resultTable = generateResultTable(csv); // Таблица строится на основе CSV логики (split по запятым), это ок
+            var resultTable = generateResultTable(csv); 
             document.getElementById('resultOutput').innerHTML = resultTable;
             
             saveToStorage();
@@ -319,9 +278,9 @@
             document.getElementById('downloadButton').href = url;
         });
 
-        // COPY ALL BUTTON: Использует generatedTsvContent
+        // COPY ALL BUTTON
         document.getElementById('copyAllButton').addEventListener('click', function() {
-            copyToClipboard(generatedTsvContent);
+            copyListDataToClipboard(generatedTsvContent);
         });
 
         document.getElementById('clearButton').addEventListener('click', function () {
@@ -370,7 +329,18 @@
                 tableHtml += '<tr>';
                 var columns = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 for (var j = 0; j < columns.length; j++) {
-                    tableHtml += '<td>' + columns[j] + '</td>';
+                    let cellContent = columns[j];
+                    
+                    // Убираем внешние кавычки CSV для корректной работы словаря и отображения в браузере
+                    if (cellContent.startsWith('"') && cellContent.endsWith('"')) {
+                        cellContent = cellContent.slice(1, -1).replace(/""/g, '"');
+                    }
+
+                    if (j === 0) {
+                        tableHtml += '<td>' + cellContent + '</td>';
+                    } else {
+                        tableHtml += '<td class="pli-lang">' + cellContent + '</td>';
+                    }
                 }
                 tableHtml += '</tr>';
             }
@@ -378,14 +348,40 @@
             return tableHtml;
         }
 
-        function copyToClipboard(text) {
+        // Новая функция копирования с другим названием, чтобы не конфликтовать с глобальной copyToClipboard
+        function copyListDataToClipboard(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    triggerBubbleNotification();
+                }).catch(err => {
+                    fallbackCopyListData(text);
+                });
+            } else {
+                fallbackCopyListData(text);
+            }
+        }
+
+        function fallbackCopyListData(text) {
             var textarea = document.createElement('textarea');
             textarea.value = text;
             document.body.appendChild(textarea);
             textarea.select();
             document.execCommand('copy');
             document.body.removeChild(textarea);
-            showCopySuccess();
+            triggerBubbleNotification();
+        }
+
+        function triggerBubbleNotification() {
+            if (typeof showBubbleNotification === 'function') {
+                const path = window.location.pathname;
+                const language = localStorage.getItem('siteLanguage') || (path.includes('/r/') ? 'ru' : 'en');
+                const notificationText = {
+                    ru: "Скопировано",
+                    en: "Copied"
+                }[language] || "Copied";
+                
+                showBubbleNotification(notificationText);
+            }
         }
 
         function copyColumnToClipboard(columnIndex) {
@@ -395,20 +391,12 @@
             for (var i = 1; i < rows.length; i++) {
                 var cells = rows[i].getElementsByTagName('td');
                 if (cells[columnIndex]) {
-                    columnData.push(cells[columnIndex].innerText);
+                    // Используем textContent чтобы избежать попадания html тегов (например pli-lang)
+                    columnData.push(cells[columnIndex].textContent);
                 }
             }
-            // Для копирования отдельной колонки оставляем просто перенос строки
             var columnText = columnData.join('\n');
-            copyToClipboard(columnText);
-        }
-
-        function showCopySuccess() {
-            var copySuccess = document.querySelector('.copy-success');
-            copySuccess.style.display = 'block';
-            setTimeout(function () {
-                copySuccess.style.display = 'none';
-            }, 1500);
+            copyListDataToClipboard(columnText);
         }
 
         function escapeCommas(text) {
@@ -425,7 +413,8 @@
             }
         });
     </script>
-    <script src="/assets/js/dark-mode-switch/dark-mode-switch.js"></script>
+    <script defer src="/assets/js/themeswitch.js"></script>
+    <script src="/assets/js/settings.js"></script>
 
 </body>
 
