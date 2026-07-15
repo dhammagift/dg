@@ -78,12 +78,9 @@ sed -i \
 done
 
 find . -type f -exec sed -i 's|</head>|<meta name="viewport" content="width=device-width, initial-scale=1">\n</head>|i' {} +
-
+find . -type f -name "*htm" -exec sed -i 's|</body>|<script src="/assets/js/legacy-theme.js"></script></body>|' {} +
 find . -type f -exec sed -i 's|../AN|../../AN|g' {} +
 find . -type f -exec sed -i 's|../SN|../../SN|g' {} +
-find . -type f -name "*htm" -exec sed -i 's|</body>|<script src="/assets/js/legacy-theme.js"></script></body>|' {} +
-
-
 
 
 echo "--- Готово! Ссылки исправлены, скрипты подключены. ---"
