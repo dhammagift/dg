@@ -384,6 +384,8 @@ function detectTranslationLang() {
 }
 */
 
+
+/*
 function detectTranslationLang() {
   // ---> НОВОЕ: Исключение ТОЛЬКО для новых статей (нет пали И это не Легаси) <---
   const hasPali = document.querySelectorAll('.pli-lang').length > 0;
@@ -401,6 +403,22 @@ function detectTranslationLang() {
   if (path.includes('/en/') || path.includes('/b/') || path.includes('/read/')) return 'en';
   
   return 'ru';
+}
+*/
+
+function detectTranslationLang() {
+    // 1. Сначала проверяем классы самих элементов (это надежнее всего)
+    const container = document.querySelector('.sutta-container') || document;
+    if (container.querySelector('.eng-lang')) return 'en';
+    if (container.querySelector('.rus-lang')) return 'ru';
+    if (container.querySelector('.tha-lang')) return 'th';
+
+    // 2. Только если классов нет, падаем в legacy-логику по URL
+    const path = window.location.pathname;
+    if (path.includes('/th/') || path.includes('/thml/')) return 'th';
+    if (path.includes('/en/') || path.includes('/b/') || path.includes('/read/')) return 'en';
+  
+    return 'ru'; 
 }
 
 
