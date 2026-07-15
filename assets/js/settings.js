@@ -1245,7 +1245,7 @@ if (event.altKey && event.code === "KeyJ") {
   let historyPhpPath, historyHtmlPath;
 
   // Если URL содержит языковой префикс (/ru/, /r/, /ml/)
-  if (currentUrl.match(/\/(ru|r|ml)\//)) {
+  if (currentUrl.match(/\/(ru|r|ml|mt)\//)) {
     const langPrefix = 'ru/';
     historyPhpPath = `/${langPrefix}history.php`;
     historyHtmlPath = `/${langPrefix}assets/common/history.html`;

@@ -10,7 +10,7 @@ find "$TARGET_DIR" -type f -name "*.html" -print0 | while IFS= read -r -d '' fil
     if [ "$SLUG" == "." ]; then SLUG=$(basename "$file" .html); fi
 
     # 2. Формируем кнопки, добавляем класс voice-link и data-slug для инициализации voice.js
-    BUTTONS="<a href=\"javascript:void(0)\" class=\"voice-link icon-btn\" data-slug=\"$SLUG\" title=\"Слушать (TTS)\" style=\"font-size:14px; margin-right:4px;\">🔊</a><a href=\"/ru\" id=\"fdg-button\" class=\"icon-btn\" title=\"Искать в Суттах (Ctrl+1)\" rel=\"noreferrer\"><img src=\"/assets/img/gray-white.png\" alt=\"Поиск\" style=\"width:18px; display:block;\"></a><a title=\"Всплывающий по клику словарь (Alt+A)\" class=\"icon-btn toggle-dict-btn\"><img src=\"/assets/svg/comment.svg\" alt=\"Словарь\" style=\"width:18px; height:18px; display:block;\"></a><a id=\"orig-site-btn\" href=\"#\" title=\"Оригинальный сайт s.4nt.org\" class=\"icon-btn\" onclick=\"this.href='https://s.4nt.org'+location.pathname.replace('/4nt', '')+location.search+location.hash\" target=\"_blank\" style=\"font-size:12px; display:flex; align-items:center; justify-content:center;\">🌐</a>"
+    BUTTONS="<a href=\"javascript:void(0)\" class=\"voice-link icon-btn\" data-slug=\"$SLUG\" title=\"Слушать (TTS)\" style=\"font-size:14px; margin-right:4px;\">🔊</a><a href=\"/?q=$SLUG\" id=\"fdg-button\" class=\"icon-btn\" title=\"Искать в Суттах (Ctrl+1)\" rel=\"noreferrer\"><img src=\"/assets/img/gray-white.png\" alt=\"Поиск\" style=\"width:18px; display:block;\"></a><a title=\"Всплывающий по клику словарь (Alt+A)\" class=\"icon-btn toggle-dict-btn\"><img src=\"/assets/svg/comment.svg\" alt=\"Словарь\" style=\"width:18px; height:18px; display:block;\"></a><a id=\"orig-site-btn\" href=\"#\" title=\"Оригинальный сайт s.4nt.org\" class=\"icon-btn\" onclick=\"this.href='https://s.4nt.org'+location.pathname.replace('/4nt', '')+location.search+location.hash\" target=\"_blank\" style=\"font-size:12px; display:flex; align-items:center; justify-content:center;\">🌐</a>"
 
     # 3. Патчим основной текст: добавляем .pli-lang для Пали и .eng-lang для всех переводов, чтобы voice.js их прочитал
     sed -i "s/const ct=mk('span','ct grw');/const ct=mk('span','ct grw' + (key==='pali' || key==='san' || key==='lzh' || key==='zh' ? ' pli-lang' : ' eng-lang')); if(key==='pali' || key==='san' || key==='lzh' || key==='zh') ct.setAttribute('lang', 'pi');/g" "$file"
@@ -38,7 +38,13 @@ find "$TARGET_DIR" -type f -name "*.html" -print0 | while IFS= read -r -d '' fil
         sed -i 's|</body>|<script src="/read/js/voice.js"></script>\n</body>|g' "$file"
     fi
     if ! grep -q "voice.css" "$file"; then
-        sed -i 's|</head>|<link rel="stylesheet" href="/read/css/voice.css">\n</head>|g' "$file"
+        sed -i 's|</head>|<link rel="stylesheet" href="/assets/css/extrastyles.css">\n<link rel="stylesheet" href="/read/css/voice.css">\n</head>|g' "$file"
+    fi
+
+
+    # 8. Fix the password autosugg from andoid 
+    if grep -q 'id="jumpInput"' "$file"; then
+        sed -i 's|id="jumpInput"| type="search" id="jumpInput"|g' "$file"
     fi
 
 done

@@ -48,12 +48,12 @@ sed -i \
   
     # --- КОМАНДА 2: Подключение JS перед </body> ---
     if ! grep -q "voice.js" "$i"; then
-        sed -i 's|</body>|<script src="/read/js/voice.js"></script></body>|' "$i"
+        sed -i 's|</body>|<script src="/assets/js/settings.js"></script><script src="/read/js/voice.js"></script></body>|' "$i"
     fi
 
     # --- КОМАНДА 3: Подключение CSS перед </head> ---
     if ! grep -q "voice.css" "$i"; then
-        sed -i 's|</head>|<link rel="stylesheet" href="/read/css/voice.css"></head>|' "$i"
+        sed -i 's|</head>|<link rel="stylesheet" href="/assets/css/extrastyles.css"><link rel="stylesheet" href="/read/css/voice.css"></head>|' "$i"
     fi
     
     sed -i 's|size="7">Тхеравада.ру|size="3"><a href="/ru/read.php">@Dhamma.gift</a>|g' "$i"

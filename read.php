@@ -463,15 +463,36 @@ if (openQuickModalBtn) { // Проверяем, что элемент сущес
 
 <script>
   
-//  autocomplete part
 var input = document.getElementById("paliauto");
+
 input.addEventListener("keypress", function(event) {
-  if (event.key === "Enter") {
-    event.preventDefault();
-    document.getElementById("searchbtn").click();
-  }
-});  
-  
+    if (event.key === "Enter") {
+        event.preventDefault();
+
+        let q = input.value.trim();
+
+        // ==========================================
+        // mn1:10.1 -> /read/?q=mn1#10.1
+        // ==========================================
+        if (/^[a-z]+\d+:\d+/i.test(q)) {
+            let parts = q.split(':');
+            let sutta = parts[0];
+            let segment = parts.slice(1).join(':');
+
+            let reader = "/read/";
+
+            if (window.location.pathname.startsWith("/ru")) {
+                reader = "/r/";
+            }
+
+            window.location.href = reader + "?q=" + encodeURIComponent(sutta) + "#" + segment;
+            return;
+        }
+
+        // старое поведение для любого обычного поиска
+        document.getElementById("searchbtn").click();
+    }
+});
   
   // Function to reset all form elements
 function resetForm() {
