@@ -9,6 +9,7 @@ find "$TARGET_DIR" -type f -name "*.html" -print0 | while IFS= read -r -d '' fil
     SLUG=$(basename "$(dirname "$file")")
     if [ "$SLUG" == "." ]; then SLUG=$(basename "$file" .html); fi
 
+
     # 2. Формируем кнопки, добавляем класс voice-link и data-slug для инициализации voice.js
     BUTTONS="<a href=\"javascript:void(0)\" class=\"voice-link icon-btn\" data-slug=\"$SLUG\" title=\"Слушать (TTS)\" style=\"font-size:14px; margin-right:4px;\">🔊</a> <a class=\"icon-btn\" id=\"viewModeBtn\" href=\"javascript:void(0)\" title=\"View: Columns / Scroll\" onclick=\"toggleViewMode()\">📜</a> <a href=\"/?q=$SLUG\" id=\"fdg-button\" class=\"icon-btn\" title=\"Искать в Суттах (Ctrl+1)\" rel=\"noreferrer\"><img src=\"/assets/img/gray-white.png\" alt=\"Поиск\" style=\"width:18px; display:block;\"></a><a title=\"Всплывающий по клику словарь (Alt+A)\" class=\"icon-btn toggle-dict-btn\"><img src=\"/assets/svg/comment.svg\" alt=\"Словарь\" style=\"width:18px; height:18px; display:block;\"></a><a id=\"orig-site-btn\" href=\"#\" title=\"Оригинальный сайт s.4nt.org\" class=\"icon-btn\" onclick=\"this.href='https://s.4nt.org'+location.pathname.replace('/4nt', '')+location.search+location.hash\" target=\"_blank\" style=\"font-size:12px; display:flex; align-items:center; justify-content:center;\">🌐</a>"
 

@@ -432,6 +432,10 @@ echo
 echo offline-data
 cd /var/www/offline-data
 git pull 
+echo upd 4nt
+cd 4nt
+git pull 
+echo
 echo dpd-ui
 cd /var/www/dpd-ui
 git pull 
