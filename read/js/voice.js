@@ -4,12 +4,10 @@ const TRIAL_BLOCK_KEY = 'tts_block_trial_key';
 
 // --- Утилиты ---
 
-// Глобальная проверка на русский контекст
-function isRuContext() {
-    return !!window.location.pathname.match(/\/(ru|r|mt|ml)\//);
-}
-
-
+window.isRu = window.location.pathname.includes('/r/') || 
+                     window.location.pathname.includes('/ru/') || 
+                     window.location.pathname.includes('/ml/') || 
+                     window.location.pathname.includes('/mt/');
 (async function loadTrialKey() {
     // 0. LEGACY CHECK: Если это старая страница, мы просто не грузим ключ.
     // Функция isLegacyPage() "поднимется" (hoisting), поэтому её можно вызвать здесь.
@@ -1258,11 +1256,11 @@ function playBrowserTTS(text, langKey, rate, isPali) {
             synth.speak(utterance);
             
             const pathLang = location.pathname.split('/')[1];
-            const isRuLike = ['ru', 'r', 'ml'].includes(pathLang);
-            const helpUrl = isRuLike ? '/assets/common/ttsHelp.html#tts-help-ru' : '/assets/common/ttsHelp.html#tts-help-en';
-            const title = isRuLike ? 'TTS:' : 'TTS Hint:';
+
+            const helpUrl = window.isRu ? '/assets/common/ttsHelp.html#tts-help-ru' : '/assets/common/ttsHelp.html#tts-help-en';
+            const title = window.isRu ? 'TTS:' : 'TTS Hint:';
             const helpLink = `<a href="${helpUrl}" target="_blank" style="color: #4da6ff;">(?)</a>`;
-            const message = isRuLike 
+            const message = window.isRu 
               ? `Не найдено модулей близких к Пали. Установлен Английский. См. помощь ${helpLink}.`
               : `No Pāḷi-friendly voices found. Using English. See help ${helpLink}.`;
             showVoiceHint(title, message, PALI_ALERT_KEY);
@@ -1676,8 +1674,7 @@ async function startPlayback(container, mode, slug, startIndex = 0) {
   if (window.TRIAL_KEY && !localStorage.getItem(GOOGLE_KEY_STORAGE)) {
       if (!localStorage.getItem('tts_trial_play_hint_shown')) {
           
-          const isRu = window.location.pathname.includes('/ru') || window.location.pathname.includes('/r/');
-          const title = isRu ? "Демо-режим:" : "Demo Mode:";
+          const title = window.isRu ? "Демо-режим:" : "Demo Mode:";
           
           // Ссылки на поиск Google
           const searchUrlRu = "https://www.google.com/search?q=%D0%BA%D0%B0%D0%BA+%D0%BF%D0%BE%D0%BB%D1%83%D1%87%D0%B8%D1%82%D1%8C+%D0%B0%D0%BF%D0%B8+%D0%BA%D0%BB%D1%8E%D1%87+%D0%B3%D1%83%D0%B3%D0%BB+tts";
@@ -1686,7 +1683,7 @@ async function startPlayback(container, mode, slug, startIndex = 0) {
           // Стиль для ссылки (светло-голубой, чтобы видно на темном)
           const linkStyle = "color: #4da6ff; text-decoration: underline; font-weight: bold;";
 
-          const message = isRu 
+          const message = window.isRu 
               ? `Включены <b>голоса от Google</b>. Если понравится, вы можете <a href="${searchUrlRu}" target="_blank" style="${linkStyle}">получить свой ключ</a> бесплатно.` 
               : `<b>Google voices</b> active. If you like it, you can <a href="${searchUrlEn}" target="_blank" style="${linkStyle}">get your own key</a> for free.`;
 
@@ -1770,33 +1767,32 @@ function getPlayerHtml() {
       currentRatesList = [...currentRatesList, initialRate].sort((a,b) => a - b);
   }
 
-  const isRu = typeof isRuContext === 'function' ? isRuContext() : false;
 
-  const helpUrl = isRu 
+  const helpUrl = window.isRu 
     ? '/assets/common/ttsHelp.html#tts-help-ru' 
     : '/assets/common/ttsHelp.html#tts-help-en';
 
-  const modeLabels = isRu
+  const modeLabels = window.isRu
     ? { 'pi': 'Пали', 'pi-trn': 'Пали + Рус', 'trn': 'Перевод', 'trn-pi': 'Рус + Пали' }
     : { 'pi': 'Pāḷi', 'pi-trn': 'Pāḷi + Trn', 'trn': 'Trn', 'trn-pi': 'Trn + Pāḷi' };
 
   // Объект с переводами интерфейса
   const t = {
-    settings: isRu ? "Настройки" : "Settings",
-    scroll: isRu ? "Скролл" : "Scroll",
-    autoplay: isRu ? "Автостарт" : "Autoplay",
-    delay: isRu ? "Задержка" : "Delay",
-    sec: isRu ? "сек" : "sec",
-    paliVoice: isRu ? "Голос Пали:" : "Pāḷi Voice:",
-    trnVoice: isRu ? "Голос Перевода:" : "Trn Voice:",
-    native: isRu ? "Нативный" : "Native",
-    speedPali: isRu ? "Скорость (Пали)" : "Speed (Pali)",
-    speedTrn: isRu ? "Скорость (Перевод)" : "Speed (Translation)",
-    delayTitle: isRu ? "Пауза между фразами (секунды)" : "Pause between phrases (seconds)",
-    apiKeyTitle: isRu ? "Введите API-ключ Google Cloud TTS" : "Enter Google Cloud TTS API Key for premium voices",
-    refreshVoices: isRu ? "Обновить список" : "Refresh Voice List",
-    resetTts: isRu ? "Полный сброс (очистить данные)" : "Full Reset (Clear Data)",
-    help: isRu ? "Помощь" : "Help"
+    settings: window.isRu ? "Настройки" : "Settings",
+    scroll: window.isRu ? "Скролл" : "Scroll",
+    autoplay: window.isRu ? "Автостарт" : "Autoplay",
+    delay: window.isRu ? "Задержка" : "Delay",
+    sec: window.isRu ? "сек" : "sec",
+    paliVoice: window.isRu ? "Голос Пали:" : "Pāḷi Voice:",
+    trnVoice: window.isRu ? "Голос Перевода:" : "Trn Voice:",
+    native: window.isRu ? "Нативный" : "Native",
+    speedPali: window.isRu ? "Скорость (Пали)" : "Speed (Pali)",
+    speedTrn: window.isRu ? "Скорость (Перевод)" : "Speed (Translation)",
+    delayTitle: window.isRu ? "Пауза между фразами (секунды)" : "Pause between phrases (seconds)",
+    apiKeyTitle: window.isRu ? "Введите API-ключ Google Cloud TTS" : "Enter Google Cloud TTS API Key for premium voices",
+    refreshVoices: window.isRu ? "Обновить список" : "Refresh Voice List",
+    resetTts: window.isRu ? "Полный сброс (очистить данные)" : "Full Reset (Clear Data)",
+    help: window.isRu ? "Помощь" : "Help"
   };
 
   return `
@@ -2016,7 +2012,7 @@ async function handleTTSSettingChange(e) {
   if (e.target.id === 'reset-tts-btn') {
       e.preventDefault();
 
-      const resetMessage = isRuContext()
+      const resetMessage = window.isRu
         ? 'Сбросить настройки голоса: отключить Google TTS, удалить API-ключ и включить системные голоса?'
         : 'Reset voice settings: disable Google TTS, remove the API key, and use system voices?';
         
@@ -2188,7 +2184,7 @@ async function handleTTSSettingChange(e) {
     // 6. Autoplay (связка с ttsMode)
   if (e.target.id === 'tts-autoplay-toggle') {
      const isChecked = e.target.checked;
-     const isRu = isRuContext();
+
      
      if (isChecked) {
          localStorage.setItem('ttsMode', 'true');
@@ -2907,7 +2903,7 @@ document.addEventListener('keydown', (e) => {
     if (e.altKey || e.ctrlKey || e.metaKey) return;
 
     // Используем глобальную функцию
-    const isRu = isRuContext();
+
 
     // 1. Горячая клавиша: S (Автоскролл)
     if (e.code === 'KeyS') {
@@ -2920,8 +2916,8 @@ document.addEventListener('keydown', (e) => {
         
         if (typeof showBubbleNotification === 'function') {
             const msg = ttsState.autoScroll 
-                ? (isRu ? 'Автоскролл: Вкл' : 'Autoscroll: On') 
-                : (isRu ? 'Автоскролл: Выкл' : 'Autoscroll: Off');
+                ? (window.isRu ? 'Автоскролл: Вкл' : 'Autoscroll: On') 
+                : (window.isRu ? 'Автоскролл: Выкл' : 'Autoscroll: Off');
             showBubbleNotification(msg);
         }
         return;
@@ -2949,7 +2945,7 @@ document.addEventListener('keydown', (e) => {
             if (typeof showBubbleNotification === 'function') {
                 const modeLabelsRu = { 'pi': 'Пали', 'pi-trn': 'Пали + Рус', 'trn': 'Перевод', 'trn-pi': 'Рус + Пали' };
                 const modeLabelsEn = { 'pi': 'Pāḷi', 'pi-trn': 'Pāḷi + Trn', 'trn': 'Translation', 'trn-pi': 'Trn + Pāḷi' };
-                const msg = isRu ? ('Режим: ' + modeLabelsRu[newMode]) : ('Mode: ' + modeLabelsEn[newMode]);
+                const msg = window.isRu ? ('Режим: ' + modeLabelsRu[newMode]) : ('Mode: ' + modeLabelsEn[newMode]);
                 showBubbleNotification(msg);
             }
         }
@@ -2979,7 +2975,7 @@ document.addEventListener('keydown', (e) => {
                 rateSelect.dispatchEvent(new Event('change', { bubbles: true }));
                 
                 if (typeof showBubbleNotification === 'function') {
-                    showBubbleNotification((isRu ? 'Скорость: ' : 'Speed: ') + rateSelect.value + 'x');
+                    showBubbleNotification((window.isRu ? 'Скорость: ' : 'Speed: ') + rateSelect.value + 'x');
                 }
             }
         }
