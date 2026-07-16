@@ -3330,3 +3330,54 @@ window.addEventListener('hashchange', applyHashHighlights);
         document.head.appendChild(script);
     }
 })();
+
+document.addEventListener('click', function (e) {
+    const link = e.target.closest('.s4ntLink');
+
+    if (!link) return;
+
+    const url = get4ntUrl();
+
+    if (url) {
+        link.href = url;
+    }
+});
+
+function getSlug(slug = null) {
+    if (slug) return slug.trim().toLowerCase();
+
+    return (
+        document.querySelector('#paliauto')?.value.trim() ||
+        document.querySelector('input[name="q"]')?.value.trim() ||
+        new URLSearchParams(location.search).get('q')?.trim() ||
+        null
+    )?.toLowerCase();
+}
+
+function get4ntUrl(slug = null) {
+    slug = getSlug(slug);
+    if (!slug) return null;
+
+    // const site4nt = "https://s.4nt.org";
+    const basePath = "/4nt";
+
+    const slugParts = slug.match(/^([a-z]+)(\d*)/);
+    if (!slugParts) return null;
+
+    const book = slugParts[1];
+    const firstNum = slugParts[2];
+
+    if (book === "dn" || book === "mn") {
+        return `${basePath}/${book}/#${slug}`;
+    }
+
+    if (book === "sn" || book === "an") {
+        return `${basePath}/${book}/${book}${firstNum}/#${slug}`;
+    }
+
+    if (["ud", "iti", "snp", "dhp", "thig", "thag", "kp"].includes(book)) {
+        return `${basePath}/kn/${book}/#${slug}`;
+    }
+
+    return null;
+}

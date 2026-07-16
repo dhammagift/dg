@@ -26,6 +26,7 @@ find "$TARGET_DIR" -type f -name "*.html" -print0 | while IFS= read -r -d '' fil
             sed -i "s|<a href=\"/ru\" id=\"fdg-button\".*orig-site-btn.*🌐</a>|$BUTTONS|g" "$file"
         else
             sed -i "s|<div class=\"settings-wrap\" id=\"settingsWrap\">|$BUTTONS<div class=\"settings-wrap\" id=\"settingsWrap\">|g" "$file"
+            sed -i "s|<div class=\"settings-wrap\" id=\"siteSettingsWrap\">|$BUTTONS<div class=\"settings-wrap\" id=\"siteSettingsWrap\">|g" "$file"
         fi
     fi
 
@@ -47,7 +48,11 @@ find "$TARGET_DIR" -type f -name "*.html" -print0 | while IFS= read -r -d '' fil
     if grep -q -- '--logo-w:56px;' "$file"; then
         sed -i 's|--logo-w:56px;|--logo-w:16px;|' "$file"
     fi
-
+    
+    if grep -qE -- 'home-logo.*width:56px' "$file"; then
+        sed -i '/home-logo/s|width:56px|width:16px|' "$file"
+    fi
+    
     # 9. Fix the password autosugg from android 
     if grep -q 'id="jumpInput"' "$file"; then
         sed -i 's|id="jumpInput"| type="search" id="jumpInput"|g' "$file"
@@ -157,6 +162,9 @@ cd /var/www/offline-data/4nt
 git reset --hard HEAD~1
 git push origin HEAD --force
 
+
+
+git checkout add -- extra/extra.css extra/extra.js
 
 
 #create new local
