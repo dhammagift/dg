@@ -1,5 +1,9 @@
 // === Файл: /assets/js/quickModal.js ===
 
+window.isRu = window.location.pathname.includes('/r/') || 
+                     window.location.pathname.includes('/ru/') || 
+                     window.location.pathname.includes('/ml/') || 
+                     window.location.pathname.includes('/mt/');
 // Делаем переменные глобальными для доступа из других скриптов
 window.isQuickModalRendered = false; 
 window.quickModalIsOpen = false;     
@@ -15,19 +19,19 @@ function buildQuickModalDOM() {
     : "/read/?q=";
   
   const formAction = currentPath.match(/\/(ru|r)\//) ? '/ru/' : '/';
-  const isRu = currentPath.includes('/ru/') || currentPath.includes('/r/') || currentPath.includes('/ml/');
+
   const isDark = document.body.classList.contains("dark");
   
-  const tabFavText = isRu ? "★ Избранное" : "★ Favorites";
-  const favTitleText = isRu ? "Избранное" : "Favorites";
+  const tabFavText = window.isRu ? "★ Избранное" : "★ Favorites";
+  const favTitleText = window.isRu ? "Избранное" : "Favorites";
   const tabLinksText = "4 Ariyasaccāni";
-  const tabMemoText = isRu ? "Запоминание" : "Memo";
-  const memoPath = isRu ? "/ru/memo/" : "/memo/";
-  const tabDpdText = isRu ? "Словарь" : "Dict";
-  const histTitleText = isRu ? "История поиска" : "Search History";
-  const titleClearAll = isRu ? "Очистить историю" : "Clear history";
+  const tabMemoText = window.isRu ? "Запоминание" : "Memo";
+  const memoPath = window.isRu ? "/ru/memo/" : "/memo/";
+  const tabDpdText = window.isRu ? "Словарь" : "Dict";
+  const histTitleText = window.isRu ? "История поиска" : "Search History";
+  const titleClearAll = window.isRu ? "Очистить историю" : "Clear history";
   const dpdTheme = isDark ? "dark" : "light";
-  const dpdUrl = `https://dict.dhamma.gift${isRu ? '/ru/' : '/'}?theme=${dpdTheme}`;
+  const dpdUrl = `https://dict.dhamma.gift${window.isRu ? '/ru/' : '/'}?theme=${dpdTheme}`;
 
   // Создаем узлы
   quickOverlay = document.createElement("div");
@@ -56,14 +60,14 @@ function buildQuickModalDOM() {
         </div>
         
         <div class="quick-actions-right">
-            <span class="action-btn" id="btn-sync-now" title="${isRu ? 'Синхронизировать' : 'Sync Now'}">
+            <span class="action-btn" id="btn-sync-now" title="${window.isRu ? 'Синхронизировать' : 'Sync Now'}">
                <img src="/assets/svg/rotate-solid-full.svg" width="20" height="20" alt="Login & Sync">
             </span>
 
             <span class="clear-all-btn action-btn" id="main-trash-icon" title="${titleClearAll}">
                <img src="/assets/svg/trash-can-regular-full.svg" width="25" height="25" alt="Reset">
             </span>
-            <span class="action-btn cursor-pointer" id="main-open-window-icon" title="${isRu ? 'Открыть в новом окне' : 'Open in new window'}" style="display: none;">
+            <span class="action-btn cursor-pointer" id="main-open-window-icon" title="${window.isRu ? 'Открыть в новом окне' : 'Open in new window'}" style="display: none;">
                <img src="/assets/svg/open-link.svg" width="20" height="20" alt="Open">
             </span>
         </div>
@@ -88,11 +92,11 @@ function buildQuickModalDOM() {
         <div id="quick-history-container"></div>
         
         <div class="quick-all-history-wrapper" style="display: flex; justify-content: space-between; align-items: center;">
-            <a href="${isRu ? '/ru/assets/common/history.html' : '/assets/common/history.html'}" class="quick-all-history-link">
-                ${isRu ? "← Ваша история" : "← Your history"}
+            <a href="${window.isRu ? '/ru/assets/common/history.html' : '/assets/common/history.html'}" class="quick-all-history-link">
+                ${window.isRu ? "← Ваша история" : "← Your history"}
             </a>
-            <a href="${isRu ? '/ru/history.php' : '/history.php'}" class="quick-all-history-link">
-                ${isRu ? "Общая история →" : "Common history →"}
+            <a href="${window.isRu ? '/ru/history.php' : '/history.php'}" class="quick-all-history-link">
+                ${window.isRu ? "Общая история →" : "Common history →"}
             </a>
         </div>
 
@@ -226,14 +230,14 @@ function buildQuickModalDOM() {
               
               btnSyncNow.style.opacity = '1';
           } else {
-              window.location.href = isRu ? '/ru/login' : '/login';
+              window.location.href = window.isRu ? '/ru/login' : '/login';
           }
       });
 
       // НОВОЕ: Обработчик правого клика и долгого нажатия на мобильных (contextmenu)
       btnSyncNow.addEventListener('contextmenu', (e) => {
           e.preventDefault(); // Отключаем стандартное контекстное меню браузера
-          window.location.href = isRu ? '/ru/login' : '/login';
+          window.location.href = window.isRu ? '/ru/login' : '/login';
       });
 
       // НОВОЕ: Обработчик клика колесиком мыши (auxclick)
@@ -241,9 +245,9 @@ function buildQuickModalDOM() {
           if (e.button === 1) { // button 1 означает среднюю кнопку (колесико)
               e.preventDefault();
               // Если нужно открывать в новой вкладке при клике колесиком:
-              // window.open(isRu ? '/ru/login' : '/login', '_blank');
+              // window.open(window.isRu ? '/ru/login' : '/login', '_blank');
               // Или в той же вкладке, как просили:
-              window.location.href = isRu ? '/ru/login' : '/login';
+              window.location.href = window.isRu ? '/ru/login' : '/login';
           }
       });
   }
@@ -261,7 +265,7 @@ function buildQuickModalDOM() {
   }
 
   window.refreshQuickModalData = function() {
-    renderQuickLists(isRu, queryBase);
+    renderQuickLists(window.isRu, queryBase);
   };
   
   const favContainer = quickModal.querySelector('#quick-favorites-container');
@@ -276,7 +280,7 @@ function buildQuickModalDOM() {
           
           if (itemIndex !== -1) {
               const currentTitle = favData[itemIndex].title || favData[itemIndex].slug;
-              const confirmMsg = isRu 
+              const confirmMsg = window.isRu 
                   ? `Удалить "${currentTitle}" из избранного?` 
                   : `Delete bookmark "${currentTitle}"?`;
               
@@ -303,7 +307,7 @@ function buildQuickModalDOM() {
           
           if (itemIndex !== -1) {
               const currentTitle = favData[itemIndex].title || favData[itemIndex].slug;
-              const newTitle = prompt(isRu ? "Введите новое название закладки:" : "Enter new bookmark name:", currentTitle);
+              const newTitle = prompt(window.isRu ? "Введите новое название закладки:" : "Enter new bookmark name:", currentTitle);
               
               if (newTitle !== null && newTitle.trim() !== "") {
                   favData[itemIndex].title = newTitle.trim();
@@ -360,7 +364,7 @@ function buildQuickModalDOM() {
       if (e.target.classList.contains('hidden-delete-hist')) {
           const slug = e.target.dataset.slug;
           
-          if (confirm(isRu ? "Стереть этот запрос из истории?" : "Delete this search from history?")) {
+          if (confirm(window.isRu ? "Стереть этот запрос из истории?" : "Delete this search from history?")) {
               
               let deletedHist = JSON.parse(localStorage.getItem('dg_deleted_history')) || [];
               deletedHist.push({ slug: slug, deletedAt: Date.now() });
@@ -391,7 +395,7 @@ function buildQuickModalDOM() {
 
   if (mainTrashIcon) {
       mainTrashIcon.addEventListener('click', () => {
-          if (confirm(isRu ? "Очистить ВСЮ историю поиска, включая в Облаке?" : "Clear ALL search history, including Cloud?")) {
+          if (confirm(window.isRu ? "Очистить ВСЮ историю поиска, включая в Облаке?" : "Clear ALL search history, including Cloud?")) {
               localStorage.setItem('localSearchHistory', JSON.stringify([]));
               
               // --- ИЗМЕНЕНО: Отправка команды на очистку коллекции ---
@@ -436,7 +440,7 @@ function renderQuickLists(isRu, queryBase) {
 
     // Рендер Избранного
     if (favData.length === 0) {
-      favContainer.innerHTML = `<p class="quick-empty-msg">${isRu ? "Избранного пока нет." : "No favorites yet."}</p>`;
+      favContainer.innerHTML = `<p class="quick-empty-msg">${window.isRu ? "Избранного пока нет." : "No favorites yet."}</p>`;
       favHeader.style.display = 'none';
       favContainer.style.display = 'block';
     } else {
@@ -457,7 +461,7 @@ function renderQuickLists(isRu, queryBase) {
         // Добавили кнопку rename-fav-btn (карандаш) перед кнопкой удаления
         favHtml += `<li><span class="fav-star-icon">★</span><a href="${url}">${fav.title || fav.slug}</a>
         <span class="item-date">${dateStr}</span>
-        <span class="action-btn rename-fav-btn" data-slug="${fav.slug}" title="${isRu ? 'Переименовать' : 'Rename'}">✎</span>
+        <span class="action-btn rename-fav-btn" data-slug="${fav.slug}" title="${window.isRu ? 'Переименовать' : 'Rename'}">✎</span>
         <span class="action-btn remove-fav-btn" data-slug="${fav.slug}">×</span></li>`;
       });
       favHtml += '</ul>';
@@ -467,7 +471,7 @@ function renderQuickLists(isRu, queryBase) {
 
     // Рендер Истории
     if (histData.length === 0) {
-      histContainer.innerHTML = `<p class="quick-empty-msg">${isRu ? "История пуста." : "History is empty."}</p>`;
+      histContainer.innerHTML = `<p class="quick-empty-msg">${window.isRu ? "История пуста." : "History is empty."}</p>`;
       histHeader.style.display = 'none';
       histContainer.style.display = 'block';
     } else {
