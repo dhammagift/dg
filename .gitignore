@@ -10,5 +10,5 @@ helpdocs
 config/sync-config.json
 config/tts-config.json
 config/*.json
-
+4nt
 **/node_modules
