@@ -272,6 +272,36 @@ function initExtra() {
 
         observer.observe(document.body, { childList: true, subtree: true });
 
+
+    // 11. SC segment refs: Default to 'Subtle', then remember user's choice
+    const segRefBtn = document.getElementById('segBtn');
+    if (segRefBtn) {
+        // Check if user has a saved preference, otherwise default to 'Subtle'
+        const savedSegState = localStorage.getItem('4ntSegRefState');
+        const targetState = savedSegState || 'Subtle'; 
+        const currentState = segRefBtn.textContent.trim();
+        
+        // If the current state doesn't match the target, click to cycle it
+        if (currentState !== targetState) {
+            let current = currentState;
+            let clicks = 0;
+            // cycleSeg() cycles: Off -> Subtle -> Explicit -> Off
+            while (current !== targetState && clicks < 3) {
+                segRefBtn.click();
+                current = segRefBtn.textContent.trim();
+                clicks++;
+            }
+        }
+        
+        // Listen for manual clicks to save the user's new preference
+        segRefBtn.addEventListener('click', () => {
+            // Small delay to ensure the original cycleSeg() has updated the DOM text
+            setTimeout(() => {
+                localStorage.setItem('4ntSegRefState', segRefBtn.textContent.trim());
+            }, 20); 
+        });
+    }
+
         // 10. Load external JS
         const scripts = [
             "/assets/js/settings.js",
