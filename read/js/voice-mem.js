@@ -2,18 +2,20 @@
  * A-B Loop Repeat Module (Универсальный цикл)
  * Работает поверх window.ttsAPI из voice.js
  */
-
+window.isRu = window.location.pathname.includes('/r/') || 
+                     window.location.pathname.includes('/ru/') || 
+                     window.location.pathname.includes('/ml/') || 
+                     window.location.pathname.includes('/mt/');
 (function() {
     // --- Локализация ---
-    const isRu = window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/');
     const L = {
-        a: isRu ? 'А:' : 'A:',
-        b: isRu ? 'Б:' : 'B:',
-        notSet: isRu ? 'не выбрана' : 'not set',
-        titlePick: isRu ? 'Нажмите для выбора. ПКМ или долгое нажатие для сброса.' : 'Click to select. Right-Click / Long-Press to clear.',
-        interval: isRu ? 'сек' : 'sec', 
-        playing: isRu ? 'Проигрывание... (осталось: ' : 'Playing... (left: ',
-        paused: isRu ? 'Пауза... Старт через ' : 'Paused... Next in ',
+        a: window.isRu ? 'А:' : 'A:',
+        b: window.isRu ? 'Б:' : 'B:',
+        notSet: window.isRu ? 'не выбрана' : 'not set',
+        titlePick: window.isRu ? 'Нажмите для выбора. ПКМ или долгое нажатие для сброса.' : 'Click to select. Right-Click / Long-Press to clear.',
+        interval: window.isRu ? 'сек' : 'sec', 
+        playing: window.isRu ? 'Проигрывание... (осталось: ' : 'Playing... (left: ',
+        paused: window.isRu ? 'Пауза... Старт через ' : 'Paused... Next in ',
         abLoopTitle: 'AB'
     };
 
@@ -66,8 +68,7 @@
                 memoBtn.title = 'Открыть в Memo';
                 memoBtn.innerHTML = 'memo';
                 
-                const isRuPathBase = window.location.pathname.includes('/r/') || window.location.pathname.includes('/ml/') || window.location.pathname.includes('/ru/');
-                memoBtn.href = isRuPathBase ? '/ru/memo/' : '/memo/';
+                memoBtn.href = window.isRu ? '/ru/memo/' : '/memo/';
                 
                 mainRow.appendChild(memoBtn);
  
