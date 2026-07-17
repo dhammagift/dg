@@ -1,4 +1,25 @@
+// Функция проверки и установки флага
+function checkForceLocalFlag() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('force_local')) {
+        localStorage.setItem('forceLocal', 'true');
+      
+     //   alert("Флаг forceLocal установлен!");
+    } else if (urlParams.has('clear_local')) {
+        localStorage.removeItem('forceLocal');
+      
+    //    alert("Флаг forceLocal удален!");
+    }
+}
+
+// Запускаем сразу при чтении скрипта
+checkForceLocalFlag();
+// console.log("Статус при запуске скрипта: forceLocal =", localStorage.getItem('forceLocal'));
+
 document.addEventListener("DOMContentLoaded", function() {
+    checkForceLocalFlag();
+  //  console.log("DOM загружен. Текущий статус forceLocal =", localStorage.getItem('forceLocal'));
+
     const searchValue = getSearchValue();
     const bwLinks = document.querySelectorAll('.bwLink');
     bwLinks.forEach(link => {
@@ -25,6 +46,7 @@ function getSearchValue() {
 }
 
 function openBw(slug) {
+    checkForceLocalFlag();
     const searchValue = getSearchValue();
     const textUrl = findBwTextUrl(slug, searchValue);
     if (textUrl) {
@@ -35,26 +57,43 @@ function openBw(slug) {
 }
 
 function findBwTextUrl(slug, searchValue) {
+    checkForceLocalFlag();
+
     const datasetBw = typeof tbwLinksData !== 'undefined' ? tbwLinksData : [];
     if (!datasetBw || !datasetBw.length) return null;
 
     const item = datasetBw.find(item => Array.isArray(item) ? item[0] === slug : item === slug);
     if (!item) return null;
 
-    const isLocal = window.location.host.includes('localhost') || window.location.host.includes('127.0.0.1');
+    const isForceLocal = localStorage.getItem('forceLocal') === 'true';
+    const isLocalHost = window.location.host.includes('localhost') || window.location.host.includes('127.0.0.1');
+    const isLocal = isLocalHost || isForceLocal;
+
     const isBbPath = window.location.pathname.startsWith('/b/');
 
-    if (isLocal) {
-        // Если мы уже на странице BB – не показываем ссылку на BB
-        if (isBbPath) return null;
+ //   console.log(`Слуг [${slug}]: isLocal=${isLocal} (isLocalHost=${isLocalHost}, isForceLocal=${isForceLocal}), isBbPath=${isBbPath}`);
 
-        let url = "/b/?q=" + encodeURIComponent(item[1]);
-        if (searchValue) {
-            url += "&s=" + encodeURIComponent(searchValue);
+    if (isLocal) {
+        if (isBbPath) {
+            // Прямая ссылка для локального/секретного режима
+            const match = slug.match(/^[a-z]+/);
+            if (!match) return null;
+            const folder = match[0];
+            let url = "/bw/" + folder + "/" + slug + ".html";
+            if (searchValue) {
+                url += "?s=" + encodeURIComponent(searchValue);
+            }
+            return url;
+        } else {
+            // Стандартное поведение ссылки b
+            let url = "/b/?q=" + encodeURIComponent(item[1]);
+            if (searchValue) {
+                url += "&s=" + encodeURIComponent(searchValue);
+            }
+            return url;
         }
-        return url;
     } else {
-        // Онлайн – прямая ссылка на thebuddhaswords.net
+        // Обычный онлайн без флага
         const match = slug.match(/^[a-z]+/);
         if (!match) return null;
         const folder = match[0];
@@ -66,23 +105,22 @@ function findBwTextUrl(slug, searchValue) {
     }
 }
 
-
 function findBwTextUrlOld(slug, searchValue) {
     let datasetBw;
     let tbwRootUrl;
-    let base; 
+    let base;
 
     if (window.location.host.includes('localhost') || window.location.host.includes('127.0.0.1')) {
         base = "/";
-        tbwRootUrl = "b/?q="; 
+        tbwRootUrl = "b/?q=";
     } else {
         base = "/";
-        tbwRootUrl = "b/?q="; 
+        tbwRootUrl = "b/?q=";
     }
-  
+
     // Assumes tbwLinksData is available in the global scope
     datasetBw = typeof tbwLinksData !== 'undefined' ? tbwLinksData : [];
-  
+
     if (datasetBw && datasetBw.length) {
         const item = datasetBw.find(item => Array.isArray(item) ? item[0] === slug : item === slug);
         if (item) {
