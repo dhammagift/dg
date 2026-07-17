@@ -33,11 +33,15 @@ function processHtml(dir) {
             let changed = false;
 
             // Добавление id к ix-row
-            content = content.replace(pattern, (match, fullTag, folderName) => {
+            const newContent = content.replace(pattern, (match, fullTag, folderName) => {
                 if (/\sid=/.test(fullTag)) return fullTag;
                 changed = true;
                 return fullTag.slice(0, -1) + ` id="${folderName}">`;
             });
+            
+            if (newContent !== content) {
+                content = newContent;
+            }
 
             // Подключение extra.js
             if (!content.includes('/4nt/extra/extra.js')) {
@@ -45,6 +49,12 @@ function processHtml(dir) {
                     /<\/head>/i,
                     `${EXTRA_SCRIPT}\n</head>`
                 );
+                changed = true;
+            }
+
+            // Замена логотипа
+            if (content.includes('debabel-logo-1k.jpg')) {
+                content = content.split('debabel-logo-1k.jpg').join('headerlogo.png');
                 changed = true;
             }
 
@@ -57,7 +67,22 @@ function processHtml(dir) {
         }
     }
 
+    // Запускаем обход файлов
     walk(dir);
+    
+    // Копирование фавиконки после модификации всех HTML
+    try {
+        const srcLogo = path.join(dir, 'headerlogo.png');
+        const destFavicon = path.join(dir, 'favicon.png');
+        
+        if (fs.existsSync(srcLogo)) {
+            fs.copyFileSync(srcLogo, destFavicon);
+        } else {
+            console.warn(`Файл ${srcLogo} не найден, копирование фавиконки пропущено.`);
+        }
+    } catch (err) {
+        console.error(`Ошибка при копировании фавиконки: ${err.message}`);
+    }
 }
 
 processHtml(process.argv[2] || '.');

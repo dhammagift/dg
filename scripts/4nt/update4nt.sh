@@ -83,8 +83,6 @@ echo -n " done"
 echo
 echo -n editing styles
 
-
-
 grep -ril debabel-logo-1k.jpg * | grep html | xargs sed -i 's/debabel-logo-1k.jpg/headerlogo.png/g'  
 grep -ril "#1a1612" *.html | grep html | xargs sed -i 's/#1a1612/#000/g'
 cp headerlogo.png favicon.png
