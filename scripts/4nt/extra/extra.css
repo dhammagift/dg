@@ -173,5 +173,5 @@ td.c, td.l, .pli-lang, .eng-lang {
    ========================================= */
 /* Глобальная защита скролла для всего документа */
 html, body {
-    scroll-padding-top: 25vh !important;
+    scroll-padding-top: 20vh !important;
 }
