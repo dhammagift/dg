@@ -7,14 +7,12 @@ function checkForceLocalFlag() {
         localStorage.setItem('forceLocal', 'true');
         changed = true;
         isSet = true;
-        console.log("Установка: Флаг forceLocal добавлен в localStorage");
-        alert("Флаг forceLocal установлен и готовится к отправке в облако!");
+      //  alert("Флаг forceLocal установлен и готовится к отправке в облако!");
     } else if (urlParams.has('clear_local')) {
         localStorage.removeItem('forceLocal');
         changed = true;
         isSet = false;
-        console.log("Удаление: Флаг forceLocal удален из localStorage");
-        alert("Флаг forceLocal удален локально и в облаке!");
+      //  alert("Флаг forceLocal удален локально и в облаке!");
     }
 
     // Если флаг изменился — регистрируем это для облака вручную
