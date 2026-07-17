@@ -58,15 +58,20 @@ window.toggleDots = function(forceState) {
 
 function getSlug(slug = null) {
     if (slug) return slug.trim().toLowerCase();
-    return (
-        document.querySelector('#jumpInput')?.value.trim() ||
-        document.querySelector('input[name="q"]')?.value.trim() ||
-        new URLSearchParams(location.search).get('q')?.trim() ||
-        (() => {
-            const pathParts = location.pathname.replace(/\/$/, '').split('/');
-            return pathParts[pathParts.length - 1] || null;
-        })()
-    )?.toLowerCase();
+    
+    // 1. Сначала проверяем инпуты и URL-параметры
+    const inputVal = document.querySelector('#jumpInput')?.value.trim() ||
+                     document.querySelector('input[name="q"]')?.value.trim() ||
+                     new URLSearchParams(location.search).get('q')?.trim();
+    if (inputVal) return inputVal.toLowerCase();
+
+    // 2. Извлекаем из пути (URL)
+    let path = location.pathname;
+    // Убираем index.html (в любом регистре) и возможные слеши в конце
+    path = path.replace(/\/?index\.html$/i, '').replace(/\/$/, '');
+    
+    const pathParts = path.split('/');
+    return (pathParts[pathParts.length - 1] || null)?.toLowerCase();
 }
 
 function initExtra() {
@@ -163,6 +168,42 @@ function initExtra() {
             });
             
             targetWrap.parentNode.insertBefore(fragment, targetWrap);
+            
+            
+             // ==========================================
+         // --- ПРАВЫЙ КЛИК / ДОЛГОЕ НАЖАТИЕ НА КНОПКУ ПОИСКА (fdg-button) ---
+         // ==========================================
+         const fdgBtn = document.getElementById('fdg-button');
+         if (fdgBtn) {
+             let longPressTimer;
+             
+             // 1. Десктоп: Правый клик (вызов контекстного меню)
+             fdgBtn.addEventListener('contextmenu', function(e) {
+                 e.preventDefault(); // Блокируем стандартное меню браузера
+                 if (typeof toggleQuickModal === 'function') toggleQuickModal();
+             });
+             
+             // 2. Мобильные устройства: Долгое нажатие (Long-press)
+             fdgBtn.addEventListener('touchstart', function(e) {
+                 // Запускаем таймер на 500 мс
+                 longPressTimer = setTimeout(function() {
+                     if (typeof toggleQuickModal === 'function') toggleQuickModal();
+                     // Легкая вибрация для тактильного отклика (если телефон поддерживает)
+                     if (navigator.vibrate) navigator.vibrate(30); 
+                 }, 500); 
+             }, { passive: true });
+             
+             // Отменяем таймер, если палец отпустили
+             fdgBtn.addEventListener('touchend', function() {
+                 clearTimeout(longPressTimer);
+             });
+             
+             // Отменяем таймер, если палец сдвинулся (чтобы не срабатывало при скролле)
+             fdgBtn.addEventListener('touchmove', function() {
+                 clearTimeout(longPressTimer);
+             }, { passive: true });
+         }
+            
         }
 
         // 6. Insert Pāli dots option into settings menu (before SC segment refs)
@@ -330,16 +371,221 @@ if (document.readyState === "loading") {
 
 // Hotkeys
 document.addEventListener("keydown", function(event) {
+    // Игнорируем, если фокус в поле ввода (чтобы не мешать печатать)
+    const activeTag = document.activeElement.tagName;
+    const isInput = ['INPUT', 'TEXTAREA'].includes(activeTag) || document.activeElement.isContentEditable;
+
+    // Alt + C: Переключение вида (Колонки / Скролл)
     if (event.altKey && event.code === "KeyC") {
         event.preventDefault();
         window.toggleViewMode();
     }
+    
+    // Alt + W: Оглавление / Сайдбар
     if (event.altKey && event.code === "KeyW") {
         event.preventDefault();
         if (typeof toggleSidebar === 'function') toggleSidebar();
     }
+    
+    // Alt + Z: Точки в Пали
     if (event.altKey && event.code === "KeyZ") {
         event.preventDefault();
         window.toggleDots();
     }
+    
+    if (event.altKey && (event.code === "KeyP" || event.code === "KeyY")) { 
+  event.preventDefault();
+    toggleQuickModal();
+  }
+
+
+
+    // --- Alt + R: Управление TTS плеером (Дубль из settings.js для гарантии) ---
+    if (event.altKey && event.code === "KeyR") {
+        if (isInput) return;
+        event.preventDefault();
+        
+        // 1. Если скрипты еще не загружены — грузим и запускаем
+        if (!window.isVoiceScriptLoaded) {
+            if (typeof window.loadVoiceScripts === 'function') {
+                window.loadVoiceScripts(() => {
+                    const voiceLink = document.querySelector('.voice-link');
+                    if (voiceLink) voiceLink.click();
+                });
+            }
+            return;
+        }
+        
+        // 2. Сценарий: Плеер уже активен (Пауза/Плей)
+        if (typeof ttsState !== 'undefined' && ttsState.speaking) {
+            const mainPlayBtn = document.querySelector('.play-main-button');
+            if (mainPlayBtn) mainPlayBtn.click();
+            return;
+        }
+        
+        // 3. Сценарий: Выбран конкретный сегмент (мини-кнопка Play)
+        const miniPlayBtn = document.querySelector('.dynamic-tts-btn');
+        if (miniPlayBtn) {
+            miniPlayBtn.click();
+            return;
+        }
+        
+        // 4. Сценарий: Запуск по умолчанию (клик по главной кнопке озвучки)
+        const voiceLink = document.querySelector('.voice-link');
+        if (voiceLink) voiceLink.click();
+    }
+
+    // --- Alt + T: Переключение темы (Светлая / Темная) ---
+    if (event.altKey && event.code === "KeyT") {
+        if (isInput) return;
+        event.preventDefault();
+        // Вызываем глобальную функцию переключения темы, которую extra.js уже патчит
+        if (typeof window.toggleTheme === 'function') {
+            window.toggleTheme();
+        }
+    }
 });
+
+
+window.addEventListener("keydown", (event) => {
+    if (event.key === 'Escape' || event.code === 'Escape') {
+
+        // ==========================================
+        // ПРИОРИТЕТ 1: ПОДСКАЗКИ (Hints)
+        // ==========================================
+        
+        // --- 1.1. Voice Hint ---
+        const voiceHint = document.getElementById('active-voice-hint');
+        if (voiceHint) {
+            const closeHintBtn = document.getElementById('closeVoiceHintBtn');
+            if (closeHintBtn) {
+                closeHintBtn.click();
+                event.preventDefault();
+                return;
+            }
+        }
+
+        // --- 1.2. General Hint Popup (С логами для Павла) ---
+        // Ищем все варианты уведомлений: старые, новые тосты и баблы
+        const hintElements = document.querySelectorAll('.dg-bottom-toast, .hint, .bubble-notification');
+        
+        for (let i = 0; i < hintElements.length; i++) {
+            const hintElement = hintElements[i];
+            const style = window.getComputedStyle(hintElement);
+            
+            // Проверяем наличие класса 'show' или фактическую видимость через opacity
+            const isVisible = hintElement.classList.contains('show') || 
+                              (style.display !== 'none' && style.opacity !== '0');
+            
+            if (isVisible) {
+                
+                // Ищем любую кнопку закрытия внутри
+                const closeHintButton = hintElement.querySelector('#closeHintBtn, .dg-toast-close, .close-btn, .dg-bottom-toast-close');
+                
+                if (closeHintButton) {
+                    closeHintButton.click();
+                } else {
+                    hintElement.classList.remove('show');
+                }
+                
+                event.preventDefault();
+                return; 
+            }
+        }
+
+		
+        // ==========================================
+        // ПРИОРИТЕТ 2: СЛОВАРИ (Dictionaries)
+        // ==========================================
+
+        // --- 2.1. FDG Popup ---
+        const fdgPopupElement = document.querySelector('.fdg-popup');
+        if (fdgPopupElement && fdgPopupElement.style.display === 'block') {
+            const fdgCloseButton = fdgPopupElement.querySelector('.fdg-close-btn');
+            if (fdgCloseButton) {
+                fdgCloseButton.click();
+                event.preventDefault();
+                return;
+            }
+        }
+
+        // --- 2.2. Pali Lookup Popup (Главный словарь) ---
+        const paliLookupPopupElement = document.querySelector('.popup');
+        if (paliLookupPopupElement && paliLookupPopupElement.style.display === 'block') {
+            const paliLookupCloseButton = paliLookupPopupElement.querySelector('.close-btn');
+            if (paliLookupCloseButton) {
+                paliLookupCloseButton.click();
+                event.preventDefault();
+                return;
+            }
+        }
+
+        // ==========================================
+        // ПРИОРИТЕТ 3: МОДАЛЬНЫЕ ОКНА (Modals & Banners)
+        // ==========================================
+
+        // --- 3.1. Quick Modal (Cattāri Ariyasaccāni) ---
+        if (window.quickModalIsOpen) {
+            if (typeof window.toggleQuickModal === 'function') {
+                window.toggleQuickModal(); 
+                event.preventDefault();
+                return;
+            }
+        }
+
+        // --- 3.2. PWA Banner ---
+        const pwaBanner = document.getElementById('pwa-banner');
+        if (pwaBanner && pwaBanner.offsetParent !== null) { 
+            const closePwaBtn = document.getElementById('closePwaBanner');
+            if (closePwaBtn) {
+                closePwaBtn.click();
+                event.preventDefault();
+                return;
+            }
+        }
+
+        // --- 3.3. Основные модальные окна (Settings, Help и т.д.) ---
+        const closeBtnElements = document.querySelectorAll('.btn-close');
+        if (closeBtnElements.length > 0) {
+            let modalClosed = false;
+            closeBtnElements.forEach(button => {
+                if (button.offsetParent !== null) {
+                    button.click();
+                    modalClosed = true;
+                }
+            });
+            // Возвращаемся, только если действительно закрыли видимое окно
+            if (modalClosed) {
+                event.preventDefault();
+                return; 
+            }
+        }
+
+        // ==========================================
+        // ПРИОРИТЕТ 4: TTS И ВЫДЕЛЕНИЯ (Active Word)
+        // ==========================================
+        
+        const dropdown = document.querySelector('.voice-dropdown');
+        const isDropdownActive = dropdown && dropdown.classList.contains('active');
+        const isHighlightActive = document.querySelector('.active-word');
+
+        // Безопасная проверка, чтобы не уронить скрипт до загрузки voice.js
+        const isTtsActive = typeof ttsState !== 'undefined' && (ttsState.speaking || ttsState.paused);
+
+        // Если что-то играет, открыто меню или выделен текст
+        if (isTtsActive || isDropdownActive || isHighlightActive) {
+            event.preventDefault();
+            
+            if (typeof stopPlayback === 'function') {
+                stopPlayback();        // Остановить звук, сбросить state
+            }
+            if (typeof removeAllHighlights === 'function') {
+                removeAllHighlights(); // Убрать желтое выделение и мини-кнопку
+            }
+            
+            // Закрываем меню плеера визуально
+            if (dropdown) dropdown.classList.remove('active');
+            return;
+        }
+    }
+}, true);

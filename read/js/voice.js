@@ -2333,9 +2333,15 @@ async function refreshVoiceDropdowns(forceRefresh = false) {
     const paliLangSelect = document.getElementById('google-lang-select-pali');
     const paliVoiceSelect = document.getElementById('google-voice-select-pali');
     
+    const isChineseLang = (code) => {
+        return code.replace('_', '-').toLowerCase().startsWith('zh-');
+    };
+
+
     if (paliLangSelect && paliVoiceSelect) {
         if (isNativePali) {
-            let paliNativeVoices = nativeVoices.filter(v => isIndianLang(v.languageCodes[0]));
+            // Теперь включаем сюда и индийские, и китайские для Пали
+            let paliNativeVoices = nativeVoices.filter(v => isIndianLang(v.languageCodes[0]) || isChineseLang(v.languageCodes[0]));
             if (paliNativeVoices.length === 0) {
                 paliNativeVoices = nativeVoices.filter(v => isEnglishLang(v.languageCodes[0]));
             }
@@ -2346,10 +2352,11 @@ async function refreshVoiceDropdowns(forceRefresh = false) {
             paliLangSelect.style.maxWidth = '';
             paliVoiceSelect.style.display = '';
             
-            const paliVoices = googleVoices.filter(v => isIndianLang(v.languageCodes[0]));
+            // Включаем китайские в список Google для Пали
+            const paliVoices = googleVoices.filter(v => isIndianLang(v.languageCodes[0]) || isChineseLang(v.languageCodes[0]));
             setupVoiceSelectors(paliVoices, 'google-lang-select-pali', 'google-voice-select-pali', GOOGLE_PALI_SETTINGS_KEY, DEFAULT_PALI_CONFIG);
         }
-    }
+}
 
     // --- НАСТРОЙКА UI TRANSLATION ---
     const trnLangSelect = document.getElementById('google-lang-select-trn');
