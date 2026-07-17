@@ -110,10 +110,23 @@ function initExtra() {
         // 2. View Mode
         document.documentElement.setAttribute('data-view-mode', window.viewMode);
 
-        // 3. Mobile sidebar
+        // 3. Mobile sidebar - Аккуратно сворачиваем ТОС без вызова toggleSidebar()
         const isMobileDevice = window.matchMedia("(max-width: 900px)").matches;
         if (isMobileDevice && typeof sidebarVisible !== 'undefined' && sidebarVisible) {
-            if (typeof toggleSidebar === 'function') toggleSidebar();
+            sidebarVisible = false;
+            document.getElementById('sidebar')?.classList.add('hidden');
+            document.getElementById('tocBar')?.classList.add('hidden');
+            document.getElementById('main')?.classList.add('full');
+            document.getElementById('colBar')?.classList.add('sidebar-hidden');
+            document.getElementById('tocBtn')?.classList.remove('on');
+            document.getElementById('tocSash')?.classList.add('hidden');
+            const ft = document.getElementById('siteFooter');
+            if(ft) ft.classList.add('full');
+            
+            // Откладываем пересчет высоты шапки до полной загрузки картинок
+            window.addEventListener('load', () => {
+                if (typeof updateHeaderHeight === 'function') updateHeaderHeight();
+            });
         }
 
         // 4. UI Elements Adjustment
@@ -169,41 +182,35 @@ function initExtra() {
             
             targetWrap.parentNode.insertBefore(fragment, targetWrap);
             
-            
-             // ==========================================
-         // --- ПРАВЫЙ КЛИК / ДОЛГОЕ НАЖАТИЕ НА КНОПКУ ПОИСКА (fdg-button) ---
-         // ==========================================
-         const fdgBtn = document.getElementById('fdg-button');
-         if (fdgBtn) {
-             let longPressTimer;
-             
-             // 1. Десктоп: Правый клик (вызов контекстного меню)
-             fdgBtn.addEventListener('contextmenu', function(e) {
-                 e.preventDefault(); // Блокируем стандартное меню браузера
-                 if (typeof toggleQuickModal === 'function') toggleQuickModal();
-             });
-             
-             // 2. Мобильные устройства: Долгое нажатие (Long-press)
-             fdgBtn.addEventListener('touchstart', function(e) {
-                 // Запускаем таймер на 500 мс
-                 longPressTimer = setTimeout(function() {
-                     if (typeof toggleQuickModal === 'function') toggleQuickModal();
-                     // Легкая вибрация для тактильного отклика (если телефон поддерживает)
-                     if (navigator.vibrate) navigator.vibrate(30); 
-                 }, 500); 
-             }, { passive: true });
-             
-             // Отменяем таймер, если палец отпустили
-             fdgBtn.addEventListener('touchend', function() {
-                 clearTimeout(longPressTimer);
-             });
-             
-             // Отменяем таймер, если палец сдвинулся (чтобы не срабатывало при скролле)
-             fdgBtn.addEventListener('touchmove', function() {
-                 clearTimeout(longPressTimer);
-             }, { passive: true });
-         }
-            
+            // ==========================================
+            // --- ПРАВЫЙ КЛИК / ДОЛГОЕ НАЖАТИЕ НА КНОПКУ ПОИСКА (fdg-button) ---
+            // ==========================================
+            const fdgBtn = document.getElementById('fdg-button');
+            if (fdgBtn) {
+                let longPressTimer;
+                
+                // 1. Десктоп: Правый клик (вызов контекстного меню)
+                fdgBtn.addEventListener('contextmenu', function(e) {
+                    e.preventDefault(); 
+                    if (typeof toggleQuickModal === 'function') toggleQuickModal();
+                });
+                
+                // 2. Мобильные устройства: Долгое нажатие (Long-press)
+                fdgBtn.addEventListener('touchstart', function(e) {
+                    longPressTimer = setTimeout(function() {
+                        if (typeof toggleQuickModal === 'function') toggleQuickModal();
+                        if (navigator.vibrate) navigator.vibrate(30); 
+                    }, 500); 
+                }, { passive: true });
+                
+                fdgBtn.addEventListener('touchend', function() {
+                    clearTimeout(longPressTimer);
+                });
+                
+                fdgBtn.addEventListener('touchmove', function() {
+                    clearTimeout(longPressTimer);
+                }, { passive: true });
+            }
         }
 
         // 6. Insert Pāli dots option into settings menu (before SC segment refs)
@@ -235,7 +242,6 @@ function initExtra() {
 
         // Init dots state by default
         const hideDotsSetting = localStorage.getItem('4ntHideDots');
-        // If no setting exists (first visit), dots will be hidden (true)
         const shouldHideDots = hideDotsSetting === null ? true : hideDotsSetting === 'true';
         window.toggleDots(shouldHideDots);
 
@@ -313,35 +319,29 @@ function initExtra() {
 
         observer.observe(document.body, { childList: true, subtree: true });
 
-
-    // 11. SC segment refs: Default to 'Subtle', then remember user's choice
-    const segRefBtn = document.getElementById('segBtn');
-    if (segRefBtn) {
-        // Check if user has a saved preference, otherwise default to 'Subtle'
-        const savedSegState = localStorage.getItem('4ntSegRefState');
-        const targetState = savedSegState || 'Subtle'; 
-        const currentState = segRefBtn.textContent.trim();
-        
-        // If the current state doesn't match the target, click to cycle it
-        if (currentState !== targetState) {
-            let current = currentState;
-            let clicks = 0;
-            // cycleSeg() cycles: Off -> Subtle -> Explicit -> Off
-            while (current !== targetState && clicks < 3) {
-                segRefBtn.click();
-                current = segRefBtn.textContent.trim();
-                clicks++;
+        // 11. SC segment refs: Default to 'Subtle', then remember user's choice
+        const segRefBtn = document.getElementById('segBtn');
+        if (segRefBtn) {
+            const savedSegState = localStorage.getItem('4ntSegRefState');
+            const targetState = savedSegState || 'Subtle'; 
+            const currentState = segRefBtn.textContent.trim();
+            
+            if (currentState !== targetState) {
+                let current = currentState;
+                let clicks = 0;
+                while (current !== targetState && clicks < 3) {
+                    segRefBtn.click();
+                    current = segRefBtn.textContent.trim();
+                    clicks++;
+                }
             }
+            
+            segRefBtn.addEventListener('click', () => {
+                setTimeout(() => {
+                    localStorage.setItem('4ntSegRefState', segRefBtn.textContent.trim());
+                }, 20); 
+            });
         }
-        
-        // Listen for manual clicks to save the user's new preference
-        segRefBtn.addEventListener('click', () => {
-            // Small delay to ensure the original cycleSeg() has updated the DOM text
-            setTimeout(() => {
-                localStorage.setItem('4ntSegRefState', segRefBtn.textContent.trim());
-            }, 20); 
-        });
-    }
 
         // 10. Load external JS
         const scripts = [
@@ -361,6 +361,7 @@ function initExtra() {
         console.error("4nt Extra script error:", error);
     }
 }
+
 
 // Smart initialization
 if (document.readyState === "loading") {
