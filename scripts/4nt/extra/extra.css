@@ -12,12 +12,10 @@ html[data-view-mode="rows"] .rt tr {
   border-bottom: 2px solid var(--border);
 }
 
-/* Чтобы Pāli-заголовок (seg) был виден в режиме строк */
+/* Отступы Pāli-заголовка (seg) в режиме строк (видимость управляется через data-seg) */
 html[data-view-mode="rows"] .seg {
-  display: block;
   margin-bottom: 0.2rem;
 }
-
 
 /* =========================================
    2. EXTRA BUTTONS (Панель настроек)
