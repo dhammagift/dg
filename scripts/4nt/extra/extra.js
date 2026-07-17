@@ -148,7 +148,7 @@ function initExtra() {
                 { tag: 'a', html: '🔊', title: 'Listen (TTS)', class: 'voice-link icon-btn', id: 'voiceLinkBtn', attr: { 'data-slug': slug }, href: 'javascript:void(0)' },
                 { tag: 'a', html: '📜', title: 'View: Columns / Scroll', class: 'icon-btn', id: 'viewModeBtn', onclick: 'window.toggleViewMode()', href: 'javascript:void(0)' },
                 { tag: 'a', html: '<img src="/assets/img/gray-white.png" alt="Search">', title: 'Search Suttas (Ctrl+1)', href: '/?q=' + slug, id: 'fdg-button', class: 'icon-btn', rel: 'noreferrer' },
-                { tag: 'a', html: '<img src="/assets/svg/comment.svg" alt="Dictionary">', title: 'Popup Dictionary (Alt+A)', class: 'icon-btn toggle-dict-btn' }
+                { tag: 'a', html: '<img  style="width:18px; height:18px; display:block;" src="/assets/svg/comment.svg" alt="Dictionary">', title: 'Popup Dictionary (Alt+A)', class: 'icon-btn toggle-dict-btn' }
             ];
 
             buttons.forEach(b => {
