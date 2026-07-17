@@ -58,6 +58,12 @@ function processHtml(dir) {
                 changed = true;
             }
 
+// Замена эмодзи
+if (content.includes('🦘')) {
+    content = content.split('🦘').join('🐇');
+    changed = true;
+}
+
             if (changed) {
                 fs.writeFileSync(filePath, content, 'utf8');
             }
