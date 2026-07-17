@@ -210,7 +210,7 @@ function updateURL(params) {
             <a class="navbar-brand mobile-center" href="<?php echo $mainpage;?>"> <div class="container">
               
             
-<img loading="lazy" alt="Precise search in Pali Suttas and Vinaya" src="/assets/img/dhammafindlogo.webp" class="w-100px">
+<img loading="lazy" alt="Precise search in Pali Suttas and Vinaya" src="/assets/img/dgsanhkalogo.png" class="w-100px">
 </a>
 
             
