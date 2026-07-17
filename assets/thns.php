@@ -18,7 +18,7 @@ $publishedCmd = "find ../offline-data/dhammagift/en_other -name \"*-en-*.json\" 
 //$publishedCmd = "find ../offline-data/dhammagift/en_other -name \"*-en-*.json\" -printf '%f\n' | sort -V | awk '{sub(/_translation-en-thanissaro\\.json$/, \"\", $1); print $1}'";
 
 // Not ready остается как была
-$notReadyCmd = "cd ../offline-data/dhammagift/en_other; find ../lbl sutta/sn sutta/mn sutta/an -type f | awk -F/ '{print \$NF}' | sed 's/_.*//' | sort -u | grep -Fhxvf - an.txt sn.txt mn.txt | awk '/^sn/{print \"1 \" \$0;next}/^mn/{print \"2 \" \$0;next}/^dn/{print \"3 \" \$0;next}/^an/{print \"4 \" \$0;next}' | sort -k1,1n -k2,2V | cut -d' ' -f2-";
+$notReadyCmd = "cd ../offline-data/dhammagift/en_other; find /var/www/offline-data/lbl sutta/sn sutta/mn sutta/an -type f | awk -F/ '{print \$NF}' | sed 's/_.*//' | sort -u | grep -Fhxvf - an.txt sn.txt mn.txt | awk '/^sn/{print \"1 \" \$0;next}/^mn/{print \"2 \" \$0;next}/^dn/{print \"3 \" \$0;next}/^an/{print \"4 \" \$0;next}' | sort -k1,1n -k2,2V | cut -d' ' -f2-";
 
 // Выполнение
 $gitOutput = shell_exec("cd ../../offline-data; git pull 2>&1") ?? '';
