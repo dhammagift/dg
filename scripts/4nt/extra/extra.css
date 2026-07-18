@@ -261,3 +261,20 @@ td.c .ct {
 }
 
 
+.seg-link {
+  display: none;
+  position: absolute;
+  top: .4rem;
+  right: .3rem;
+  z-index: 10;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: .6rem;
+  line-height: 1;
+  padding: 0;
+  opacity: .22;
+  filter: grayscale(.5);
+  user-select: none;
+  transition: opacity .12s, filter .12s;
+}

@@ -1,5 +1,13 @@
 //todo tts with active word doesnt word for first play on the page. 
 
+window.removePaliPunctuation = function(text) {
+    return text.replace(/·/g, '')
+               .replace(/[-—–]/g, ' ')
+               .replace(/[:;“”‘’,"']/g, '')
+               .replace(/[.?!]/g, ' | ');
+};
+
+
 // Make variables and functions global to avoid conflicts
 window.viewMode = localStorage.getItem('4ntReadView') || 'cols';
 
@@ -41,7 +49,8 @@ window.toggleDots = function(forceState) {
                 if (node.originalText === undefined) {
                     node.originalText = node.nodeValue;
                 }
-                node.nodeValue = node.nodeValue.replace(/·/g, '');
+                
+                node.nodeValue = window.removePaliPunctuation(node.originalText);
             } else {
                 if (node.originalText !== undefined) {
                     node.nodeValue = node.originalText;
@@ -57,6 +66,8 @@ window.toggleDots = function(forceState) {
         btn.textContent = isHidden ? 'Off' : 'On';
     }
 };
+
+
 
 function getSlug(slug = null) {
     if (slug) return slug.trim().toLowerCase();
@@ -229,8 +240,8 @@ if (topBtn) {
                 const dotsRow = document.createElement('div');
                 dotsRow.className = 'set-row';
                 dotsRow.innerHTML = `
-                    <span class="set-lbl" title="Toggle middle dots (·) used to break up Pāli compounds for easier reading">Pāli compound dots</span>
-                    <button class="icon-btn" id="dotsBtn" onclick="window.toggleDots()" title="Toggle Pāli compound dots">Off</button>
+                    <span class="set-lbl" title="Toggle compound dots (·) and punctuation">Toggle Pāli punctuation</span>
+                    <button class="icon-btn" id="dotsBtn" onclick="window.toggleDots()" title="Toggle Pāli punctuation">Off</button>
                 `;
                 segRow.parentNode.insertBefore(dotsRow, segRow);
             }
@@ -269,7 +280,7 @@ if (topBtn) {
         });
 
         // 9. Handle language classes and dynamically hide dots
-        const processLangClasses = (el) => {
+                const processLangClasses = (el) => {
             if (!el || !el.classList) return;
             
             let isPali = false;
@@ -304,7 +315,8 @@ if (topBtn) {
                     if (node.originalText === undefined) {
                         node.originalText = node.nodeValue;
                     }
-                    node.nodeValue = node.nodeValue.replace(/·/g, '');
+                    
+                    node.nodeValue = window.removePaliPunctuation(node.originalText);
                 }
             }
         };
@@ -404,32 +416,35 @@ document.addEventListener("keydown", function(event) {
     }
     
     if (event.altKey && (event.code === "KeyP" || event.code === "KeyY")) { 
-  event.preventDefault();
-    toggleQuickModal();
-  }
-
-
+        event.preventDefault();
+        if (typeof toggleQuickModal === 'function') toggleQuickModal();
+    }
 
     // --- Alt + R: Управление TTS плеером (Дубль из settings.js для гарантии) ---
     if (event.altKey && event.code === "KeyR") {
         if (isInput) return;
         event.preventDefault();
         
-        // 1. Если скрипты еще не загружены — грузим и запускаем
+        // 1. Сценарий: Плеер уже активен (Пауза/Плей)
+        if (window.isVoiceScriptLoaded && typeof ttsState !== 'undefined' && (ttsState.speaking || ttsState.paused)) {
+            const mainPlayBtn = document.querySelector('.play-main-button');
+            if (mainPlayBtn) mainPlayBtn.click();
+            return;
+        }
+
+        // 2. Если скрипты еще не загружены — грузим и запускаем с учетом активного слова
         if (!window.isVoiceScriptLoaded) {
             if (typeof window.loadVoiceScripts === 'function') {
                 window.loadVoiceScripts(() => {
-                    const voiceLink = document.querySelector('.voice-link');
-                    if (voiceLink) voiceLink.click();
+                    const miniPlayBtn = document.querySelector('.dynamic-tts-btn');
+                    if (miniPlayBtn) {
+                        miniPlayBtn.click();
+                    } else {
+                        const voiceLink = document.querySelector('.voice-link');
+                        if (voiceLink) voiceLink.click();
+                    }
                 });
             }
-            return;
-        }
-        
-        // 2. Сценарий: Плеер уже активен (Пауза/Плей)
-        if (typeof ttsState !== 'undefined' && ttsState.speaking) {
-            const mainPlayBtn = document.querySelector('.play-main-button');
-            if (mainPlayBtn) mainPlayBtn.click();
             return;
         }
         
@@ -600,3 +615,30 @@ window.addEventListener("keydown", (event) => {
     }
 }, true);
 
+// Перехват клика по главной кнопке озвучки для старта с активного слова
+window.addEventListener('click', function(event) {
+    const voiceLink = event.target.closest('.voice-link');
+    
+    if (voiceLink) {
+        const miniPlayBtn = document.querySelector('.dynamic-tts-btn');
+        const isTtsRunning = window.isVoiceScriptLoaded && typeof ttsState !== 'undefined' && (ttsState.speaking || ttsState.paused);
+        
+        if (miniPlayBtn && !isTtsRunning) {
+            // Жестко блокируем клик для всех остальных скриптов, включая voice.js
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+            
+            if (!window.isVoiceScriptLoaded && typeof window.loadVoiceScripts === 'function') {
+                window.loadVoiceScripts(() => {
+                    setTimeout(() => {
+                        const dynamicBtn = document.querySelector('.dynamic-tts-btn');
+                        if (dynamicBtn) dynamicBtn.click();
+                    }, 50);
+                });
+            } else {
+                miniPlayBtn.click();
+            }
+        }
+    }
+}, true); // true означает фазу перехвата (захвата) - сработает самым первым
