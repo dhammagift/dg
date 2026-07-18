@@ -1,3 +1,5 @@
+//todo tts with active word doesnt word for first play on the page. 
+
 // Make variables and functions global to avoid conflicts
 window.viewMode = localStorage.getItem('4ntReadView') || 'cols';
 
@@ -344,7 +346,8 @@ function initExtra() {
         }
 
         // 10. Load external JS
-        const scripts = [
+                const scripts = [
+            "/assets/js/smoothScroll.js",
             "/assets/js/settings.js",
             "/read/js/voice.js"
         ];
@@ -590,3 +593,4 @@ window.addEventListener("keydown", (event) => {
         }
     }
 }, true);
+
