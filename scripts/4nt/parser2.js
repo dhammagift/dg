@@ -1,12 +1,18 @@
 const fs = require('fs');
 const path = require('path');
 
-const ROOT_DIR = __dirname;
-const OUT_DIR = path.join(__dirname, 'output');
+// 1. ИСПОЛЬЗУЕМ ТЕКУЩУЮ ДИРЕКТОРИЮ ВЫЗОВА ВМЕСТО РАСПОЛОЖЕНИЯ СКРИПТА
+const ROOT_DIR = process.cwd();
+const OUT_DIR = path.join(ROOT_DIR, 'output');
 
-// УКАЖИ ЗДЕСЬ ПУТЬ К РЕАЛЬНОМУ РЕПОЗИТОРИЮ SC НА ТВОЕМ СЕРВЕРЕ
-//const SC_REPO_PATH = '/var/www/suttacentral.net/sc-data/sc_bilara_data';
-const SC_REPO_PATH = '/data/data/com.termux/files/usr/share/apache2/default-site/suttacentral.net/sc-data/sc_bilara_data';
+// 2. УНИВЕРСАЛЬНЫЙ ПОИСК ПУТИ К РЕПОЗИТОРИЮ SC
+const possibleRepoPaths = [
+    '/var/www/suttacentral.net/sc-data/sc_bilara_data',
+    '/data/data/com.termux/files/usr/share/apache2/default-site/suttacentral.net/sc-data/sc_bilara_data'
+];
+
+// Ищет первый существующий путь. Если не найдет ни одного, вернет пустую строку.
+const SC_REPO_PATH = possibleRepoPaths.find(p => fs.existsSync(p)) || '';
 
 // Хранилище: collections[transKey][suttaId][segId] = text
 const collections = {};
