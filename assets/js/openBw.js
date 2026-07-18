@@ -26,51 +26,6 @@ document.addEventListener('click', function(event) {
 });  
   
   
-  
-
-
-function checkForceLocalFlag() {
-    const urlParams = new URLSearchParams(window.location.search);
-    let changed = false;
-    let isSet = false;
-
-    if (urlParams.has('force_local')) {
-        localStorage.setItem('forceLocal', 'true');
-        changed = true;
-        isSet = true;
-      //  alert("Флаг forceLocal установлен и готовится к отправке в облако!");
-    } else if (urlParams.has('clear_local')) {
-        localStorage.removeItem('forceLocal');
-        changed = true;
-        isSet = false;
-      //  alert("Флаг forceLocal удален локально и в облаке!");
-    }
-
-    // Если флаг изменился — регистрируем это для облака вручную
-    if (changed) {
-        // Создаем объекты на случай, если common.js еще не успел их инициализировать
-        window.dg_pendingSettingsUpdates = window.dg_pendingSettingsUpdates || {};
-        window.dg_deletedKeys = window.dg_deletedKeys || new Set();
-        window.dg_settingsChanged = true;
-
-        if (isSet) {
-            window.dg_pendingSettingsUpdates['forceLocal'] = 'true';
-            window.dg_deletedKeys.delete('forceLocal');
-        } else {
-            window.dg_deletedKeys.add('forceLocal');
-            delete window.dg_pendingSettingsUpdates['forceLocal'];
-        }
-
-        // Пытаемся отправить сразу, если Firebase и скрипты синхронизации уже загружены
-        if (typeof window.syncSettingsToCloud === 'function') {
-            window.syncSettingsToCloud();
-        }
-    }
-}
-
-// Запускаем сразу при чтении скрипта
-checkForceLocalFlag();
-// console.log("Статус при запуске скрипта: forceLocal =", localStorage.getItem('forceLocal'));
 
 document.addEventListener("DOMContentLoaded", function() {
     checkForceLocalFlag();

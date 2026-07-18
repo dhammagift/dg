@@ -3444,3 +3444,28 @@ function get4ntUrl(slug = null) {
 
     return null;
 }
+
+
+function checkForceLocalFlag() {
+    const urlParams = new URLSearchParams(window.location.search);
+    let changed = false;
+    let isSet = false;
+
+    if (urlParams.has('force_local')) {
+        localStorage.setItem('forceLocal', 'true');
+        changed = true;
+        isSet = true;
+      //  alert("Флаг forceLocal установлен и готовится к отправке в облако!");
+    } else if (urlParams.has('clear_local')) {
+        localStorage.removeItem('forceLocal');
+        changed = true;
+        isSet = false;
+      //  alert("Флаг forceLocal удален локально и в облаке!");
+    }
+
+
+}
+
+// Запускаем сразу при чтении скрипта
+checkForceLocalFlag();
+// console.log("Статус при запуске скрипта: forceLocal =", localStorage.getItem('forceLocal'));
