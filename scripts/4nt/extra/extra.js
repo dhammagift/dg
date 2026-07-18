@@ -143,6 +143,12 @@ function initExtra() {
             }
         });
 
+// Hide original Back to top button
+const topBtn = document.getElementById('topBtn');
+if (topBtn) {
+    topBtn.style.display = 'none';
+}
+
         document.querySelectorAll("style").forEach(style => {
             if (style.textContent.includes("#1a1612")) {
                 style.textContent = style.textContent.replaceAll("#1a1612", "#000");
