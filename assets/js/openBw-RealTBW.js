@@ -1,34 +1,3 @@
-document.addEventListener('click', function(event) {
-    // Ищем ближайший родительский элемент с классом link4nt (или bwLink, если решите оставить старый класс)
-    const link = event.target.closest('a.ntLink');
-    
-    // Если клик был не по нашей ссылке, ничего не делаем
-    if (!link) return;
-
-    // Предотвращаем стандартный переход по ссылке (которая сейчас ведет на "#")
-    event.preventDefault();
-
-    // Получаем slug из data-атрибута
-    const slug = link.getAttribute('data-slug');
-    
-    // Генерируем URL "на лету"
-    const targetUrl = get4ntUrl(slug);
-
-    if (targetUrl) {
-        // Если URL сформирован успешно, открываем его в новой вкладке
-        // Если нужно открывать в том же окне, используйте: window.location.href = targetUrl;
-        window.open(targetUrl, '_blank');
-    } else {
-        // Опционально: можно добавить визуальное уведомление или лог, если slug не распознан
-        console.warn(`Не удалось сформировать 4nt-ссылку для slug: "${slug}"`);
-        // alert('Ссылка для этого текста пока не настроена');
-    }
-});  
-  
-  
-  
-
-
 function checkForceLocalFlag() {
     const urlParams = new URLSearchParams(window.location.search);
     let changed = false;

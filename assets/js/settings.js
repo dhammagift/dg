@@ -1,6 +1,4 @@
 
-
-
 window.notEn= /^\/(ru|r|ml|mt)(\/|$)/.test(window.location.pathname)
     || (localStorage.getItem('siteLanguage') || 'en') !== 'en';    
 
@@ -3358,9 +3356,74 @@ function get4ntUrl(slug = null) {
     slug = getSlug(slug);
     if (!slug) return null;
 
-    // const site4nt = "https://s.4nt.org";
     const basePath = "/4nt";
 
+    // =========================================================
+    // 1. ЛОГИКА ДЛЯ ВИНАИ (Vinaya)
+    // =========================================================
+    
+    // Словарь для преобразования коротких имен в полные имена папок 4nt
+    const vinayaFolderMap = {
+        "bu-pm": "pli-tv-bu-pm",
+        "bupm": "pli-tv-bu-pm",
+        "bi-pm": "pli-tv-bi-pm",
+        "bipm": "pli-tv-bi-pm",
+        "bu-pc": "pli-tv-bu-vb-pc",
+        "bu-vb-pc": "pli-tv-bu-vb-pc",
+        "bi-pc": "pli-tv-bi-vb-pc",
+        "bi-vb-pc": "pli-tv-bi-vb-pc",
+        "bu-as": "pli-tv-bu-vb-as",
+        "bu-vb-as": "pli-tv-bu-vb-as",
+        "bi-as": "pli-tv-bi-vb-as",
+        "bi-vb-as": "pli-tv-bi-vb-as",
+        "pvr": "pli-tv-pvr",
+        "kd": "pli-tv-kd"
+    };
+
+    let vinayaBook = "";
+    let anchorBase = slug;
+
+    // Вариант А: Slug уже нормализован вашей функцией parseSlug и начинается с "pli-tv-"
+    if (slug.startsWith("pli-tv-")) {
+        // 1. Для Patimokkha, Pacittiya, Aniyata/Sekhiya (цифры правила идут после, в якоре)
+        const matchVb = slug.match(/^(pli-tv-(?:bu|bi)-(?:vb-)?(?:pc|as|pm))/);
+        if (matchVb) {
+            vinayaBook = matchVb[1]; // например, "pli-tv-bu-vb-pc"
+        } else {
+            // 2. Для Khandhaka и Parivara, где цифра может быть частью имени папки (как в примере pli-tv-pvr15)
+            const matchKdPvr = slug.match(/^(pli-tv-(?:pvr|kd)\d*)/);
+            if (matchKdPvr) {
+                vinayaBook = matchKdPvr[1]; // например, "pli-tv-pvr15"
+            } else {
+                // 3. Запасной вариант: берем все буквы и дефисы до первой цифры
+                const matchFallback = slug.match(/^(pli-tv-[a-z-]+)/);
+                if (matchFallback) {
+                    vinayaBook = matchFallback[1];
+                }
+            }
+        }
+    } 
+    // Вариант Б: Slug короткий (например, "bu-pc34" или "bupm227")
+    else {
+        for (const [shortKey, fullFolder] of Object.entries(vinayaFolderMap)) {
+            if (slug.startsWith(shortKey)) {
+                vinayaBook = fullFolder;
+                // Заменяем короткое имя на полное для формирования корректного якоря
+                // Например: "bu-pc34" -> "pli-tv-bu-vb-pc34"
+                anchorBase = slug.replace(shortKey, fullFolder);
+                break;
+            }
+        }
+    }
+
+    // Если мы успешно распознали Винаю, формируем специальный URL и сразу возвращаем его
+    if (vinayaBook) {
+        return `${basePath}/vin/tv/${vinayaBook}/index.html#${anchorBase}`;
+    }
+
+    // =========================================================
+    // 2. СУЩЕСТВУЮЩАЯ ЛОГИКА ДЛЯ СУТТ (Nikayas)
+    // =========================================================
     const slugParts = slug.match(/^([a-z]+)(\d*)/);
     if (!slugParts) return null;
 
