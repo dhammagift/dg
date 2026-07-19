@@ -35,10 +35,10 @@ function randCallToAction() {
  
   if(theLanguage == "en"){
   //  console.log("your html contains en");
-    var tasks = ["Start with Sn56.11", "Read sn22.87", "Ponder on mn28", "Dukkha in Suttas is?", "How many Jhanas in Suttas?",  "Real meaning of Pañña is?", "Dukkha is defined in dn22", "Saṅkhārā in mn44", "Why Tathagata is like ocean?", "Why Dhamma is like Ocean?", "Why Tathagata is like elephant?", "What is the ocean?", "What is the all?", "Difference between dukkha and dukkha ariyasacca?", "Cow in Suttas symbolizes - ..."];
+    var tasks = ["Difference between dukkha and domanassa?", "isn't suffering is a mix of dukkha and domanassa?", "Start with Sn56.11", "Read sn22.87", "Ponder on mn28", "Dukkha in Suttas is?", "How many Jhanas in Suttas?",  "Real meaning of Pañña is?", "Dukkha is defined in dn22", "Saṅkhārā in mn44", "Why Tathagata is like ocean?", "Why Dhamma is like Ocean?", "Why Tathagata is like elephant?", "What is the ocean?", "What is the all?", "Difference between dukkha and dukkha ariyasacca?", "Cow in Suttas symbolizes - ..."];
 }  else if  ( theLanguage == "ru") {
  //  console.log("your html contains ru");
-    var tasks = ["Начните с Sn56.11", "Прочтите sn22.87", "Подумайте над mn28", "Dukkha в Суттах - это?", "Сколько джхан в Суттах?", "Pañña на самом деле - это ...?", "Определение dukkha есть в dn22", "Saṅkhārā в mn44", "Почему Татхагата, как слон?", "Почему Дхамма, как Океан?", "Почему Татхагата, как Океан?", "Что такое океан?", "Что такое 'всё'?", "Разница между dukkha и dukkha ariyasacca", "Корова в суттах символизирует - ...?"];
+    var tasks = ["Разница между dukkha и domanassa?", "Разве страдание - это не смесь dukkha и domanassa?" "Начните с Sn56.11", "Прочтите sn22.87", "Подумайте над mn28", "Dukkha в Суттах - это?", "Сколько джхан в Суттах?", "Pañña на самом деле - это ...?", "Определение dukkha есть в dn22", "Saṅkhārā в mn44", "Почему Татхагата, как слон?", "Почему Дхамма, как Океан?", "Почему Татхагата, как Океан?", "Что такое океан?", "Что такое 'всё'?", "Разница между dukkha и dukkha ariyasacca", "Корова в суттах символизирует - ...?"];
           }
 const random = Math.floor(Math.random() * tasks.length);
 // console.log(random, tasks[random]);

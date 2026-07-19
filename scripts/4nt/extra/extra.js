@@ -154,11 +154,11 @@ function initExtra() {
             }
         });
 
-// Hide original Back to top button
-const topBtn = document.getElementById('topBtn');
-if (topBtn) {
-    topBtn.style.display = 'none';
-}
+        // Hide original Back to top button
+        const topBtn = document.getElementById('topBtn');
+        if (topBtn) {
+            topBtn.style.display = 'none';
+        }
 
         document.querySelectorAll("style").forEach(style => {
             if (style.textContent.includes("#1a1612")) {
@@ -280,7 +280,7 @@ if (topBtn) {
         });
 
         // 9. Handle language classes and dynamically hide dots
-                const processLangClasses = (el) => {
+        const processLangClasses = (el) => {
             if (!el || !el.classList) return;
             
             let isPali = false;
@@ -339,6 +339,21 @@ if (topBtn) {
 
         observer.observe(document.body, { childList: true, subtree: true });
 
+        // 10. Load external JS
+        const scripts = [
+            "/assets/js/smoothScroll.js",
+            "/assets/js/settings.js",
+            "/read/js/voice.js"
+        ];
+        scripts.forEach(src => {
+            if (!document.querySelector(`script[src="${src}"]`)) {
+                const script = document.createElement("script");
+                script.src = src; 
+                script.async = false;
+                document.body.appendChild(script);
+            }
+        });
+
         // 11. SC segment refs: Default to 'Subtle', then remember user's choice
         const segRefBtn = document.getElementById('segBtn');
         if (segRefBtn) {
@@ -363,26 +378,61 @@ if (topBtn) {
             });
         }
 
-        // 10. Load external JS
-                const scripts = [
-            "/assets/js/smoothScroll.js",
-            "/assets/js/settings.js",
-            "/read/js/voice.js"
-        ];
-        scripts.forEach(src => {
-            if (!document.querySelector(`script[src="${src}"]`)) {
-                const script = document.createElement("script");
-                script.src = src; 
-                script.async = false;
-                document.body.appendChild(script);
+        // 12. Логика сортировки по коренным языкам
+        const getLangWeight = (key) => {
+            const k = key.toLowerCase();
+            if (k === 'pali') return 1;
+            if (k.includes('pali')) return 2;
+            if (k.includes('ru_')) return 3;
+            return 4;
+        };
+
+        // 13. Сортировка ALL_TRANSLATIONS для выпадающих списков
+        if (typeof ALL_TRANSLATIONS !== 'undefined' && Array.isArray(ALL_TRANSLATIONS)) {
+            ALL_TRANSLATIONS.sort((a, b) => {
+                const wA = getLangWeight(a.key);
+                const wB = getLangWeight(b.key);
+                if (wA !== wB) return wA - wB;
+                return (a.label && b.label) ? a.label.localeCompare(b.label) : 0;
+            });
+        }
+
+        // 14. Сортировка колонок COLS с принудительной миграцией один раз
+        if (typeof COLS !== 'undefined' && Array.isArray(COLS)) {
+            const migrationFlag = '4nt_col_order_migrated_v2';
+            const isMigrated = localStorage.getItem(migrationFlag);
+
+            if (!isMigrated) {
+                const origCols = [...COLS];
+                
+                COLS.sort((a, b) => {
+                    const wA = getLangWeight(a);
+                    const wB = getLangWeight(b);
+                    if (wA !== wB) return wA - wB;
+                    return 0; // Для равных весов сохраняем текущий порядок
+                });
+                
+                console.log('4nt: Columns migrated to new default:', COLS);
+
+                // Если массив изменился — обновляем состояние и перерисовываем
+                if (JSON.stringify(origCols) !== JSON.stringify(COLS)) {
+                    if (typeof saveSettings === 'function') saveSettings();
+                    if (typeof renderColBar === 'function') renderColBar();
+                    if (typeof renderMain === 'function') renderMain();
+                }
+                
+                // Ставим отметку, чтобы больше не сбрасывать пользовательский порядок
+                localStorage.setItem(migrationFlag, 'true');
+            } else {
+                // Если миграция уже была, просто обновляем селекты, чтобы списки были по алфавиту
+                if (typeof renderColBar === 'function') renderColBar();
             }
-        });
+        }
         
     } catch (error) {
         console.error("4nt Extra script error:", error);
     }
 }
-
 
 // Smart initialization
 if (document.readyState === "loading") {
