@@ -89,19 +89,18 @@ function getSlug(slug = null) {
 
 function initExtra() {
     try {
+        // Определяем базовый путь в зависимости от того, где запущен сайт
+        const basePath = location.pathname.startsWith('/4nt') ? '/4nt' : '';
+
         // 1. Theme (Sync global 'theme' and site's internal storage)
         const rawTheme = localStorage.getItem('theme');
         if (rawTheme) {
-            // If auto or dark -> apply dark, otherwise light
             const effectiveTheme = (rawTheme === 'dark' || rawTheme === 'auto') ? 'dark' : 'light';
-            
             document.documentElement.setAttribute('data-theme', effectiveTheme);
             const themeBtn = document.getElementById('themeBtn');
             if (themeBtn) {
                 themeBtn.textContent = effectiveTheme === 'dark' ? '☾ Dark' : '☀ Light';
             }
-            
-            // Update site's internal settings object
             try {
                 let siteSettings = JSON.parse(localStorage.getItem('debabel.viewer.v1') || '{}');
                 siteSettings.theme = effectiveTheme;
@@ -109,7 +108,6 @@ function initExtra() {
             } catch(e) {}
         }
 
-        // Intercept standard theme toggle to write to our 'theme' key
         if (typeof window.toggleTheme === 'function' && !window.toggleTheme.isPatched) {
             const origToggleTheme = window.toggleTheme;
             window.toggleTheme = function() {
@@ -123,7 +121,7 @@ function initExtra() {
         // 2. View Mode
         document.documentElement.setAttribute('data-view-mode', window.viewMode);
 
-        // 3. Mobile sidebar - Аккуратно сворачиваем ТОС без вызова toggleSidebar()
+        // 3. Mobile sidebar
         const isMobileDevice = window.matchMedia("(max-width: 900px)").matches;
         if (isMobileDevice && typeof sidebarVisible !== 'undefined' && sidebarVisible) {
             sidebarVisible = false;
@@ -136,7 +134,6 @@ function initExtra() {
             const ft = document.getElementById('siteFooter');
             if(ft) ft.classList.add('full');
             
-            // Откладываем пересчет высоты шапки до полной загрузки картинок
             window.addEventListener('load', () => {
                 if (typeof updateHeaderHeight === 'function') updateHeaderHeight();
             });
@@ -154,7 +151,6 @@ function initExtra() {
             }
         });
 
-        // Hide original Back to top button
         const topBtn = document.getElementById('topBtn');
         if (topBtn) {
             topBtn.style.display = 'none';
@@ -179,8 +175,8 @@ function initExtra() {
             const buttons = [
                 { tag: 'a', html: '🔊', title: 'Listen (TTS)', class: 'voice-link icon-btn', id: 'voiceLinkBtn', attr: { 'data-slug': slug }, href: 'javascript:void(0)' },
                 { tag: 'a', html: '📜', title: 'View: Columns / Scroll', class: 'icon-btn', id: 'viewModeBtn', onclick: 'window.toggleViewMode()', href: 'javascript:void(0)' },
-                { tag: 'a', html: '<img src="/assets/img/gray-white.png" alt="Search">', title: 'Search Suttas (Ctrl+1)', href: '/?q=' + slug, id: 'fdg-button', class: 'icon-btn', rel: 'noreferrer' },
-                { tag: 'a', html: '<img  style="width:18px; height:18px; display:block;" src="/assets/svg/comment.svg" alt="Dictionary">', title: 'Popup Dictionary (Alt+A)', class: 'icon-btn toggle-dict-btn' }
+                { tag: 'a', html: `<img src="${basePath}/assets/img/gray-white.png" alt="Search">`, title: 'Search Suttas (Ctrl+1)', href: basePath + '/?q=' + slug, id: 'fdg-button', class: 'icon-btn', rel: 'noreferrer' },
+                { tag: 'a', html: `<img style="width:18px; height:18px; display:block;" src="${basePath}/assets/svg/comment.svg" alt="Dictionary">`, title: 'Popup Dictionary (Alt+A)', class: 'icon-btn toggle-dict-btn' }
             ];
 
             buttons.forEach(b => {
@@ -201,20 +197,15 @@ function initExtra() {
             
             targetWrap.parentNode.insertBefore(fragment, targetWrap);
             
-            // ==========================================
-            // --- ПРАВЫЙ КЛИК / ДОЛГОЕ НАЖАТИЕ НА КНОПКУ ПОИСКА (fdg-button) ---
-            // ==========================================
             const fdgBtn = document.getElementById('fdg-button');
             if (fdgBtn) {
                 let longPressTimer;
                 
-                // 1. Десктоп: Правый клик (вызов контекстного меню)
                 fdgBtn.addEventListener('contextmenu', function(e) {
                     e.preventDefault(); 
                     if (typeof toggleQuickModal === 'function') toggleQuickModal();
                 });
                 
-                // 2. Мобильные устройства: Долгое нажатие (Long-press)
                 fdgBtn.addEventListener('touchstart', function(e) {
                     longPressTimer = setTimeout(function() {
                         if (typeof toggleQuickModal === 'function') toggleQuickModal();
@@ -232,7 +223,7 @@ function initExtra() {
             }
         }
 
-        // 6. Insert Pāli dots option into settings menu (before SC segment refs)
+        // 6. Insert Pāli dots option into settings menu
         const segBtn = document.getElementById('segBtn');
         if (segBtn && !document.getElementById('dotsBtn')) {
             const segRow = segBtn.closest('.set-row');
@@ -252,24 +243,25 @@ function initExtra() {
         if (morePop && !document.getElementById('orig-site-btn')) {
             const origRow = document.createElement('div');
             origRow.className = 'set-row';
+            const cleanPath = location.pathname.replace(/^\/4nt/, '');
+            
             origRow.innerHTML = `
                 <span class="set-lbl" title="Open this page on the original s.4nt.org site">Original site</span>
-                <a id="orig-site-btn" class="icon-btn" href="javascript:void(0)" onclick="this.href='https://s.4nt.org'+location.pathname.replace('/4nt', '')+location.search+location.hash" target="_blank" title="Original s.4nt.org site">🌐</a>
+                <a id="orig-site-btn" class="icon-btn" href="javascript:void(0)" onclick="this.href='https://s.4nt.org${cleanPath}'+location.search+location.hash" target="_blank" title="Original s.4nt.org site">🌐</a>
             `;
             morePop.appendChild(origRow);
         }
 
-        // Init dots state by default
         const hideDotsSetting = localStorage.getItem('4ntHideDots');
         const shouldHideDots = hideDotsSetting === null ? true : hideDotsSetting === 'true';
         window.toggleDots(shouldHideDots);
 
-        // 8. Load CSS
+        // 8. Load CSS using dynamic basePath
         const styles = [
-            "/assets/css/paliLookup.css",
-            "/assets/css/extrastyles.css",
-            "/read/css/voice.css",
-            "/4nt/extra/extra.css"
+            `${basePath}/assets/css/paliLookup.css`,
+            `${basePath}/assets/css/extrastyles.css`,
+            `${basePath}/read/css/voice.css`,
+            `${basePath}/extra/extra.css`
         ];
         styles.forEach(href => {
             if (!document.querySelector(`link[href="${href}"]`)) {
@@ -279,7 +271,7 @@ function initExtra() {
             }
         });
 
-        // 9. Handle language classes and dynamically hide dots
+        // 9. Handle language classes
         const processLangClasses = (el) => {
             if (!el || !el.classList) return;
             
@@ -306,7 +298,6 @@ function initExtra() {
                 isPali = true;
             }
 
-            // Dynamically remove dots from new Pāli elements if hiding is active
             const main = document.getElementById('main');
             if (isPali && main && main.classList.contains('dots-hidden')) {
                 const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
@@ -315,7 +306,6 @@ function initExtra() {
                     if (node.originalText === undefined) {
                         node.originalText = node.nodeValue;
                     }
-                    
                     node.nodeValue = window.removePaliPunctuation(node.originalText);
                 }
             }
@@ -339,11 +329,11 @@ function initExtra() {
 
         observer.observe(document.body, { childList: true, subtree: true });
 
-        // 10. Load external JS
+        // 10. Load external JS using dynamic basePath
         const scripts = [
-            "/assets/js/smoothScroll.js",
-            "/assets/js/settings.js",
-            "/read/js/voice.js"
+            `${basePath}/assets/js/smoothScroll.js`,
+            `${basePath}/assets/js/settings.js`,
+            `${basePath}/read/js/voice.js`
         ];
         scripts.forEach(src => {
             if (!document.querySelector(`script[src="${src}"]`)) {
@@ -354,7 +344,7 @@ function initExtra() {
             }
         });
 
-        // 11. SC segment refs: Default to 'Subtle', then remember user's choice
+        // 11. SC segment refs
         const segRefBtn = document.getElementById('segBtn');
         if (segRefBtn) {
             const savedSegState = localStorage.getItem('4ntSegRefState');
@@ -397,7 +387,7 @@ function initExtra() {
             });
         }
 
-        // 14. Сортировка колонок COLS с принудительной миграцией один раз
+        // 14. Сортировка колонок COLS
         if (typeof COLS !== 'undefined' && Array.isArray(COLS)) {
             const migrationFlag = '4nt_col_order_migrated_v2';
             const isMigrated = localStorage.getItem(migrationFlag);
@@ -409,22 +399,19 @@ function initExtra() {
                     const wA = getLangWeight(a);
                     const wB = getLangWeight(b);
                     if (wA !== wB) return wA - wB;
-                    return 0; // Для равных весов сохраняем текущий порядок
+                    return 0; 
                 });
                 
                 console.log('4nt: Columns migrated to new default:', COLS);
 
-                // Если массив изменился — обновляем состояние и перерисовываем
                 if (JSON.stringify(origCols) !== JSON.stringify(COLS)) {
                     if (typeof saveSettings === 'function') saveSettings();
                     if (typeof renderColBar === 'function') renderColBar();
                     if (typeof renderMain === 'function') renderMain();
                 }
                 
-                // Ставим отметку, чтобы больше не сбрасывать пользовательский порядок
                 localStorage.setItem(migrationFlag, 'true');
             } else {
-                // Если миграция уже была, просто обновляем селекты, чтобы списки были по алфавиту
                 if (typeof renderColBar === 'function') renderColBar();
             }
         }
