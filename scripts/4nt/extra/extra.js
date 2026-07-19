@@ -1,4 +1,19 @@
-//todo tts with active word doesnt word for first play on the page. 
+// ==========================================
+// ГЛОБАЛЬНАЯ ИНИЦИАЛИЗАЦИЯ ЯЗЫКА ДЛЯ СЛОВАРЯ
+// Выполняется моментально при загрузке страницы
+// ==========================================
+(function() {
+    const savedDict = (localStorage.getItem('selectedDict') || '').toLowerCase();
+    if (savedDict.includes('ru')) {
+        window.isRu = true;
+        localStorage.setItem('siteLanguage', 'ru');
+    } else {
+        window.isRu = false;
+        localStorage.setItem('siteLanguage', 'en');
+    }
+})();
+// ==========================================
+
 
 window.removePaliPunctuation = function(text) {
     return text.replace(/·/g, '')
@@ -165,6 +180,12 @@ function initExtra() {
         const jumpInput = document.getElementById('jumpInput');
         if (jumpInput) jumpInput.type = 'search';
 
+        // --- Добавление подзаголовка Dhamma.Gift ---
+        const subText = document.querySelector('p.sub');
+        if (subText && !subText.textContent.includes('Dhamma.Gift')) {
+            subText.innerHTML += '<br>with Dhamma.Gift Voice and DPD options';
+        }
+
         // 5. Insert header buttons (main panel)
         const targetWrap = document.getElementById('settingsWrap') || document.getElementById('siteSettingsWrap');
         
@@ -223,18 +244,88 @@ function initExtra() {
             }
         }
 
-        // 6. Insert Pāli dots option into settings menu
+          // 6. Insert Pāli dots and Dictionary options into settings menu
         const segBtn = document.getElementById('segBtn');
-        if (segBtn && !document.getElementById('dotsBtn')) {
+        if (segBtn) {
             const segRow = segBtn.closest('.set-row');
             if (segRow) {
-                const dotsRow = document.createElement('div');
-                dotsRow.className = 'set-row';
-                dotsRow.innerHTML = `
-                    <span class="set-lbl" title="Toggle compound dots (·) and punctuation">Toggle Pāli punctuation</span>
-                    <button class="icon-btn" id="dotsBtn" onclick="window.toggleDots()" title="Toggle Pāli punctuation">Off</button>
-                `;
-                segRow.parentNode.insertBefore(dotsRow, segRow);
+                // --- Добавляем переключатель пунктуации Пали ---
+                if (!document.getElementById('dotsBtn')) {
+                    const dotsRow = document.createElement('div');
+                    dotsRow.className = 'set-row';
+                    dotsRow.innerHTML = `
+                        <span class="set-lbl" title="Toggle compound dots (·) and punctuation">Toggle Pāli punctuation</span>
+                        <button class="icon-btn" id="dotsBtn" onclick="window.toggleDots()" title="Toggle Pāli punctuation">Off</button>
+                    `;
+                    segRow.parentNode.insertBefore(dotsRow, segRow);
+                }
+
+                // --- Добавляем выпадающий список словаря ---
+                if (!document.getElementById('dict-select-4nt')) {
+                    const dictRow = document.createElement('div');
+                    dictRow.className = 'set-row';
+                    
+                    // Берем текущий словарь в нижнем регистре
+                    const currentDict = (localStorage.getItem('selectedDict') || 'standalone').toLowerCase();
+                    
+                    // === ПРЕВРАЩАЕМ САЙТ В РУССКИЙ ИЛИ АНГЛИЙСКИЙ ПРИ ЗАГРУЗКЕ ===
+                    if (currentDict.includes('ru')) {
+                        window.isRu = true;
+                        localStorage.setItem('siteLanguage', 'ru');
+                    } else {
+                        window.isRu = false;
+                        localStorage.setItem('siteLanguage', 'en');
+                    }
+                    
+                    dictRow.innerHTML = `
+                        <span class="set-lbl" title="Select dictionary">Dictionary</span>
+                        <select id="dict-select-4nt" style="background: var(--bg); color: var(--text); border: 1px solid var(--bar-border); border-radius: 4px; padding: 2px 4px; font-family: sans-serif; font-size: 0.82rem; outline: none; cursor: pointer;">
+                            <option value="standalone">DPD Built-in</option>
+                            <option value="dpdfull">DPD Online Popup</option>
+                            <option value="newwindow">DPD Online New Window</option>
+                            <option value="dpdcompact">DPD Online Mini</option>
+                            <option value="machinetranslation">DharmaMitra.org</option>
+                            <option value="searchonly">Search Only</option>
+                            <option value="dicttango">DictTango Android</option>
+                            <option value="mdict">Mdict IOS</option>
+                            <option value="goldenpc">GoldenDict Desktop</option>
+                            <option value="standaloneru">DPD Встроенный (Ru)</option>
+                            <option value="dpdfullru">DPD Онлайн Попап (Ru)</option>
+                            <option value="newwindowru">DPD Онлайн Новое Окно (Ru)</option>
+                            <option value="dpdcompactru">DPD Онлайн Мини (Ru)</option>
+                        </select>
+                    `;
+                    segRow.parentNode.insertBefore(dictRow, segRow);
+
+                    const dictSelect = document.getElementById('dict-select-4nt');
+                    
+                    // Устанавливаем текущее значение в селект
+                    const options = Array.from(dictSelect.options);
+                    const matchedOpt = options.find(opt => opt.value === currentDict);
+                    if (matchedOpt) {
+                        dictSelect.value = matchedOpt.value;
+                    }
+
+                    // Обработчик смены без перезагрузки
+                    dictSelect.addEventListener('change', function(e) {
+                        let newDict = e.target.value; 
+                        
+                        // === ПЕРЕКЛЮЧАЕМ ЯЗЫК САЙТА ПЕРЕД ВЫЗОВОМ НАСТРОЕК СЛОВАРЯ ===
+                        if (newDict.includes('ru')) {
+                            window.isRu = true;
+                            localStorage.setItem('siteLanguage', 'ru');
+                        } else {
+                            window.isRu = false;
+                            localStorage.setItem('siteLanguage', 'en');
+                        }
+                        
+                        if (typeof applyDictConfig === 'function') {
+                            applyDictConfig(newDict);
+                        } else {
+                            localStorage.setItem('selectedDict', newDict);
+                        }
+                    });
+                }
             }
         }
 
@@ -420,6 +511,7 @@ function initExtra() {
         console.error("4nt Extra script error:", error);
     }
 }
+
 
 // Smart initialization
 if (document.readyState === "loading") {
