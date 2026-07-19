@@ -28,6 +28,15 @@ find "assets/texts/ru/sutta" -type f \
   xargs -r mv -t "assets/texts/svEtc/automatic/"
   
 #grep level5 read.php | grep "$i\""  ; 
+
+
+sed -i '/class="level5"/ { /href=.*?q='$i'"/ { 
+s/<?php echo \$ifRuSvOTrn;?>//g;
+s/<?php echo \$ifRuSvTrn;?>//g;
+s/<?php echo \$ifRuAYSOTrn;?>//g;
+s/<?php echo \$ifRuAYSTrn;?>//g;
+} }' read.php
+
 sed -i '/class="level5"/ { /href=.*?q='$i'"/ { /<?php echo \$ifRuLitTrn;?>/! s/<\/span>/ <?php echo \$ifRuLitTrn;?><\/span>/; } }' read.php
 
 
