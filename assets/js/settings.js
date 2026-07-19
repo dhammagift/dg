@@ -3431,7 +3431,9 @@ function get4ntUrl(slug = null) {
     const firstNum = slugParts[2];
 
     if (book === "dn" || book === "mn") {
-        return `${basePath}/${book}/#${slug}`;
+//        return `${basePath}/${book}/#${slug}`;
+          return `${basePath}/${book}/${slug}`;
+
     }
 
     if (book === "sn" || book === "an") {
