@@ -3199,7 +3199,7 @@
 "sn54.14":{"pi":"Dutiyaānandasutta ","en":"With Ānanda (2nd) ","mtph":"","ru":"Ананда Вторая"},
 "sn54.15":{"pi":"Paṭhamabhikkhusutta ","en":"Several Mendicants (1st) ","mtph":"","ru":"Бхиккху Первая"},
 "sn54.16":{"pi":"Dutiyabhikkhusutta ","en":"Several Mendicants (2nd) ","mtph":"","ru":"Бхиккху Вторая"},
-"sn54.17":{"pi":"Saṁyojanappahānasutta ","en":"Giving Up the Fetters ","mtph":"","ru":"Понимание Времени"},
+"sn54.17":{"pi":"Saṁyojanappahānasutta ","en":"Giving Up the Fetters ","mtph":"","ru":"Понимание Времени (o)"},
 "sn54.18":{"pi":"Anusayasamugghātasutta ","en":"Uprooting the Tendencies ","mtph":"","ru":"Понимание Времени"},
 "sn54.19":{"pi":"Addhānapariññāsutta ","en":"Completely Understanding the Course of Time ","mtph":"","ru":"Понимание Времени (o)"},
 "sn54.20":{"pi":"Āsavakkhayasutta ","en":"The Ending of Defilements ","mtph":"","ru":"Исчерпание Загразнений"},

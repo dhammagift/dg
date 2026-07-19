@@ -8771,7 +8771,7 @@ clearBtn.style.display = 'block';
 
 		 
 		 <div class="mt-3">
- <span class="level5" id="sn45.161"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn45.161">sn45.161</a> Esanāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+ <span class="level5" id="sn45.161"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn45.161">sn45.161</a> Esanāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?> <?php echo $ifRuLitTrn;?></span>
  </div>
 
 		 
@@ -13253,7 +13253,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.67"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.67">an4.67</a> Ahirājasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.67"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.67">an4.67</a> Ahirājasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?> <?php echo $ifRuLitTrn;?></span>
 </div>
  
 <div class="mt-3">
