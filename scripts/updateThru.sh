@@ -56,28 +56,28 @@ sed -i \
         sed -i 's|</head>|<link rel="stylesheet" href="/assets/css/extrastyles.css"><link rel="stylesheet" href="/read/css/voice.css"></head>|' "$i"
     fi
     
-    sed -i 's|size="7">Тхеравада.ру|size="3"><a href="/ru/read.php">@Dhamma.gift</a>|g' "$i"
     sed -i 's|<b>Буддизм<br>|<b>Копия<br>|g' "$i"
     sed -i 's|Учение Старцев </b>|Тхеравада.ру </b>|g' "$i"
     sed -i 's|Учение Старцев</b>|Тхеравада.ру</b>|g' "$i"
     sed -i 's|href="/index.htm"|href="/ru/"|g' "$i"
-    sed -i 's|</head>|<meta name="viewport" content="width=device-width, initial-scale=1">\n</head>|i' "$i"
-
+    
     # --- КОМАНДА 4: Правка ширины таблицы (1000 -> 100%) ---
-    sed -i 's/table width="1000"/table width="100%" style="max-width: 1000px;"/g' "$i"
-    sed -i 's/table width="1009"/table width="100%" style="max-width: 1000px;"/g' "$i"
-    sed -i 's/height="2" width="36%"/height="2" width="86%"/g' "$i"
-    sed -i 's/height="2" width="44%"/height="2" width="4%"/g' "$i"
+    #sed -i 's/table width="1000"/table width="100%" style="max-width: 1000px;"/g' "$i"
+    #sed -i 's/table width="1009"/table width="100%" style="max-width: 1000px;"/g' "$i"
+    #sed -i 's/height="2" width="36%"/height="2" width="86%"/g' "$i"
+    #sed -i 's/height="2" width="44%"/height="2" width="4%"/g' "$i"
+    #sed -i 's|</head>|<meta name="viewport" content="width=device-width, initial-scale=1">\n</head>|i' "$i"
+    #sed -i 's|size="7">Тхеравада.ру|size="3"><a href="/ru/read.php">@Dhamma.gift</a>|g' "$i"
     
 
     # --- КОМАНДА 5: Правка логики шрифтов в старом скрипте ---
-   sed -i 's/setAttribute("size", "5")/setAttribute("size", "4")/g' "$i"
-    sed -i 's/setAttribute("size", "8")/setAttribute("size", "5")/g' "$i"
-    sed -i 's/setAttribute("size", "6")/setAttribute("size", "4")/g' "$i"
+   #sed -i 's/setAttribute("size", "5")/setAttribute("size", "4")/g' "$i"
+  #  sed -i 's/setAttribute("size", "8")/setAttribute("size", "5")/g' "$i"
+   # sed -i 's/setAttribute("size", "6")/setAttribute("size", "4")/g' "$i"
 
 done
 
-find . -type f -exec sed -i 's|</head>|<meta name="viewport" content="width=device-width, initial-scale=1">\n</head>|i' {} +
+#find . -type f -exec sed -i 's|</head>|<meta name="viewport" content="width=device-width, initial-scale=1">\n</head>|i' {} +
 find . -type f -name "*htm" -exec sed -i 's|</body>|<script src="/assets/js/legacy-theme.js"></script></body>|' {} +
 find . -type f -exec sed -i 's|../AN|../../AN|g' {} +
 find . -type f -exec sed -i 's|../SN|../../SN|g' {} +

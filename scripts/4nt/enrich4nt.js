@@ -4,11 +4,12 @@ const path = require('path');
 function createSymlinks(dir) {
     const links = [
         { target: '../scripts/4nt/extra', name: 'extra' },
+        { target: '../scripts/4nt/update4nt.sh', name: 'update4nt.sh' },
         { target: '../assets/img/headerlogo.png', name: 'headerlogo.png' },
         { target: '../assets', name: 'assets' },
         { target: '../read', name: 'read' }
     ];
-
+    
     links.forEach(link => {
         const linkPath = path.join(dir, link.name);
         try {
@@ -40,6 +41,22 @@ function createSymlinks(dir) {
 function processHtml(dir) {
     // Сначала создаем симлинки
     createSymlinks(dir);
+    
+    const filesToCopy = [
+        { src: path.join(dir, '../scripts/4nt/README.md'), dest: 'README.md' },
+        { src: path.join(dir, '../scripts/4nt/.gitignore'), dest: '.gitignore' }
+    ];
+
+    filesToCopy.forEach(file => {
+        try {
+            fs.copyFileSync(file.src, path.join(dir, file.dest));
+            console.log(`Файл ${file.dest} физически скопирован.`);
+        } catch (err) {
+            console.error(`Ошибка при копировании ${file.dest}: ${err.message}`);
+        }
+    });
+
+
 
     const pattern = /(<a\b[^>]*class="ix-row"[^>]*href="([^/"]+)\/index\.html"[^>]*>)/g;
 
