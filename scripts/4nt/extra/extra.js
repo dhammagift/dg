@@ -170,7 +170,7 @@ function initExtra() {
 const style = document.createElement('style');
 style.textContent = `
     img[src*="headerlogo.png"] {
-        background-color: #ede5d4; 
+background-color: rgb(112 89 40 / 50%); 
         padding: 4px;
         border-radius: 10px;
         border: 1px solid var(--bar-border);
@@ -199,6 +199,13 @@ document.head.appendChild(style);
         if (mainH1 && !mainH1.textContent.includes('Dhamma.Gift')) {
             mainH1.textContent = 's.4nt.org Dhamma.Gift edition';
         }
+        
+                // Замена s.4nt.org на 4nt DG в заголовке вкладки
+        if (document.title.includes('s.4nt.org')) {
+            document.title = document.title.replace('s.4nt.org', '4nt DG');
+        }
+
+        
         
         const firstTagline = document.querySelector('h1 + p.tagline');
         if (firstTagline && !firstTagline.textContent.includes('Voice and DPD')) {
