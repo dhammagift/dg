@@ -188,6 +188,12 @@ git checkout add -- extra/extra.css extra/extra.js
 git checkout -b mod 
 
 
+#overwrite local
+git fetch origin
+git reset --hard origin/mod
+git clean -fd
+
+
 #remote repo
 git push origin --delete mod
 git push --set-upstream origin mod
