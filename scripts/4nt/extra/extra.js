@@ -102,10 +102,170 @@ function getSlug(slug = null) {
     return (pathParts[pathParts.length - 1] || null)?.toLowerCase();
 }
 
+
+
 function initExtra() {
     try {
         // Определяем базовый путь в зависимости от того, где запущен сайт
         const basePath = location.pathname.startsWith('/4nt') ? '/4nt' : '';
+
+        // ==========================================
+        // СИНХРОНИЗАЦИЯ КОЛОНОК С URL И НАВИГАЦИЕЙ
+        // ==========================================
+        const urlParams = new URLSearchParams(window.location.search);
+        let requestedCols = [];
+        
+        // 1. Проверяем URL (высший приоритет)
+        if (urlParams.get('tabs') === 'root') {
+            requestedCols = ['pali_royal_iast', 'pali', 'ru_dhammagift'];
+        } else if (urlParams.has('cols')) {
+            requestedCols = urlParams.get('cols').split(',').map(c => c.trim());
+        } 
+        // 2. Проверяем сессию (чтобы колонки не слетали при переходах между никаями в одной вкладке)
+        else {
+            const sessionCols = sessionStorage.getItem('sharedCols');
+            if (sessionCols) {
+                requestedCols = sessionCols.split(',');
+            }
+        }
+
+        // Применяем колонки
+        if (requestedCols.length > 0 && typeof COLS !== 'undefined') {
+            const validCols = requestedCols.filter(k => ALL_TRANSLATIONS.some(t => t.key === k));
+            
+            if (validCols.length > 0) {
+                COLS.length = 0; 
+                COLS.push(...validCols.slice(0, 6));
+                
+                // Сохраняем в сессию, чтобы настройки "выживали" при навигации
+                sessionStorage.setItem('sharedCols', COLS.join(','));
+                
+                if (typeof saveSettings === 'function') saveSettings();
+                if (typeof renderColBar === 'function') renderColBar();
+                if (typeof renderMain === 'function') renderMain();
+            }
+        }
+
+        // Функция для обновления адресной строки и сессии
+        function updateUrlWithCols() {
+            if (typeof COLS !== 'undefined' && COLS.length > 0) {
+                const currentColsStr = COLS.join(',');
+                sessionStorage.setItem('sharedCols', currentColsStr); // Обновляем сессию при любых изменениях
+                
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.set('cols', currentColsStr);
+                newUrl.searchParams.delete('tabs');
+                window.history.replaceState({}, document.title, newUrl.toString());
+            }
+        }
+
+        // Обновляем URL при старте, чтобы зафиксировать текущие колонки
+        updateUrlWithCols();
+
+        // Перехватываем стандартную функцию сохранения настроек
+        if (typeof window.saveSettings === 'function' && !window.saveSettings.isUrlPatched) {
+            const origSaveSettings = window.saveSettings;
+            window.saveSettings = function() {
+                origSaveSettings();
+                updateUrlWithCols();
+            };
+            window.saveSettings.isUrlPatched = true;
+        }
+
+        // Пробрасываем параметр ?cols во все клики по внутренним ссылкам (хлебные крошки и т.д.)
+        document.addEventListener('click', function(e) {
+            const a = e.target.closest('a');
+            // Проверяем, что ссылка ведет на наш же домен
+            if (a && a.href && a.origin === window.location.origin) {
+                try {
+                    const url = new URL(a.href);
+                    // Исключаем пустые якоря на текущей странице
+                    if (url.pathname !== window.location.pathname) {
+                        const currentCols = sessionStorage.getItem('sharedCols');
+                        if (currentCols) {
+                            url.searchParams.set('cols', currentCols);
+                            a.href = url.toString();
+                        }
+                    }
+                } catch(err) {}
+            }
+        });
+
+
+
+        // ==========================================
+        // ДИНАМИЧЕСКИЕ ПЕРЕОПРЕДЕЛЕНИЯ ДЛЯ ФОРКА
+        // ==========================================
+        
+        // 1. Мутируем переводы и настройки меню
+        if (typeof ALL_TRANSLATIONS !== 'undefined') {
+            ALL_TRANSLATIONS.forEach(t => {
+                if (t.key === 'pali') {
+                    t.tip = "Root Pāli (Mahāsaṅgīti edition)";
+                }
+                if (t.key === 'ru_dhammagift') {
+                    t.group = "Russian"; // Это будет заголовком в выпадающем списке
+                }
+            });
+        }
+
+        if (typeof CAT_LABELS !== 'undefined') {
+            CAT_LABELS.rus = 'Rus'; // Это текст для кнопки фильтра
+        }
+
+        window.groupRank = function(g) { 
+            return g.indexOf('Root') === 0 ? 0 : (g === 'Russian' ? 1 : g === 'English' ? 2 : g === 'International' ? 4 : 3); 
+        };
+
+        window.catOf = function(g) { 
+            return g.indexOf('Root') === 0 ? 'root' : g === 'Russian' ? 'rus' : g === 'English' ? 'eng' : g === 'International' ? 'int' : 'other'; 
+        };
+
+        // 2. Скрытие текста предупреждения от JS-парсеров
+        const warnMsgEl = document.getElementById('fnWarnMsg');
+        const warnBtn = document.getElementById('fnWarn');
+        if (warnMsgEl && warnBtn) {
+            const warnText = warnMsgEl.innerHTML;
+            warnMsgEl.innerHTML = ''; 
+            warnMsgEl.setAttribute('data-nosnippet', 'true');
+            
+            warnBtn.addEventListener('click', () => {
+                if (!warnMsgEl.innerHTML) {
+                    warnMsgEl.innerHTML = warnText;
+                }
+            });
+        }
+
+
+        // ==========================================
+        // МЕТА-ТЕГИ ДЛЯ SOCIAL SHARING (тот код, что был выше)
+        // ==========================================
+
+        const shareTitle = "4nt DG";
+        const shareDesc = "3 National Pali Canon Editions With Line by Line translations";
+
+        function setMetaTag(attrName, attrValue, content) {
+            let meta = document.querySelector(`meta[${attrName}="${attrValue}"]`);
+            if (!meta) {
+                meta = document.createElement('meta');
+                meta.setAttribute(attrName, attrValue);
+                document.head.appendChild(meta);
+            }
+            meta.setAttribute('content', content);
+        }
+
+        // Стандартное описание страницы
+        setMetaTag('name', 'description', shareDesc);
+
+        // OpenGraph (Facebook, Telegram, ВКонтакте и др.)
+        setMetaTag('property', 'og:title', shareTitle);
+        setMetaTag('property', 'og:description', shareDesc);
+        setMetaTag('property', 'og:type', 'website');
+
+        // Twitter Cards
+        setMetaTag('name', 'twitter:card', 'summary');
+        setMetaTag('name', 'twitter:title', shareTitle);
+        setMetaTag('name', 'twitter:description', shareDesc);
 
         // 1. Theme (Sync global 'theme' and site's internal storage)
         const rawTheme = localStorage.getItem('theme');
@@ -170,7 +330,7 @@ function initExtra() {
 const style = document.createElement('style');
 style.textContent = `
     img[src*="headerlogo.png"] {
-background-color: rgb(112 89 40 / 50%); 
+        background-color: #ede5d4; 
         padding: 4px;
         border-radius: 10px;
         border: 1px solid var(--bar-border);
@@ -199,13 +359,6 @@ document.head.appendChild(style);
         if (mainH1 && !mainH1.textContent.includes('Dhamma.Gift')) {
             mainH1.textContent = 's.4nt.org Dhamma.Gift edition';
         }
-        
-                // Замена s.4nt.org на 4nt DG в заголовке вкладки
-        if (document.title.includes('s.4nt.org')) {
-            document.title = document.title.replace('s.4nt.org', '4nt DG');
-        }
-
-        
         
         const firstTagline = document.querySelector('h1 + p.tagline');
         if (firstTagline && !firstTagline.textContent.includes('Voice and DPD')) {
@@ -390,6 +543,7 @@ document.head.appendChild(style);
             }
         });
 
+
         // 9. Handle language classes
         const processLangClasses = (el) => {
             if (!el || !el.classList) return;
@@ -399,7 +553,7 @@ document.head.appendChild(style);
                 const td = el.closest('td.c');
                 if (td) {
                     isPali = Array.from(td.classList).some(cls => 
-                        ['t-pali', 't-san', 't-lzh', 't-zh', 't-pali_royal_iast'].includes(cls)
+                        cls.startsWith('t-pali') || ['t-san', 't-lzh', 't-zh'].includes(cls)
                     );
                     
                     if (isPali) {
@@ -421,7 +575,7 @@ document.head.appendChild(style);
             if (isPali && main && main.classList.contains('dots-hidden')) {
                 const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
                 let node;
-                while (node = walker.nextNode()) {
+                while ((node = walker.nextNode())) {
                     if (node.originalText === undefined) {
                         node.originalText = node.nodeValue;
                     }
@@ -491,10 +645,12 @@ document.head.appendChild(style);
         const getLangWeight = (key) => {
             const k = key.toLowerCase();
             if (k === 'pali') return 1;
-            if (k.includes('pali')) return 2;
-            if (k.includes('ru_')) return 3;
-            return 4;
+            if (k.includes('iast')) return 2;
+            if (k.includes('pali')) return 3;
+            if (k.includes('ru_')) return 4;
+            return 5;
         };
+
 
         // 13. Сортировка ALL_TRANSLATIONS для выпадающих списков
         if (typeof ALL_TRANSLATIONS !== 'undefined' && Array.isArray(ALL_TRANSLATIONS)) {
