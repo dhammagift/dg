@@ -165,6 +165,20 @@ function initExtra() {
                 img.style.width = '16px';
             }
         });
+        
+        // Добавляем стиль для логотипов в head
+const style = document.createElement('style');
+style.textContent = `
+    img[src*="headerlogo.png"] {
+        background-color: #ede5d4; 
+        padding: 4px;
+        border-radius: 10px;
+        border: 1px solid var(--bar-border);
+    }
+`;
+document.head.appendChild(style);
+
+
 
         const topBtn = document.getElementById('topBtn');
         if (topBtn) {
@@ -180,10 +194,17 @@ function initExtra() {
         const jumpInput = document.getElementById('jumpInput');
         if (jumpInput) jumpInput.type = 'search';
 
-        // --- Добавление подзаголовка Dhamma.Gift ---
-        const subText = document.querySelector('p.sub');
-        if (subText && !subText.textContent.includes('Dhamma.Gift')) {
-            subText.innerHTML += '<br>with Dhamma.Gift Voice and DPD options';
+        // --- Изменение заголовка H1 и полная замена подзаголовка ---
+        const mainH1 = document.querySelector('h1');
+        if (mainH1 && !mainH1.textContent.includes('Dhamma.Gift')) {
+            mainH1.textContent = 's.4nt.org Dhamma.Gift edition';
+        }
+        
+        const firstTagline = document.querySelector('h1 + p.tagline');
+        if (firstTagline && !firstTagline.textContent.includes('Voice and DPD')) {
+            // Полностью заменяем оригинальный текст "Suttas, Side by Side"
+            firstTagline.textContent = 'Pali Line by Line with Voice and DPD';
+            firstTagline.id = 'dg-edition-text';
         }
 
         // 5. Insert header buttons (main panel)
@@ -196,7 +217,7 @@ function initExtra() {
             const buttons = [
                 { tag: 'a', html: '🔊', title: 'Listen (TTS)', class: 'voice-link icon-btn', id: 'voiceLinkBtn', attr: { 'data-slug': slug }, href: 'javascript:void(0)' },
                 { tag: 'a', html: '📜', title: 'View: Columns / Scroll', class: 'icon-btn', id: 'viewModeBtn', onclick: 'window.toggleViewMode()', href: 'javascript:void(0)' },
-                { tag: 'a', html: `<img src="${basePath}/assets/img/gray-white.png" alt="Search">`, title: 'Search Suttas (Ctrl+1)', href: basePath + '/?q=' + slug, id: 'fdg-button', class: 'icon-btn', rel: 'noreferrer' },
+                { tag: 'a', html: `<img style="width:18px; height:18px; display:block;" src="${basePath}/assets/img/gray-white.png" alt="Search">`, title: 'Search Suttas (Ctrl+1)', href: basePath + '/?q=' + slug, id: 'fdg-button', class: 'icon-btn', rel: 'noreferrer' },
                 { tag: 'a', html: `<img style="width:18px; height:18px; display:block;" src="${basePath}/assets/svg/comment.svg" alt="Dictionary">`, title: 'Popup Dictionary (Alt+A)', class: 'icon-btn toggle-dict-btn' }
             ];
 
@@ -600,9 +621,14 @@ document.addEventListener("keydown", function(event) {
     }
 });
 
-
 window.addEventListener("keydown", (event) => {
     if (event.key === 'Escape' || event.code === 'Escape') {
+
+        // Вспомогательная функция для полной остановки события, чтобы другие скрипты его не подхватили
+        const consumeEvent = () => {
+            event.preventDefault();
+            event.stopPropagation();
+        };
 
         // ==========================================
         // ПРИОРИТЕТ 1: ПОДСКАЗКИ (Hints)
@@ -610,66 +636,60 @@ window.addEventListener("keydown", (event) => {
         
         // --- 1.1. Voice Hint ---
         const voiceHint = document.getElementById('active-voice-hint');
-        if (voiceHint) {
+        if (voiceHint && voiceHint.offsetWidth > 0) { // надежная проверка видимости
             const closeHintBtn = document.getElementById('closeVoiceHintBtn');
             if (closeHintBtn) {
                 closeHintBtn.click();
-                event.preventDefault();
+                consumeEvent();
                 return;
             }
         }
 
-        // --- 1.2. General Hint Popup (С логами для Павла) ---
-        // Ищем все варианты уведомлений: старые, новые тосты и баблы
+        // --- 1.2. General Hint Popup ---
         const hintElements = document.querySelectorAll('.dg-bottom-toast, .hint, .bubble-notification');
-        
         for (let i = 0; i < hintElements.length; i++) {
             const hintElement = hintElements[i];
             const style = window.getComputedStyle(hintElement);
             
-            // Проверяем наличие класса 'show' или фактическую видимость через opacity
+            // Защита от "проглатывания": элемент должен занимать место на экране
             const isVisible = hintElement.classList.contains('show') || 
-                              (style.display !== 'none' && style.opacity !== '0');
+                              (hintElement.offsetWidth > 0 && style.display !== 'none' && style.opacity !== '0' && style.visibility !== 'hidden');
             
             if (isVisible) {
-                
-                // Ищем любую кнопку закрытия внутри
                 const closeHintButton = hintElement.querySelector('#closeHintBtn, .dg-toast-close, .close-btn, .dg-bottom-toast-close');
-                
                 if (closeHintButton) {
                     closeHintButton.click();
                 } else {
                     hintElement.classList.remove('show');
                 }
-                
-                event.preventDefault();
+                consumeEvent();
                 return; 
             }
         }
 
-		
         // ==========================================
         // ПРИОРИТЕТ 2: СЛОВАРИ (Dictionaries)
         // ==========================================
 
         // --- 2.1. FDG Popup ---
         const fdgPopupElement = document.querySelector('.fdg-popup');
-        if (fdgPopupElement && fdgPopupElement.style.display === 'block') {
+        // Используем getComputedStyle, чтобы отловить стили из CSS классов
+        if (fdgPopupElement && window.getComputedStyle(fdgPopupElement).display !== 'none') {
             const fdgCloseButton = fdgPopupElement.querySelector('.fdg-close-btn');
             if (fdgCloseButton) {
                 fdgCloseButton.click();
-                event.preventDefault();
+                consumeEvent();
                 return;
             }
         }
 
         // --- 2.2. Pali Lookup Popup (Главный словарь) ---
         const paliLookupPopupElement = document.querySelector('.popup');
-        if (paliLookupPopupElement && paliLookupPopupElement.style.display === 'block') {
+        if (paliLookupPopupElement && window.getComputedStyle(paliLookupPopupElement).display !== 'none') {
             const paliLookupCloseButton = paliLookupPopupElement.querySelector('.close-btn');
             if (paliLookupCloseButton) {
                 paliLookupCloseButton.click();
-                event.preventDefault();
+                consumeEvent();
                 return;
             }
         }
@@ -682,18 +702,18 @@ window.addEventListener("keydown", (event) => {
         if (window.quickModalIsOpen) {
             if (typeof window.toggleQuickModal === 'function') {
                 window.toggleQuickModal(); 
-                event.preventDefault();
+                consumeEvent();
                 return;
             }
         }
 
         // --- 3.2. PWA Banner ---
         const pwaBanner = document.getElementById('pwa-banner');
-        if (pwaBanner && pwaBanner.offsetParent !== null) { 
+        if (pwaBanner && pwaBanner.offsetWidth > 0) { 
             const closePwaBtn = document.getElementById('closePwaBanner');
             if (closePwaBtn) {
                 closePwaBtn.click();
-                event.preventDefault();
+                consumeEvent();
                 return;
             }
         }
@@ -703,14 +723,14 @@ window.addEventListener("keydown", (event) => {
         if (closeBtnElements.length > 0) {
             let modalClosed = false;
             closeBtnElements.forEach(button => {
-                if (button.offsetParent !== null) {
+                // getBoundingClientRect надежнее, чем offsetParent, для fixed/absolute элементов
+                if (button.getBoundingClientRect().width > 0) {
                     button.click();
                     modalClosed = true;
                 }
             });
-            // Возвращаемся, только если действительно закрыли видимое окно
             if (modalClosed) {
-                event.preventDefault();
+                consumeEvent();
                 return; 
             }
         }
@@ -722,27 +742,19 @@ window.addEventListener("keydown", (event) => {
         const dropdown = document.querySelector('.voice-dropdown');
         const isDropdownActive = dropdown && dropdown.classList.contains('active');
         const isHighlightActive = document.querySelector('.active-word');
-
-        // Безопасная проверка, чтобы не уронить скрипт до загрузки voice.js
         const isTtsActive = typeof ttsState !== 'undefined' && (ttsState.speaking || ttsState.paused);
 
-        // Если что-то играет, открыто меню или выделен текст
         if (isTtsActive || isDropdownActive || isHighlightActive) {
-            event.preventDefault();
-            
-            if (typeof stopPlayback === 'function') {
-                stopPlayback();        // Остановить звук, сбросить state
-            }
-            if (typeof removeAllHighlights === 'function') {
-                removeAllHighlights(); // Убрать желтое выделение и мини-кнопку
-            }
-            
-            // Закрываем меню плеера визуально
+            if (typeof stopPlayback === 'function') stopPlayback();
+            if (typeof removeAllHighlights === 'function') removeAllHighlights();
             if (dropdown) dropdown.classList.remove('active');
+            
+            consumeEvent();
             return;
         }
     }
 }, true);
+
 
 // Перехват клика по главной кнопке озвучки для старта с активного слова
 window.addEventListener('click', function(event) {
