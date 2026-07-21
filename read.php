@@ -15160,7 +15160,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an5.209"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an5.209">an5.209</a> Gītassarasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an5.209"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an5.209">an5.209</a> Gītassarasutta  <?php echo $ifEnSujTrn;?> <?php echo $ifRuLitTrn;?></span>
 </div>
  
 <div class="mt-3">
