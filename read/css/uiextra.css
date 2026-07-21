@@ -1429,6 +1429,10 @@ smart TOC
   opacity: 0.7; /* Светло-серые иконки в темной теме */
 }
 
+#sm-compare .menu-icon {
+    transform: rotate(-90deg);
+}
+
 @media (max-width: 768px) {
   #sutta {
     padding-left: 5px;
@@ -1501,3 +1505,4 @@ smart TOC
 .dark .copy-Link-special:hover .title-svg-icon {
     opacity: 1;
 }
+

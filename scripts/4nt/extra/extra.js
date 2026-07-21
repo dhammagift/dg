@@ -1,3 +1,6 @@
+// не работает кнопка fdg - передавать # и ридер в зависимости от выбранных языков.  если если русский то /r/  или /read/ если есть англ. 
+
+
 // ==========================================
 // ГЛОБАЛЬНАЯ ИНИЦИАЛИЗАЦИЯ ЯЗЫКА ДЛЯ СЛОВАРЯ
 // Выполняется моментально при загрузке страницы
@@ -38,9 +41,12 @@ window.toggleViewMode = function() {
         renderMain();
     }
     
-    setTimeout(() => {
+        setTimeout(() => {
         if (typeof initTtsMarkup === 'function') initTtsMarkup();
+        applyIndependentHighlight();
     }, 100);
+    
+
 };
 
 window.toggleDots = function(forceState) {
@@ -108,6 +114,15 @@ function initExtra() {
     try {
         // Определяем базовый путь в зависимости от того, где запущен сайт
         const basePath = location.pathname.startsWith('/4nt') ? '/4nt' : '';
+        const cleanPath = location.pathname.replace(/^\/4nt/, '');
+        
+        if (
+            location.pathname === `${basePath}/` ||
+            location.pathname === `${basePath}/index.html`
+        ) {
+            document.title = "4nt DG — Main Pali Editions Line by Line with Translations";
+            document.querySelector("img.logo-full")?.remove();
+        }
 
         // ==========================================
         // СИНХРОНИЗАЦИЯ КОЛОНОК С URL И НАВИГАЦИЕЙ
@@ -142,7 +157,10 @@ function initExtra() {
                 
                 if (typeof saveSettings === 'function') saveSettings();
                 if (typeof renderColBar === 'function') renderColBar();
-                if (typeof renderMain === 'function') renderMain();
+if (typeof renderMain === 'function') {
+    renderMain();
+    setTimeout(applyIndependentHighlight, 100);
+}
             }
         }
 
@@ -377,7 +395,8 @@ document.head.appendChild(style);
             const buttons = [
                 { tag: 'a', html: '🔊', title: 'Listen (TTS)', class: 'voice-link icon-btn', id: 'voiceLinkBtn', attr: { 'data-slug': slug }, href: 'javascript:void(0)' },
                 { tag: 'a', html: '📜', title: 'View: Columns / Scroll', class: 'icon-btn', id: 'viewModeBtn', onclick: 'window.toggleViewMode()', href: 'javascript:void(0)' },
-                { tag: 'a', html: `<img style="width:18px; height:18px; display:block;" src="${basePath}/assets/img/gray-white.png" alt="Search">`, title: 'Search Suttas (Ctrl+1)', href: basePath + '/?q=' + slug, id: 'fdg-button', class: 'icon-btn', rel: 'noreferrer' },
+                { tag: 'a', html: `<img style="width:18px; height:18px; display:block;" src="${basePath}/assets/img/gray-white.png" alt="Search">`, title: 'Search Suttas (Ctrl+1)', 
+    href: location.pathname.startsWith('/4nt') ? '/?q=' + slug : 'https://f.dhamma.gift/?q=' + slug, id: 'fdg-button', class: 'icon-btn', rel: 'noreferrer' },
                 { tag: 'a', html: `<img style="width:18px; height:18px; display:block;" src="${basePath}/assets/svg/comment.svg" alt="Dictionary">`, title: 'Popup Dictionary (Alt+A)', class: 'icon-btn toggle-dict-btn' }
             ];
 
@@ -682,7 +701,10 @@ document.head.appendChild(style);
                 if (JSON.stringify(origCols) !== JSON.stringify(COLS)) {
                     if (typeof saveSettings === 'function') saveSettings();
                     if (typeof renderColBar === 'function') renderColBar();
-                    if (typeof renderMain === 'function') renderMain();
+if (typeof renderMain === 'function') {
+    renderMain();
+    setTimeout(applyIndependentHighlight, 100);
+}
                 }
                 
                 localStorage.setItem(migrationFlag, 'true');
@@ -946,3 +968,86 @@ window.addEventListener('click', function(event) {
         }
     }
 }, true); // true означает фазу перехвата (захвата) - сработает самым первым
+
+function applyIndependentHighlight() {
+    const hash = window.location.hash;
+    if (!hash) return;
+
+    // Очищаем хеш от параметров
+    const hashContent = hash.substring(1);
+    const cleanId = hashContent.split('&')[0].split('?')[0];
+    
+    // Поддержка нескольких ID через запятую[span_2](start_span)[span_2](end_span)
+    const ids = cleanId.includes(',') ? cleanId.split(',') : [cleanId];
+
+    ids.forEach(id => {
+        let element = document.getElementById(id);
+        
+        // Фолбэк для поиска соседнего узла, если точный ID не найден[span_3](start_span)[span_3](end_span)
+        if (!element) {
+            const match = id.match(/(.*?)(\d+)$/);
+            if (match) {
+                const prefix = match[1];
+                const num = parseInt(match[2], 10);
+                if (num - 1 >= 0) {
+                    element = document.getElementById(prefix + (num - 1));
+                }
+            }
+        }
+
+        if (element) {
+            // =====================================
+            // ДУБЛИКАТ ЛОГИКИ МИГАНИЯ ИЗ ПРОДА[span_4](start_span)[span_4](end_span)
+            // =====================================
+            const originalPosition = element.style.position;
+            if (window.getComputedStyle(element).position === 'static') {
+                element.style.position = 'relative';
+            }
+
+            const overlay = document.createElement('div');
+            overlay.style.position = 'absolute';
+            overlay.style.top = '0'; 
+            overlay.style.left = '0';
+            overlay.style.width = '100%'; 
+            overlay.style.height = '100%';
+            overlay.style.pointerEvents = 'none'; 
+            overlay.style.zIndex = '10';
+            overlay.style.borderRadius = window.getComputedStyle(element).borderRadius;
+            overlay.style.transition = 'background-color 0.45s ease-in-out';
+            overlay.style.backgroundColor = 'transparent';
+            element.appendChild(overlay);
+
+            let blinkCount = 0;
+            const blinkInterval = setInterval(() => {
+                overlay.style.backgroundColor = blinkCount % 2 === 0 ? 'rgba(26, 188, 156, 0.25)' : 'transparent';
+                blinkCount++;
+                if (blinkCount >= 6) { 
+                    clearInterval(blinkInterval);
+                    setTimeout(() => {
+                        if (overlay.parentNode === element) element.removeChild(overlay);
+                        if (!originalPosition) element.style.removeProperty('position');
+                        else element.style.position = originalPosition;
+                    }, 450);
+                }
+            }, 450);
+
+            // Искусственная задержка для инициализации плеера[span_5](start_span)[span_5](end_span)
+            setTimeout(() => {
+                if (typeof window.activateSegmentForTTS === 'function') {
+                    if (element.matches('.pli-lang, .rus-lang, .eng-lang, .tha-lang')) {
+                         window.activateSegmentForTTS(element);
+                    } else {
+                        const childLang = element.querySelector('.pli-lang, .rus-lang, .eng-lang, .tha-lang');
+                        if (childLang) {
+                            window.activateSegmentForTTS(childLang);
+                        } else {
+                            window.activateSegmentForTTS(element);
+                        }
+                    }
+                } else {
+                    element.classList.add('active-word');
+                }
+            }, 400);
+        }
+    });
+}

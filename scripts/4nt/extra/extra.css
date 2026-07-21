@@ -26,6 +26,7 @@ html[data-view-mode="rows"] .seg {
 .icon-btn:hover,
 .icon-btn:active {
   text-decoration: none;
+  filter: grayscale(100%);
 }
 
 /* Стили, перенесенные из extra.js */
