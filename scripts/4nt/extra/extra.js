@@ -1,6 +1,5 @@
 // не работает кнопка fdg - передавать # и ридер в зависимости от выбранных языков.  если если русский то /r/  или /read/ если есть англ. 
 
-
 // ==========================================
 // ГЛОБАЛЬНАЯ ИНИЦИАЛИЗАЦИЯ ЯЗЫКА ДЛЯ СЛОВАРЯ
 // Выполняется моментально при загрузке страницы
@@ -219,7 +218,10 @@ if (typeof renderMain === 'function') {
         if (typeof ALL_TRANSLATIONS !== 'undefined') {
             ALL_TRANSLATIONS.forEach(t => {
                 if (t.key === 'pali') {
+                    t.label = "Pali Mahasangiti";
                     t.tip = "Root Pāli (Mahāsaṅgīti edition)";
+                } else if (t.label && t.label.includes('IAST')) {
+                    t.label = t.label.replace(/\s*\(IAST\)/gi, '').trim();
                 }
                 if (t.key === 'ru_dhammagift') {
                     t.group = "Russian"; // Это будет заголовком в выпадающем списке
@@ -392,11 +394,16 @@ document.head.appendChild(style);
             const slug = getSlug() || '';
             const fragment = document.createDocumentFragment();
 
+            // Определяем наличие русского языка в колонках или настройках для корректного пути (/r/ или /read/) и хэша (#)
+            const hasRuLang = (typeof COLS !== 'undefined' && COLS.some(c => c.includes('ru'))) || (window.isRu === true);
+            const readerPath = hasRuLang ? '/r/' : '/read/';
+            const hashSymbol = hasRuLang ? '#' : '';
+
             const buttons = [
                 { tag: 'a', html: '🔊', title: 'Listen (TTS)', class: 'voice-link icon-btn', id: 'voiceLinkBtn', attr: { 'data-slug': slug }, href: 'javascript:void(0)' },
                 { tag: 'a', html: '📜', title: 'View: Columns / Scroll', class: 'icon-btn', id: 'viewModeBtn', onclick: 'window.toggleViewMode()', href: 'javascript:void(0)' },
                 { tag: 'a', html: `<img style="width:18px; height:18px; display:block;" src="${basePath}/assets/img/gray-white.png" alt="Search">`, title: 'Search Suttas (Ctrl+1)', 
-    href: location.pathname.startsWith('/4nt') ? '/?q=' + slug : 'https://f.dhamma.gift/?q=' + slug, id: 'fdg-button', class: 'icon-btn', rel: 'noreferrer' },
+    href: location.pathname.startsWith('/4nt') ? `${readerPath}?q=` + slug + hashSymbol : `https://f.dhamma.gift${readerPath}?q=` + slug + hashSymbol, id: 'fdg-button', class: 'icon-btn', rel: 'noreferrer' },
                 { tag: 'a', html: `<img style="width:18px; height:18px; display:block;" src="${basePath}/assets/svg/comment.svg" alt="Dictionary">`, title: 'Popup Dictionary (Alt+A)', class: 'icon-btn toggle-dict-btn' }
             ];
 
