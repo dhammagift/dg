@@ -286,6 +286,12 @@
         font-weight: bold;
   }  
 
+.sankha {
+    margin-top: -0px;
+  height: 31px;
+  width: 31px;
+}
+
   .common-size-icon3 {
     margin-top: -3px; 
   margin-left: 0px;	
