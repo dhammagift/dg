@@ -279,3 +279,11 @@ td.c .ct {
   user-select: none;
   transition: opacity .12s, filter .12s;
 }
+
+.logo-mini {
+filter:sepia(1) saturate(3) brightness(.65);
+}
+
+.motto {
+display: none;  
+}

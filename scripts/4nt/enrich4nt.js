@@ -5,7 +5,6 @@ function createSymlinks(dir) {
     const links = [
         { target: '../scripts/4nt/extra', name: 'extra' },
         { target: '../scripts/4nt/update4nt.sh', name: 'update4nt.sh' },
-        { target: '../assets/img/headerlogo.png', name: 'headerlogo.png' },
         { target: '../assets', name: 'assets' },
         { target: '../read', name: 'read' }
     ];
@@ -111,10 +110,20 @@ function processHtml(dir) {
             }
 
             if (content.includes('debabel-logo-1k.jpg')) {
-                content = content.split('debabel-logo-1k.jpg').join('headerlogo.png');
+                content = content.split('debabel-logo-1k.jpg').join('/assets/img/headerlogo.png');
                 changed = true;
             }
 
+            const absoluteFilePath = path.resolve(filePath);
+            const absoluteRootIndex = path.resolve(dir, 'index.html');
+            if (absoluteFilePath === absoluteRootIndex) {
+                const logoMiniRegex = /(<img\b[^>]*class="logo-mini"[^>]*src=")[^"]*("[^>]*>)/g;
+                if (logoMiniRegex.test(content)) {
+                    content = content.replace(logoMiniRegex, `$1/assets/img/logo4nt.png$2`);
+                    changed = true;
+                }
+            }
+            
             if (content.includes('🦘')) {
                 content = content.split('🦘').join('🐇');
                 changed = true;
