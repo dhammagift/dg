@@ -669,70 +669,40 @@ async function saveToHistory(key, url) {
 
 //установка фокуса в инпуте по нажатию / 
 document.addEventListener('keydown', function(event) {
-    // Проверяем именно символ / (код 191 или Slash)
-    if (event.key === '/' || event.code === 'Slash') {
-        // Проверяем, активно ли модальное окно через глобальный window (защита от ReferenceError)
-        const isModalActive = window.quickModalIsOpen && document.getElementById('quickSearchInput');
+    // Отключаем перехват, если мы УЖЕ печатаем внутри любого поля ввода
+    const activeTag = document.activeElement ? document.activeElement.tagName : '';
+    if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || document.activeElement.isContentEditable) {
+        return; 
+    }
 
-        
-        // Если модальное окно активно, устанавливаем фокус в его поле ввода
-        if (isModalActive) {
+    // Ловим нажатие слэша
+    if (event.key === '/' || event.code === 'Slash') {
+        event.preventDefault();
+
+        // 1. Приоритет: Модальное окно
+        if (window.quickModalIsOpen) {
             const modalInput = document.getElementById('quickSearchInput');
-            event.preventDefault();
-            modalInput.focus();
-            modalInput.setSelectionRange(modalInput.value.length, modalInput.value.length);
-            return; // Прерываем выполнение, так как модальное окно активно
+            if (modalInput) {
+                modalInput.focus();
+                modalInput.setSelectionRange(modalInput.value.length, modalInput.value.length);
+            }
+            return;
         }
         
-        // Ищем все возможные инпуты (оригинальная логика)
+        // 2. Приоритет: Основной инпут или любой подходящий резервный
         const inputs = document.querySelectorAll(
-            '#paliauto[type="search"], #paliauto[type="text"], .dtsb-value.dtsb-input'
+            '#paliauto[type="search"], #paliauto[type="text"], .dtsb-value.dtsb-input, input[type="search"], input[type="text"]'
         );
         
-        // Если нет ни одного подходящего инпута - выходим
-        if (inputs.length === 0) return;
-        
-        // Берем первый подходящий инпут
-        const input = inputs[0];
-        
-        // Предотвращаем действие по умолчанию только если нашли инпут
-        event.preventDefault();
-        
-        // Фокусируемся и перемещаем курсор в конец
-        input.focus();
-        input.setSelectionRange(input.value.length, input.value.length);
+        // Берем первый подходящий инпут из списка
+        if (inputs.length > 0) {
+            const targetInput = inputs[0];
+            targetInput.focus();
+            targetInput.setSelectionRange(targetInput.value.length, targetInput.value.length);
+        }
     }
 }); 
-
-// Отключаем перехват / когда фокус уже в инпуте
-const handleInputKeydown = (event) => {
-    if (event.key === '/' || event.code === 'Slash') {
-        event.stopPropagation();
-    }
-};
-
-// Вешаем обработчики на все существующие и будущие инпуты
-document.querySelectorAll('input').forEach(input => {
-    input.addEventListener('keydown', handleInputKeydown);
-});
-
-// Наблюдатель для динамически добавляемых инпутов
-new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-        mutation.addedNodes.forEach((node) => {
-            if (node.nodeName === 'INPUT') {
-                node.addEventListener('keydown', handleInputKeydown);
-            } else if (node.querySelectorAll) {
-                node.querySelectorAll('input').forEach(input => {
-                    input.addEventListener('keydown', handleInputKeydown);
-                });
-            }
-        });
-    });
-}).observe(document.body, { childList: true, subtree: true });
-
 //конец фокуса в инпуте по нажатию / 
-
 
 function loadModal(modalId, modalFile) {
     fetch(modalFile)
