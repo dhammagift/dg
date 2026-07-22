@@ -131,11 +131,12 @@ function processHtml(dir) {
                 changed = true;
             }
 
-            // 4. Замена src у <img> внутри <a> с классом ft-logo (только для debabel-logo)
-            const ftLogoRegex = /(<a\b[^>]*class=["'][^"']*?\bft-logo\b[^"']*?["'][^>]*>[\s\S]*?<img\b[^>]*src=["'])([^"']*)(["'][^>]*>)/gi;
-            const newContentFt = content.replace(ftLogoRegex, (match, p1, p2, p3) => {
-                if (p2.includes('debabel-logo-1k')) {
-                    return `${p1}/assets/img/logo4nt.png${p3}`;
+            // 4. Замена src у <img> внутри <a> с классом ft-logo (кроме ft-right) на logo4nt.png
+            const ftLogoRegex = /(<a\b[^>]*class=["']([^"']*?\bft-logo\b[^"']*?)["'][^>]*>[\s\S]*?<img\b[^>]*src=["'])([^"']*)(["'][^>]*>)/gi;
+            const newContentFt = content.replace(ftLogoRegex, (match, p1, classAttr, p3, p4) => {
+                // Если в классах нет ft-right, заменяем путь
+                if (!classAttr.includes('ft-right')) {
+                    return `${p1}/assets/img/logo4nt.png${p4}`;
                 }
                 return match;
             });
@@ -171,6 +172,7 @@ function processHtml(dir) {
         console.error(`Ошибка при копировании фавиконки: ${err.message}`);
     }
 }
+
 
 processHtml(process.argv[2] || '.');
 
