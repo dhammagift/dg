@@ -2073,16 +2073,51 @@ function normalizeQuery(rawQuery) {
 
     q = q.replace(/([a-z])\s+(\d)/g, '$1$2');
 
-    const match = q.match(/^([a-z]+)(\d.*)$/);
+    // Подстановка полных префиксов Винаи (включая алиасы по умолчанию для bu)
+    const vinayaFolderMap = {
+        "bu-pj": "pli-tv-bu-vb-pj", "bi-pj": "pli-tv-bi-vb-pj",
+        "bu-ss": "pli-tv-bu-vb-ss", "bi-ss": "pli-tv-bi-vb-ss",
+        "bu-ay": "pli-tv-bu-vb-ay", "bi-ay": "pli-tv-bi-vb-ay",
+        "bu-np": "pli-tv-bu-vb-np", "bi-np": "pli-tv-bi-vb-np",
+        "bu-pc": "pli-tv-bu-vb-pc", "bi-pc": "pli-tv-bi-vb-pc",
+        "bu-pd": "pli-tv-bu-vb-pd", "bi-pd": "pli-tv-bi-vb-pd",
+        "bu-sk": "pli-tv-bu-vb-sk", "bi-sk": "pli-tv-bi-vb-sk",
+        "bu-as": "pli-tv-bu-vb-as", "bi-as": "pli-tv-bi-vb-as",
+        "bu-pm": "pli-tv-bu-pm",    "bi-pm": "pli-tv-bi-pm",
+        "bupm": "pli-tv-bu-pm",     "bipm": "pli-tv-bi-pm",
+        "pvr": "pli-tv-pvr",        "kd": "pli-tv-kd",
+        "pj": "pli-tv-bu-vb-pj",
+        "ss": "pli-tv-bu-vb-ss",
+        "ay": "pli-tv-bu-vb-ay",
+        "np": "pli-tv-bu-vb-np",
+        "pc": "pli-tv-bu-vb-pc",
+        "pd": "pli-tv-bu-vb-pd",
+        "sk": "pli-tv-bu-vb-sk",
+        "as": "pli-tv-bu-vb-as",
+        "pm": "pli-tv-bu-pm"
+    };
+
+    // Заменяем префикс только если это точное совпадение или за ним идет цифра 
+    // (чтобы поиск слова "asoka" не сломался об алиас "as")
+    for (const [shortKey, fullFolder] of Object.entries(vinayaFolderMap)) {
+        const regex = new RegExp(`^${shortKey}(?=$|\\d)`);
+        if (regex.test(q)) {
+            q = q.replace(shortKey, fullFolder);
+            break;
+        }
+    }
+
+    // Захватываем дефисы для уже расширенных ключей
+    const match = q.match(/^([a-z-]+)(\d.*)$/);
     if (match) {
         let letters = match[1];
         let rest = match[2];
 
-        const keepAsIs = ['iti', 'snp', 'ud', 'thig', 'thag', 'dhp', 'pj', 'ss', 'ay', 'np', 'pc', 'pd', 'sk', 'as', 'bu', 'bi'];
+        const keepAsIs = ['iti', 'snp', 'ud', 'thig', 'thag', 'dhp', 'kp', 'ja'];
 
-        if (keepAsIs.includes(letters) || letters.startsWith('bu-') || letters.startsWith('bi-')) {
+        if (keepAsIs.includes(letters) || letters.startsWith('pli-tv-')) {
              q = letters + rest;
-        } else {
+        } else if (!letters.startsWith('pli-tv-')) {
             const first = letters[0];
             if (first === 'm') q = 'mn' + rest;
             else if (first === 'd') q = 'dn' + rest;
@@ -3334,18 +3369,49 @@ function get4ntUrl(slug = null) {
     
     // Словарь для преобразования коротких имен в полные имена папок 4nt
     const vinayaFolderMap = {
+        // Параджика (Parajika)
+        "bu-pj": "pli-tv-bu-vb-pj",
+        "bi-pj": "pli-tv-bi-vb-pj",
+
+        // Сангхадисеса (Sanghadisesa)
+        "bu-ss": "pli-tv-bu-vb-ss",
+        "bi-ss": "pli-tv-bi-vb-ss",
+
+        // Анията (Aniyata)
+        "bu-ay": "pli-tv-bu-vb-ay",
+        "bi-ay": "pli-tv-bi-vb-ay",
+
+        // Ниссаггия Пачиттия (Nissaggiya Pacittiya)
+        "bu-np": "pli-tv-bu-vb-np",
+        "bi-np": "pli-tv-bi-vb-np",
+
+        // Пачиттия (Pacittiya)
+        "bu-pc": "pli-tv-bu-vb-pc",
+        "bi-pc": "pli-tv-bi-vb-pc",
+        "bu-vb-pc": "pli-tv-bu-vb-pc", // Оставляем на случай, если уже приходит такой формат
+        "bi-vb-pc": "pli-tv-bi-vb-pc",
+
+        // Патидесания (Patidesaniya)
+        "bu-pd": "pli-tv-bu-vb-pd",
+        "bi-pd": "pli-tv-bi-vb-pd",
+
+        // Секхия (Sekhiya)
+        "bu-sk": "pli-tv-bu-vb-sk",
+        "bi-sk": "pli-tv-bi-vb-sk",
+
+        // Адхикарана-саматха (Adhikarana-samatha)
+        "bu-as": "pli-tv-bu-vb-as",
+        "bi-as": "pli-tv-bi-vb-as",
+        "bu-vb-as": "pli-tv-bu-vb-as",
+        "bi-vb-as": "pli-tv-bi-vb-as",
+
+        // Патимоккха (Patimokkha)
         "bu-pm": "pli-tv-bu-pm",
         "bupm": "pli-tv-bu-pm",
         "bi-pm": "pli-tv-bi-pm",
         "bipm": "pli-tv-bi-pm",
-        "bu-pc": "pli-tv-bu-vb-pc",
-        "bu-vb-pc": "pli-tv-bu-vb-pc",
-        "bi-pc": "pli-tv-bi-vb-pc",
-        "bi-vb-pc": "pli-tv-bi-vb-pc",
-        "bu-as": "pli-tv-bu-vb-as",
-        "bu-vb-as": "pli-tv-bu-vb-as",
-        "bi-as": "pli-tv-bi-vb-as",
-        "bi-vb-as": "pli-tv-bi-vb-as",
+
+        // Кхандхака и Паривара
         "pvr": "pli-tv-pvr",
         "kd": "pli-tv-kd"
     };
