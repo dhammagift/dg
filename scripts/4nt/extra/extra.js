@@ -116,6 +116,30 @@ function updateIndexLinks() {
         return;
     }
 
+    // === СОРТИРОВКА БЛОКОВ ===
+    const colsContainer = document.querySelector('.cols');
+    if (colsContainer) {
+        // Задаем желаемый порядок по атрибуту href
+        const desiredOrder = [
+            'an/index.html',
+            'dn/index.html',
+            'mn/index.html',
+            'sn/index.html',
+            'kn/index.html',
+            'vin/tv/index.html',
+            'major/index.html'
+        ];
+        
+        // Перемещаем элементы в соответствии с массивом
+        desiredOrder.forEach(href => {
+            const link = colsContainer.querySelector(`a.col[href="${href}"]`);
+            if (link) {
+                colsContainer.appendChild(link);
+            }
+        });
+    }
+
+    // === ОБРАБОТКА КЛАССА MAJOR ===
     // 1. Удаляем класс major у ссылки "Major EBT-relevant texts"
     const oldMajorLink = document.querySelector('a.col[href="major/index.html"]');
     if (oldMajorLink) {
@@ -132,9 +156,8 @@ function updateIndexLinks() {
             col.classList.add('major');
         }
     });
-
-
 }
+
 
 function initExtra() {
     try {
