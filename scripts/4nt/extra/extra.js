@@ -136,11 +136,8 @@ function updateIndexLinks() {
 
 }
 
-
-
 function initExtra() {
     try {
-        // Определяем базовый путь в зависимости от того, где запущен сайт
         const basePath = location.pathname.startsWith('/4nt') ? '/4nt' : '';
         const cleanPath = location.pathname.replace(/^\/4nt/, '');
         updateIndexLinks();
@@ -152,19 +149,14 @@ function initExtra() {
             document.querySelector("img.logo-full")?.remove();
         }
 
-        // ==========================================
-        // СИНХРОНИЗАЦИЯ КОЛОНОК С URL И НАВИГАЦИЕЙ
-        // ==========================================
         const urlParams = new URLSearchParams(window.location.search);
         let requestedCols = [];
         
-        // 1. Проверяем URL (высший приоритет)
         if (urlParams.get('tabs') === 'root') {
             requestedCols = ['pali_royal_iast', 'pali', 'ru_dhammagift'];
         } else if (urlParams.has('cols')) {
             requestedCols = urlParams.get('cols').split(',').map(c => c.trim());
         } 
-        // 2. Проверяем сессию (чтобы колонки не слетали при переходах между никаями в одной вкладке)
         else {
             const sessionCols = sessionStorage.getItem('sharedCols');
             if (sessionCols) {
@@ -172,7 +164,6 @@ function initExtra() {
             }
         }
 
-        // Применяем колонки
         if (requestedCols.length > 0 && typeof COLS !== 'undefined') {
             const validCols = requestedCols.filter(k => ALL_TRANSLATIONS.some(t => t.key === k));
             
@@ -180,23 +171,21 @@ function initExtra() {
                 COLS.length = 0; 
                 COLS.push(...validCols.slice(0, 6));
                 
-                // Сохраняем в сессию, чтобы настройки "выживали" при навигации
                 sessionStorage.setItem('sharedCols', COLS.join(','));
                 
                 if (typeof saveSettings === 'function') saveSettings();
                 if (typeof renderColBar === 'function') renderColBar();
-if (typeof renderMain === 'function') {
-    renderMain();
-    setTimeout(applyIndependentHighlight, 100);
-}
+                if (typeof renderMain === 'function') {
+                    renderMain();
+                    setTimeout(applyIndependentHighlight, 100);
+                }
             }
         }
 
-        // Функция для обновления адресной строки и сессии
         function updateUrlWithCols() {
             if (typeof COLS !== 'undefined' && COLS.length > 0) {
                 const currentColsStr = COLS.join(',');
-                sessionStorage.setItem('sharedCols', currentColsStr); // Обновляем сессию при любых изменениях
+                sessionStorage.setItem('sharedCols', currentColsStr); 
                 
                 const newUrl = new URL(window.location);
                 newUrl.searchParams.set('cols', currentColsStr);
@@ -205,10 +194,8 @@ if (typeof renderMain === 'function') {
             }
         }
 
-        // Обновляем URL при старте, чтобы зафиксировать текущие колонки
         updateUrlWithCols();
 
-        // Перехватываем стандартную функцию сохранения настроек
         if (typeof window.saveSettings === 'function' && !window.saveSettings.isUrlPatched) {
             const origSaveSettings = window.saveSettings;
             window.saveSettings = function() {
@@ -218,14 +205,11 @@ if (typeof renderMain === 'function') {
             window.saveSettings.isUrlPatched = true;
         }
 
-        // Пробрасываем параметр ?cols во все клики по внутренним ссылкам (хлебные крошки и т.д.)
         document.addEventListener('click', function(e) {
             const a = e.target.closest('a');
-            // Проверяем, что ссылка ведет на наш же домен
             if (a && a.href && a.origin === window.location.origin) {
                 try {
                     const url = new URL(a.href);
-                    // Исключаем пустые якоря на текущей странице
                     if (url.pathname !== window.location.pathname) {
                         const currentCols = sessionStorage.getItem('sharedCols');
                         if (currentCols) {
@@ -237,13 +221,6 @@ if (typeof renderMain === 'function') {
             }
         });
 
-
-
-        // ==========================================
-        // ДИНАМИЧЕСКИЕ ПЕРЕОПРЕДЕЛЕНИЯ ДЛЯ ФОРКА
-        // ==========================================
-        
-        // 1. Мутируем переводы и настройки меню
         if (typeof ALL_TRANSLATIONS !== 'undefined') {
             ALL_TRANSLATIONS.forEach(t => {
                 if (t.key === 'pali') {
@@ -253,13 +230,13 @@ if (typeof renderMain === 'function') {
                     t.label = t.label.replace(/\s*\(IAST\)/gi, '').trim();
                 }
                 if (t.key === 'ru_dhammagift') {
-                    t.group = "Russian"; // Это будет заголовком в выпадающем списке
+                    t.group = "Russian"; 
                 }
             });
         }
 
         if (typeof CAT_LABELS !== 'undefined') {
-            CAT_LABELS.rus = 'Rus'; // Это текст для кнопки фильтра
+            CAT_LABELS.rus = 'Rus'; 
         }
 
         window.groupRank = function(g) { 
@@ -270,7 +247,6 @@ if (typeof renderMain === 'function') {
             return g.indexOf('Root') === 0 ? 'root' : g === 'Russian' ? 'rus' : g === 'English' ? 'eng' : g === 'International' ? 'int' : 'other'; 
         };
 
-        // 2. Скрытие текста предупреждения от JS-парсеров
         const warnMsgEl = document.getElementById('fnWarnMsg');
         const warnBtn = document.getElementById('fnWarn');
         if (warnMsgEl && warnBtn) {
@@ -285,11 +261,6 @@ if (typeof renderMain === 'function') {
             });
         }
 
-
-        // ==========================================
-        // МЕТА-ТЕГИ ДЛЯ SOCIAL SHARING (тот код, что был выше)
-        // ==========================================
-
         const shareTitle = "4nt DG";
         const shareDesc = "3 National Pali Canon Editions With Line by Line translations";
 
@@ -303,20 +274,14 @@ if (typeof renderMain === 'function') {
             meta.setAttribute('content', content);
         }
 
-        // Стандартное описание страницы
         setMetaTag('name', 'description', shareDesc);
-
-        // OpenGraph (Facebook, Telegram, ВКонтакте и др.)
         setMetaTag('property', 'og:title', shareTitle);
         setMetaTag('property', 'og:description', shareDesc);
         setMetaTag('property', 'og:type', 'website');
-
-        // Twitter Cards
         setMetaTag('name', 'twitter:card', 'summary');
         setMetaTag('name', 'twitter:title', shareTitle);
         setMetaTag('name', 'twitter:description', shareDesc);
 
-        // 1. Theme (Sync global 'theme' and site's internal storage)
         const rawTheme = localStorage.getItem('theme');
         if (rawTheme) {
             const effectiveTheme = (rawTheme === 'dark' || rawTheme === 'auto') ? 'dark' : 'light';
@@ -342,10 +307,8 @@ if (typeof renderMain === 'function') {
             window.toggleTheme.isPatched = true;
         }
 
-        // 2. View Mode
         document.documentElement.setAttribute('data-view-mode', window.viewMode);
 
-        // 3. Mobile sidebar
         const isMobileDevice = window.matchMedia("(max-width: 900px)").matches;
         if (isMobileDevice && typeof sidebarVisible !== 'undefined' && sidebarVisible) {
             sidebarVisible = false;
@@ -363,31 +326,21 @@ if (typeof renderMain === 'function') {
             });
         }
 
-        // 4. UI Elements Adjustment
         document.documentElement.style.setProperty('--logo-w', '16px');
         
-        document.querySelectorAll("img").forEach(img => {
-            if (img.src.includes("debabel-logo-1k.jpg")) {
-                img.src = img.src.replace("debabel-logo-1k.jpg", "headerlogo.png");
+        const style = document.createElement('style');
+        style.textContent = `
+            img[src*="headerlogo.png"] {
+                background-color: #ede5d4; 
+                padding: 4px;
+                border-radius: 10px;
+                border: 1px solid var(--bar-border);
             }
-            if (img.classList.contains("home-logo") || img.closest('.home-logo')) {
-                img.style.width = '16px';
+            .home-logo img, img.home-logo {
+                width: 16px;
             }
-        });
-        
-        // Добавляем стиль для логотипов в head
-const style = document.createElement('style');
-style.textContent = `
-    img[src*="headerlogo.png"] {
-        background-color: #ede5d4; 
-        padding: 4px;
-        border-radius: 10px;
-        border: 1px solid var(--bar-border);
-    }
-`;
-document.head.appendChild(style);
-
-
+        `;
+        document.head.appendChild(style);
 
         const topBtn = document.getElementById('topBtn');
         if (topBtn) {
@@ -403,7 +356,6 @@ document.head.appendChild(style);
         const jumpInput = document.getElementById('jumpInput');
         if (jumpInput) jumpInput.type = 'search';
 
-        // --- Изменение заголовка H1 и полная замена подзаголовка ---
         const mainH1 = document.querySelector('h1');
         if (mainH1 && !mainH1.textContent.includes('Dhamma.Gift')) {
             mainH1.textContent = 's.4nt.org Dhamma.Gift edition';
@@ -411,19 +363,16 @@ document.head.appendChild(style);
         
         const firstTagline = document.querySelector('h1 + p.tagline');
         if (firstTagline && !firstTagline.textContent.includes('Voice and DPD')) {
-            // Полностью заменяем оригинальный текст "Suttas, Side by Side"
             firstTagline.textContent = 'Pali Line by Line with Voice and DPD';
             firstTagline.id = 'dg-edition-text';
         }
 
-        // 5. Insert header buttons (main panel)
         const targetWrap = document.getElementById('settingsWrap') || document.getElementById('siteSettingsWrap');
         
         if (targetWrap && !document.getElementById('voiceLinkBtn')) {
             const slug = getSlug() || '';
             const fragment = document.createDocumentFragment();
 
-            // Определяем наличие русского языка в колонках или настройках для корректного пути (/r/ или /read/) и хэша (#)
             const hasRuLang = (typeof COLS !== 'undefined' && COLS.some(c => c.includes('ru'))) || (window.isRu === true);
             const readerPath = hasRuLang ? '/r/' : '/read/';
             const hashSymbol = hasRuLang ? '#' : '';
@@ -480,12 +429,10 @@ document.head.appendChild(style);
             }
         }
 
-          // 6. Insert Pāli dots and Dictionary options into settings menu
         const segBtn = document.getElementById('segBtn');
         if (segBtn) {
             const segRow = segBtn.closest('.set-row');
             if (segRow) {
-                // --- Добавляем переключатель пунктуации Пали ---
                 if (!document.getElementById('dotsBtn')) {
                     const dotsRow = document.createElement('div');
                     dotsRow.className = 'set-row';
@@ -496,15 +443,12 @@ document.head.appendChild(style);
                     segRow.parentNode.insertBefore(dotsRow, segRow);
                 }
 
-                // --- Добавляем выпадающий список словаря ---
                 if (!document.getElementById('dict-select-4nt')) {
                     const dictRow = document.createElement('div');
                     dictRow.className = 'set-row';
                     
-                    // Берем текущий словарь в нижнем регистре
                     const currentDict = (localStorage.getItem('selectedDict') || 'standalone').toLowerCase();
                     
-                    // === ПРЕВРАЩАЕМ САЙТ В РУССКИЙ ИЛИ АНГЛИЙСКИЙ ПРИ ЗАГРУЗКЕ ===
                     if (currentDict.includes('ru')) {
                         window.isRu = true;
                         localStorage.setItem('siteLanguage', 'ru');
@@ -535,18 +479,15 @@ document.head.appendChild(style);
 
                     const dictSelect = document.getElementById('dict-select-4nt');
                     
-                    // Устанавливаем текущее значение в селект
                     const options = Array.from(dictSelect.options);
                     const matchedOpt = options.find(opt => opt.value === currentDict);
                     if (matchedOpt) {
                         dictSelect.value = matchedOpt.value;
                     }
 
-                    // Обработчик смены без перезагрузки
                     dictSelect.addEventListener('change', function(e) {
                         let newDict = e.target.value; 
                         
-                        // === ПЕРЕКЛЮЧАЕМ ЯЗЫК САЙТА ПЕРЕД ВЫЗОВОМ НАСТРОЕК СЛОВАРЯ ===
                         if (newDict.includes('ru')) {
                             window.isRu = true;
                             localStorage.setItem('siteLanguage', 'ru');
@@ -565,7 +506,6 @@ document.head.appendChild(style);
             }
         }
 
-        // 7. Insert Original Site link into the "More" (⋮) menu
         const morePop = document.getElementById('morePop');
         if (morePop && !document.getElementById('orig-site-btn')) {
             const origRow = document.createElement('div');
@@ -583,7 +523,6 @@ document.head.appendChild(style);
         const shouldHideDots = hideDotsSetting === null ? true : hideDotsSetting === 'true';
         window.toggleDots(shouldHideDots);
 
-        // 8. Load CSS using dynamic basePath
         const styles = [
             `${basePath}/assets/css/paliLookup.css`,
             `${basePath}/assets/css/extrastyles.css`,
@@ -598,8 +537,6 @@ document.head.appendChild(style);
             }
         });
 
-
-        // 9. Handle language classes
         const processLangClasses = (el) => {
             if (!el || !el.classList) return;
             
@@ -657,7 +594,6 @@ document.head.appendChild(style);
 
         observer.observe(document.body, { childList: true, subtree: true });
 
-        // 10. Load external JS using dynamic basePath
         const scripts = [
             `${basePath}/assets/js/smoothScroll.js`,
             `${basePath}/assets/js/settings.js`,
@@ -672,7 +608,6 @@ document.head.appendChild(style);
             }
         });
 
-        // 11. SC segment refs
         const segRefBtn = document.getElementById('segBtn');
         if (segRefBtn) {
             const savedSegState = localStorage.getItem('4ntSegRefState');
@@ -696,7 +631,6 @@ document.head.appendChild(style);
             });
         }
 
-        // 12. Логика сортировки по коренным языкам
         const getLangWeight = (key) => {
             const k = key.toLowerCase();
             if (k === 'pali') return 1;
@@ -706,8 +640,6 @@ document.head.appendChild(style);
             return 5;
         };
 
-
-        // 13. Сортировка ALL_TRANSLATIONS для выпадающих списков
         if (typeof ALL_TRANSLATIONS !== 'undefined' && Array.isArray(ALL_TRANSLATIONS)) {
             ALL_TRANSLATIONS.sort((a, b) => {
                 const wA = getLangWeight(a.key);
@@ -717,7 +649,6 @@ document.head.appendChild(style);
             });
         }
 
-        // 14. Сортировка колонок COLS
         if (typeof COLS !== 'undefined' && Array.isArray(COLS)) {
             const migrationFlag = '4nt_col_order_migrated_v2';
             const isMigrated = localStorage.getItem(migrationFlag);
@@ -737,10 +668,10 @@ document.head.appendChild(style);
                 if (JSON.stringify(origCols) !== JSON.stringify(COLS)) {
                     if (typeof saveSettings === 'function') saveSettings();
                     if (typeof renderColBar === 'function') renderColBar();
-if (typeof renderMain === 'function') {
-    renderMain();
-    setTimeout(applyIndependentHighlight, 100);
-}
+                    if (typeof renderMain === 'function') {
+                        renderMain();
+                        setTimeout(applyIndependentHighlight, 100);
+                    }
                 }
                 
                 localStorage.setItem(migrationFlag, 'true');

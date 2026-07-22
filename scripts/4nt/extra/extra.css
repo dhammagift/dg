@@ -280,8 +280,8 @@ td.c .ct {
   transition: opacity .12s, filter .12s;
 }
 
-.logo-mini {
-filter:sepia(1) saturate(3) brightness(.65);
+.ft-logo:not(.ft-right), .home-logo, .logo-mini {
+    filter: sepia(1) saturate(3) brightness(.65);
 }
 
 .motto {
@@ -290,5 +290,6 @@ display: none;
 
 
 .bar-crumbs .home-logo img {
-    opacity: 0;
+    /* opacity: 0; */
+    
 }
