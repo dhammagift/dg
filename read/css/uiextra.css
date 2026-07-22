@@ -1512,3 +1512,14 @@ smart TOC
     opacity: 1;
 }
 
+/* Контейнер скрыт по умолчанию, но готов к плавному появлению */
+.deferred-links-container {
+    opacity: 0;
+    transition: opacity 0.4s ease-in-out;
+    display: inline-block; 
+}
+
+/* Класс, который добавляется скриптом после рендера HTML */
+.deferred-links-container.links-loaded {
+    opacity: 1;
+}
