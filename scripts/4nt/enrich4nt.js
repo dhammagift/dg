@@ -110,7 +110,7 @@ function processHtml(dir) {
             }
 
             if (content.includes('debabel-logo-1k.jpg')) {
-                content = content.split('debabel-logo-1k.jpg').join('/assets/img/headerlogo.png');
+                content = content.split('debabel-logo-1k.jpg').join('/assets/img/logo4nt.png');
                 changed = true;
             }
 

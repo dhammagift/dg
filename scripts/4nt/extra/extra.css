@@ -287,3 +287,8 @@ filter:sepia(1) saturate(3) brightness(.65);
 .motto {
 display: none;  
 }
+
+
+.bar-crumbs .home-logo img {
+    opacity: 0;
+}

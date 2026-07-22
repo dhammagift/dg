@@ -107,6 +107,35 @@ function getSlug(slug = null) {
     return (pathParts[pathParts.length - 1] || null)?.toLowerCase();
 }
 
+function updateIndexLinks() {
+    // Проверяем, что находимся именно в корне, а не в подпапке
+    const basePath = location.pathname.startsWith('/4nt') ? '/4nt' : '';
+    const isRoot = location.pathname === `${basePath}/` || location.pathname === `${basePath}/index.html`;
+    
+    if (!isRoot) {
+        return;
+    }
+
+    // 1. Удаляем класс major у ссылки "Major EBT-relevant texts"
+    const oldMajorLink = document.querySelector('a.col[href="major/index.html"]');
+    if (oldMajorLink) {
+        oldMajorLink.classList.remove('major');
+    }
+
+    // 2. Находим ссылки an, mn, sn, dn и добавляем класс major
+    const targetHrefs = ['an/index.html', 'mn/index.html', 'sn/index.html', 'dn/index.html'];
+    const allCols = document.querySelectorAll('a.col');
+    
+    allCols.forEach(col => {
+        const href = col.getAttribute('href');
+        if (href && targetHrefs.includes(href)) {
+            col.classList.add('major');
+        }
+    });
+
+
+}
+
 
 
 function initExtra() {
@@ -114,7 +143,7 @@ function initExtra() {
         // Определяем базовый путь в зависимости от того, где запущен сайт
         const basePath = location.pathname.startsWith('/4nt') ? '/4nt' : '';
         const cleanPath = location.pathname.replace(/^\/4nt/, '');
-        
+        updateIndexLinks();
         if (
             location.pathname === `${basePath}/` ||
             location.pathname === `${basePath}/index.html`
