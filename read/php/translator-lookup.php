@@ -5,33 +5,51 @@ header("Content-Type:text/plain");
 function translatorLookup($fromjs, $lang) {
     include_once('../../config/config.php');
     
-    // Очистка ввода: оставляем только буквы, цифры, дефисы и слеши (защита от Directory Traversal)
-    $fromjs = preg_replace('/[^a-zA-Z0-9\-\/]/', '', $fromjs);
+    // Очистка ввода
+    $fromjs = preg_replace('/[^a-zA-Z0-9\-\/\.]/', '', $fromjs);
+    $lang = preg_replace('/[^a-z]/', '', strtolower($lang));
     
-    // Определяем папку и префикс языка на основе параметра
-    if ($lang === 'th') {
-        $dir = $thtranslatorlocation;
-        $lang_prefix = 'th';
-    } else {
-        // По умолчанию используем основную папку (например, для 'ru')
-        $dir = $translatorlocation; 
-        $lang_prefix = 'ru'; 
+    // Список разрешенных языков (защита от поиска в системных папках вроде 'variant' или 'vinaya')
+    $allowed_langs = ['ru', 'en', 'th']; 
+    if (!in_array($lang, $allowed_langs)) {
+        $lang = 'ru'; // Если пришла какая-то дичь, падаем на русский по умолчанию
     }
 
-    // Ищем файлы с помощью безопасного glob()
-    $pattern = rtrim($dir, '/') . "/{$fromjs}_translation-{$lang_prefix}-*.json";
-    $files = glob($pattern);
+    // Формируем пути
+    if ($lang === 'th') {
+        $dir = rtrim($thtranslatorlocation, '/'); 
+    } else {
+        // Теперь скрипт пойдет в assets/texts/en, если lang=en, и assets/texts/ru, если lang=ru
+        $dir = rtrim($translatorlocation, '/') . '/' . $lang; 
+    }
+    
+    $lang_prefix = $lang; 
 
-    if (!empty($files)) {
-        $filename = basename($files[0]);
-        // Извлекаем имя переводчика (всё, что идет после префикса языка и до .json)
-        if (preg_match('/_translation-' . $lang_prefix . '-(.+)\.json$/', $filename, $matches)) {
-            return $matches[1];
+    // Защита: если папка не найдена, даже не начинаем поиск
+    if (!is_dir($dir)) {
+        return "";
+    }
+
+    $search_prefix = "{$fromjs}_translation-{$lang_prefix}-";
+
+    // 3. Рекурсивный поиск с поддержкой симлинков (теперь он не выйдет за пределы папки ru)
+    $directory = new RecursiveDirectoryIterator($dir, FilesystemIterator::FOLLOW_SYMLINKS | FilesystemIterator::SKIP_DOTS);
+    $iterator = new RecursiveIteratorIterator($directory);
+
+    foreach ($iterator as $file) {
+        if ($file->isFile() && strpos($file->getFilename(), $search_prefix) === 0) {
+            $filename = $file->getFilename();
+            
+            if (preg_match('/_translation-' . $lang_prefix . '-(.+)\.json$/', $filename, $matches)) {
+                return $matches[1];
+            }
         }
     }
     
     return "";
 }
+
+
 
 // Получаем параметры из URL
 $fromjs = isset($_GET['fromjs']) ? $_GET['fromjs'] : '';
