@@ -12,14 +12,17 @@ function translatorLookup($fromjs, $lang) {
     // Список разрешенных языков (защита от поиска в системных папках вроде 'variant' или 'vinaya')
     $allowed_langs = ['ru', 'en', 'th']; 
     if (!in_array($lang, $allowed_langs)) {
-        $lang = 'ru'; // Если пришла какая-то дичь, падаем на русский по умолчанию
+        $lang = 'ru'; 
     }
 
     // Формируем пути
     if ($lang === 'th') {
         $dir = rtrim($thtranslatorlocation, '/'); 
+    } elseif ($lang === 'en') {
+        // Для английского поиск идет в папке en_other
+        $dir = rtrim($translatorlocation, '/') . '/en_other'; 
     } else {
-        // Теперь скрипт пойдет в assets/texts/en, если lang=en, и assets/texts/ru, если lang=ru
+        // Для русского (и по умолчанию) скрипт пойдет в папку ru
         $dir = rtrim($translatorlocation, '/') . '/' . $lang; 
     }
     
@@ -32,7 +35,7 @@ function translatorLookup($fromjs, $lang) {
 
     $search_prefix = "{$fromjs}_translation-{$lang_prefix}-";
 
-    // 3. Рекурсивный поиск с поддержкой симлинков (теперь он не выйдет за пределы папки ru)
+    // Рекурсивный поиск с поддержкой симлинков
     $directory = new RecursiveDirectoryIterator($dir, FilesystemIterator::FOLLOW_SYMLINKS | FilesystemIterator::SKIP_DOTS);
     $iterator = new RecursiveIteratorIterator($directory);
 
@@ -49,8 +52,6 @@ function translatorLookup($fromjs, $lang) {
     return "";
 }
 
-
-
 // Получаем параметры из URL
 $fromjs = isset($_GET['fromjs']) ? $_GET['fromjs'] : '';
 $lang = isset($_GET['lang']) ? $_GET['lang'] : 'ru'; // Если язык не передан, ставим 'ru'
@@ -59,3 +60,5 @@ if (!empty($fromjs)) {
     echo translatorLookup($fromjs, $lang);
 }
 ?>
+
+
