@@ -61,7 +61,7 @@ async function buildSutta(slug) {
 
   // Запрашиваем переводчика напрямую через JS функцию из common.js
   if (translator === "") {
-      translator = await getTranslator(texttype, slugReady, pathLang);
+      translator = await getTranslator(texttype, slug, pathLang);
   }
 
   const onlynumber = slug.replace(/[a-zA-Z]/g, '');
