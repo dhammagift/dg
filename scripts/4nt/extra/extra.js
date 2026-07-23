@@ -399,13 +399,27 @@ function initExtra() {
             const hasRuLang = (typeof COLS !== 'undefined' && COLS.some(c => c.includes('ru'))) || (window.isRu === true);
             const readerPath = hasRuLang ? '/r/' : '/read/';
             const hashSymbol = hasRuLang ? '#' : '';
+            let cleanSlug = slug
+              .replace(/^4nt\/?/i, '')       // убрать 4nt в начале
+              .replace(/\/?index\.html?$/i, '') // убрать index.html или index.htm в конце
+              .replace(/^\/+/, '');          // убрать ведущий /
+
 
             const buttons = [
                 { tag: 'a', html: '🔊', title: 'Listen (TTS)', class: 'voice-link icon-btn', id: 'voiceLinkBtn', attr: { 'data-slug': slug }, href: 'javascript:void(0)' },
                 { tag: 'a', html: '📜', title: 'View: Columns / Scroll', class: 'icon-btn', id: 'viewModeBtn', onclick: 'window.toggleViewMode()', href: 'javascript:void(0)' },
-                { tag: 'a', html: `<img style="width:18px; height:18px; display:block;" src="${basePath}/assets/img/gray-white.png" alt="Search">`, title: 'Search Suttas (Ctrl+1)', 
-    href: location.pathname.startsWith('/4nt') ? `${readerPath}?q=` + slug + hashSymbol : `https://f.dhamma.gift${readerPath}?q=` + slug + hashSymbol, id: 'fdg-button', class: 'icon-btn', rel: 'noreferrer' },
-                { tag: 'a', html: `<img style="width:18px; height:18px; display:block;" src="${basePath}/assets/svg/comment.svg" alt="Dictionary">`, title: 'Popup Dictionary (Alt+A)', class: 'icon-btn toggle-dict-btn' }
+{
+  tag: 'a',
+  html: `<img style="width:18px; height:18px; display:block;" src="${basePath}/assets/img/gray-white.png" alt="Search">`,
+  title: 'Search Suttas (Ctrl+1)',
+  href: location.pathname.startsWith('/4nt')
+    ? `${readerPath}?q=${cleanSlug}${hashSymbol}`
+    : `https://f.dhamma.gift${readerPath}?q=${cleanSlug}${hashSymbol}`,
+  id: 'fdg-button',
+  class: 'icon-btn',
+  rel: 'noreferrer'
+},
+{ tag: 'a', html: `<img style="width:18px; height:18px; display:block;" src="${basePath}/assets/svg/comment.svg" alt="Dictionary">`, title: 'Popup Dictionary (Alt+A)', class: 'icon-btn toggle-dict-btn' }
             ];
 
             buttons.forEach(b => {

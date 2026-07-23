@@ -1524,3 +1524,46 @@ smart TOC
     opacity: 1;
 }
 
+/*
+.sc-link > a {
+  animation: fadeInLinks 0.4s ease-in-out forwards;
+}
+
+@keyframes fadeInLinks {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.sc-link > a {
+  opacity: 0;
+  animation: fadeInLinks 0.4s ease forwards;
+}
+
+.sc-link > a:nth-child(1)  { animation-delay: 0.00s; }
+.sc-link > a:nth-child(2)  { animation-delay: 0.05s; }
+.sc-link > a:nth-child(3)  { animation-delay: 0.10s; }
+.sc-link > a:nth-child(4)  { animation-delay: 0.15s; }
+.sc-link > a:nth-child(5)  { animation-delay: 0.20s; }
+.sc-link > a:nth-child(6)  { animation-delay: 0.25s; }
+.sc-link > a:nth-child(7)  { animation-delay: 0.30s; }
+.sc-link > a:nth-child(8)  { animation-delay: 0.35s; }
+.sc-link > a:nth-child(9)  { animation-delay: 0.40s; }
+.sc-link > a:nth-child(10) { animation-delay: 0.45s; }
+
+@keyframes fadeInLinks {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+*/
+

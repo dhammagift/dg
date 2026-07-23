@@ -692,27 +692,80 @@ function generateThirdPartyLinks(slug, slugReady, texttype, translator) {
 
 // 2. Основная функция генерации ссылок (внутренняя сборка HTML)
 function buildThirdPartyLinksHTML(slug, slugReady, texttype, translator) {
-    let scLink = "";
+    let scLink = `<p class="sc-link">`;
+    //let scLink = "";
+
+    // --- НОВЫЙ БЛОК: Внутренние ссылки с исходными подписями ---
+    const path = window.location.pathname;
+    
+    const isRuPath = path.startsWith('/r/');
+    const isMlPath = path.startsWith('/ml/');
+    const isMtPath = path.startsWith('/mt/');
+    const isRuZone = isRuPath || isMlPath || isMtPath;
+
+    const isReadPath = path.startsWith('/read/') || path === '/';
+    const isMultiPath = path.startsWith('/multi/');
+    const isEnZone = isReadPath || isMultiPath || path.startsWith('/devanagari/') || path.startsWith('/memorize/');
+
+    if (isRuZone) {
+      
+        
+        // R+R с подписью (показываем, если не на /mt/)
+        if (!isMtPath) {
+            scLink += `<a title="Multi Tran (Alt+2)" href="/mt/?q=${slug}">R+R</a>&nbsp;`;
+        }
+        
+        // R+E с подписью (показываем, если не на /ml/)
+        if (!isMlPath) {
+            scLink += `<a title="Multi Tran (Alt+2)" href="/ml/?q=${slug}">R+E</a>&nbsp;`;
+        }
+        
+        // Ru с подписью (показываем, если не на /r/)
+        if (!isRuPath) {
+            scLink += `<a title="Russian (Alt+1)" href="/r/?q=${slug}">Ru</a>&nbsp;`;
+        }
+      
+        // En с подписью
+        scLink += `<a title='Английский (Alt+1)' href="/read/?q=${slug}">En</a>&nbsp;`;
+        
+        
+    } else if (isEnZone) {
+        
+        // E+E с подписью (показываем, если не на /multi/)
+        if (!isMultiPath) {
+            scLink += `<a title="Multi Tran (Alt+2)" href="/multi/?q=${slug}">E+E</a>&nbsp;`;
+        }
+        
+        // En с подписью (показываем, если не на /read/ и не в корне)
+        if (!isReadPath) {
+            scLink += `<a title='Английский (Alt+1)' href="/read/?q=${slug}">En</a>&nbsp;`;
+        }
+  
+        // Ru с подписью
+        scLink += `<a title="Russian (Alt+1)" href="/r/?q=${slug}">Ru</a>&nbsp;`;
+        
+    }
+    // ---------------------------------------------------------------------
 
     // Voice
-    scLink += `<a data-slug="${texttype}/${slugReady}" href="javascript:void(0)" title="Text-to-Speech (Alt+R)" class="voice-link">Voice</a> `;
+    scLink += `<a data-slug="${texttype}/${slugReady}" href="javascript:void(0)" title="Text-to-Speech (Alt+R)" class="voice-link">Voice</a>&nbsp;`;
 
     // 4nt
     let url4nt = typeof get4ntUrl === 'function' ? get4ntUrl(slug) : null;
     if (url4nt) {
-        scLink += `<a target="_blank" class="s4ntLink" title="s.4nt.org" href="${url4nt}">4nt</a> `;
+        scLink += `<a target="_blank" class="s4ntLink" title="s.4nt.org" href="${url4nt}">4nt</a>&nbsp;`;
     }
 
     // DPR
     let dprUrl = typeof getDprUrl === 'function' ? getDprUrl(slug) : null;
-    if (dprUrl) scLink += `<a target="_blank" title="Myanmar and Thai Editions at DPR" href="${dprUrl}">DPR</a> `;
+    if (dprUrl) scLink += `<a target="_blank" title="Myanmar and Thai Editions at DPR" href="${dprUrl}">DPR</a>&nbsp;`;
 
     // BJT
     let bjtUrl = typeof getBjtUrl === 'function' ? getBjtUrl(slug) : null;
-    if (bjtUrl) scLink += `<a target="_blank" title="Buddha Jayanthi (Sri Lanka Edition at Tipitaka.lk)" href="${bjtUrl}">BJT</a> `;
+    if (bjtUrl) scLink += `<a target="_blank" title="Buddha Jayanthi (Sri Lanka Edition at Tipitaka.lk)" href="${bjtUrl}">BJT</a>&nbsp;`;
 
     // SC
-    scLink += `<a target="_blank" title='SuttaCentral.net' href="https://suttacentral.net/${slug}">SC</a> `;
+    scLink += `<a target="_blank" title='SuttaCentral.net' href="https://suttacentral.net/${slug}">SC</a>&nbsp;`;
         
     // BB, TBW, Th.ru, Th.su
     const isForceLocal = localStorage.getItem('forceLocal') === 'true';
@@ -723,16 +776,16 @@ function buildThirdPartyLinksHTML(slug, slugReady, texttype, translator) {
         if (hasTbw) {
             const isBbPath = window.location.pathname.startsWith('/b/');
             if (!isBbPath && isLocal) {
-                scLink += ` <a target="" title="BB and Other translations" href="/b/?q=${slug}">BB</a>`;
+                scLink += `<a target="" title="BB and Other translations" href="/b/?q=${slug}">BB</a>&nbsp;`;
             }
 
             const bookMatch = slug.match(/^[a-z]+/);
             const book = bookMatch ? bookMatch[0] : "";
 
             if (isLocal) {
-                scLink += ` <a target="_blank" title="TheBuddhasWords.net (Offline Copy)" href="/bw/${book}/${slug}.html">TBW</a>`;
+                scLink += `<a target="_blank" title="TheBuddhasWords.net (Offline Copy)" href="/bw/${book}/${slug}.html">TBW</a>&nbsp;`;
             } else {
-                scLink += ` <a target="_blank" title="TheBuddhasWords.net (Offline Copy)" href="https://thebuddhaswords.net/${book}/${slug}.html">TBW</a>`;
+                scLink += `<a target="_blank" title="TheBuddhasWords.net (Offline Copy)" href="https://thebuddhaswords.net/${book}/${slug}.html">TBW</a>&nbsp;`;
             }
         }
     }
@@ -741,25 +794,27 @@ function buildThirdPartyLinksHTML(slug, slugReady, texttype, translator) {
         if (typeof thruLinksData !== 'undefined') {
             const ruItem = thruLinksData.find(item => item[0] === slug);
             if (ruItem) {
-                scLink += ` <a title="Theravada.ru (Offline Copy)" target="_blank" href="/theravada.ru/Teaching/Canon/Suttanta/Texts/${ruItem[1]}">Th.ru</a>`;
+                scLink += `<a title="Theravada.ru (Offline Copy)" target="_blank" href="/theravada.ru/Teaching/Canon/Suttanta/Texts/${ruItem[1]}">Th.ru</a>&nbsp;`;
             }
         }
 
         if (isLocal) {
             if (typeof thsuLinksDataoffl !== 'undefined') {
                 const suItem = thsuLinksDataoffl.find(item => item[0] === slug);
-                if (suItem) scLink += ` <a title="Theravada.su" target="_blank" href="/tipitaka.theravada.su/dn/${suItem[1]}">Th.su</a>`;
+                if (suItem) scLink += `<a title="Theravada.su" target="_blank" href="/tipitaka.theravada.su/dn/${suItem[1]}">Th.su</a>&nbsp;`;
             }
         } else {
             if (typeof thsuLinksData !== 'undefined') {
                 const suItem = thsuLinksData.find(item => item[0] === slug);
-                if (suItem) scLink += ` <a title="Theravada.su" target="_blank" href="https://tipitaka.theravada.su/${suItem[1]}">Th.su</a>`;
+                if (suItem) scLink += `<a title="Theravada.su" target="_blank" href="https://tipitaka.theravada.su/${suItem[1]}">Th.su</a>&nbsp;`;
             }
         }
     }
 
+    scLink += `</p>`;
     return scLink;
 }
+
 
 // 3. Функция наполнения (Hydration) через MutationObserver
 function hydrateThirdPartyLinks() {
