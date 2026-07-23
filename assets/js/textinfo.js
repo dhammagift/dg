@@ -2550,7 +2550,7 @@
 "sn35.143":{"pi":"Bāhirāniccahetusutta ","en":"Exterior and Cause Are Impermanent ","mtph":"","ru":"Причина Внешнее Ненадёжное"},
 "sn35.144":{"pi":"Bāhiradukkhahetusutta ","en":"Exterior and Cause Are Suffering ","mtph":"","ru":"Причина Внешнее Болезненное"},
 "sn35.145":{"pi":"Bāhirānattahetusutta ","en":"Exterior and Cause Are Not-Self ","mtph":"","ru":"Причина Внешнее Без Самости"},
-"sn35.146":{"pi":"Kammanirodhasutta ","en":"The Cessation of Action ","mtph":"","ru":"Истечение Активности"},
+"sn35.146":{"pi":"Kammanirodhasutta ","en":"The Cessation of Action ","mtph":"","ru":"Истечение Активности (o)"},
 "sn35.147":{"pi":"Aniccanibbānasappāyasutta ","en":"The Impermanent as Conducive to Extinguishment ","mtph":"","ru":"Подходит для достижения ниббаны Первая"},
 "sn35.148":{"pi":"Dukkhanibbānasappāyasutta ","en":"The Suffering as Conducive to Extinguishment ","mtph":"","ru":"Подходит для достижения ниббаны Первая"},
 "sn35.149":{"pi":"Anattanibbānasappāyasutta ","en":"Not-Self as Conducive to Extinguishment ","mtph":"","ru":"Подходит для достижения ниббаны Первая"},

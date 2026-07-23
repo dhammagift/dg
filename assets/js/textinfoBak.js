@@ -692,7 +692,7 @@
 "an5.206":{"pi":"Vinibandhasutta","en":"Shackles","mtph":"","ru":"Подневольность"},
 "an5.207":{"pi":"Yāgusutta","en":"Porridge","mtph":"","ru":"Рисовая каша"},
 "an5.208":{"pi":"Dantakaṭṭhasutta","en":"Chew Sticks","mtph":"","ru":"Чистка зубов"},
-"an5.209":{"pi":"Gītassarasutta","en":"The Sound of Singing","mtph":"","ru":"Распев"},
+"an5.209":{"pi":"Gītassarasutta","en":"The Sound of Singing","mtph":"","ru":"Распев (o)"},
 "an5.210":{"pi":"Muṭṭhassatisutta","en":"Unmindful","mtph":"","ru":"С замутнённым умом"},
 "an5.211":{"pi":"Akkosakasutta","en":"An Abuser","mtph":"","ru":"Тот, кто оскорбляет"},
 "an5.212":{"pi":"Bhaṇḍanakārakasutta","en":"Starting Arguments","mtph":"","ru":"Споры"},

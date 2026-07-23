@@ -1524,16 +1524,3 @@ smart TOC
     opacity: 1;
 }
 
-
-.sc-link > a {
-  animation: fadeInLinks 0.4s ease-in-out forwards;
-}
-
-@keyframes fadeInLinks {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}

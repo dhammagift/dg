@@ -7055,7 +7055,7 @@ clearBtn.style.display = 'block';
 
 		 
 		 <div class="mt-3">
- <span class="level5" id="sn35.146"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn35.146">sn35.146</a> Kammanirodhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
+ <span class="level5" id="sn35.146"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn35.146">sn35.146</a> Kammanirodhasutta  <?php echo $ifEnThanTrn;?> <?php echo $ifRuLitTrn;?></span>
  </div>
 
 		 
