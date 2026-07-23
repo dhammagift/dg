@@ -775,17 +775,22 @@ function hydrateThirdPartyLinks() {
             if (slug) {
                 container.classList.add('hydrated');
                 container.innerHTML = buildThirdPartyLinksHTML(slug, slugReady, texttype, translator);
-                
-                requestAnimationFrame(() => {
-                    container.classList.add('links-loaded');
-                });
             }
         });
+
+        // Показываем сразу все ссылки одним кадром
+        requestAnimationFrame(() => {
+            document
+                .querySelectorAll('.sc-link, .deferred-links-container')
+                .forEach(el => el.classList.add('links-loaded'));
+        });
+
         return;
     }
 
     // Если контейнеров еще нет в DOM, запускаем наблюдатель
     const suttaArea = document.getElementById('sutta') || document.body;
+
     const observer = new MutationObserver((mutations, obs) => {
         const targetContainers = document.querySelectorAll('.deferred-links-container:not(.hydrated)');
         if (targetContainers.length > 0) {
@@ -794,9 +799,11 @@ function hydrateThirdPartyLinks() {
         }
     });
 
-    observer.observe(suttaArea, { childList: true, subtree: true });
+    observer.observe(suttaArea, {
+        childList: true,
+        subtree: true
+    });
 }
-
 // 4. Привязка обработчиков к стандартным событиям приложения
 window.addEventListener('suttaLoaded', hydrateThirdPartyLinks);
 window.addEventListener('suttaRenderedCentral', hydrateThirdPartyLinks);
