@@ -9,42 +9,48 @@ function translatorLookup($fromjs, $lang) {
     $fromjs = preg_replace('/[^a-zA-Z0-9\-\/\.]/', '', $fromjs);
     $lang = preg_replace('/[^a-z]/', '', strtolower($lang));
     
-    // Список разрешенных языков (защита от поиска в системных папках вроде 'variant' или 'vinaya')
+    // Список разрешенных языков
     $allowed_langs = ['ru', 'en', 'th']; 
     if (!in_array($lang, $allowed_langs)) {
         $lang = 'ru'; 
     }
 
-    // Формируем пути
+    $base_dir = rtrim($translatorlocation, '/');
+    $search_dirs = [];
+
+    // Формируем пути в порядке приоритета
     if ($lang === 'th') {
-        $dir = rtrim($thtranslatorlocation, '/'); 
+        $search_dirs[] = rtrim($thtranslatorlocation, '/'); 
     } elseif ($lang === 'en') {
-        // Для английского поиск идет в папке en_other
-        $dir = rtrim($translatorlocation, '/') . '/en_other'; 
+        // Приоритет 1: o
+        $search_dirs[] = $base_dir . '/en/o'; 
+        // Приоритет 2: thanissaro и другие
+        $search_dirs[] = $base_dir . '/en_other'; 
     } else {
-        // Для русского (и по умолчанию) скрипт пойдет в папку ru
-        $dir = rtrim($translatorlocation, '/') . '/' . $lang; 
+        // Для русского (и по умолчанию)
+        $search_dirs[] = $base_dir . '/' . $lang; 
     }
     
     $lang_prefix = $lang; 
-
-    // Защита: если папка не найдена, даже не начинаем поиск
-    if (!is_dir($dir)) {
-        return "";
-    }
-
     $search_prefix = "{$fromjs}_translation-{$lang_prefix}-";
 
-    // Рекурсивный поиск с поддержкой симлинков
-    $directory = new RecursiveDirectoryIterator($dir, FilesystemIterator::FOLLOW_SYMLINKS | FilesystemIterator::SKIP_DOTS);
-    $iterator = new RecursiveIteratorIterator($directory);
+    // Ищем по всем директориям массива с учетом приоритета
+    foreach ($search_dirs as $dir) {
+        if (!is_dir($dir)) {
+            continue;
+        }
 
-    foreach ($iterator as $file) {
-        if ($file->isFile() && strpos($file->getFilename(), $search_prefix) === 0) {
-            $filename = $file->getFilename();
-            
-            if (preg_match('/_translation-' . $lang_prefix . '-(.+)\.json$/', $filename, $matches)) {
-                return $matches[1];
+        // Рекурсивный поиск с поддержкой симлинков
+        $directory = new RecursiveDirectoryIterator($dir, FilesystemIterator::FOLLOW_SYMLINKS | FilesystemIterator::SKIP_DOTS);
+        $iterator = new RecursiveIteratorIterator($directory);
+
+        foreach ($iterator as $file) {
+            if ($file->isFile() && strpos($file->getFilename(), $search_prefix) === 0) {
+                $filename = $file->getFilename();
+                
+                if (preg_match('/_translation-' . $lang_prefix . '-(.+)\.json$/', $filename, $matches)) {
+                    return $matches[1]; // Возвращаем первого найденного переводчика
+                }
             }
         }
     }
@@ -54,11 +60,9 @@ function translatorLookup($fromjs, $lang) {
 
 // Получаем параметры из URL
 $fromjs = isset($_GET['fromjs']) ? $_GET['fromjs'] : '';
-$lang = isset($_GET['lang']) ? $_GET['lang'] : 'ru'; // Если язык не передан, ставим 'ru'
+$lang = isset($_GET['lang']) ? $_GET['lang'] : 'ru'; 
 
 if (!empty($fromjs)) {
     echo translatorLookup($fromjs, $lang);
 }
 ?>
-
-

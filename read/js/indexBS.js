@@ -25,7 +25,9 @@ async function buildSutta(slug) {
   if (slugArray[1]) {
     translator = slugArray[1];
   } else {
-    translator = "sujato";
+    // В английской версии мы не ставим sujato жестко сразу, 
+    // чтобы дать отработать getTranslator
+    translator = "";
   }
   slug = slug.toLowerCase();
 
@@ -57,6 +59,11 @@ async function buildSutta(slug) {
   let html = `<div class="button-area"><button title="Switch language (Atl+Z or Alt+Space)" id="language-button" class="hide-button">Pāḷi Eng</button></div>`;
   const slugReady = parseSlug(slug);
 
+  // Получаем переводчика напрямую через JS функцию
+  if (translator === "") {
+      translator = await getTranslator(texttype, slug, pathLang);
+  }
+
   let params = new URLSearchParams(document.location.search);
   let script = params.get("script");
   const savedScript = localStorage.getItem('selectedScript');
@@ -78,7 +85,7 @@ async function buildSutta(slug) {
   if (slug.match(/ja/)) {
     let slugNumber = parseInt(slug.replace(/\D/g, ''), 10);
     if (slugNumber >= 1 && slugNumber <= 75) {
-      trnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/${translator}/${texttype}/${slugReady}_translation-en-sujato.json`;
+      trnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/sujato/${texttype}/${slugReady}_translation-en-sujato.json`;
     } else if (slugNumber > 70) {
       trnpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slugReady}_root-pli-ms.json`;
     }
@@ -93,12 +100,10 @@ async function buildSutta(slug) {
     }
     trnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/brahmali/${texttype}/${slug}_translation-en-brahmali.json`;
     htmlpath = `/assets/html/${texttype}/${slug}_html.json`;
-  } else if (typeof otrnranges !== 'undefined' && otrnranges.indexOf(slug) !== -1) { 
+  } else if (translator === "o") { 
     trnpath = `/assets/texts/en/o/${texttype}/${slugReady}_translation-en-o.json`;
-    translator = "o";
-  } else if (typeof thanissarotrnranges !== 'undefined' && thanissarotrnranges.indexOf(slug) !== -1) { 
+  } else if (translator === "thanissaro") { 
     trnpath = `/assets/texts/en_other/${texttype}/${slugReady}_translation-en-thanissaro.json`;
-    translator = "thanissaro";
   }  else {
     trnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/${pathLang}/${translator}/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`;
   }
@@ -268,9 +273,28 @@ async function buildSutta(slug) {
   }).catch(error => {
       console.log('Error fetching sutta data:', error);
       if (typeof window.handleFetchError === 'function') {
-          window.handleFetchError(slug, false); // true = русский интерфейс
+          window.handleFetchError(slug, false); 
       }
   });
+}
+
+
+// === Инициализация приложения ===
+if (document.location.search) {
+  let params = new URLSearchParams(document.location.search);
+  let slug = params.get("q");
+  let lang = params.get("lang");
+  if (citation) citation.value = slug;
+  buildSutta(slug);
+  if (lang) {
+    language = lang;
+    setLanguage(lang);
+  } else if (localStorage.paliToggle) {
+    language = localStorage.paliToggle; 
+    setLanguage(language);
+  }
+} else {
+ // alert("[LOG INIT] Параметр ?q= не найден в URL. Отображается главная инструкция.");
 }
 
 

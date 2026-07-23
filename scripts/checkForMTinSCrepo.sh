@@ -38,7 +38,7 @@ if [ -d $dwnl ]; then
 fi
 
 echo Thns Files   
-sed -i "/thanissarotrnranges/c $(echo -n "window.thanissarotrnranges = [" && find ../offline-data/dhammagift/en_other/ -type f -name "*.json" | awk -F/ '{print $NF}' | sed 's/_.*//g' | sort -V | sed "s/.*/'&'/" | paste -sd, - | sed 's/$/];/')" ../offline-data/dhammagift/common.js
+#sed -i "/thanissarotrnranges/c $(echo -n "window.thanissarotrnranges = [" && find ../offline-data/dhammagift/en_other/ -type f -name "*.json" | awk -F/ '{print $NF}' | sed 's/_.*//g' | sort -V | sed "s/.*/'&'/" | paste -sd, - | sed 's/$/];/')" ./read/js/common.js
 
 
 
@@ -71,7 +71,7 @@ exit 0
 echo -n "window.thanissarotrnranges = [" && find ../offline-data/dhammagift/en_other/ -type f -name "*.json" | awk -F/ '{print $NF}' | sed 's/_.*//g' | sort -V | sed "s/.*/'&'/" | paste -sd, - | sed 's/$/];/'
 
 
-sed -i "/thanissarotrnranges/c $(echo -n "window.thanissarotrnranges = [" && find ../offline-data/dhammagift/en_other/ -type f -name "*.json" | awk -F/ '{print $NF}' | sed 's/_.*//g' | sort -V | sed "s/.*/'&'/" | paste -sd, - | sed 's/$/];/')" ../offline-data/dhammagift/common.js
+sed -i "/thanissarotrnranges/c $(echo -n "window.thanissarotrnranges = [" && find ../offline-data/dhammagift/en_other/ -type f -name "*.json" | awk -F/ '{print $NF}' | sed 's/_.*//g' | sort -V | sed "s/.*/'&'/" | paste -sd, - | sed 's/$/];/')" ./read/js/common.js
 
 
 #Update Thanissaro or en_other files for common.js
