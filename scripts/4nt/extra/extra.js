@@ -158,10 +158,9 @@ function updateIndexLinks() {
     });
 }
 
-
 function initExtra() {
     try {
-        const basePath = location.pathname.startsWith('/4nt') ? '/4nt' : '';
+      const basePath = location.pathname.startsWith('/4nt') ? '/4nt' : '';
         const cleanPath = location.pathname.replace(/^\/4nt/, '');
         updateIndexLinks();
         if (
@@ -170,6 +169,11 @@ function initExtra() {
         ) {
             document.title = "4nt DG — Main Pali Editions Line by Line with Translations";
             document.querySelector("img.logo-full")?.remove();
+
+            const dpdBtn = document.getElementById('dpd-cta-btn');
+            if (dpdBtn) {
+                dpdBtn.href = "https://chromewebstore.google.com/detail/dhammagift-search-and-wor/dnnogjdcmhbiobpnkhdbfnfjnjlikabd";
+            }
         }
 
         const urlParams = new URLSearchParams(window.location.search);

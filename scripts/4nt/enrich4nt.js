@@ -42,7 +42,7 @@ function processHtml(dir) {
     createSymlinks(dir);
     
     const filesToCopy = [
-        { src: path.join(dir, '../scripts/4nt/README.md'), dest: 'README.md' },
+        //{ src: path.join(dir, '../scripts/4nt/README.md'), dest: 'README.md' },
         { src: path.join(dir, '../scripts/4nt/.gitignore'), dest: '.gitignore' }
     ];
 
