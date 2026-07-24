@@ -1,0 +1,88 @@
+name: Build to Mod Branch
+
+on:
+  # 1. Запуск при нажатии "Sync fork" (обновление ветки main)
+  push:
+    branches:
+      - main
+  
+  # 2. Ручной запуск через кнопку "Run workflow"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Скачиваем ветку mod (чтобы было куда сохранять результат)
+      - name: Checkout mod branch
+        uses: actions/checkout@v4
+        with:
+          ref: mod
+
+      # 2. Устанавливаем Node.js 24
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # 3. Полностью очищаем текущую папку (кроме скрытой папки .git)
+      - name: Clean old files
+        run: |
+          find . -maxdepth 1 ! -name '.git' ! -name '.' -exec rm -rf {} +
+
+      # 4. Скачиваем чистый слепок оригинального репозитория без истории
+      - name: Download upstream snapshot
+        run: |
+          # Качаем ZIP-архив ветки main из оригинального репо s.4nt
+          wget -qO main.zip https://github.com/frankksutta/s.4nt/archive/refs/heads/main.zip
+          unzip -q main.zip
+          
+          # Копируем всё из распакованной папки в корень нашего форка
+          cp -a s.4nt-main/* .
+          
+          # Удаляем временный архив и папку
+          rm -rf main.zip s.4nt-main
+
+      # 5. Подготавливаем структуру для скрипта
+      - name: Prepare external structure
+        run: |
+          mkdir -p ../scripts/4nt
+          wget -qO enrich4nt.js https://raw.githubusercontent.com/dhammagift/dg/refs/heads/main/scripts/4nt/enrich4nt.js
+          wget -qO favicon.png https://raw.githubusercontent.com/dhammagift/dg/refs/heads/main/assets/img/headerlogo.png     
+          wget -qO ../scripts/4nt/.gitignore https://raw.githubusercontent.com/dhammagift/dg/refs/heads/main/scripts/4nt/.gitignore
+          
+          # Скачиваем целевой README в корень репозитория (для ветки mod)
+          wget -qO README.md https://raw.githubusercontent.com/dhammagift/dg/refs/heads/main/scripts/4nt/README.md
+          
+      # 6. Запускаем обработку
+      - name: Execute script
+        run: node enrich4nt.js .
+
+      # 7. Фиксируем изменения и отправляем в ветку mod
+      - name: Commit and push to mod
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add .
+          git commit -m "Сборка обновления из слепка апстрима (frankksutta/s.4nt)" || echo "Нет изменений"
+          git push origin mod
+
+      # 8. Переключаемся на ветку main для добавления README
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      # 9. Скачиваем README в ветку main и пушим
+      - name: Add README to main branch
+        run: |
+          wget -qO README.md https://raw.githubusercontent.com/dhammagift/dg/refs/heads/main/scripts/4nt/README.md
+          
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add README.md
+          git commit -m "Обновление README.md [skip ci]" || echo "Нет изменений"
+          git push origin main
