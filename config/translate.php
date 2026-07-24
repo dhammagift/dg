@@ -883,7 +883,7 @@ $copyrightnote = 'The materials on this website are distributed under the <a cla
 $ifRuLitTrn = '';
 //$ifEnLitTrn = '(<a href="/assets/common/o-en.html" class="translation-link">o</a>)';
 
-$ifEnLitTrn = '<span class="small text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Throughout Terminology, word-for-word Translation"><a href="/assets/common/o-en.html" class="translation-link">o</a></span>';
+$ifEnLitTrn = '<span class="small text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Throughout Terminology, word-for-word Translation">(<a href="/assets/common/o-en.html" class="translation-link">o</a>)</span>';
 $ifEnThanTrn = '<span data-bs-toggle="tooltip" data-bs-placement="top" title="Thanissaro Bhikkhu. Translation from Thai Royal Edition of the Pali Canon"><a class="text-decoration-none small text-muted">TB</a></span>';
 $ifEnSujTrn = '<span data-bs-toggle="tooltip" data-bs-placement="top" title="Bhikkhu Sujato. Translation from Masasangiti Edition of the Pali Canon"><a class="text-decoration-none small text-muted">BS</a></span>';
 

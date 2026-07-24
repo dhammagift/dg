@@ -10672,7 +10672,7 @@ clearBtn.style.display = 'block';
 
 		 
 		 <div class="mt-3">
- <span class="level5" id="sn54.1"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn54.1">sn54.1</a> Ekadhammasutta<?php echo $ifEnLitTrn ;?> <?php echo $ifRuLitTrn;?> <?php echo $ifEnOTrn;?></span>
+ <span class="level5" id="sn54.1"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn54.1">sn54.1</a> Ekadhammasutta <?php echo $ifEnLitTrn ;?> <?php echo $ifRuLitTrn;?> <?php echo $ifEnOTrn;?></span>
  </div>
 
 		 
@@ -11236,7 +11236,7 @@ clearBtn.style.display = 'block';
 
 		 
 		 <div class="mt-3">
- <span class="level5" id="sn56.11"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn56.11">sn56.11</a> Dhammacakkappavattanasutta<?php echo $ifEnLitTrn ;?> <?php echo $ifRuLitTrn;?> <?php echo $ifEnOTrn;?></span>
+ <span class="level5" id="sn56.11"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn56.11">sn56.11</a> Dhammacakkappavattanasutta <?php echo $ifEnLitTrn ;?> <?php echo $ifRuLitTrn;?> <?php echo $ifEnOTrn;?></span>
  </div>
 
 		 
@@ -12381,11 +12381,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.34"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.34">an3.34</a> Nidānasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.34"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.34">an3.34</a> Nidānasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.35"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.35">an3.35</a> Hatthakasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.35"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.35">an3.35</a> Hatthakasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -12401,11 +12401,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.39"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.39">an3.39</a> Sukhumālasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.39"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.39">an3.39</a> Sukhumālasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.40"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.40">an3.40</a> Ādhipateyyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.40"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.40">an3.40</a> Ādhipateyyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 </div> <!-- close prev vagga div -->
@@ -12418,7 +12418,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.42"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.42">an3.42</a> Tiṭhānasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.42"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.42">an3.42</a> Tiṭhānasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -12447,7 +12447,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.49"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.49">an3.49</a> Ātappakaraṇīyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.49"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.49">an3.49</a> Ātappakaraṇīyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -12460,11 +12460,11 @@ clearBtn.style.display = 'block';
 		 <h5>6. Brāhmaṇavagga</h5>
  </div>
 <div class="mt-3">
-<span class="level5" id="an3.51"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.51">an3.51</a> Paṭhamadvebrāhmaṇasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.51"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.51">an3.51</a> Paṭhamadvebrāhmaṇasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.52"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.52">an3.52</a> Dutiyadvebrāhmaṇasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.52"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.52">an3.52</a> Dutiyadvebrāhmaṇasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -12484,7 +12484,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.57"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.57">an3.57</a> Vacchagottasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.57"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.57">an3.57</a> Vacchagottasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -12496,7 +12496,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.60"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.60">an3.60</a> Saṅgāravasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.60"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.60">an3.60</a> Saṅgāravasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 </div> <!-- close prev vagga div -->
@@ -12505,15 +12505,15 @@ clearBtn.style.display = 'block';
 		 <h5>7. Mahāvagga</h5>
  </div>
 <div class="mt-3">
-<span class="level5" id="an3.61"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.61">an3.61</a> Titthāyatanasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.61"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.61">an3.61</a> Titthāyatanasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.62"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.62">an3.62</a> Bhayasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.62"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.62">an3.62</a> Bhayasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.63"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.63">an3.63</a> Venāgapurasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.63"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.63">an3.63</a> Venāgapurasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -12521,7 +12521,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.65"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.65">an3.65</a> Kesamuttisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.65"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.65">an3.65</a> Kesamuttisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -12533,7 +12533,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.68"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.68">an3.68</a> Aññatitthiyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.68"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.68">an3.68</a> Aññatitthiyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -12550,15 +12550,15 @@ clearBtn.style.display = 'block';
 		 <h5>8. Ānandavagga</h5>
  </div>
 <div class="mt-3">
-<span class="level5" id="an3.71"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.71">an3.71</a> Channasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.71"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.71">an3.71</a> Channasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.72"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.72">an3.72</a> Ājīvakasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.72"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.72">an3.72</a> Ājīvakasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.73"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.73">an3.73</a> Mahānāmasakkasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.73"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.73">an3.73</a> Mahānāmasakkasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -12570,7 +12570,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.76"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.76">an3.76</a> Paṭhamabhavasutta <?php echo $ifRuLitTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.76"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.76">an3.76</a> Paṭhamabhavasutta <?php echo $ifRuLitTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -12599,7 +12599,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.82"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.82">an3.82</a> Gadrabhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.82"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.82">an3.82</a> Gadrabhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -12607,7 +12607,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.84"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.84">an3.84</a> Vajjiputtasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.84"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.84">an3.84</a> Vajjiputtasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -12615,11 +12615,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.86"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.86">an3.86</a> Paṭhamasikkhāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.86"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.86">an3.86</a> Paṭhamasikkhāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.87"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.87">an3.87</a> Dutiyasikkhāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.87"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.87">an3.87</a> Dutiyasikkhāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -12693,15 +12693,15 @@ clearBtn.style.display = 'block';
 		 <h5>11. Sambodhavagga</h5>
  </div>
 <div class="mt-3">
-<span class="level5" id="an3.103"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.103">an3.103</a> Pubbevasambodhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.103"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.103">an3.103</a> Pubbevasambodhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.104"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.104">an3.104</a> Paṭhamaassādasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.104"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.104">an3.104</a> Paṭhamaassādasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.105"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.105">an3.105</a> Dutiyaassādasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.105"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.105">an3.105</a> Dutiyaassādasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -12717,7 +12717,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.109"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.109">an3.109</a> Arakkhitasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.109"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.109">an3.109</a> Arakkhitasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -12725,11 +12725,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.111"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.111">an3.111</a> Paṭhamanidānasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.111"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.111">an3.111</a> Paṭhamanidānasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.112"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.112">an3.112</a> Dutiyanidānasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.112"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.112">an3.112</a> Dutiyanidānasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 </div> <!-- close prev vagga div -->
@@ -12746,11 +12746,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.115"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.115">an3.115</a> Appameyyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.115"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.115">an3.115</a> Appameyyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.116"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.116">an3.116</a> Āneñjasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.116"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.116">an3.116</a> Āneñjasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -12766,15 +12766,15 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.120"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.120">an3.120</a> Paṭhamasoceyyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.120"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.120">an3.120</a> Paṭhamasoceyyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.121"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.121">an3.121</a> Dutiyasoceyyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.121"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.121">an3.121</a> Dutiyasoceyyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.122"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.122">an3.122</a> Moneyyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.122"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.122">an3.122</a> Moneyyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 </div> <!-- close prev vagga div -->
@@ -12783,7 +12783,7 @@ clearBtn.style.display = 'block';
 		 <h5>13. Kusināravagga</h5>
  </div>
 <div class="mt-3">
-<span class="level5" id="an3.123"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.123">an3.123</a> Kusinārasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.123"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.123">an3.123</a> Kusinārasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -12791,7 +12791,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.125"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.125">an3.125</a> Gotamakacetiyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.125"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.125">an3.125</a> Gotamakacetiyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -12803,7 +12803,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.128"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.128">an3.128</a> Kaṭuviyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.128"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.128">an3.128</a> Kaṭuviyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -12811,7 +12811,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.130"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.130">an3.130</a> Dutiyaanuruddhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.130"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.130">an3.130</a> Dutiyaanuruddhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -12819,7 +12819,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.132"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.132">an3.132</a> Lekhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.132"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.132">an3.132</a> Lekhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 </div> <!-- close prev vagga div -->
@@ -12840,7 +12840,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an3.136"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.136">an3.136</a> Uppādāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an3.136"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an3.136">an3.136</a> Uppādāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13110,19 +13110,19 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.35"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.35">an4.35</a> Vassakārasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.35"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.35">an4.35</a> Vassakārasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.36"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.36">an4.36</a> Doṇasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.36"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.36">an4.36</a> Doṇasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.37"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.37">an4.37</a> Aparihāniyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.37"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.37">an4.37</a> Aparihāniyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.38"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.38">an4.38</a> Patilīnasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.38"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.38">an4.38</a> Patilīnasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13139,11 +13139,11 @@ clearBtn.style.display = 'block';
 		 <h5>5. Rohitassavagga</h5>
  </div>
 <div class="mt-3">
-<span class="level5" id="an4.41"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.41">an4.41</a> Samādhibhāvanāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.41"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.41">an4.41</a> Samādhibhāvanāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.42"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.42">an4.42</a> Pañhabyākaraṇasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.42"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.42">an4.42</a> Pañhabyākaraṇasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13155,7 +13155,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.45"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.45">an4.45</a> Rohitassasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.45"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.45">an4.45</a> Rohitassasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13171,11 +13171,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.49"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.49">an4.49</a> Vipallāsasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.49"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.49">an4.49</a> Vipallāsasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.50"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.50">an4.50</a> Upakkilesasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.50"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.50">an4.50</a> Upakkilesasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 </div> <!-- close prev vagga div -->
@@ -13188,11 +13188,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.52"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.52">an4.52</a> Dutiyapuññābhisandasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.52"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.52">an4.52</a> Dutiyapuññābhisandasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.53"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.53">an4.53</a> Paṭhamasaṁvāsasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.53"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.53">an4.53</a> Paṭhamasaṁvāsasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13200,7 +13200,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.55"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.55">an4.55</a> Paṭhamasamajīvīsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.55"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.55">an4.55</a> Paṭhamasamajīvīsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13233,7 +13233,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.62"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.62">an4.62</a> Ānaṇyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.62"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.62">an4.62</a> Ānaṇyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13253,7 +13253,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.67"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.67">an4.67</a> Ahirājasutta  <?php echo $ifEnSujTrn;?> <?php echo $ifRuLitTrn;?></span>
+<span class="level5" id="an4.67"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.67">an4.67</a> Ahirājasutta <?php echo $ifRuLitTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13282,7 +13282,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.73"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.73">an4.73</a> Sappurisasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.73"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.73">an4.73</a> Sappurisasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13308,7 +13308,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.77"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.77">an4.77</a> Acinteyyasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.77"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.77">an4.77</a> Acinteyyasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13316,7 +13316,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.79"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.79">an4.79</a> Vaṇijjasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.79"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.79">an4.79</a> Vaṇijjasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13345,7 +13345,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.85"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.85">an4.85</a> Tamotamasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.85"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.85">an4.85</a> Tamotamasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13353,19 +13353,19 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.87"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.87">an4.87</a> Puttasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.87"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.87">an4.87</a> Puttasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.88"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.88">an4.88</a> Saṁyojanasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.88"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.88">an4.88</a> Saṁyojanasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.89"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.89">an4.89</a> Sammādiṭṭhisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.89"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.89">an4.89</a> Sammādiṭṭhisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.90"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.90">an4.90</a> Khandhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.90"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.90">an4.90</a> Khandhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 </div> <!-- close prev vagga div -->
@@ -13386,15 +13386,15 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.94"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.94">an4.94</a> Tatiyasamādhisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.94"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.94">an4.94</a> Tatiyasamādhisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.95"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.95">an4.95</a> Chavālātasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.95"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.95">an4.95</a> Chavālātasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.96"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.96">an4.96</a> Rāgavinayasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.96"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.96">an4.96</a> Rāgavinayasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13406,11 +13406,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.99"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.99">an4.99</a> Sikkhāpadasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.99"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.99">an4.99</a> Sikkhāpadasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.100"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.100">an4.100</a> Potaliyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.100"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.100">an4.100</a> Potaliyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 </div> <!-- close prev vagga div -->
@@ -13480,11 +13480,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.115"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.115">an4.115</a> Ṭhānasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.115"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.115">an4.115</a> Ṭhānasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.116"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.116">an4.116</a> Appamādasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.116"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.116">an4.116</a> Appamādasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13517,19 +13517,19 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.123"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.123">an4.123</a> Paṭhamanānākaraṇasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.123"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.123">an4.123</a> Paṭhamanānākaraṇasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.124"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.124">an4.124</a> Dutiyanānākaraṇasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.124"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.124">an4.124</a> Dutiyanānākaraṇasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.125"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.125">an4.125</a> Paṭhamamettāsutta <?php echo $ifRuLitTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.125"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.125">an4.125</a> Paṭhamamettāsutta <?php echo $ifRuLitTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.126"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.126">an4.126</a> Dutiyamettāsutta <?php echo $ifRuLitTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.126"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.126">an4.126</a> Dutiyamettāsutta <?php echo $ifRuLitTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13537,7 +13537,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.128"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.128">an4.128</a> Dutiyatathāgataacchariyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.128"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.128">an4.128</a> Dutiyatathāgataacchariyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13554,7 +13554,7 @@ clearBtn.style.display = 'block';
 		 <h5>14. Puggalavagga</h5>
  </div>
 <div class="mt-3">
-<span class="level5" id="an4.131"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.131">an4.131</a> Saṁyojanasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.131"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.131">an4.131</a> Saṁyojanasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13582,7 +13582,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.138"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.138">an4.138</a> Nikaṭṭhasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.138"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.138">an4.138</a> Nikaṭṭhasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13664,19 +13664,19 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.156"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.156">an4.156</a> Kappasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.156"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.156">an4.156</a> Kappasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.157"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.157">an4.157</a> Rogasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.157"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.157">an4.157</a> Rogasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.158"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.158">an4.158</a> Parihānisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.158"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.158">an4.158</a> Parihānisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.159"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.159">an4.159</a> Bhikkhunīsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.159"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.159">an4.159</a> Bhikkhunīsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13693,11 +13693,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.162"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.162">an4.162</a> Vitthārasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.162"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.162">an4.162</a> Vitthārasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.163"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.163">an4.163</a> Asubhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.163"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.163">an4.163</a> Asubhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13705,7 +13705,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.165"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.165">an4.165</a> Dutiyakhamasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.165"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.165">an4.165</a> Dutiyakhamasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13725,7 +13725,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.170"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.170">an4.170</a> Yuganaddhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.170"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.170">an4.170</a> Yuganaddhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 </div> <!-- close prev vagga div -->
@@ -13742,7 +13742,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.173"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.173">an4.173</a> Mahākoṭṭhikasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.173"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.173">an4.173</a> Mahākoṭṭhikasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13762,11 +13762,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.178"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.178">an4.178</a> Jambālīsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.178"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.178">an4.178</a> Jambālīsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.179"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.179">an4.179</a> Nibbānasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.179"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.179">an4.179</a> Nibbānasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13779,19 +13779,19 @@ clearBtn.style.display = 'block';
 		 <h5>19. Brāhmaṇavagga</h5>
  </div>
 <div class="mt-3">
-<span class="level5" id="an4.181"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.181">an4.181</a> Yodhājīvasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.181"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.181">an4.181</a> Yodhājīvasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.182"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.182">an4.182</a> Pāṭibhogasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.182"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.182">an4.182</a> Pāṭibhogasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.183"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.183">an4.183</a> Sutasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.183"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.183">an4.183</a> Sutasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.184"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.184">an4.184</a> Abhayasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.184"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.184">an4.184</a> Abhayasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13824,11 +13824,11 @@ clearBtn.style.display = 'block';
 		 <h5>20. Mahāvagga</h5>
  </div>
 <div class="mt-3">
-<span class="level5" id="an4.191"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.191">an4.191</a> Sotānugatasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.191"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.191">an4.191</a> Sotānugatasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.192"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.192">an4.192</a> Ṭhānasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.192"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.192">an4.192</a> Ṭhānasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13836,11 +13836,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.194"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.194">an4.194</a> Sāmugiyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.194"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.194">an4.194</a> Sāmugiyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.195"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.195">an4.195</a> Vappasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.195"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.195">an4.195</a> Vappasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -13860,7 +13860,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.200"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.200">an4.200</a> Pemasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.200"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.200">an4.200</a> Pemasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 </div> <!-- close prev vagga div -->
@@ -13869,7 +13869,7 @@ clearBtn.style.display = 'block';
 		 <h5>21. Sappurisavagga</h5>
  </div>
 <div class="mt-3">
-<span class="level5" id="an4.201"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.201">an4.201</a> Sikkhāpadasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.201"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.201">an4.201</a> Sikkhāpadasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -14012,7 +14012,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.233"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.233">an4.233</a> Vitthārasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.233"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.233">an4.233</a> Vitthārasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -14020,7 +14020,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.235"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.235">an4.235</a> Paṭhamasikkhāpadasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.235"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.235">an4.235</a> Paṭhamasikkhāpadasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -14028,11 +14028,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.237"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.237">an4.237</a> Ariyamaggasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.237"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.237">an4.237</a> Ariyamaggasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.238"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.238">an4.238</a> Bojjhaṅgasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.238"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.238">an4.238</a> Bojjhaṅgasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -14065,7 +14065,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.245"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.245">an4.245</a> Sikkhānisaṁsasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.245"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.245">an4.245</a> Sikkhānisaṁsasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -14110,7 +14110,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.255"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.255">an4.255</a> Pariyesanāsutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.255"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.255">an4.255</a> Pariyesanāsutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -14122,7 +14122,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.258"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.258">an4.258</a> Kulasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an4.258"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.258">an4.258</a> Kulasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -15503,11 +15503,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an6.12"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.12">an6.12</a> Dutiyasāraṇīyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.12"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.12">an6.12</a> Dutiyasāraṇīyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an6.13"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.13">an6.13</a> Nissāraṇīyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.13"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.13">an6.13</a> Nissāraṇīyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -15519,11 +15519,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an6.16"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.16">an6.16</a> Nakulapitusutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.16"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.16">an6.16</a> Nakulapitusutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an6.17"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.17">an6.17</a> Soppasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.17"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.17">an6.17</a> Soppasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -15531,11 +15531,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an6.19"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.19">an6.19</a> Paṭhamamaraṇassatisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.19"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.19">an6.19</a> Paṭhamamaraṇassatisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an6.20"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.20">an6.20</a> Dutiyamaraṇassatisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.20"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.20">an6.20</a> Dutiyamaraṇassatisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 </div> <!-- close prev vagga div -->
@@ -15576,7 +15576,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an6.29"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.29">an6.29</a> Udāyīsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.29"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.29">an6.29</a> Udāyīsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -15589,7 +15589,7 @@ clearBtn.style.display = 'block';
 		 <h5>4. Devatāvagga</h5>
  </div>
 <div class="mt-3">
-<span class="level5" id="an6.31"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.31">an6.31</a> Sekhasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.31"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.31">an6.31</a> Sekhasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -15613,11 +15613,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an6.37"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.37">an6.37</a> Chaḷaṅgadānasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.37"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.37">an6.37</a> Chaḷaṅgadānasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an6.38"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.38">an6.38</a> Attakārīsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.38"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.38">an6.38</a> Attakārīsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -15629,11 +15629,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an6.41"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.41">an6.41</a> Dārukkhandhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.41"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.41">an6.41</a> Dārukkhandhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an6.42"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.42">an6.42</a> Nāgitasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.42"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.42">an6.42</a> Nāgitasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 </div> <!-- close prev vagga div -->
@@ -15642,7 +15642,7 @@ clearBtn.style.display = 'block';
 		 <h5>5. Dhammikavagga</h5>
  </div>
 <div class="mt-3">
-<span class="level5" id="an6.43"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.43">an6.43</a> Nāgasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.43"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.43">an6.43</a> Nāgasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -15650,15 +15650,15 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an6.45"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.45">an6.45</a> Iṇasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.45"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.45">an6.45</a> Iṇasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an6.46"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.46">an6.46</a> Mahācundasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.46"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.46">an6.46</a> Mahācundasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an6.47"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.47">an6.47</a> Paṭhamasandiṭṭhikasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.47"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.47">an6.47</a> Paṭhamasandiṭṭhikasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -15666,7 +15666,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an6.49"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.49">an6.49</a> Khemasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.49"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.49">an6.49</a> Khemasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -15674,7 +15674,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an6.51"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.51">an6.51</a> Ānandasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.51"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.51">an6.51</a> Ānandasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -15695,7 +15695,7 @@ clearBtn.style.display = 'block';
 		 <h5>6. Mahāvagga</h5>
  </div>
 <div class="mt-3">
-<span class="level5" id="an6.55"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.55">an6.55</a> Soṇasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.55"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.55">an6.55</a> Soṇasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -15715,7 +15715,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an6.60"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.60">an6.60</a> Hatthisāriputtasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.60"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.60">an6.60</a> Hatthisāriputtasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -15760,11 +15760,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an6.70"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.70">an6.70</a> Samādhisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.70"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.70">an6.70</a> Samādhisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an6.71"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.71">an6.71</a> Sakkhibhabbasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.71"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.71">an6.71</a> Sakkhibhabbasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -15830,19 +15830,19 @@ clearBtn.style.display = 'block';
 		 <h5>9. Sītivagga</h5>
  </div>
 <div class="mt-3">
-<span class="level5" id="an6.85"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.85">an6.85</a> Sītibhāvasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.85"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.85">an6.85</a> Sītibhāvasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an6.86"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.86">an6.86</a> Āvaraṇasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.86"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.86">an6.86</a> Āvaraṇasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an6.87"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.87">an6.87</a> Voropitasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.87"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.87">an6.87</a> Voropitasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an6.88"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.88">an6.88</a> Sussūsatisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an6.88"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an6.88">an6.88</a> Sussūsatisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -16165,19 +16165,19 @@ clearBtn.style.display = 'block';
 		 <h5>4. Devatāvagga</h5>
  </div>
 <div class="mt-3">
-<span class="level5" id="an7.32"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an7.32">an7.32</a> Appamādagāravasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an7.32"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an7.32">an7.32</a> Appamādagāravasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an7.33"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an7.33">an7.33</a> Hirigāravasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an7.33"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an7.33">an7.33</a> Hirigāravasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an7.34"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an7.34">an7.34</a> Paṭhamasovacassatāsutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an7.34"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an7.34">an7.34</a> Paṭhamasovacassatāsutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an7.35"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an7.35">an7.35</a> Dutiyasovacassatāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an7.35"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an7.35">an7.35</a> Dutiyasovacassatāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -16238,23 +16238,23 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an7.49"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an7.49">an7.49</a> Dutiyasaññāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an7.49"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an7.49">an7.49</a> Dutiyasaññāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an7.50"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an7.50">an7.50</a> Methunasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an7.50"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an7.50">an7.50</a> Methunasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an7.51"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an7.51">an7.51</a> Saṁyogasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an7.51"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an7.51">an7.51</a> Saṁyogasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an7.52"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an7.52">an7.52</a> Dānamahapphalasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an7.52"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an7.52">an7.52</a> Dānamahapphalasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an7.53"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an7.53">an7.53</a> Nandamātāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an7.53"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an7.53">an7.53</a> Nandamātāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 </div> <!-- close prev vagga div -->
@@ -16263,7 +16263,7 @@ clearBtn.style.display = 'block';
 		 <h5>6. Abyākatavagga</h5>
  </div>
 <div class="mt-3">
-<span class="level5" id="an7.54"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an7.54">an7.54</a> Abyākatasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an7.54"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an7.54">an7.54</a> Abyākatasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -16496,7 +16496,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an8.2"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.2">an8.2</a> Paññāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an8.2"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.2">an8.2</a> Paññāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -16512,19 +16512,19 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an8.6"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.6">an8.6</a> Dutiyalokadhammasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an8.6"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.6">an8.6</a> Dutiyalokadhammasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an8.7"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.7">an8.7</a> Devadattavipattisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an8.7"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.7">an8.7</a> Devadattavipattisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an8.8"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.8">an8.8</a> Uttaravipattisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an8.8"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.8">an8.8</a> Uttaravipattisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an8.9"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.9">an8.9</a> Nandasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an8.9"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.9">an8.9</a> Nandasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -16549,7 +16549,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an8.14"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.14">an8.14</a> Assakhaḷuṅkasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an8.14"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.14">an8.14</a> Assakhaḷuṅkasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -16569,7 +16569,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an8.19"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.19">an8.19</a> Pahārādasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an8.19"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.19">an8.19</a> Pahārādasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -16586,11 +16586,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an8.22"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.22">an8.22</a> Dutiyauggasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an8.22"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.22">an8.22</a> Dutiyauggasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an8.23"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.23">an8.23</a> Paṭhamahatthakasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an8.23"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.23">an8.23</a> Paṭhamahatthakasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -16602,7 +16602,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an8.26"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.26">an8.26</a> Jīvakasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an8.26"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.26">an8.26</a> Jīvakasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -16610,7 +16610,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an8.28"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.28">an8.28</a> Dutiyabalasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an8.28"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.28">an8.28</a> Dutiyabalasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -16659,11 +16659,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an8.39"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.39">an8.39</a> Abhisandasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an8.39"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.39">an8.39</a> Abhisandasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an8.40"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.40">an8.40</a> Duccaritavipākasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an8.40"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.40">an8.40</a> Duccaritavipākasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 </div> <!-- close prev vagga div -->
@@ -16717,7 +16717,7 @@ clearBtn.style.display = 'block';
 		 <h5>6. Gotamīvagga</h5>
  </div>
 <div class="mt-3">
-<span class="level5" id="an8.51"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.51">an8.51</a> Gotamīsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an8.51"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.51">an8.51</a> Gotamīsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -16725,11 +16725,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an8.53"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.53">an8.53</a> Saṅkhittasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an8.53"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.53">an8.53</a> Saṅkhittasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an8.54"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.54">an8.54</a> Dīghajāṇusutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an8.54"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.54">an8.54</a> Dīghajāṇusutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -16762,7 +16762,7 @@ clearBtn.style.display = 'block';
 		 <h5>7. Bhūmicālavagga</h5>
  </div>
 <div class="mt-3">
-<span class="level5" id="an8.61"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.61">an8.61</a> Icchāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an8.61"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.61">an8.61</a> Icchāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -16770,11 +16770,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an8.63"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.63">an8.63</a> Saṅkhittasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an8.63"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.63">an8.63</a> Saṅkhittasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an8.64"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.64">an8.64</a> Gayāsīsasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an8.64"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.64">an8.64</a> Gayāsīsasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -16843,7 +16843,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an8.80"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.80">an8.80</a> Kusītārambhavatthusutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an8.80"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.80">an8.80</a> Kusītārambhavatthusutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 </div> <!-- close prev vagga div -->
@@ -16872,7 +16872,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an8.86"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.86">an8.86</a> Yasasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an8.86"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an8.86">an8.86</a> Yasasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -16938,7 +16938,7 @@ clearBtn.style.display = 'block';
 		 <h5>1. Sambodhivagga</h5>
  </div>
 <div class="mt-3">
-<span class="level5" id="an9.1"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.1">an9.1</a> Sambodhisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an9.1"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.1">an9.1</a> Sambodhisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -16962,11 +16962,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an9.7"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.7">an9.7</a> Sutavāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an9.7"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.7">an9.7</a> Sutavāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an9.8"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.8">an9.8</a> Sajjhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an9.8"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.8">an9.8</a> Sajjhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -16991,11 +16991,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an9.13"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.13">an9.13</a> Koṭṭhikasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an9.13"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.13">an9.13</a> Koṭṭhikasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an9.14"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.14">an9.14</a> Samiddhisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an9.14"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.14">an9.14</a> Samiddhisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -17040,11 +17040,11 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an9.24"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.24">an9.24</a> Sattāvāsasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an9.24"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.24">an9.24</a> Sattāvāsasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an9.25"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.25">an9.25</a> Paññāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an9.25"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.25">an9.25</a> Paññāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -17068,7 +17068,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an9.31"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.31">an9.31</a> Anupubbanirodhasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an9.31"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.31">an9.31</a> Anupubbanirodhasutta <?php echo $ifRuSvTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 </div> <!-- close prev vagga div -->
@@ -17081,35 +17081,35 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an9.33"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.33">an9.33</a> Anupubbavihārasamāpattisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an9.33"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.33">an9.33</a> Anupubbavihārasamāpattisutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an9.34"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.34">an9.34</a> Nibbānasukhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an9.34"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.34">an9.34</a> Nibbānasukhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an9.35"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.35">an9.35</a> Gāvīupamāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an9.35"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.35">an9.35</a> Gāvīupamāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an9.36"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.36">an9.36</a> Jhānasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an9.36"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.36">an9.36</a> Jhānasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an9.37"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.37">an9.37</a> Ānandasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an9.37"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.37">an9.37</a> Ānandasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an9.38"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.38">an9.38</a> Lokāyatikasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an9.38"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.38">an9.38</a> Lokāyatikasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an9.39"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.39">an9.39</a> Devāsurasaṅgāmasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an9.39"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.39">an9.39</a> Devāsurasaṅgāmasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an9.40"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.40">an9.40</a> Nāgasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an9.40"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.40">an9.40</a> Nāgasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -17122,19 +17122,19 @@ clearBtn.style.display = 'block';
 		 <h5>5. Sāmaññavagga</h5>
  </div>
 <div class="mt-3">
-<span class="level5" id="an9.42"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.42">an9.42</a> Sambādhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an9.42"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.42">an9.42</a> Sambādhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an9.43"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.43">an9.43</a> Kāyasakkhīsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an9.43"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.43">an9.43</a> Kāyasakkhīsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an9.44"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.44">an9.44</a> Paññāvimuttasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an9.44"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.44">an9.44</a> Paññāvimuttasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an9.45"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.45">an9.45</a> Ubhatobhāgavimuttasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+<span class="level5" id="an9.45"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an9.45">an9.45</a> Ubhatobhāgavimuttasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
 </div>
  
 <div class="mt-3">

@@ -19,10 +19,10 @@ result_thanissaro=$(find assets/texts/en_other/sutta/ -name "*translation-en-tha
   sort -V)
 
 for i in $result_thanissaro; do  
-  echo $i
+  echo "$i"
   
-  # Добавление переменной $ifEnThanTrn в read.php
-  sed -i '/class="level5"/ { /q='"$i"'"/ { /<\?php echo \$ifEnThanTrn;\?>/! s/<\/span>/ <?php echo \$ifEnThanTrn;?><\/span>/; } }' read.php
+  # Проверка условий и замена переменных
+  sed -i '/class="level5"/ { /q='"$i"'"/ { /ifEnLitTrn/! { /ifEnThanTrn/! { s/ *<?php echo \$ifEnSujTrn;?>//g; s/<\/span>/ <?php echo \$ifEnThanTrn;?><\/span>/; } } } }' read.php
 
   if [[ $? != 0 ]]; then
     echo "</br>error in $i (Thanissaro)"
@@ -40,6 +40,6 @@ fi
 
 # Если не было ошибок, создаем/обновляем state_file
 if [[ $error_found -eq 0 ]]; then
-  #touch $REFERENCE_FILE
+  #touch "$REFERENCE_FILE"
   echo
 fi
