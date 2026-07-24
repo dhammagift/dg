@@ -896,7 +896,7 @@ $metakeywords = 'Buddha, dhamma, pitaka, sutta, suttas, vinaya, patimokkha, prat
 $titletwit = 'Precise Search in Buddha Dhamma, in Pali Suttas and Vinaya. ';
 $ogdesc = 'Liberation Search Engine. Search in Buddha Dhamma, Suttas and Vinaya in Pali, English, Russian and Thai';
 $oglocale = 'en_US';
-$ogshare = 'https://Dhamma.Gift/assets/img/social_sharing_gift.jpg';
+$ogshare = 'https://Dhamma.Gift/assets/img/social_sharing_gift_eng.jpg';
 
 $linksothermat = 'https://drive.google.com/drive/folders/1nrNtb_4s27nJGq61tpigf_b2sO_KOnVG';
 
@@ -1680,7 +1680,7 @@ $mainreadlink = '/th/read.php';
     $titletwit = 'การค้นหาที่แม่นยำในพระธรรมวินัย พระสูตรบาลี และพระวินัย';
     $ogdesc = 'เครื่องมือค้นหาเพื่อความพ้นทุกข์ ค้นหาในพระธรรมวินัย พระสูตร และพระวินัย ในภาษาบาลี อังกฤษ รัสเซีย และไทย';
     $oglocale = 'th_TH';
-    $ogshare = 'https://Dhamma.Gift/assets/img/social_sharing_gift.jpg';
+    $ogshare = 'https://Dhamma.Gift/assets/img/social_sharing_gift_eng.jpg';
 
     $linksothermat = 'https://drive.google.com/drive/folders/1nrNtb_4s27nJGq61tpigf_b2sO_KOnVG';
 
