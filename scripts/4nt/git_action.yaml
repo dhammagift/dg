@@ -49,17 +49,25 @@ jobs:
         run: |
           mkdir -p ../scripts/4nt
           wget -qO enrich4nt.js https://raw.githubusercontent.com/dhammagift/dg/refs/heads/main/scripts/4nt/enrich4nt.js
-          wget -qO favicon.png https://raw.githubusercontent.com/dhammagift/dg/refs/heads/main/assets/img/headerlogo.png     
+          
+          # Скачиваем лого и копируем в favicon
+          wget -qO logo4nt_plain.png https://raw.githubusercontent.com/dhammagift/dg/refs/heads/main/assets/img/logo4nt_plain.png
+          cp logo4nt_plain.png favicon.png
+          
           wget -qO ../scripts/4nt/.gitignore https://raw.githubusercontent.com/dhammagift/dg/refs/heads/main/scripts/4nt/.gitignore
           
           # Скачиваем целевой README в корень репозитория (для ветки mod)
           wget -qO README.md https://raw.githubusercontent.com/dhammagift/dg/refs/heads/main/scripts/4nt/README.md
-          
-      # 6. Запускаем обработку
+
+      # 6. Устанавливаем необходимые зависимости для скрипта
+      - name: Install dependencies
+        run: npm install cheerio
+
+      # 7. Запускаем обработку
       - name: Execute script
         run: node enrich4nt.js .
 
-      # 7. Фиксируем изменения и отправляем в ветку mod
+      # 8. Фиксируем изменения и отправляем в ветку mod
       - name: Commit and push to mod
         run: |
           git config --global user.name "github-actions[bot]"
@@ -69,13 +77,13 @@ jobs:
           git commit -m "Сборка обновления из слепка апстрима (frankksutta/s.4nt)" || echo "Нет изменений"
           git push origin mod
 
-      # 8. Переключаемся на ветку main для добавления README
+      # 9. Переключаемся на ветку main для добавления README
       - name: Checkout main branch
         uses: actions/checkout@v4
         with:
           ref: main
 
-      # 9. Скачиваем README в ветку main и пушим
+      # 10. Скачиваем README в ветку main и пушим
       - name: Add README to main branch
         run: |
           wget -qO README.md https://raw.githubusercontent.com/dhammagift/dg/refs/heads/main/scripts/4nt/README.md
