@@ -107,74 +107,11 @@ function getSlug(slug = null) {
     return (pathParts[pathParts.length - 1] || null)?.toLowerCase();
 }
 
-function updateIndexLinks() {
-    // Проверяем, что находимся именно в корне, а не в подпапке
-    const basePath = location.pathname.startsWith('/4nt') ? '/4nt' : '';
-    const isRoot = location.pathname === `${basePath}/` || location.pathname === `${basePath}/index.html`;
-    
-    if (!isRoot) {
-        return;
-    }
-
-    // === СОРТИРОВКА БЛОКОВ ===
-    const colsContainer = document.querySelector('.cols');
-    if (colsContainer) {
-        // Задаем желаемый порядок по атрибуту href
-        const desiredOrder = [
-            'an/index.html',
-            'dn/index.html',
-            'mn/index.html',
-            'sn/index.html',
-            'kn/index.html',
-            'vin/tv/index.html',
-            'major/index.html'
-        ];
-        
-        // Перемещаем элементы в соответствии с массивом
-        desiredOrder.forEach(href => {
-            const link = colsContainer.querySelector(`a.col[href="${href}"]`);
-            if (link) {
-                colsContainer.appendChild(link);
-            }
-        });
-    }
-
-    // === ОБРАБОТКА КЛАССА MAJOR ===
-    // 1. Удаляем класс major у ссылки "Major EBT-relevant texts"
-    const oldMajorLink = document.querySelector('a.col[href="major/index.html"]');
-    if (oldMajorLink) {
-        oldMajorLink.classList.remove('major');
-    }
-
-    // 2. Находим ссылки an, mn, sn, dn и добавляем класс major
-    const targetHrefs = ['an/index.html', 'mn/index.html', 'sn/index.html', 'dn/index.html'];
-    const allCols = document.querySelectorAll('a.col');
-    
-    allCols.forEach(col => {
-        const href = col.getAttribute('href');
-        if (href && targetHrefs.includes(href)) {
-            col.classList.add('major');
-        }
-    });
-}
 
 function initExtra() {
     try {
-      const basePath = location.pathname.startsWith('/4nt') ? '/4nt' : '';
+        const basePath = location.pathname.startsWith('/4nt') ? '/4nt' : '';
         const cleanPath = location.pathname.replace(/^\/4nt/, '');
-        updateIndexLinks();
-        if (
-            location.pathname === `${basePath}/` ||
-            location.pathname === `${basePath}/index.html`
-        ) {
-            document.title = "4nt DG — Main Pali Editions Line by Line with Translations";
-            document.querySelector("img.logo-full")?.remove();
-
-            const dpdBtn = document.getElementById('dpd-cta-btn');
-            if (dpdBtn) {
-                dpdBtn.href = "https://chromewebstore.google.com/detail/dhammagift-search-and-wor/dnnogjdcmhbiobpnkhdbfnfjnjlikabd";
-            }
-        }
 
         const urlParams = new URLSearchParams(window.location.search);
         let requestedCols = [];
@@ -288,27 +225,6 @@ function initExtra() {
             });
         }
 
-        const shareTitle = "4nt DG";
-        const shareDesc = "3 National Pali Canon Editions With Line by Line translations";
-
-        function setMetaTag(attrName, attrValue, content) {
-            let meta = document.querySelector(`meta[${attrName}="${attrValue}"]`);
-            if (!meta) {
-                meta = document.createElement('meta');
-                meta.setAttribute(attrName, attrValue);
-                document.head.appendChild(meta);
-            }
-            meta.setAttribute('content', content);
-        }
-
-        setMetaTag('name', 'description', shareDesc);
-        setMetaTag('property', 'og:title', shareTitle);
-        setMetaTag('property', 'og:description', shareDesc);
-        setMetaTag('property', 'og:type', 'website');
-        setMetaTag('name', 'twitter:card', 'summary');
-        setMetaTag('name', 'twitter:title', shareTitle);
-        setMetaTag('name', 'twitter:description', shareDesc);
-
         const rawTheme = localStorage.getItem('theme');
         if (rawTheme) {
             const effectiveTheme = (rawTheme === 'dark' || rawTheme === 'auto') ? 'dark' : 'light';
@@ -353,47 +269,6 @@ function initExtra() {
             });
         }
 
-        document.documentElement.style.setProperty('--logo-w', '16px');
-        
-        const style = document.createElement('style');
-        style.textContent = `
-            img[src*="headerlogo.png"] {
-                background-color: #ede5d4; 
-                padding: 4px;
-                border-radius: 10px;
-                border: 1px solid var(--bar-border);
-            }
-            .home-logo img, img.home-logo {
-                width: 16px;
-            }
-        `;
-        document.head.appendChild(style);
-
-        const topBtn = document.getElementById('topBtn');
-        if (topBtn) {
-            topBtn.style.display = 'none';
-        }
-
-        document.querySelectorAll("style").forEach(style => {
-            if (style.textContent.includes("#1a1612")) {
-                style.textContent = style.textContent.replaceAll("#1a1612", "#000");
-            }
-        });
-
-        const jumpInput = document.getElementById('jumpInput');
-        if (jumpInput) jumpInput.type = 'search';
-
-        const mainH1 = document.querySelector('h1');
-        if (mainH1 && !mainH1.textContent.includes('Dhamma.Gift')) {
-            mainH1.textContent = 's.4nt.org Dhamma.Gift edition';
-        }
-        
-        const firstTagline = document.querySelector('h1 + p.tagline');
-        if (firstTagline && !firstTagline.textContent.includes('Voice and DPD')) {
-            firstTagline.textContent = 'Pali Line by Line with Voice and DPD';
-            firstTagline.id = 'dg-edition-text';
-        }
-
         const targetWrap = document.getElementById('settingsWrap') || document.getElementById('siteSettingsWrap');
         
         if (targetWrap && !document.getElementById('voiceLinkBtn')) {
@@ -404,26 +279,26 @@ function initExtra() {
             const readerPath = hasRuLang ? '/r/' : '/read/';
             const hashSymbol = hasRuLang ? '#' : '';
             let cleanSlug = slug
-              .replace(/^4nt\/?/i, '')       // убрать 4nt в начале
-              .replace(/\/?index\.html?$/i, '') // убрать index.html или index.htm в конце
-              .replace(/^\/+/, '');          // убрать ведущий /
+              .replace(/^4nt\/?/i, '')       
+              .replace(/\/?index\.html?$/i, '') 
+              .replace(/^\/+/, '');          
 
 
             const buttons = [
                 { tag: 'a', html: '🔊', title: 'Listen (TTS)', class: 'voice-link icon-btn', id: 'voiceLinkBtn', attr: { 'data-slug': slug }, href: 'javascript:void(0)' },
                 { tag: 'a', html: '📜', title: 'View: Columns / Scroll', class: 'icon-btn', id: 'viewModeBtn', onclick: 'window.toggleViewMode()', href: 'javascript:void(0)' },
-{
-  tag: 'a',
-  html: `<img style="width:18px; height:18px; display:block;" src="${basePath}/assets/img/gray-white.png" alt="Search">`,
-  title: 'Search Suttas (Ctrl+1)',
-  href: location.pathname.startsWith('/4nt')
-    ? `${readerPath}?q=${cleanSlug}${hashSymbol}`
-    : `https://f.dhamma.gift${readerPath}?q=${cleanSlug}${hashSymbol}`,
-  id: 'fdg-button',
-  class: 'icon-btn',
-  rel: 'noreferrer'
-},
-{ tag: 'a', html: `<img style="width:18px; height:18px; display:block;" src="${basePath}/assets/svg/comment.svg" alt="Dictionary">`, title: 'Popup Dictionary (Alt+A)', class: 'icon-btn toggle-dict-btn' }
+                {
+                  tag: 'a',
+                  html: `<img style="width:18px; height:18px; display:block;" src="${basePath}/assets/img/gray-white.png" alt="Search">`,
+                  title: 'Search Suttas (Ctrl+1)',
+                  href: location.pathname.startsWith('/4nt')
+                    ? `${readerPath}?q=${cleanSlug}${hashSymbol}`
+                    : `https://f.dhamma.gift${readerPath}?q=${cleanSlug}${hashSymbol}`,
+                  id: 'fdg-button',
+                  class: 'icon-btn',
+                  rel: 'noreferrer'
+                },
+                { tag: 'a', html: `<img style="width:18px; height:18px; display:block;" src="${basePath}/assets/svg/comment.svg" alt="Dictionary">`, title: 'Popup Dictionary (Alt+A)', class: 'icon-btn toggle-dict-btn' }
             ];
 
             buttons.forEach(b => {
@@ -564,20 +439,7 @@ function initExtra() {
         const shouldHideDots = hideDotsSetting === null ? true : hideDotsSetting === 'true';
         window.toggleDots(shouldHideDots);
 
-        const styles = [
-            `${basePath}/assets/css/paliLookup.css`,
-            `${basePath}/assets/css/extrastyles.css`,
-            `${basePath}/read/css/voice.css`,
-            `${basePath}/extra/extra.css`
-        ];
-        styles.forEach(href => {
-            if (!document.querySelector(`link[href="${href}"]`)) {
-                const link = document.createElement("link");
-                link.rel = "stylesheet"; link.href = href;
-                document.head.appendChild(link);
-            }
-        });
-
+        // Обработка динамически подгружаемых языковых классов
         const processLangClasses = (el) => {
             if (!el || !el.classList) return;
             
@@ -589,16 +451,16 @@ function initExtra() {
                         cls.startsWith('t-pali') || ['t-san', 't-lzh', 't-zh'].includes(cls)
                     );
                     
-                    if (isPali) {
+                    if (isPali && !el.classList.contains('pli-lang')) {
                         el.classList.add('pli-lang');
                         el.setAttribute('lang', 'pi');
-                    } else {
+                    } else if (!isPali && !el.classList.contains('eng-lang')) {
                         el.classList.add('eng-lang');
                     }
                 }
             }
             
-            if (el.classList.contains('tr-pali')) {
+            if (el.classList.contains('tr-pali') && !el.classList.contains('pli-lang')) {
                 el.classList.add('pli-lang');
                 el.setAttribute('lang', 'pi');
                 isPali = true;
@@ -725,7 +587,6 @@ function initExtra() {
         console.error("4nt Extra script error:", error);
     }
 }
-
 
 // Smart initialization
 if (document.readyState === "loading") {

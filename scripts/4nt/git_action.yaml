@@ -54,6 +54,11 @@ jobs:
           
           # Скачиваем целевой README в корень репозитория (для ветки mod)
           wget -qO README.md https://raw.githubusercontent.com/dhammagift/dg/refs/heads/main/scripts/4nt/README.md
+
+      # ДОБАВЛЕННЫЙ ШАГ: Установка зависимостей
+      - name: Install dependencies
+        run: npm install cheerio
+          
           
       # 6. Запускаем обработку
       - name: Execute script
