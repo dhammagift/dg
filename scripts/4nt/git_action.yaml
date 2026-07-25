@@ -74,7 +74,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
           git add .
-          git commit -m "Сборка обновления из слепка апстрима (frankksutta/s.4nt)" || echo "Нет изменений"
+          git commit -m "Building update from upstream" || echo "No changes"
           git push origin mod
 
       # 9. Переключаемся на ветку main для добавления README
@@ -92,5 +92,5 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
           git add README.md
-          git commit -m "Обновление README.md [skip ci]" || echo "Нет изменений"
+          git commit -m "Updated README.md" || echo "No changes"
           git push origin main

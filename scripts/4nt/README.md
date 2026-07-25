@@ -2,6 +2,13 @@
 
 ## [dhamma.gift/4nt](https://dhamma.gift/4nt) or [s.dhamma.gift](https://s.dhamma.gift/)
 
+### Installation
+```git clone https://github.com/dhammagift/4nt.git
+cd 4nt 
+git switch mod
+# after you may open index.html with the browser
+```
+
 ### Feature list:
 
 * voice tts for pali and English (alt / option + R) (navigate with arrow keys, few other hotkeys from this [help](https://dhamma.gift/assets/common/ttsHelp.html#tts-help-en)) 
