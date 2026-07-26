@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 finalUrl += (baseUrl.includes("?") ? "&" : "?") + "q=" + encodeURIComponent(q);
             }
 
-            window.location.href = finalUrl;
+            window.open(finalUrl, "_blank", "noopener,noreferrer");
         });
     });
 
