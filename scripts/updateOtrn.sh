@@ -1,0 +1,1 @@
+find /data/data/com.termux/files/usr/share/apache2/default-site/offline-data/dhammagift/ru -name "*ru-o*.json" | grep -v bu-pm | sort -V | xargs cat | sed 's/}{/,/' > $dwnl/sutta_rus_trn.txt
