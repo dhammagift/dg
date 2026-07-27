@@ -55,8 +55,19 @@ async function buildSutta(slug) {
   let html = `<div class="button-area"><button title="Переключить язык (Atl+Z или Alt+Space)" id="language-button" class="hide-button">Pāḷi Рус</button></div>`;
   const slugReady = parseSlug(slug);
 
+  // ПЕРЕХВАТ АНГЛИЙСКИХ ПЕРЕВОДЧИКОВ
+  let engTranslatorId = "sujato";
+  if (translator === "thanissaro" || translator === "o") {
+      engTranslatorId = translator;
+      translator = ""; // Сбрасываем для корректного поиска русского перевода
+  } else if (texttype === "vinaya") {
+      engTranslatorId = "brahmali";
+  } else {
+      engTranslatorId = await getTranslator(texttype, slug, "en");
+  }
+
   if (translator === "") {
-      translator = await getTranslator(texttype, slugReady, pathLang);
+      translator = await getTranslator(texttype, slug, pathLang);
   }
 
   let params = new URLSearchParams(document.location.search);
@@ -72,20 +83,17 @@ async function buildSutta(slug) {
 
   var rustrnpath = `/assets/texts/ru/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`;
   
-  let engTranslatorId = "sujato";
-  var engtrnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/sujato/${texttype}/${slugReady}_translation-en-sujato.json`;
-
-  if (texttype === "vinaya") {
-      engTranslatorId = "brahmali";
-      engtrnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/brahmali/${texttype}/${slugReady}_translation-en-brahmali.json`;
-  } else if (typeof otrnranges !== 'undefined' && otrnranges.indexOf(slug) !== -1) { 
-      engTranslatorId = "o";
+  let engtrnpath;
+  if (engTranslatorId === "o") { 
       engtrnpath = `/assets/texts/en/o/${texttype}/${slugReady}_translation-en-o.json`;
-  } else if (typeof thanissarotrnranges !== 'undefined' && thanissarotrnranges.indexOf(slug) !== -1) { 
-    engtrnpath = `/assets/texts/en_other/${texttype}/${slugReady}_translation-en-thanissaro.json`;
-      engTranslatorId = "thanissaro";
-  } 
-
+  } else if (engTranslatorId === "thanissaro") { 
+      engtrnpath = `/assets/texts/en_other/${texttype}/${slugReady}_translation-en-thanissaro.json`;
+  } else if (texttype === "vinaya") {
+      engtrnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/brahmali/${texttype}/${slugReady}_translation-en-brahmali.json`;
+  } else {
+      engtrnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/${engTranslatorId}/${texttype}/${slugReady}_translation-en-${engTranslatorId}.json`;
+  }
+  
   var htmlpath = `${Sccopy}/sc-data/sc_bilara_data/html/pli/ms/${texttype}/${slugReady}_html.json`;
 
   const mlUrl  = window.location.href;
@@ -188,10 +196,8 @@ async function buildSutta(slug) {
           </span>${closeHtml}\n\n`;
       }
 
-
       let translatorforuser = window.siteTranslators?.[pathLang]?.[translator] || translator;
       
-      // Ищем маппинг сначала в "en", затем в "ru" (pathLang), затем оставляем ID
       let secondTrName = window.siteTranslators?.["en"]?.[engTranslatorId] || window.siteTranslators?.[pathLang]?.[engTranslatorId] || engTranslatorId;
       let secondTranslatorByline = `<span class="eng-lang second-translation-row"> Eng: ${secondTrName}</span>`;
 
@@ -226,7 +232,7 @@ async function buildSutta(slug) {
   }).catch(error => {
       console.log('Error fetching sutta data:', error);
       if (typeof window.handleFetchError === 'function') {
-          window.handleFetchError(slug, true); // true = русский интерфейс
+          window.handleFetchError(slug, true); 
       }
   });
 }
