@@ -1,3 +1,7 @@
+//TODO починить ссылку 4nt чтобы передавала s param которая вверху страниц с суттами.
+//TODO сделать чтобы removePunc смотрела на ту же опцию в localStorage что и на дхамма гифт что настройка была общей для /4nt случая
+
+
 (function() {
     const savedDict = (localStorage.getItem('selectedDict') || '').toLowerCase();
     if (savedDict.includes('ru')) {
@@ -37,38 +41,19 @@ window.toggleViewMode = function() {
 };
 
 window.toggleDots = function(forceState) {
-    const main = document.getElementById('main');
-    if (!main) return;
-    
-    const isHidden = forceState !== undefined ? forceState : !main.classList.contains('dots-hidden');
-    
-    if (isHidden) {
-        main.classList.add('dots-hidden');
-    } else {
-        main.classList.remove('dots-hidden');
-    }
-    
-    document.querySelectorAll(".pli-lang").forEach(el => {
-        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
-        let node;
-        while (node = walker.nextNode()) {
-            if (isHidden) {
-                if (node.originalText === undefined) {
-                    node.originalText = node.nodeValue;
-                }
-                node.nodeValue = window.removePaliPunctuation(node.originalText);
-            } else {
-                if (node.originalText !== undefined) {
-                    node.nodeValue = node.originalText;
-                }
-            }
-        }
-    });
+    const isHidden = forceState !== undefined ? forceState : (localStorage.getItem('4ntHideDots') !== 'true');
     localStorage.setItem('4ntHideDots', isHidden);
     
     const btn = document.getElementById('dotsBtn');
     if (btn) {
         btn.textContent = isHidden ? 'Off' : 'On';
+    }
+    
+    // Вместо модификации DOM используем нативный механизм перерисовки сайта с сохранением позиции скролла
+    if (typeof withScrollAnchor === 'function' && typeof renderMain === 'function') {
+        withScrollAnchor(() => renderMain());
+    } else if (typeof renderMain === 'function') {
+        renderMain();
     }
 };
 
@@ -725,15 +710,6 @@ window.applyWordHighlight = function() {
     });
 };
 
-// Патч глобальной функции renderMain для применения подсветки при перерисовке
-if (typeof window.renderMain === 'function' && !window.renderMain.isWordHighlightPatched) {
-    const origRenderMain = window.renderMain;
-    window.renderMain = function() {
-        origRenderMain();
-        setTimeout(window.applyWordHighlight, 100);
-    };
-    window.renderMain.isWordHighlightPatched = true;
-}
 
 // Применение подсветки при начальной загрузке страницы
 if (document.readyState === "loading") {
@@ -743,3 +719,24 @@ if (document.readyState === "loading") {
 } else {
     setTimeout(window.applyWordHighlight, 300);
 }
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Патч нативного рендерера текста. Очищает пунктуацию ДО того, как она попадет в DOM ячейки
+    if (typeof window.granText === 'function' && !window.granText.isDotsPatched) {
+        const origGranText = window.granText;
+        window.granText = function(t) {
+            let text = origGranText(t);
+            if (text && localStorage.getItem('4ntHideDots') === 'true') {
+                text = window.removePaliPunctuation(text);
+            }
+            return text;
+        };
+        window.granText.isDotsPatched = true;
+        
+        // Поскольку первый рендер страницы происходит до этого момента, 
+        // принудительно обновляем текст, если скрытие пунктуации активно
+        if (localStorage.getItem('4ntHideDots') === 'true' && typeof window.renderMain === 'function') {
+            window.renderMain();
+        }
+    }
+});
