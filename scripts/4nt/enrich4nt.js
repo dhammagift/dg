@@ -51,6 +51,8 @@ function processHtml(dir) {
         }
     });
 
+    let processedCount = 0;
+
     function walk(currentDir) {
         let entries;
         try {
@@ -71,6 +73,11 @@ function processHtml(dir) {
     }
 
     function processFile(filePath, currentDir) {
+        processedCount++;
+        if (processedCount % 100 === 0) {
+            console.log(`В процессе... Обработано HTML файлов: ${processedCount}`);
+        }
+
         try {
             let rawContent = fs.readFileSync(filePath, 'utf8');
             const $ = cheerio.load(rawContent, { decodeEntities: false });
@@ -100,12 +107,14 @@ function processHtml(dir) {
                 changed = true;
             }
 
-            // 3. Удаление лишних языков
-            const scriptsToRemove = $('#tx-arabic-esque, #nt-arabic-esque, #tx-chinese-esque, #nt-chinese-esque, #tx-spanish-esque, #nt-spanish-esque');
-            if (scriptsToRemove.length > 0) {
-                scriptsToRemove.remove();
-                changed = true;
-            }
+            // 3. Динамическое удаление -esque языков, кроме bodhi и russian
+            $('script[id^="tx-"], script[id^="nt-"]').each((_, el) => {
+                const id = $(el).attr('id');
+                if (id && id.endsWith('-esque') && !id.includes('bodhi-esque') && !id.includes('russian-esque')) {
+                    $(el).remove();
+                    changed = true;
+                }
+            });
 
             // 4. Обновление JS: ALL_TRANSLATIONS и генерация HTML с языковыми классами
             $('script').each((_, el) => {
@@ -118,7 +127,12 @@ function processHtml(dir) {
                         const transMatch = scriptContent.match(/const ALL_TRANSLATIONS = (\[.*?\]);/);
                         if (transMatch) {
                             let translations = JSON.parse(transMatch[1]);
-                            translations = translations.filter(t => !['arabic-esque', 'chinese-esque', 'spanish-esque'].includes(t.key));
+                            translations = translations.filter(t => {
+                                if (t.key.endsWith('-esque')) {
+                                    return t.key === 'bodhi-esque' || t.key === 'russian-esque';
+                                }
+                                return true;
+                            });
                             translations.forEach(t => {
                                 if (t.key === 'pali') {
                                     t.label = "Pali Mahasangiti";
@@ -172,18 +186,7 @@ function processHtml(dir) {
 
             // 5. SEO Метатеги и стили
             if ($('meta[property="og:title"]').length === 0) {
-                $('head').append(`
-<meta name="description" content="3 National Pali Canon Editions With Line by Line translations">
-<meta property="og:title" content="4nt DG">
-<meta property="og:description" content="3 National Pali Canon Editions With Line by Line translations">
-<meta property="og:type" content="website">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="4nt DG">
-<meta name="twitter:description" content="3 National Pali Canon Editions With Line by Line translations">
-<style>
-    img[src*="headerlogo.png"] { background-color: #ede5d4; padding: 4px; border-radius: 10px; border: 1px solid var(--bar-border); }
-    .home-logo img, img.home-logo { width: 16px; }
-</style>`);
+                $('head').append(`\n<meta name="description" content="3 National Pali Canon Editions With Line by Line translations">\n<meta property="og:title" content="4nt DG">\n<meta property="og:description" content="3 National Pali Canon Editions With Line by Line translations">\n<meta property="og:type" content="website">\n<meta name="twitter:card" content="summary">\n<meta name="twitter:title" content="4nt DG">\n<meta name="twitter:description" content="3 National Pali Canon Editions With Line by Line translations">\n<style>\n    img[src*="headerlogo.png"] { background-color: #ede5d4; padding: 4px; border-radius: 10px; border: 1px solid var(--bar-border); }\n    .home-logo img, img.home-logo { width: 16px; }\n</style>`);
                 changed = true;
             }
 
@@ -318,7 +321,9 @@ function processHtml(dir) {
         }
     }
 
+    console.log(`Начинаю обход директорий и обработку файлов в: ${dir}`);
     walk(dir);
+    console.log(`Обход завершен. Всего обработано HTML файлов: ${processedCount}`);
     
     try {
         const srcLogo = path.join(dir, 'headerlogo.png');
