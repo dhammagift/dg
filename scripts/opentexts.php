@@ -297,116 +297,86 @@ if ($isProblematicSlug) {
     $_SESSION['processed_slug'] = $stringForOpen;
 }
 
-
-if (preg_match("/^(ja|snp|iti|thig|thag)[0-9]{1,3}.*/i", $stringForOpen)) {
-  
-redirectWithAnchor($readerlang, $stringForOpen, $s ?? null, $anchor); 	  
+if (preg_match("/^(bv|ja|ne|pv[0-9]|cnd|mil|pe|thi-ap|tha-ap|cp|kp|mnd|ps|vv|ds|dt|kv|patthana|pp|ya|vb[0-9]*)/i", $stringForOpen)) {
+    echo "<script>window.location.href='/4nt/?q=$stringForOpen';</script>";
+    exit();
+} else if (preg_match("/^(snp|iti|thig|thag)[0-9]{1,3}.*/i", $stringForOpen)) {
+    redirectWithAnchor($readerlang, $stringForOpen, $s ?? null, $anchor); 	  
 //for patimokkha and vinaya vibhanga
 } else if (preg_match("/pli-tv-/i", $stringForOpen)) {
-  
-//  echo "<script>window.location.href='$readerlang?q=$stringForOpen&s=$s';</script>";
-
-// echo "<script>window.location.href='$readerlang?s=$s&q=$stringForOpen#$anchor';</script>";
- if ($isProblematicSlug) {
+    if ($isProblematicSlug) {
         unset($_SESSION['processed_slug']);
         session_write_close();
     }
-	
-redirectWithAnchor($readerlang, $stringForOpen, $s ?? null, $anchor); 
-	  
+    redirectWithAnchor($readerlang, $stringForOpen, $s ?? null, $anchor); 
 } else if (preg_match("/^(bu|bi)-pm$/i", $stringForOpen)) {
-//echo "<script>alert('case 1');</script>";	
-redirectWithAnchor($readerlang, $stringForOpen, $s ?? null, $anchor); 
-
-}  else if (preg_match("/^(bu|pm|bpm|bupm)$/i", $stringForOpen)) {
-  
-	//echo "<script>window.location.href='$readerlang?q=bu-{$stringForOpen}';</script>";	
-	echo "<script>window.location.href='/pm.php?expand=true';</script>";	
-	  exit(); 
+    redirectWithAnchor($readerlang, $stringForOpen, $s ?? null, $anchor); 
+} else if (preg_match("/^(bu|pm|bpm|bupm)$/i", $stringForOpen)) {
+    echo "<script>window.location.href='/pm.php?expand=true';</script>";	
+    exit(); 
 } else if (preg_match("/^(bi|bipm)$/i", $stringForOpen)) {
-
-//echo "<script>alert('case 1');</script>";	
-//	echo "<script>window.location.href='$readerlang?q={$stringForOpen}';</script>";	
-	echo "<script>window.location.href='/bipm.php?expand=true';</script>";	
-} else if  (preg_match("/^(pj|ss|ay|np|pc|pd|sk|as)$/i", $stringForOpen)) {
-
-  //open read.php Bu
-  $stringForOpen = str_replace (" ", "", $stringForOpen);
-$stringForOpen = strtolower($stringForOpen);
-echo "<script>window.location.href='{$base}read.php#{$stringForOpen}CollapseBu';
-    addToSearchHistory();
-</script>";
-  exit();
-} else if  (preg_match("/^bi-(pj|ss|ay|np|pc|pd|sk|as)$/i", $stringForOpen)) {
-  //open read.php Bi
-  $stringForOpen = str_replace (" ", "", $stringForOpen);
-  $stringForOpen = str_replace ("bi-", "", $stringForOpen);
-$stringForOpen = strtolower($stringForOpen);
-echo "<script>window.location.href='{$base}read.php#{$stringForOpen}CollapseBi';
-    addToSearchHistory();
-</script>";
-  exit();
+    echo "<script>window.location.href='/bipm.php?expand=true';</script>";	
+} else if (preg_match("/^(pj|ss|ay|np|pc|pd|sk|as)$/i", $stringForOpen)) {
+    //open read.php Bu
+    $stringForOpen = str_replace (" ", "", $stringForOpen);
+    $stringForOpen = strtolower($stringForOpen);
+    echo "<script>window.location.href='{$base}read.php#{$stringForOpen}CollapseBu';
+        addToSearchHistory();
+    </script>";
+    exit();
+} else if (preg_match("/^bi-(pj|ss|ay|np|pc|pd|sk|as)$/i", $stringForOpen)) {
+    //open read.php Bi
+    $stringForOpen = str_replace (" ", "", $stringForOpen);
+    $stringForOpen = str_replace ("bi-", "", $stringForOpen);
+    $stringForOpen = strtolower($stringForOpen);
+    echo "<script>window.location.href='{$base}read.php#{$stringForOpen}CollapseBi';
+        addToSearchHistory();
+    </script>";
+    exit();
 } else if (preg_match("/(bu|bi)-([a-z][a-z])[0-9]*/i", $stringForOpen)) {
- // echo "<script>alert('case 2');</script>";	
-if (strpos($stringForOpen, 'vb-') === false) {
-    $stringForOpen = str_replace('bi-', 'bi-vb-', $stringForOpen);
-    $stringForOpen = str_replace('bu-', 'bu-vb-', $stringForOpen);
-}
-
-  $check = shell_exec("grep -m1 -i \"{$stringForOpen}_\" $indexesfile | awk '{print \$0}'");
-//if this empty then find range
-if (empty($check)) {
-  //echo "<script>alert('case 3');</script>";	
-  $command = escapeshellcmd("bash $scriptfile $stringForOpen");
-  $stringForOpen = trim(shell_exec($command));
-  $stringForOpen = str_replace(PHP_EOL, '', $stringForOpen);
-}	  
-if (empty($stringForOpen)) {
-  //echo "<script>alert('case 31');</script>";	
-  echo "<script>window.location.href='$readerlang';</script>";	
-  exit();
-}	  
-
-  $stringForOpen = str_replace('bi-vb-', 'bi-', $stringForOpen);
-    $stringForOpen = str_replace('bu-vb-', 'bu-', $stringForOpen);
- redirectWithAnchor($readerlang, $stringForOpen, $s ?? null, $anchor); 
-
-} else if (preg_match("/(bu|bi)-(vb|[a-z][a-z]*)/i", $stringForOpen)) {
-//echo "<script>alert('case 4');</script>";	
- $stringForOpen = $stringForOpen . "1";
- 	redirectWithAnchor($readerlang, $stringForOpen, $s ?? null, $anchor); 
-
-} else if (preg_match("/(pj|ss|ay|np|pc|pd|sk|as)([0-9]{1,3}|[0-9]-[0-9])/i", $stringForOpen)) {
- // echo "<script>alert('case 5');</script>";	
-  $stringForOpen = "bu-" . $stringForOpen;
-
-if (strpos($stringForOpen, 'vb-') === false) {
-    $stringForOpen = str_replace('bi-', 'bi-vb-', $stringForOpen);
-    $stringForOpen = str_replace('bu-', 'bu-vb-', $stringForOpen);
-}
-
-  $check = shell_exec("grep -m1 -i \"{$stringForOpen}_\" $indexesfile | awk '{print \$0}'");
-//if this empty then find range
-if (empty($check)) {
-  //echo "<script>alert('case 3');</script>";	
-  $command = escapeshellcmd("bash $scriptfile $stringForOpen");
-  $stringForOpen = trim(shell_exec($command));
-  $stringForOpen = str_replace(PHP_EOL, '', $stringForOpen);
-}	  
-if (empty($stringForOpen)) {
-  //echo "<script>alert('case 31');</script>";	
-  echo "<script>window.location.href='$readerlang';</script>";	
-  exit();
-}	  
-
-  $stringForOpen = str_replace('bi-vb-', 'bi-', $stringForOpen);
+    if (strpos($stringForOpen, 'vb-') === false) {
+        $stringForOpen = str_replace('bi-', 'bi-vb-', $stringForOpen);
+        $stringForOpen = str_replace('bu-', 'bu-vb-', $stringForOpen);
+    }
+    $check = shell_exec("grep -m1 -i \"{$stringForOpen}_\" $indexesfile | awk '{print \$0}'");
+    //if this empty then find range
+    if (empty($check)) {
+        $command = escapeshellcmd("bash $scriptfile $stringForOpen");
+        $stringForOpen = trim(shell_exec($command));
+        $stringForOpen = str_replace(PHP_EOL, '', $stringForOpen);
+    }	  
+    if (empty($stringForOpen)) {
+        echo "<script>window.location.href='$readerlang';</script>";	
+        exit();
+    }	  
+    $stringForOpen = str_replace('bi-vb-', 'bi-', $stringForOpen);
     $stringForOpen = str_replace('bu-vb-', 'bu-', $stringForOpen);
     redirectWithAnchor($readerlang, $stringForOpen, $s ?? null, $anchor); 
-
+} else if (preg_match("/(bu|bi)-(vb|[a-z][a-z]*)/i", $stringForOpen)) {
+    $stringForOpen = $stringForOpen . "1";
+    redirectWithAnchor($readerlang, $stringForOpen, $s ?? null, $anchor); 
+} else if (preg_match("/(pj|ss|ay|np|pc|pd|sk|as)([0-9]{1,3}|[0-9]-[0-9])/i", $stringForOpen)) {
+    $stringForOpen = "bu-" . $stringForOpen;
+    if (strpos($stringForOpen, 'vb-') === false) {
+        $stringForOpen = str_replace('bi-', 'bi-vb-', $stringForOpen);
+        $stringForOpen = str_replace('bu-', 'bu-vb-', $stringForOpen);
+    }
+    $check = shell_exec("grep -m1 -i \"{$stringForOpen}_\" $indexesfile | awk '{print \$0}'");
+    //if this empty then find range
+    if (empty($check)) {
+        $command = escapeshellcmd("bash $scriptfile $stringForOpen");
+        $stringForOpen = trim(shell_exec($command));
+        $stringForOpen = str_replace(PHP_EOL, '', $stringForOpen);
+    }	  
+    if (empty($stringForOpen)) {
+        echo "<script>window.location.href='$readerlang';</script>";	
+        exit();
+    }	  
+    $stringForOpen = str_replace('bi-vb-', 'bi-', $stringForOpen);
+    $stringForOpen = str_replace('bu-vb-', 'bu-', $stringForOpen);
+    redirectWithAnchor($readerlang, $stringForOpen, $s ?? null, $anchor); 
 } else if (preg_match("/(kd|pvr)([0-9]{1,3}|[0-9][ \.][0-9])/i", $stringForOpen)) {
- // echo "<script>alert('case 5');</script>";	
-  $stringForOpen = "pli-tv-" . $stringForOpen;
-
+    $stringForOpen = "pli-tv-" . $stringForOpen;
     redirectWithAnchor($readerlang, $stringForOpen, $s ?? null, $anchor); 
 }
 
