@@ -874,19 +874,31 @@ async function prepareTextData(slug) {
   return textData;
 }
 
+function detectDynamicLang(text, fallbackLang, isRoot) {
+    if (!text) return fallbackLang;
+    if (/[А-Яа-яЁё]/.test(text)) return 'ru';
+    if (/[\u4e00-\u9fa5]/.test(text)) return 'zh';
+    if (isRoot) return 'pi-dev'; 
+    if (/[A-Za-z]/.test(text)) return 'en'; 
+    return fallbackLang;
+}
+
 function createPlaylistFromData(textData, mode) {
   const playlist = [];
   const translationLang = detectTranslationLang();
   
   textData.forEach(item => {
     const addPali = () => {
-        if (item.paliDev) playlist.push({
-          text: item.paliDev, lang: 'pi-dev', element: item.paliElement, id: item.id
-        });
+        if (item.paliDev) {
+            let lang = detectDynamicLang(item.paliDev, 'pi-dev', true);
+            playlist.push({
+              text: item.paliDev, lang: lang, element: item.paliElement, id: item.id
+            });
+        }
     };
     const addTrn = () => {
         if (item.translation) {
-            let lang = /[А-Яа-яЁё]/.test(item.translation) ? 'ru' : translationLang;
+            let lang = detectDynamicLang(item.translation, translationLang, false);
             playlist.push({
               text: item.translation, lang: lang, element: item.translationElement, id: item.id
             });
@@ -894,7 +906,7 @@ function createPlaylistFromData(textData, mode) {
     };
     const addTrn2 = () => {
         if (item.translation2) {
-            let lang = /[А-Яа-яЁё]/.test(item.translation2) ? 'ru' : translationLang;
+            let lang = detectDynamicLang(item.translation2, translationLang, false);
             playlist.push({
               text: item.translation2, lang: lang, element: item.translationElement2, id: item.id
             });
@@ -912,6 +924,9 @@ function createPlaylistFromData(textData, mode) {
   
   return playlist;
 }
+
+
+
 
 
 function shouldRequestWakeLockForItem(item) {
@@ -1016,6 +1031,11 @@ async function playCurrentSegment() {
     audioRateBrowser = uiRate;
     audioRateGoogle = uiRate;
     targetLang = 'th';
+  } else if (item.lang === 'zh') { 
+    uiRate = getRateForLang('zh'); 
+    audioRateBrowser = uiRate;
+    audioRateGoogle = uiRate;
+    targetLang = 'zh';
   } else if (item.lang === 'en') {
     uiRate = getRateForLang('en');
     audioRateBrowser = uiRate;
@@ -1072,9 +1092,8 @@ async function playCurrentSegment() {
           }
 
           if (audioContent) {
-              // ИСПОЛЬЗУЕМ ГЛОБАЛЬНЫЙ ПЛЕЕР ДЛЯ ОБХОДА IOS
               const audio = window.sharedGoogleAudio || new Audio();
-              window.sharedGoogleAudio = audio; // Гарантируем наличие
+              window.sharedGoogleAudio = audio;
               audio.src = "data:audio/mp3;base64," + audioContent;
               
               ttsState.googleAudio = audio;
@@ -1140,14 +1159,10 @@ async function playCurrentSegment() {
   playBrowserTTS(item.text, targetLang, audioRateBrowser, isPali);
 }
 
-
 function playBrowserTTS(text, langKey, rate, isPali) {
-  // --- ИСПРАВЛЕНИЕ WAKE LOCK ---
-  // Гарантируем, что любой запуск нативного TTS (прямой или фолбэк) удерживает экран.
   if (!wakeLock && !ttsState.paused) {
     requestWakeLock();
   }
-  // -----------------------------
 
   const utterance = new SpeechSynthesisUtterance(text);
   
@@ -1171,6 +1186,7 @@ function playBrowserTTS(text, langKey, rate, isPali) {
   } else {
       if (langKey === 'ru') utterance.lang = 'ru-RU';
       else if (langKey === 'th') utterance.lang = 'th-TH';
+      else if (langKey === 'zh') utterance.lang = 'zh-CN';
       else if (langKey === 'en') utterance.lang = 'en-US';
       else if (langKey === 'pi-dev') {
          utterance.lang = 'sa-IN'; 
@@ -1293,6 +1309,9 @@ function playBrowserTTS(text, langKey, rate, isPali) {
     }, 50);
   }
 }
+
+
+
 
 async function handleSuttaClick(e) {
   const dynamicBtn = e.target.closest('.dynamic-tts-btn');
