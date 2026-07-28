@@ -741,6 +741,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 
+/*
 document.addEventListener("DOMContentLoaded", function() {
     const urlParams = new URLSearchParams(window.location.search);
     const qParam = urlParams.get('q');
@@ -749,3 +750,4 @@ document.addEventListener("DOMContentLoaded", function() {
         jumpToRef(qParam);
     }
 });
+*/
