@@ -1404,9 +1404,10 @@ window.toggleThePali = window.toggleThePali || function() {
     });
 };
 
-// Логика кнопки оглавления (TOC) - SPA-защита, слежение и автоцентрирование
+// Логика кнопки оглавления (TOC) - SPA-защита, слежение, автоцентрирование и свайп
 (function() {
     let activeSlug = ''; 
+    let cachedTOCNodes = null;
     const isMemoPath = window.location.pathname.includes('/memorize/');
 
     const capitalize = (str) => {
@@ -1419,8 +1420,6 @@ window.toggleThePali = window.toggleThePali || function() {
         const panel = document.getElementById('smart-toc-panel');
         if (!sutta || !panel) return;
 
-        // В режиме memorize оглавление ВСЕГДА должно показывать полный текст (обычно это .rus-lang или .eng-lang)
-        // Поэтому мы выходим из функции и не добавляем классы hide-..., чтобы текст в TOC не исчез.
         if (isMemoPath) {
             panel.classList.remove('hide-pali', 'hide-english', 'hide-russian', 'hide-thai');
             return;
@@ -1437,30 +1436,13 @@ window.toggleThePali = window.toggleThePali || function() {
         });
     };
 
-    function syncTOC() {
+    function getTOCNodes() {
+        if (cachedTOCNodes) {
+            return { nodes: cachedTOCNodes };
+        }
+
         const suttaContainer = document.getElementById('sutta');
-        const pillLabel = document.getElementById('smart-toc-current');
-        const tocPanel = document.getElementById('smart-toc-panel');
-        const tocBtn = document.getElementById('smart-toc-btn');
-
-        if (!suttaContainer || !pillLabel) return;
-
-        let st = window.pageYOffset || document.documentElement.scrollTop;
-        if (st <= 90) {
-            if (tocBtn) tocBtn.classList.add('icon-only');
-        } else {
-            if (tocBtn) tocBtn.classList.remove('icon-only');
-        }
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const currentSlug = urlParams.get('q') || '';
-        if (activeSlug !== currentSlug) {
-            activeSlug = currentSlug;
-            if (tocPanel) {
-                tocPanel.innerHTML = '';
-                tocPanel.classList.remove('active');
-            }
-        }
+        if (!suttaContainer) return { nodes: [] };
 
         const hasInternalHeaders = suttaContainer.querySelector('h3, h4, h5, h6') !== null;
         let selector = 'h1, h2, .endsutta'; 
@@ -1469,8 +1451,8 @@ window.toggleThePali = window.toggleThePali || function() {
         } else {
             selector += ', .speaker, .rule, .subrule, .verse-line, .anapatti, .uddana-intro';
         }
-        
-        const headings = Array.from(suttaContainer.querySelectorAll(selector)).filter(el => {
+
+        let standardNodes = Array.from(suttaContainer.querySelectorAll(selector)).filter(el => {
             if (el.classList.contains('verse-line')) {
                 const parentBlock = el.closest('blockquote, section');
                 if (parentBlock && (parentBlock.querySelector('.uddana-intro') || parentBlock.previousElementSibling?.classList.contains('uddana-intro'))) return false;
@@ -1480,6 +1462,65 @@ window.toggleThePali = window.toggleThePali || function() {
             }
             return el.innerText.trim().length > 0;
         });
+
+        const realHeaders = suttaContainer.querySelectorAll('h2, h3, h4, h5, h6');
+        const segments = Array.from(suttaContainer.querySelectorAll('span[id]'));
+        let fallbackNodes = [];
+        
+        if (realHeaders.length <= 3 && segments.length > 120 && !hasInternalHeaders) {
+            const fractions = [0, 0.25, 0.5, 0.75];
+            
+            fractions.forEach(frac => {
+                let targetIndex = Math.floor(segments.length * frac);
+                let found = segments[targetIndex];
+                
+                for (let i = targetIndex; i < Math.min(targetIndex + 20, segments.length); i++) {
+                    if (segments[i].id.match(/\.1$/)) {
+                        found = segments[i];
+                        break;
+                    }
+                }
+                
+                if (found && !fallbackNodes.includes(found) && !standardNodes.includes(found)) {
+                    found.dataset.fallback = 'true';
+                    fallbackNodes.push(found);
+                }
+            });
+        }
+
+        let combinedNodes = [...standardNodes, ...fallbackNodes];
+        combinedNodes.sort((a, b) => {
+            if (a === b) return 0;
+            if (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) {
+                return -1;
+            }
+            return 1;
+        });
+
+        cachedTOCNodes = combinedNodes;
+        return { nodes: cachedTOCNodes };
+    }
+
+    function syncTOC() {
+        const suttaContainer = document.getElementById('sutta');
+        const pillLabel = document.getElementById('smart-toc-current');
+        const tocPanel = document.getElementById('smart-toc-panel');
+        const tocBtn = document.getElementById('smart-toc-btn');
+
+        if (!suttaContainer || !pillLabel) return;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentSlug = urlParams.get('q') || '';
+        if (activeSlug !== currentSlug) {
+            activeSlug = currentSlug;
+            cachedTOCNodes = null; 
+            if (tocPanel) {
+                tocPanel.innerHTML = '';
+                tocPanel.classList.remove('active');
+            }
+        }
+
+        const { nodes: headings } = getTOCNodes();
 
         if (headings.length === 0) {
             if (tocBtn) tocBtn.classList.add('hidden-toc');
@@ -1501,6 +1542,7 @@ window.toggleThePali = window.toggleThePali || function() {
         const isTh = window.location.pathname.includes('/th/');
         const langClass = window.isRuPath ? '.rus-lang' : (isTh ? '.tha-lang' : '.eng-lang');
 
+        // ОРИГИНАЛЬНАЯ ЛОГИКА ТЕКСТА
         let labelText = '';
         if (isMemoPath) {
             const fullSpan = headings[activeIndex].querySelector('.rus-lang, .eng-lang, .tha-lang');
@@ -1550,21 +1592,12 @@ window.toggleThePali = window.toggleThePali || function() {
         const tocPanel = document.getElementById('smart-toc-panel');
         if (!suttaContainer || !tocPanel) return;
 
-        const hasInternalHeaders = suttaContainer.querySelector('h3, h4, h5, h6') !== null;
-        let selector = 'h1, h2, .endsutta'; 
-        if (hasInternalHeaders) {
-            selector += ', h3, h4, h5, h6';
-        } else {
-            selector += ', .speaker, .rule, .subrule, .verse-line, .anapatti, .uddana-intro';
-        }
-
-        const elements = suttaContainer.querySelectorAll(selector);
+        const { nodes: elements } = getTOCNodes();
         tocPanel.innerHTML = '';
 
         let lastSpeakerText = '';
         let lastPoemBlock = null;
         let currentLevel = 2; 
-
         const firstContentBlock = suttaContainer.querySelector('p, blockquote, .rule');
 
         elements.forEach((el) => {
@@ -1577,7 +1610,6 @@ window.toggleThePali = window.toggleThePali || function() {
 
             let tocClassType = 'h' + currentLevel;
             let extraClass = '';
-
 
             const isThPath = window.location.pathname.includes('/th/');
             const targetLang = window.isRuPath ? 'rus-lang' : (isThPath ? 'tha-lang' : 'eng-lang');
@@ -1661,12 +1693,10 @@ window.toggleThePali = window.toggleThePali || function() {
             const scrollAndHighlight = (targetElement) => {
                 tocPanel.classList.remove('active');
                 const offset = 120;
-                
                 let scrollTarget = targetElement;
                 if (!scrollTarget.offsetParent || scrollTarget.getBoundingClientRect().height === 0) {
                     scrollTarget = scrollTarget.closest('[id]') || scrollTarget.parentElement || scrollTarget;
                 }
-
                 const targetY = window.pageYOffset + scrollTarget.getBoundingClientRect().top - offset;
                 window.scrollTo({ top: targetY, behavior: 'smooth' });
                 if (typeof window.activateSegmentForTTS === 'function') window.activateSegmentForTTS(targetElement);
@@ -1687,17 +1717,24 @@ window.toggleThePali = window.toggleThePali || function() {
                 if (langSpans.length > 0) {
                     langSpans.forEach(originalSpan => {
                         if (isMemoPath && originalSpan.classList.contains('pli-lang')) return;
-
                         const clone = originalSpan.cloneNode(true);
                         clone.querySelectorAll('.copyLink, .copyLink-start, .variant').forEach(child => child.remove());
                         let cleanText = clone.textContent.replace(/[()\[\]"“”«»'‘’]/g, '').replace(/\s+/g, ' ').trim();
                         if (cleanText) {
+                            if (el.dataset.fallback === 'true') {
+                                let words = cleanText.split(/\s+/);
+                                if (words.length > 8) cleanText = words.slice(0, 8).join(' ') + '...';
+                            }
                             clone.textContent = capitalize(cleanText) + ' '; 
                             clone.onclick = (e) => { e.stopPropagation(); scrollAndHighlight(originalSpan); };
                             item.appendChild(clone);
                         }
                     });
                 } else {
+                    if (el.dataset.fallback === 'true') {
+                        let words = text.split(/\s+/);
+                        if (words.length > 8) text = words.slice(0, 8).join(' ') + '...';
+                    }
                     item.textContent = capitalize(text);
                     item.onclick = () => scrollAndHighlight(el);
                 }
@@ -1707,6 +1744,39 @@ window.toggleThePali = window.toggleThePali || function() {
 
         if (typeof window.syncTOCLanguageVisibility === 'function') window.syncTOCLanguageVisibility();
         syncTOC();
+    }
+
+    function initSwipeGestures() {
+        const panel = document.getElementById('smart-toc-panel');
+        if (!panel) return;
+
+        let startX = 0, startY = 0;
+        let isDragging = false;
+
+        const handleStart = (x, y) => {
+            startX = x;
+            startY = y;
+            isDragging = true;
+        };
+
+        const handleEnd = (x, y) => {
+            if (!isDragging) return;
+            isDragging = false;
+            const xDiff = x - startX;
+            const yDiff = y - startY;
+
+            if (Math.abs(xDiff) > Math.abs(yDiff) && Math.abs(xDiff) > 50) {
+                panel.classList.remove('active');
+            }
+        };
+
+        panel.addEventListener('touchstart', (e) => handleStart(e.changedTouches[0].clientX, e.changedTouches[0].clientY), { passive: true });
+        panel.addEventListener('touchend', (e) => handleEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY), { passive: true });
+
+        panel.addEventListener('mousedown', (e) => handleStart(e.clientX, e.clientY), { passive: true });
+        window.addEventListener('mouseup', (e) => {
+            if (isDragging) handleEnd(e.clientX, e.clientY);
+        }, { passive: true });
     }
 
     document.addEventListener('click', (e) => {
@@ -1740,11 +1810,14 @@ window.toggleThePali = window.toggleThePali || function() {
         }
     });
 
-    window.addEventListener('suttaLoaded', () => { activeSlug = ''; syncTOC(); });
-    window.addEventListener('dgSuttaRendered', () => { activeSlug = ''; syncTOC(); });
-window.addEventListener('scroll', throttle(() => syncTOC(), 150), { passive: true });
-  
+    window.addEventListener('suttaLoaded', () => { activeSlug = ''; cachedTOCNodes = null; syncTOC(); });
+    window.addEventListener('dgSuttaRendered', () => { activeSlug = ''; cachedTOCNodes = null; syncTOC(); });
+    window.addEventListener('scroll', throttle(() => syncTOC(), 150), { passive: true });
+    
+    document.addEventListener('DOMContentLoaded', initSwipeGestures);
+
 })();
+
 
 function generateLanguageLinks(modes = ['ru', 'en']) {
     const labels = {

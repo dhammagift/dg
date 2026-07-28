@@ -12,17 +12,9 @@ document.addEventListener('click', function(event) {
     const slug = link.getAttribute('data-slug');
     
     // Генерируем URL "на лету"
-    const targetUrl = get4ntUrl(slug);
+const targetUrl = "/4nt/?q=" + encodeURIComponent(slug.replace("#", ":"));
+window.open(targetUrl, "_blank");
 
-    if (targetUrl) {
-        // Если URL сформирован успешно, открываем его в новой вкладке
-        // Если нужно открывать в том же окне, используйте: window.location.href = targetUrl;
-        window.open(targetUrl, '_blank');
-    } else {
-        // Опционально: можно добавить визуальное уведомление или лог, если slug не распознан
-        console.warn(`Не удалось сформировать 4nt-ссылку для slug: "${slug}"`);
-        // alert('Ссылка для этого текста пока не настроена');
-    }
 });  
   
   
