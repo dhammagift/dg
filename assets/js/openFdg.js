@@ -300,15 +300,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function findFdgTextUrl(slug, searchValue, baseUrl) {
     const exceptions = ["bv", "ja", "ne", "pv[0-9]", "cnd", "mil", "pe", "thi-ap", "tha-ap", "cp", "kp", "mnd", "ps", "vv", 'ds', 'dt', 'kv', 'patthana', 'pp', 'ya'];
-    const isSuttaCentral =
+    const isExtSite =
       exceptions.some(ex => slug.includes(ex)) ||
       /^vb\d*$/.test(slug);
-    const url = isSuttaCentral ? `https://suttacentral.net/${slug}` : baseUrl;
+    const url = isExtSite ? `/4nt/?q=${slug}` : baseUrl;
     let scUrl = `${baseUrl}?s=${searchValue ? searchValue : ""}&q=${slug}`;
     if (scUrl.endsWith('#')) {
         scUrl = scUrl.replace(/#$/, '');
     }
-    return isSuttaCentral ? url : scUrl;
+    return isExtSite ? url : scUrl;
 }
 
 document.addEventListener('click', function(event) {
