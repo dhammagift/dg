@@ -98,7 +98,7 @@ echo '<!--
 
                  <li>
          <div class="dropdown-item ">
-          <a class="text-reset s4ntLink" target="_blank" href="/4nt">S.4nt.org</a>
+          <a class="text-reset" target="_blank" href="javascript:void(0)" onclick="openWithQuery(event, \'/4nt/?q={{q}}\')">S.4nt.org</a>
           <a class="text-reset" target="_blank"  href="' . $linktbwOnMain . '">The Buddha\'s Words</a>
          </div>
          </li>
