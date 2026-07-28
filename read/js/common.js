@@ -699,6 +699,19 @@ function buildThirdPartyLinksHTML(slug, slugReady, texttype, translator) {
     // 4nt
     let url4nt = typeof get4ntUrl === 'function' ? get4ntUrl(slug) : null;
     if (url4nt) {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sParam = urlParams.get('s');
+            
+            if (sParam) {
+                const parsedUrl = new URL(url4nt, window.location.origin);
+                parsedUrl.searchParams.set('s', sParam);
+                url4nt = parsedUrl.href;
+            }
+        } catch (err) {
+            console.error('Ошибка при формировании ссылки 4nt:', err);
+        }
+        
         scLink += `<a target="_blank" class="s4ntLink" title="s.4nt.org" href="${url4nt}">4nt</a> `;
     }
 
@@ -759,6 +772,7 @@ function buildThirdPartyLinksHTML(slug, slugReady, texttype, translator) {
 
     return scLink;
 }
+
 
 // 3. Функция наполнения (Hydration) через MutationObserver
 function hydrateThirdPartyLinks() {
@@ -2259,7 +2273,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // --- СРАВНИТЬ (COMPARE) - ЛОКАЛЬНАЯ И ОНЛАЙН ВЕРСИИ ---
+// --- СРАВНИТЬ (COMPARE) - ЛОКАЛЬНАЯ И ОНЛАЙН ВЕРСИИ ---
   document.getElementById('sm-compare').addEventListener('click', (e) => {
     e.stopPropagation();
     menu.classList.add('segment-menu-hidden');
@@ -2267,6 +2281,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const urlParams = new URLSearchParams(window.location.search);
     let slug = urlParams.get('q');
+    const sParam = urlParams.get('s');
+
     if (!slug) return;
     
     slug = slug.split('&')[0].toLowerCase();
@@ -2276,31 +2292,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (url4nt) {
         try {
-          let finalUrl;
           const anchorBase = url4nt.split('#')[1] || slug;
           const urlWithoutHash = url4nt.split('#')[0];
-          const colsParams = "cols=pali%2Cpali_royal_iast%2Cpali_myanmar_iast%2Cpali_bjt_iast";
+          
+          // Единый объект URL для надежной работы с параметрами
+          const parsedUrl = new URL(urlWithoutHash, window.location.origin);
 
-          if (window.isLocalHost) {
-            // ЛОКАЛЬНО: Используем путь от get4ntUrl, добавляем колонки и расширенный якорь
-            finalUrl = `${urlWithoutHash}?${colsParams}#tr-${anchorBase}:${currentContext.hash}`;
-          } else {
-            // ОНЛАЙН: Применяем ту же правильную логику к s.dhamma.gift
-            const parsedUrl = new URL(urlWithoutHash, window.location.origin);
+          // Настраиваем хост и пути для онлайн-версии
+          if (!window.isLocalHost) {
             parsedUrl.protocol = 'https:';
             parsedUrl.hostname = 's.dhamma.gift';
-            
-            // Убираем префикс /4nt, так как s.dhamma.gift — это уже корень
             parsedUrl.pathname = parsedUrl.pathname.replace(/^\/4nt/, '');
-            
-            // Сохраняем параметры колонок и правильный якорь
-            parsedUrl.search = colsParams;
-            parsedUrl.hash = `#tr-${anchorBase}:${currentContext.hash}`;
-            
-            finalUrl = parsedUrl.href;
           }
 
-          window.open(finalUrl, '_blank');
+          // Добавляем параметры запроса
+          const newParams = new URLSearchParams();
+          newParams.set('cols', 'pali,pali_royal_iast,pali_myanmar_iast,pali_bjt_iast');
+          
+          if (sParam) {
+            newParams.set('s', sParam);
+          }
+          
+          parsedUrl.search = newParams.toString();
+          
+          // Логика формирования хэша в зависимости от наличия диапазона
+          if (slug.includes('-')) {
+              // Для диапазонов (an1.11-20) используем только ID строки (an1.12:1.2)
+              parsedUrl.hash = `#tr-${currentContext.hash}`;
+          } else {
+              // Для обычных сутт (mn1) используем классическую склейку (mn1:1.2)
+              parsedUrl.hash = `#tr-${anchorBase}:${currentContext.hash}`;
+          }
+
+          window.open(parsedUrl.href, '_blank');
         } catch (err) {
           console.error('Ошибка при формировании ссылки для сравнения:', err);
         }
@@ -2310,8 +2334,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       console.error('Функция get4ntUrl не определена на странице.');
     }
-  });
-
-  
+  });  
 });
 

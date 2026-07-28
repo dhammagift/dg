@@ -153,17 +153,40 @@ function initExtra() {
 
         document.addEventListener('click', function(e) {
             const a = e.target.closest('a');
+            // Обрабатываем только внутренние ссылки (на тот же домен)
             if (a && a.href && a.origin === window.location.origin) {
                 try {
                     const url = new URL(a.href);
+                    // Исключаем якорные ссылки в рамках той же страницы
                     if (url.pathname !== window.location.pathname) {
+                        let isModified = false;
+                        
+                        // 1. Прокидываем настройки колонок (cols) из хранилища (приоритет)
                         const currentCols = sessionStorage.getItem('sharedCols');
                         if (currentCols) {
                             url.searchParams.set('cols', currentCols);
+                            isModified = true;
+                        }
+                        
+                        // 2. Динамически прокидываем все остальные параметры с текущей страницы
+                        const currentParams = new URLSearchParams(window.location.search);
+                        currentParams.forEach((value, key) => {
+                            // Не перезаписываем параметры, которые уже жестко заданы в ссылке (например, q)
+                            // И пропускаем cols, так как мы его уже установили из sessionStorage
+                            if (key !== 'cols' && !url.searchParams.has(key)) {
+                                url.searchParams.set(key, value);
+                                isModified = true;
+                            }
+                        });
+
+                        // Обновляем href только если добавили параметры
+                        if (isModified) {
                             a.href = url.toString();
                         }
                     }
-                } catch(err) {}
+                } catch(err) {
+                    console.error("Ошибка при обработке клика по ссылке:", err);
+                }
             }
         });
 
@@ -656,4 +679,67 @@ function applyIndependentHighlight() {
             }, 400);
         }
     });
+}
+
+// Полный блок для подсветки слов из URL параметра `s`
+window.applyWordHighlight = function() {
+    const params = new URLSearchParams(window.location.search);
+    let finder = (params.get("s") || "").replace(/ṃ/g, "ṁ");
+    
+    if (!finder || finder.trim() === "") return;
+    
+    // Экранирование спецсимволов для безопасности регулярного выражения
+    finder = finder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(finder, 'gi');
+    
+    // Класс .ct содержит текстовые сегменты (корни и переводы)
+    document.querySelectorAll('.ct').forEach(el => {
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
+        const nodesToReplace = [];
+        let node;
+        
+        while (node = walker.nextNode()) {
+            if (node.nodeValue.match(regex)) {
+                nodesToReplace.push(node);
+            }
+        }
+        
+        nodesToReplace.forEach(n => {
+            const fragment = document.createDocumentFragment();
+            const parts = n.nodeValue.split(regex);
+            const matches = n.nodeValue.match(regex);
+            
+            parts.forEach((part, index) => {
+                if (part) {
+                    fragment.appendChild(document.createTextNode(part));
+                }
+                if (index < parts.length - 1) {
+                    const b = document.createElement('b');
+                    b.className = 'match finder';
+                    b.textContent = matches[index];
+                    fragment.appendChild(b);
+                }
+            });
+            n.parentNode.replaceChild(fragment, n);
+        });
+    });
+};
+
+// Патч глобальной функции renderMain для применения подсветки при перерисовке
+if (typeof window.renderMain === 'function' && !window.renderMain.isWordHighlightPatched) {
+    const origRenderMain = window.renderMain;
+    window.renderMain = function() {
+        origRenderMain();
+        setTimeout(window.applyWordHighlight, 100);
+    };
+    window.renderMain.isWordHighlightPatched = true;
+}
+
+// Применение подсветки при начальной загрузке страницы
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(window.applyWordHighlight, 300);
+    });
+} else {
+    setTimeout(window.applyWordHighlight, 300);
 }

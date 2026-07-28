@@ -297,3 +297,14 @@ display: none;
     /* opacity: 0; */
     
 }
+
+
+/* Подсветка искомого слова из параметра ?s= */
+b.match.finder {
+    color: #902A07;
+    font-weight: 600;
+}
+
+html[data-theme="dark"] b.match.finder {
+    color: #DA420E;
+}
