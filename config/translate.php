@@ -694,7 +694,6 @@ $defaults = '
 <option value="standaloneru">DPD Встроенный</option>
 <option value="dpdFullRu">DPD Онлайн </option>
 <option value="newwindowru">DPD Онлайн Новое Окно</option>
-<option value="dpdCompactRu">DPD Онлайн мини</option>
 <option value="searchonly">Только Поиск</option>
 <option value="dictTango">DictTango Android</option>
 <option value="mdict">Mdict IOS</option>
@@ -702,7 +701,6 @@ $defaults = '
 <option value="standalone">Англ DPD Встроенный</option>
 <option value="dpdFull">Англ DPD Онлайн</option>
 <option value="newwindow">Англ DPD Онлайн новое окно </option>
-<option value="dpdCompact" >Англ DPD Онлайн мини </option>
 </select> <a href="/assets/common/dictHelpRu.html">?</a>
 </div>
 
@@ -1399,7 +1397,6 @@ $defaults = '
 <option value="standalone">DPD Built-in </option>
 <option value="dpdFull">DPD Online </option>
 <option value="newwindow">DPD Online New Window</option>
-<option value="dpdCompact">DPD Onilne mini </option>
 <option value="searchonly">Search Only</option>
 <option value="dictTango">DictTango Android</option>
 <option value="mdict">Mdict IOS</option>
@@ -1408,7 +1405,6 @@ $defaults = '
 <option value="standaloneru">Ru DPD Built-in </option>
 <option value="dpdFullRu" class="d-none">Ru DPD Online </option>
 <option value="newwindowru" class="d-none">Ru DPD Online New Window </option>
-<option value="dpdCompactRu" class="d-none">Ru DPD Online mini </option>
 
 </select> <a href="/assets/common/dictHelp.html">?</a>
 </div>

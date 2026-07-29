@@ -279,7 +279,6 @@ function processHtml(dir) {
                             <option value="standalone">DPD Built-in</option>
                             <option value="dpdfull">DPD Online Popup</option>
                             <option value="newwindow">DPD Online New Window</option>
-                            <option value="dpdcompact">DPD Online Mini</option>
                             <option value="machinetranslation">DharmaMitra.org</option>
                             <option value="searchonly">Search Only</option>
                             <option value="dicttango">DictTango Android</option>
@@ -288,7 +287,6 @@ function processHtml(dir) {
                             <option value="standaloneru">DPD Встроенный (Ru)</option>
                             <option value="dpdfullru">DPD Онлайн Попап (Ru)</option>
                             <option value="newwindowru">DPD Онлайн Новое Окно (Ru)</option>
-                            <option value="dpdcompactru">DPD Онлайн Мини (Ru)</option>
                         </select>
                     </div>
                 `);
