@@ -33,7 +33,10 @@
    <a href="/assets/readylinebyline.html" title="Обновить Список Готовых" class=" ms-2 me-2 text-muted" target="_blank">
 <i class="fa-solid fa-list"></i>
    </a>  
-                <a href="/assets/lbl-en.html" title="English " class=" ms-0 me-2 text-muted text-decoration-none">en</a>  
+                <a href="/assets/lbl-en.html"  title="English " class=" ms-0 me-2 text-muted text-decoration-none">en</a>  
+                            <a href="https://ruscorpora.ru/" target="_blank" title="Russian texual corpus" class=" ms-0 me-2 text-muted text-decoration-none">crp</a>  
+
+            
                 
                 <div class="input-group-append ms-1 me-3 mb-2">
                     <div class=" ms-1">
@@ -61,8 +64,9 @@
                 </div>
   
                 <div class="input-group-append ms-1 me-3">
-                    <button class="btn btn-primary mb-1" title="Открыть текст на dhamma.gift" id="linkButton2">Th.ru</button>
+
                     <button class="btn btn-primary mb-1" title="Открыть текст на dhamma.gift" id="linkButton1">DG</button>
+                   <button class="btn btn-primary mb-1" title="Открыть текст на dhamma.gift" id="linkButton3">4nt</button>
                 </div>
 
                 <div class="input-group-append ms-1 me-3">
@@ -1465,6 +1469,11 @@ function clearInputs() {
 </script> 
 	
 <script>
+    document.getElementById('linkButton3').addEventListener('click', function() {
+        var indexValue = document.getElementById('indexInput').value;
+                window.open('/4nt/?cols=pali%2Cpali_royal_iast%2Cpali_myanmar_iast%2Cpali_bjt_iast&q=' + indexValue, '_blank');
+    });
+
     document.getElementById('linkButton2').addEventListener('click', function() {
         var indexValue = document.getElementById('indexInput').value;
         var found = false;
