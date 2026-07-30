@@ -2068,7 +2068,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         text: sourceText,
-                        threshold: 0.4
+                        threshold: 0.4,
+                        lang: 'ru'
                     })
                 });
 
@@ -2136,6 +2137,7 @@ document.addEventListener('DOMContentLoaded', function() {
             dropdown.style.display = 'none';
         }
     });
+
 });
 </script>
 

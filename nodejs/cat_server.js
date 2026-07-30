@@ -21,7 +21,7 @@ function resetInactivityTimer() {
     inactivityTimer = setTimeout(() => {
         translationMemory = [];
         isDbLoaded = false;
-        console.log('Таймаут неактивности (30 минут). Память очищена.');
+        console.log('Таймаут неактивности (15 минут). Память очищена.');
     }, IDLE_TIMEOUT_MS);
 }
 
@@ -49,25 +49,27 @@ async function ensureDbLoaded() {
                     const cleanPali = pali.trim();
                     if (!cleanPali) continue;
                     
-                    // Перебираем всех переводчиков для этой строки
                     for (const key in seg.translations) {
-                        if (key.startsWith('ru') || key.startsWith('en')) {
-                            const cleanTrans = seg.translations[key].trim();
-                            if (cleanTrans) {
-                                if (!memoryMap.has(cleanPali)) {
-                                    memoryMap.set(cleanPali, new Map());
-                                }
-                                
-                                const currentTransMap = memoryMap.get(cleanPali);
-                                // Если такого текста еще нет, добавляем
-                                if (!currentTransMap.has(cleanTrans)) {
+                        let lang = '';
+                        if (key.startsWith('ru')) lang = 'ru';
+                        else if (key.startsWith('en')) lang = 'en';
+                        else continue;
+
+                        const cleanTrans = seg.translations[key].trim();
+                        if (cleanTrans) {
+                            const mapKey = `${lang}_${cleanPali}`;
+                            
+                            if (!memoryMap.has(mapKey)) {
+                                memoryMap.set(mapKey, new Map());
+                            }
+                            
+                            const currentTransMap = memoryMap.get(mapKey);
+                            if (!currentTransMap.has(cleanTrans)) {
+                                currentTransMap.set(cleanTrans, key);
+                            } else {
+                                const existingKey = currentTransMap.get(cleanTrans);
+                                if ((key.includes('_o') || key.includes('edited+o')) && !existingKey.includes('_o')) {
                                     currentTransMap.set(cleanTrans, key);
-                                } else {
-                                    // Если текст дублируется, сохраняем приоритетный ключ 'o' или 'edited+o'
-                                    const existingKey = currentTransMap.get(cleanTrans);
-                                    if ((key.includes('_o') || key.includes('edited+o')) && !existingKey.includes('_o')) {
-                                        currentTransMap.set(cleanTrans, key);
-                                    }
                                 }
                             }
                         }
@@ -77,9 +79,20 @@ async function ensureDbLoaded() {
         }
         
         translationMemory = [];
-        for (const [pali, transMap] of memoryMap.entries()) {
+        for (const [mapKey, transMap] of memoryMap.entries()) {
+            const lang = mapKey.substring(0, 2);
+            const pali = mapKey.substring(3);
+            const normalizedPali = pali.toLowerCase();
+            
             for (const [trans, key] of transMap.entries()) {
-                translationMemory.push({ pali: pali, ru: trans, translator: key });
+                translationMemory.push({ 
+                    pali: pali, 
+                    normalizedPali: normalizedPali,
+                    length: normalizedPali.length,
+                    ru: trans, 
+                    translator: key,
+                    lang: lang
+                });
             }
         }
         
@@ -90,27 +103,31 @@ async function ensureDbLoaded() {
     }
 }
 
+// Оптимизированная версия алгоритма Левенштейна
 function getLevenshteinDistance(a, b) {
-    const matrix = [];
+    if (a === b) return 0;
+    if (a.length === 0) return b.length;
+    if (b.length === 0) return a.length;
+
+    let v0 = new Int32Array(b.length + 1);
+    let v1 = new Int32Array(b.length + 1);
+
     for (let i = 0; i <= b.length; i++) {
-        matrix[i] = [i];
+        v0[i] = i;
     }
-    for (let j = 0; j <= a.length; j++) {
-        matrix[0][j] = j;
-    }
-    for (let i = 1; i <= b.length; i++) {
-        for (let j = 1; j <= a.length; j++) {
-            if (b.charAt(i - 1) === a.charAt(j - 1)) {
-                matrix[i][j] = matrix[i - 1][j - 1];
-            } else {
-                matrix[i][j] = Math.min(
-                    matrix[i - 1][j - 1] + 1,
-                    Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1)
-                );
-            }
+
+    for (let i = 0; i < a.length; i++) {
+        v1[0] = i + 1;
+        for (let j = 0; j < b.length; j++) {
+            const cost = (a[i] === b[j]) ? 0 : 1;
+            v1[j + 1] = Math.min(v1[j] + 1, v0[j + 1] + 1, v0[j] + cost);
+        }
+        for (let j = 0; j <= b.length; j++) {
+            v0[j] = v1[j];
         }
     }
-    return matrix[b.length][a.length];
+
+    return v1[b.length];
 }
 
 app.post('/api/find-match', async (req, res) => {
@@ -119,9 +136,12 @@ app.post('/api/find-match', async (req, res) => {
     
     const sourceText = req.body.text || '';
     const threshold = req.body.threshold || 0.4;
-    const normalizedSource = sourceText.trim().toLowerCase();
+    const requestedLang = req.body.lang || 'ru'; 
     
-    if (!normalizedSource) {
+    const normalizedSource = sourceText.trim().toLowerCase();
+    const L1 = normalizedSource.length;
+    
+    if (L1 === 0) {
         return res.json([]);
     }
     
@@ -129,10 +149,26 @@ app.post('/api/find-match', async (req, res) => {
     
     for (let i = 0; i < translationMemory.length; i++) {
         const tmItem = translationMemory[i];
-        const normalizedTm = tmItem.pali.trim().toLowerCase();
         
-        const distance = getLevenshteinDistance(normalizedSource, normalizedTm);
-        const maxLength = Math.max(normalizedSource.length, normalizedTm.length);
+        if (tmItem.lang !== requestedLang) continue;
+        
+        const L2 = tmItem.length;
+        
+        const maxPossibleSim = Math.min(L1, L2) / Math.max(L1, L2);
+        if (maxPossibleSim < threshold) continue;
+        
+        if (normalizedSource === tmItem.normalizedPali) {
+            matches.push({
+                ru: tmItem.ru,
+                pali: tmItem.pali,
+                translator: tmItem.translator,
+                similarity: 1.0
+            });
+            continue;
+        }
+
+        const distance = getLevenshteinDistance(normalizedSource, tmItem.normalizedPali);
+        const maxLength = Math.max(L1, L2);
         const similarity = (maxLength - distance) / maxLength;
 
         if (similarity >= threshold) {
@@ -145,7 +181,6 @@ app.post('/api/find-match', async (req, res) => {
         }
     }
     
-    // Сортировка: сначала по % совпадения, затем по приоритету переводчика
     const topMatches = matches.sort((a, b) => {
         if (b.similarity !== a.similarity) {
             return b.similarity - a.similarity;
@@ -164,4 +199,6 @@ app.post('/api/find-match', async (req, res) => {
 app.listen(3001, () => {
     console.log('API поиска переводов запущено локально на порту 3001');
 });
+
+
 
