@@ -161,7 +161,7 @@ app.post('/api/find-match', async (req, res) => {
     res.json(topMatches);
 });
 
-app.listen(8000, () => {
-    console.log('API поиска переводов запущено локально на порту 8000');
+app.listen(3001, () => {
+    console.log('API поиска переводов запущено локально на порту 3001');
 });
 
