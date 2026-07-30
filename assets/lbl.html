@@ -705,13 +705,18 @@ function loadText() {
       const pathPart = trimmedUrlForRu.split('_')[0];
       
       const ruTranslatorsKeys = Object.keys(translatorsData.ru || {});
-      const priorityKeys = ['o', 'sv+edited+o', 'sv'];
+      const priorityKeys = ['o', 'ai', 'sv+edited+o', 'sv'];
       const otherKeys = ruTranslatorsKeys.filter(key => !priorityKeys.includes(key));
       
       let ruUrlsToTry = [];
       
       // 1. Папка 1 (ru) и пул
-      priorityKeys.forEach(key => ruUrlsToTry.push(`/assets/texts/ru${pathPart}_translation-ru-${key}.json`));
+      priorityKeys.forEach(key => {
+          ruUrlsToTry.push(`/assets/texts/ru${pathPart}_translation-ru-${key}.json`);
+          if (key === 'ai') {
+              ruUrlsToTry.push(`/assets/texts/ai${pathPart}_translation-ru-ai.json`);
+          }
+      });
       // 2. Папка 1 (ru) и остальные
       otherKeys.forEach(key => ruUrlsToTry.push(`/assets/texts/ru${pathPart}_translation-ru-${key}.json`));
       // 3. Папка 2 (ru_other) и пул
@@ -828,6 +833,9 @@ function loadText() {
               priorityKeys.forEach(key => {
                   group1.push({ name: `${key} (Неопублик)`, url: `/assets/texts/lbl/${indexValue}_translation-ru-${key}.json` });
                   group1.push({ name: `${key} (ru)`, url: `/assets/texts/ru${pathPart}_translation-ru-${key}.json` });
+                  if (key === 'ai') {
+                      group1.push({ name: `ai (ai)`, url: `/assets/texts/ai${pathPart}_translation-ru-ai.json` });
+                  }
               });
 
               // 2. Папка 1 (lbl и ru) и остальные
@@ -1274,6 +1282,7 @@ function loadText() {
       });
     })
     .catch(error => console.error('Error loading translators.json:', error));
+
 }
 
 function ifKn(indexValue) {
