@@ -773,7 +773,10 @@ function loadText() {
               const currentText = texts[textIndex] || ''; 
               rowCounter++;
               const row = `<tr>
-                            <td class="pli-lang">${sourceText}</td>
+                            <td class="pli-lang">
+                                <a href="#" class="cat-trigger text-muted text-decoration-none me-2" style="opacity: 0.3;" title="Искать перевод" onclick="event.preventDefault();"><i class="fa-solid fa-link"></i></a>
+                                <span class="source-text">${sourceText}</span>
+                            </td>
                             <td>${key}</td>
                             <td>${currentText}</td>
                             <td><a href="#" title="${key}" onmousedown="gotoLine(${rowCounter})"><i class="fa-solid fa-link"></i></a></td>
@@ -1988,26 +1991,30 @@ document.addEventListener("DOMContentLoaded", function() {
 <div id="catDropdown" class="cat-dropdown"></div>
 
 <script>
-let isCatModeActive = false;
+let isCatModeActive = true;
 let currentTargetRowIndex = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     const dropdown = document.getElementById('catDropdown');
     const catToggleBtn = document.getElementById('catToggleBtn');
 
-    // Логика кнопки включения/выключения
+    // Инициализация кнопки при загрузке (так как включено по умолчанию)
     if (catToggleBtn) {
+        if (isCatModeActive) {
+            catToggleBtn.classList.remove('btn-outline-secondary');
+            catToggleBtn.classList.add('btn-primary');
+        }
+
+        // Логика кнопки включения/выключения
         catToggleBtn.addEventListener('click', function() {
             isCatModeActive = !isCatModeActive;
             if (isCatModeActive) {
-                this.innerHTML = '<span class="catIcon">🐱</span>';
                 this.classList.remove('btn-outline-secondary');
                 this.classList.add('btn-primary');
             } else {
-                this.innerHTML = '<span class="catIcon">🐱</span>';
                 this.classList.remove('btn-primary');
                 this.classList.add('btn-outline-secondary');
-                dropdown.style.display = 'none';
+                if (dropdown) dropdown.style.display = 'none';
             }
         });
     }
@@ -2015,108 +2022,114 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', async function(event) {
         let target = event.target;
         
-        if (dropdown.contains(target)) {
+        if (dropdown && dropdown.contains(target)) {
             return;
         }
 
-        const pliLangCell = target.closest ? target.closest('.pli-lang') : null;
+        const catTrigger = target.closest ? target.closest('.cat-trigger') : null;
         
-        // Срабатывает только если режим включен
-        if (isCatModeActive && pliLangCell && pliLangCell.tagName === 'TD') {
-            const sourceText = pliLangCell.textContent;
+        // Срабатывает только если режим включен и клик был по триггеру
+        if (isCatModeActive && catTrigger) {
+            const pliLangCell = catTrigger.closest('.pli-lang');
+            const sourceTextElement = pliLangCell.querySelector('.source-text');
+            const sourceText = sourceTextElement ? sourceTextElement.textContent : pliLangCell.textContent;
+            
             const row = pliLangCell.parentElement;
             const tbody = row.parentElement;
             
             currentTargetRowIndex = Array.from(tbody.children).indexOf(row);
             
-            dropdown.innerHTML = '<div class="cat-dropdown-item text-muted">Поиск совпадений...</div>';
-            const rect = pliLangCell.getBoundingClientRect();
-            dropdown.style.left = (rect.left + window.scrollX + 50) + 'px';
-            dropdown.style.top = (rect.bottom + window.scrollY) + 'px';
-            dropdown.style.display = 'block';
+            if (dropdown) {
+                dropdown.innerHTML = '<div class="cat-dropdown-item text-muted">Поиск совпадений...</div>';
+                const rect = catTrigger.getBoundingClientRect();
+                dropdown.style.left = (rect.left + window.scrollX + 25) + 'px';
+                dropdown.style.top = (rect.bottom + window.scrollY) + 'px';
+                dropdown.style.display = 'block';
+            }
 
+            try {
+                const apiHost =
+                    location.hostname === 'localhost' ||
+                    location.hostname === '127.0.0.1'
+                        ? 'http://localhost:3001'
+                        : '';
 
-/* 
-curl -X POST http://f.dhamma.gift:8880/api/find-match \
-  -H "Content-Type: application/json" \
-  -d '{"text":"Sabbe saṅkhārā aniccā","threshold":0.4}'
-*/
-try {
-    const apiHost =
-        location.hostname === 'localhost' ||
-        location.hostname === '127.0.0.1'
-            ? 'http://localhost:3001'
-            : '';
+                const response = await fetch(`${apiHost}/api/find-match`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: sourceText,
+                        threshold: 0.4
+                    })
+                });
 
-    const response = await fetch(`${apiHost}/api/find-match`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            text: sourceText,
-            threshold: 0.4
-        })
-    });
-
-    if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`${response.status} ${response.statusText}\n${errorText}`);
-    }
-
-    const matches = await response.json();
-
-    if (matches.length > 0) {
-        dropdown.innerHTML = '';
-
-        for (let i = 0; i < matches.length; i++) {
-            const match = matches[i];
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'cat-dropdown-item';
-            const percent = Math.round(match.similarity * 100);
-
-            itemDiv.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                    <span class="cat-match-percent">${percent}%</span>
-                    <span class="cat-translator-badge">${match.translator.replace('ru_', '')}</span>
-                </div>
-                <div class="cat-match-text">${match.ru}</div>
-                <div class="text-muted" style="font-size:0.85em;font-style:italic;">${match.pali}</div>
-            `;
-
-            itemDiv.addEventListener('click', function (e) {
-                e.stopPropagation();
-
-                if (currentTargetRowIndex !== null) {
-                    const textarea = document.getElementById('translationInput');
-                    if (textarea) {
-                        let lines = textarea.value.split('\n');
-                        while (lines.length <= currentTargetRowIndex) lines.push('');
-
-                        lines[currentTargetRowIndex] = match.ru + ' ';
-                        textarea.value = lines.join('\n');
-
-                        if (typeof syncTextToTable === 'function') syncTextToTable();
-                        if (typeof saveInputs === 'function') saveInputs();
-                    }
-                    dropdown.style.display = 'none';
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`${response.status} ${response.statusText}\n${errorText}`);
                 }
-            });
 
-            dropdown.appendChild(itemDiv);
-        }
-    } else {
-        dropdown.innerHTML = '<div class="cat-dropdown-item text-muted">Нет совпадений</div>';
-    }
-} catch (error) {
-    console.error('CAT Tool Ошибка:', error);
-    dropdown.innerHTML = `<div class="cat-dropdown-item text-danger" style="white-space:pre-wrap">${error.message}</div>`;
-}
-return;
+                const matches = await response.json();
+
+                if (dropdown) {
+                    if (matches.length > 0) {
+                        dropdown.innerHTML = '';
+
+                        for (let i = 0; i < matches.length; i++) {
+                            const match = matches[i];
+                            const itemDiv = document.createElement('div');
+                            itemDiv.className = 'cat-dropdown-item';
+                            const percent = Math.round(match.similarity * 100);
+
+                            itemDiv.innerHTML = `
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                    <span class="cat-match-percent">${percent}%</span>
+                                    <span class="cat-translator-badge">${match.translator.replace(/^(ru_|en_)/, '')}</span>
+                                </div>
+                                <div class="cat-match-text">${match.ru}</div>
+                                <div class="text-muted" style="font-size:0.85em;font-style:italic;">${match.pali}</div>
+                            `;
+
+                            itemDiv.addEventListener('click', function (e) {
+                                e.stopPropagation();
+
+                                if (currentTargetRowIndex !== null) {
+                                    const textarea = document.getElementById('translationInput');
+                                    if (textarea) {
+                                        let lines = textarea.value.split('\n');
+                                        while (lines.length <= currentTargetRowIndex) lines.push('');
+
+                                        lines[currentTargetRowIndex] = match.ru + ' ';
+                                        textarea.value = lines.join('\n');
+
+                                        if (typeof syncTextToTable === 'function') syncTextToTable();
+                                        if (typeof saveInputs === 'function') saveInputs();
+                                    }
+                                    dropdown.style.display = 'none';
+                                }
+                            });
+
+                            dropdown.appendChild(itemDiv);
+                        }
+                    } else {
+                        dropdown.innerHTML = '<div class="cat-dropdown-item text-muted">Нет совпадений</div>';
+                    }
+                }
+            } catch (error) {
+                console.error('CAT Tool Ошибка:', error);
+                if (dropdown) {
+                    dropdown.innerHTML = `<div class="cat-dropdown-item text-danger" style="white-space:pre-wrap">${error.message}</div>`;
+                }
+            }
+            return;
         }
 
-        dropdown.style.display = 'none';
+        if (dropdown) {
+            dropdown.style.display = 'none';
+        }
     });
 });
 </script>
+
 
 </body>
 </html>

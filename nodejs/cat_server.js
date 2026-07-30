@@ -11,7 +11,7 @@ let translationMemory = [];
 let isDbLoaded = false;
 let inactivityTimer = null;
 
-const IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+const IDLE_TIMEOUT_MS = 15 * 60 * 1000;
 
 function resetInactivityTimer() {
     if (inactivityTimer) {
@@ -51,22 +51,22 @@ async function ensureDbLoaded() {
                     
                     // Перебираем всех переводчиков для этой строки
                     for (const key in seg.translations) {
-                        if (key.startsWith('ru')) {
-                            const cleanRu = seg.translations[key].trim();
-                            if (cleanRu) {
+                        if (key.startsWith('ru') || key.startsWith('en')) {
+                            const cleanTrans = seg.translations[key].trim();
+                            if (cleanTrans) {
                                 if (!memoryMap.has(cleanPali)) {
                                     memoryMap.set(cleanPali, new Map());
                                 }
                                 
                                 const currentTransMap = memoryMap.get(cleanPali);
                                 // Если такого текста еще нет, добавляем
-                                if (!currentTransMap.has(cleanRu)) {
-                                    currentTransMap.set(cleanRu, key);
+                                if (!currentTransMap.has(cleanTrans)) {
+                                    currentTransMap.set(cleanTrans, key);
                                 } else {
                                     // Если текст дублируется, сохраняем приоритетный ключ 'o' или 'edited+o'
-                                    const existingKey = currentTransMap.get(cleanRu);
+                                    const existingKey = currentTransMap.get(cleanTrans);
                                     if ((key.includes('_o') || key.includes('edited+o')) && !existingKey.includes('_o')) {
-                                        currentTransMap.set(cleanRu, key);
+                                        currentTransMap.set(cleanTrans, key);
                                     }
                                 }
                             }
@@ -78,8 +78,8 @@ async function ensureDbLoaded() {
         
         translationMemory = [];
         for (const [pali, transMap] of memoryMap.entries()) {
-            for (const [ru, key] of transMap.entries()) {
-                translationMemory.push({ pali: pali, ru: ru, translator: key });
+            for (const [trans, key] of transMap.entries()) {
+                translationMemory.push({ pali: pali, ru: trans, translator: key });
             }
         }
         
