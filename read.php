@@ -871,7 +871,7 @@ clearBtn.style.display = 'block';
 		 <h5>Mūlapariyāyavagga</h5>
  </div>
 <div class="mt-3">
-<span class="level5" id="mn1"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=mn1">mn1</a> Mūlapariyāyasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
+<span class="level5" id="mn1"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=mn1">mn1</a> Mūlapariyāyasutta  <?php echo $ifEnThanTrn;?> <?php echo $ifRuLitTrn;?></span>
 </div>
  
 <div class="mt-3">
@@ -4727,7 +4727,7 @@ clearBtn.style.display = 'block';
 
 		 
 		 <div class="mt-3">
- <span class="level5" id="sn22.44"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn22.44">sn22.44</a> Paṭipadāsutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+ <span class="level5" id="sn22.44"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn22.44">sn22.44</a> Paṭipadāsutta  <?php echo $ifEnSujTrn;?> <?php echo $ifRuLitTrn;?></span>
  </div>
 
 		 
@@ -5017,7 +5017,7 @@ clearBtn.style.display = 'block';
 
 		 
 		 <div class="mt-3">
- <span class="level5" id="sn22.99"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn22.99">sn22.99</a> Gaddulabaddhasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
+ <span class="level5" id="sn22.99"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn22.99">sn22.99</a> Gaddulabaddhasutta  <?php echo $ifEnThanTrn;?></span>
  </div>
 
 		 
@@ -6780,7 +6780,7 @@ clearBtn.style.display = 'block';
 
 		 
 		 <div class="mt-3">
- <span class="level5" id="sn35.94"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn35.94">sn35.94</a> Adantaaguttasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnSujTrn;?></span>
+ <span class="level5" id="sn35.94"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn35.94">sn35.94</a> Adantaaguttasutta  <?php echo $ifEnSujTrn;?></span>
  </div>
 
 		 
@@ -7334,7 +7334,7 @@ clearBtn.style.display = 'block';
 
 		 
 		 <div class="mt-3">
- <span class="level5" id="sn35.230"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn35.230">sn35.230</a> Bāḷisikopamasutta <?php echo $ifRuSvOTrn;?> <?php echo $ifEnThanTrn;?></span>
+ <span class="level5" id="sn35.230"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn35.230">sn35.230</a> Bāḷisikopamasutta  <?php echo $ifEnThanTrn;?> <?php echo $ifRuLitTrn;?></span>
  </div>
 
 		 
