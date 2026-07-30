@@ -13,6 +13,7 @@
         "memorize": { js: "./js/memorize.js", css: "./css/rus-multi.css" },
         "multi": { js: "./js/multitran-en.js", css: "./css/rus-multi.css" },
         "nr": { js: "./js/megareader.js", css: "./css/index.css" },      
+        "ai": { js: "./js/ai.js", css: "./css/rus-multi.css" },      
         "mt": { js: "./js/multitran.js", css: "./css/rus-multi.css" },      
         "ml": { js: "./js/multilang.js", css: "./css/rus-multi.css" },      
         "rev": { js: "./js/multilangrev.js", css: "./css/rus-multi.css" },      
