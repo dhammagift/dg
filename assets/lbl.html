@@ -2036,7 +2036,13 @@ document.addEventListener('DOMContentLoaded', function() {
             dropdown.style.display = 'block';
 
             try {
-                const response = await fetch('http://localhost:3000/api/find-match', {
+                  const apiHost =
+                  location.hostname === 'localhost' ||
+                  location.hostname === '127.0.0.1'
+                      ? 'http://localhost:8000'
+                      : 'http://f.dhamma.gift:8000';
+
+            const response = await fetch(`${apiHost}/api/find-match`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text: sourceText, threshold: 0.4 })
