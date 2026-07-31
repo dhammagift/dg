@@ -505,3 +505,21 @@ apa; bash scripts/checknewlinebylineinscrepo.sh | grep -v done ; cd - >/dev/null
 
 alias dpd='cd /data/data/com.termux/files/usr/share/apache2/default-site/dpd-ui'
 apachectl start
+
+ck() {
+    cd $basedir
+    cd ../offline-data/dhammagift
+
+local n="${1:-45}"
+
+    comm -13 \
+      <(find "ru/sutta/sn/sn$n" -maxdepth 1 -name '*ru-o.json' -printf '%f\n' | sed 's/-ru-o\.json$//' | sort) \
+      <(find "ai/sutta/sn/sn$n" -maxdepth 1 -name '*.json' -printf '%f\n' | sed 's/\.json$//' | sort) |
+    while read -r f; do
+        lines=$(wc -l < "ai/sutta/sn/sn$n/$f.json")
+        printf "%6d  %s\n" "$lines" "ai/sutta/sn/sn$n/$f.json"
+    done | sort -k1,1n -k2,2V |tac 
+}
+
+
+

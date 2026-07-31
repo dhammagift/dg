@@ -121,12 +121,13 @@ async function buildSutta(slug) {
 
   // Для multilang/multitran - функция поиска второго перевода
   async function fetchSecondTranslation() {
+      const mainRuPath = "/assets/texts/ru";
       const otherRuPath = "/assets/texts/ru_other";
       const scRuPath = `${Sccopy}/sc-data/sc_bilara_data/translation/ru`;
       
       // Главный приоритет второго перевода - запрошенный переводчик (сохраненный в переменной translator)
       const prioritySources = [
-          { path: `/assets/texts/ru/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`, author: translator },
+          { path: `${mainRuPath}/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`, author: translator },
           { path: `${otherRuPath}/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`, author: translator },
           { path: `${scRuPath}/${translator}/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`, author: translator }
       ];
@@ -144,37 +145,31 @@ async function buildSutta(slug) {
           } catch (error) {}
       }
 
-      // Если приоритетный переводчик не найден, ищем по запасному списку авторов
-      const fallbackAuthors = ["o", "sv", "khantibalo", "syrkin", "narinyanievmenenko"];
+      // Если приоритетный переводчик не найден, ищем любого другого по всем доступным папкам
+      const fallbackAuthors = ["o","sv+edited+o", "sv", "khantibalo", "syrkin+edited+o", "syrkin", "narinyanievmenenko"];
       const authorsToTry = fallbackAuthors.filter(a => a !== translator); // Исключаем того, кого уже проверили
 
       for (const author of authorsToTry) {
-          try {
-              const localPath = `${otherRuPath}/${texttype}/${slugReady}_translation-ru-${author}.json`;
-              const response = await fetch(localPath);
-              if (response.ok) {
-                  const data = await response.json();
-                  if (data && Object.keys(data).length > 0) {
-                      data._authorId = author;
-                      return data;
-                  }
-              }
-          } catch (error) {}
-      }
+          const fallbackSources = [
+              { path: `${mainRuPath}/${texttype}/${slugReady}_translation-${pathLang}-${author}.json`, author: author },
+              { path: `${otherRuPath}/${texttype}/${slugReady}_translation-${pathLang}-${author}.json`, author: author },
+              { path: `${scRuPath}/${author}/${texttype}/${slugReady}_translation-${pathLang}-${author}.json`, author: author }
+          ];
 
-      for (const author of authorsToTry) {
-          try {
-              const scPath = `${scRuPath}/${author}/${texttype}/${slugReady}_translation-ru-${author}.json`;
-              const response = await fetch(scPath);
-              if (response.ok) {
-                  const data = await response.json();
-                  if (data && Object.keys(data).length > 0) {
-                      data._authorId = author;
-                      return data;
+          for (const source of fallbackSources) {
+              try {
+                  const response = await fetch(source.path);
+                  if (response.ok) {
+                      const data = await response.json();
+                      if (data && Object.keys(data).length > 0) {
+                          data._authorId = source.author;
+                          return data;
+                      }
                   }
-              }
-          } catch (error) {}
+              } catch (error) {}
+          }
       }
+      
       return null;
   }
 

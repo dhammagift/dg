@@ -128,81 +128,85 @@
             }
         };
 
-    function loadAndCheckRanges() {
-        fetch('/read/js/reader-rus-translations.js')
-            .then(response => response.text())
-            .then(data => {
-                const regex = /let (\w+) = \[([\s\S]+?)\];/g;
-                let match;
-                let variables = {};
+async function loadAndCheckRanges() {
+    const inputField = document.getElementById('indexInput');
+    const checkResult = document.getElementById('checkResult');
+    let debounceTimer;
 
-                while ((match = regex.exec(data)) !== null) {
-                    let varName = match[1];
-                    let varValues = match[2].replace(/\s+/g, '').split(',').map(val => val.replace(/['"]/g, ''));
-                    variables[varName] = varValues;
-                }
+    // Вспомогательная функция для генерации пути
+    function getFileUrls(indexValue, translator) {
+        let lettersOnly = indexValue.match(/[a-z]+/)?.[0] ?? '';
+        let beforeDot = indexValue.split('.')[0];
+        let firstNumberOnly = beforeDot.match(/[0-9]+/)?.[0] ?? null;
 
-                const inputField = document.getElementById('indexInput');
-                inputField.addEventListener('input', function () {
-                    const inputValue = this.value.trim().toLowerCase();
-                    console.log('Введенное значение:', inputValue);
+        if (['snp', 'ud', 'dhp', 'iti'].some(kn => indexValue.includes(kn))) {
+            lettersOnly = 'kn/' + lettersOnly;
+            if (indexValue.includes('snp') || indexValue.includes('ud')) {
+                beforeDot = 'vagga' + firstNumberOnly;
+            } else if (indexValue.includes('dhp')) {
+                beforeDot = '';
+            } else if (indexValue.includes('iti') && typeof findItiVagga === 'function') {
+                beforeDot = 'vagga' + findItiVagga(firstNumberOnly);
+            }
+        }
 
-                    let resultMessage = '<i class="fa-solid fa-triangle-exclamation"></i>❌✅Уже есть!';
-
-                    if (inputValue.startsWith('an')) {
-                     resultMessage = '<i class="fa-solid fa-triangle-exclamation"></i>❌✅Уже есть!';
-                    } else if (inputValue.startsWith('sn')) {
-                        if (variables['snranges'] && variables['snranges'].includes(inputValue)) {
-                            console.log('Найден в snranges:', inputValue);
-                        } else {
-                            console.log('Не найден в snranges:', inputValue);
-                            resultMessage = '';
-                        }
-                    } else if (inputValue.startsWith('mn')) {
-                        if (variables['mnranges'] && variables['mnranges'].includes(inputValue)) {
-                            console.log('Найден в mnranges:', inputValue);
-                        } else {
-                            console.log('Не найден в mnranges:', inputValue);
-                            resultMessage = '';
-                        }
-                    } else if (inputValue.startsWith('dn')) {
-                        if (variables['dnranges'] && variables['dnranges'].includes(inputValue)) {
-                            console.log('Найден в dnranges:', inputValue);
-                        } else {
-                            console.log('Не найден в dnranges:', inputValue);
-                            resultMessage = '';
-                        }
-                    } else if (
-                      inputValue.startsWith('iti') ||
-                      inputValue.startsWith('snp') ||
-                      inputValue.startsWith('dhp')
-                    ) {
-                        if (variables['knranges'] && variables['knranges'].includes(inputValue)) {
-                            console.log('Найден в knranges:', inputValue);
-                        } else {
-                            console.log('Не найден в knranges:', inputValue);
-                            resultMessage = '';
-                        }
-                    } else if (inputValue.startsWith('bu-')) {
-                        if (variables['vinayaranges'] && variables['vinayaranges'].includes(inputValue)) {
-                            console.log('Найден в vinayaranges:', inputValue);
-                        } else {
-                            console.log('Не найден в vinayaranges:', inputValue);
-                            resultMessage = '';
-                        }
-                    } else {
-                        resultMessage = 'Неизвестный префикс.';
-                    }
-
-                    document.getElementById('checkResult').innerHTML = resultMessage;
-                });
-
-                inputField.dispatchEvent(new Event('input'));
-            })
-            .catch(error => {
-                console.error('Ошибка при загрузке файла:', error);
-            });
+        let middlePart = (indexValue.match(/dn|mn/)) ? '' : (beforeDot ? `${beforeDot}/` : '');
+        let fileName = `${indexValue}_translation-${translator}.json`;
+        
+        return [
+            `/assets/texts/ru/sutta/${lettersOnly}/${middlePart}${fileName}`.replace(/([^:]\/)\/+/g, "$1"),
+            `/assets/texts/lbl/${fileName}`
+        ];
     }
+
+    // Логика проверки существования файла
+    async function performCheck(inputValue) {
+        if (!inputValue) {
+            checkResult.innerHTML = '';
+            return;
+        }
+
+        checkResult.innerHTML = '<div class="status-badge-container"><span class="text-muted status-badge-text"><i class="fa-solid fa-spinner fa-spin"></i> Проверка...</span></div>';
+
+        const urls = getFileUrls(inputValue, 'ru-o');
+        let found = false;
+
+        for (const url of urls) {
+            try {
+                const response = await fetch(url, { method: 'HEAD' });
+                if (response.ok) {
+                    found = true;
+                    break;
+                }
+            } catch (error) {
+                continue;
+            }
+        }
+        
+        if (found) {
+            checkResult.innerHTML = '<div class="status-badge-container"><span class="text-success status-badge-text"><i class="fa-solid fa-check"></i> Уже есть</span></div>';
+        } else {
+            checkResult.innerHTML = '<div class="status-badge-container"><span class="text-muted status-badge-text"><i class="fa-solid fa-xmark"></i> Ещё нет</span></div>';
+        }
+    }
+
+    inputField.addEventListener('input', function () {
+        clearTimeout(debounceTimer);
+        const inputValue = this.value.trim().toLowerCase();
+        
+        debounceTimer = setTimeout(() => {
+            performCheck(inputValue);
+        }, 500); 
+    });
+
+    // Принудительный тихий запуск проверки без генерации события input
+    if (inputField && inputField.value.trim() !== '') {
+        performCheck(inputField.value.trim().toLowerCase());
+    }
+}
+
+// Запускаем функцию
+loadAndCheckRanges();
 
     loadAndCheckRanges();
 
@@ -391,6 +395,7 @@
       const values = Object.values(jsonObject);
       const result = values.join('\n');
       document.getElementById('translationInput').value = result;
+      loadText(); 
     } catch (error) {
       const proceed = confirm('Хотите загрузить файл для замены данных?');
       if (proceed) {
@@ -553,8 +558,10 @@ function loadText() {
 
   try {
     const jsonObject = JSON.parse(translation);
-    processJson(translation);
-    return;  
+    const values = Object.values(jsonObject);
+    translation = values.join('\n');
+    document.getElementById('translationInput').value = translation;
+    cleanedTranslation = translation;
   } catch (error) {
   }
 
@@ -967,10 +974,8 @@ function loadText() {
                               new bootstrap.Toast(toastEl, { autohide: true }).show();
                           }
 
-                          // Синхронизация текста в таблицу, если это необходимо
-                          if (typeof syncTextToTable === 'function') {
-                              syncTextToTable();
-                          }
+                          // Сразу очищаем от JSON и строим таблицу
+                          loadText();
                           
                       } else {
                           throw new Error('Network response was not ok');
