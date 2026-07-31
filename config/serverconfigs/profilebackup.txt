@@ -507,18 +507,44 @@ alias dpd='cd /data/data/com.termux/files/usr/share/apache2/default-site/dpd-ui'
 apachectl start
 
 ck() {
-    cd $basedir
-    cd ../offline-data/dhammagift
+    local basedir_path="$basedir/../offline-data/dhammagift"
+    cd "$basedir_path" || return 1
+                                                                                                local n="${1:-45}"
+    local ru_dir="ru/sutta/sn/sn$n"                                                             local ai_dir="ai/sutta/sn/sn$n"
 
-local n="${1:-45}"
+    if [[ ! -d "$ai_dir" ]]; then
+        echo "Папка $ai_dir не найдена."
+        return 1                                                                                fi
+                                                                                                local total_ai
+    total_ai=$(find "$ai_dir" -maxdepth 1 -name '*.json' | wc -l)
 
-    comm -13 \
-      <(find "ru/sutta/sn/sn$n" -maxdepth 1 -name '*ru-o.json' -printf '%f\n' | sed 's/-ru-o\.json$//' | sort) \
-      <(find "ai/sutta/sn/sn$n" -maxdepth 1 -name '*.json' -printf '%f\n' | sed 's/\.json$//' | sort) |
-    while read -r f; do
-        lines=$(wc -l < "ai/sutta/sn/sn$n/$f.json")
-        printf "%6d  %s\n" "$lines" "ai/sutta/sn/sn$n/$f.json"
-    done | sort -k1,1n -k2,2V |tac 
+    local ai_files
+    ai_files=$(find "$ai_dir" -maxdepth 1 -name '*.json' -printf '%f\n' | sed 's/-ru-ai\.json$//' | sort)
+
+    local ru_files
+    ru_files=$(find "$ru_dir" -maxdepth 1 -name '*ru-o.json' -printf '%f\n' 2>/dev/null | sed 's/-ru-o\.json$//' | sort)
+
+    local diff_files
+    diff_files=$(comm -13 <(echo "$ru_files") <(echo "$ai_files"))                          
+    local remaining_count=0
+    local done_count=0
+
+    if [[ -n "$diff_files" ]]; then
+        remaining_count=$(echo "$diff_files" | grep -c extract -v || echo "$diff_files" | wc -l)
+        done_count=$(( total_ai - remaining_count ))                                        
+        while read -r f; do
+            local file_path="$ai_dir/$f-ru-ai.json"
+            if [[ -f "$file_path" ]]; then
+                local lines
+                lines=$(wc -l < "$file_path")
+                printf "%6d  %s\n" "$lines" "$file_path"
+            fi
+        done <<< "$diff_files" | sort -k1,1n -k2,2V | tac
+    else
+        done_count=$total_ai
+    fi
+echo
+    echo "total: $total_ai | done: $done_count | left: $remaining_count"
 }
 
 
