@@ -2012,14 +2012,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const dropdown = document.getElementById('catDropdown');
     const catToggleBtn = document.getElementById('catToggleBtn');
 
-    // Инициализация кнопки при загрузке (так как включено по умолчанию)
     if (catToggleBtn) {
         if (isCatModeActive) {
             catToggleBtn.classList.remove('btn-outline-secondary');
             catToggleBtn.classList.add('btn-primary');
         }
 
-        // Логика кнопки включения/выключения
         catToggleBtn.addEventListener('click', function() {
             isCatModeActive = !isCatModeActive;
             if (isCatModeActive) {
@@ -2042,19 +2040,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const catTrigger = target.closest ? target.closest('.cat-trigger') : null;
         
-        // Срабатывает только если режим включен и клик был по триггеру
         if (isCatModeActive && catTrigger) {
             const pliLangCell = catTrigger.closest('.pli-lang');
             const sourceTextElement = pliLangCell.querySelector('.source-text');
-            const sourceText = sourceTextElement ? sourceTextElement.textContent : pliLangCell.textContent;
+            const sourceText = sourceTextElement ? sourceTextElement.textContent.trim() : pliLangCell.textContent.trim();
             
             const row = pliLangCell.parentElement;
             const tbody = row.parentElement;
             
+            const segmentId = row.cells[1] ? row.cells[1].textContent.trim() : '';
             currentTargetRowIndex = Array.from(tbody.children).indexOf(row);
             
             if (dropdown) {
-                dropdown.innerHTML = '<div class="cat-dropdown-item text-muted">Поиск совпадений...</div>';
+                dropdown.innerHTML = `<div class="cat-dropdown-item text-muted">Ищем...<br><small>Текст: ${sourceText.substring(0, 30)}...</small></div>`;
                 const rect = catTrigger.getBoundingClientRect();
                 dropdown.style.left = (rect.left + window.scrollX + 25) + 'px';
                 dropdown.style.top = (rect.bottom + window.scrollY) + 'px';
@@ -2062,77 +2060,102 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             try {
-                const apiHost =
-                    location.hostname === 'localhost' ||
-                    location.hostname === '127.0.0.1'
-                        ? 'http://localhost:3001'
-                        : '';
+                const apiHost = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:3001' : '';
+                const currentLang = document.getElementById('languageSelect').value === 'en' ? 'en' : 'ru';
 
-                const response = await fetch(`${apiHost}/api/find-match`, {
+                const response = await fetch(`${apiHost}/api/find-match-stream`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         text: sourceText,
-                        threshold: 0.4,
-                        lang: 'ru'
+                        id: segmentId,
+                        lang: currentLang
                     })
                 });
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`${response.status} ${response.statusText}\n${errorText}`);
-                }
+                if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
 
-                const matches = await response.json();
+                if (dropdown) dropdown.innerHTML = '';
 
-                if (dropdown) {
-                    if (matches.length > 0) {
-                        dropdown.innerHTML = '';
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buffer = '';
+                let matchCount = 0;
 
-                        for (let i = 0; i < matches.length; i++) {
-                            const match = matches[i];
-                            const itemDiv = document.createElement('div');
-                            itemDiv.className = 'cat-dropdown-item';
-                            const percent = Math.round(match.similarity * 100);
-
-                            itemDiv.innerHTML = `
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                                    <span class="cat-match-percent">${percent}%</span>
-                                    <span class="cat-translator-badge">${match.translator.replace(/^(ru_|en_)/, '')}</span>
-                                </div>
-                                <div class="cat-match-text">${match.ru}</div>
-                                <div class="text-muted" style="font-size:0.85em;font-style:italic;">${match.pali}</div>
-                            `;
-
-                            itemDiv.addEventListener('click', function (e) {
-                                e.stopPropagation();
-
-                                if (currentTargetRowIndex !== null) {
-                                    const textarea = document.getElementById('translationInput');
-                                    if (textarea) {
-                                        let lines = textarea.value.split('\n');
-                                        while (lines.length <= currentTargetRowIndex) lines.push('');
-
-                                        lines[currentTargetRowIndex] = match.ru + ' ';
-                                        textarea.value = lines.join('\n');
-
-                                        if (typeof syncTextToTable === 'function') syncTextToTable();
-                                        if (typeof saveInputs === 'function') saveInputs();
-                                    }
-                                    dropdown.style.display = 'none';
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+                    
+                    for (const line of lines) {
+                        if (line.trim()) {
+                            const match = JSON.parse(line);
+                            matchCount++;
+                            
+                            if (dropdown) {
+                                const itemDiv = document.createElement('div');
+                                itemDiv.className = 'cat-dropdown-item';
+                                
+                                // Вырезаем имя переводчика из пути файла (например, "o", "ai", "sv+edited+o")
+                                let shortTranslator = match.translator;
+                                const trMatch = shortTranslator.match(/-([^-]+)\.json$/);
+                                if (trMatch && trMatch[1]) {
+                                    shortTranslator = trMatch[1];
                                 }
-                            });
 
-                            dropdown.appendChild(itemDiv);
+                                // Очищаем текст от JSON ключей и кавычек
+                                let cleanContent = match.content;
+                                const contentMatch = cleanContent.match(/^"[^"]+"\s*:\s*"(.*)"\s*,?$/);
+                                if (contentMatch && contentMatch[1]) {
+                                    cleanContent = contentMatch[1];
+                                }
+
+                                itemDiv.innerHTML = `
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-bottom:1px solid #ddd; padding-bottom:4px;">
+                                        <span style="font-weight:bold; font-size: 0.85em; color: #555;">
+                                            <span style="text-transform:uppercase;">${match.folder}</span> | ${shortTranslator}
+                                        </span>
+                                        <span class="badge bg-secondary" style="font-size: 0.7em;">${match.id}</span>
+                                    </div>
+                                    <div class="cat-match-text" style="font-size: 0.95em;">${cleanContent}</div>
+                                `;
+
+                                itemDiv.addEventListener('click', function (e) {
+                                    e.stopPropagation();
+
+                                    if (currentTargetRowIndex !== null) {
+                                        const textarea = document.getElementById('translationInput');
+                                        if (textarea) {
+                                            let linesText = textarea.value.split('\n');
+                                            while (linesText.length <= currentTargetRowIndex) linesText.push('');
+
+                                            linesText[currentTargetRowIndex] = cleanContent + ' ';
+                                            textarea.value = linesText.join('\n');
+
+                                            if (typeof syncTextToTable === 'function') syncTextToTable();
+                                            if (typeof saveInputs === 'function') saveInputs();
+                                        }
+                                        dropdown.style.display = 'none';
+                                    }
+                                });
+
+                                dropdown.appendChild(itemDiv);
+                            }
                         }
-                    } else {
-                        dropdown.innerHTML = '<div class="cat-dropdown-item text-muted">Нет совпадений</div>';
                     }
                 }
+                
+                if (matchCount === 0 && dropdown) {
+                    dropdown.innerHTML = `<div class="cat-dropdown-item text-muted">Нет совпадений</div>`;
+                }
+
             } catch (error) {
                 console.error('CAT Tool Ошибка:', error);
                 if (dropdown) {
-                    dropdown.innerHTML = `<div class="cat-dropdown-item text-danger" style="white-space:pre-wrap">${error.message}</div>`;
+                    dropdown.innerHTML = `<div class="cat-dropdown-item text-danger">Ошибка загрузки</div>`;
                 }
             }
             return;
@@ -2145,7 +2168,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 </script>
-
 
 </body>
 </html>
