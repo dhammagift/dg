@@ -2099,14 +2099,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                 const itemDiv = document.createElement('div');
                                 itemDiv.className = 'cat-dropdown-item';
                                 
-                                // Вырезаем имя переводчика из пути файла (например, "o", "ai", "sv+edited+o")
+                                // Вырезаем имя переводчика
                                 let shortTranslator = match.translator;
                                 const trMatch = shortTranslator.match(/-([^-]+)\.json$/);
                                 if (trMatch && trMatch[1]) {
                                     shortTranslator = trMatch[1];
                                 }
 
-                                // Очищаем текст от JSON ключей и кавычек
+                                // Очищаем текст
                                 let cleanContent = match.content;
                                 const contentMatch = cleanContent.match(/^"[^"]+"\s*:\s*"(.*)"\s*,?$/);
                                 if (contentMatch && contentMatch[1]) {
@@ -2115,10 +2115,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
                                 itemDiv.innerHTML = `
                                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-bottom:1px solid #ddd; padding-bottom:4px;">
-                                        <span style="font-weight:bold; font-size: 0.85em; color: #555;">
-                                            <span style="text-transform:uppercase;">${match.folder}</span> | ${shortTranslator}
+                                        <span class="badge bg-secondary" style="font-size: 0.8em; font-weight: normal; letter-spacing: 0.5px;">
+                                            <span style="text-transform:uppercase; opacity: 0.8;">${match.folder}</span> | ${shortTranslator}
                                         </span>
-                                        <span class="badge bg-secondary" style="font-size: 0.7em;">${match.id}</span>
+                                        <span style="font-size: 0.7em; color: #adb5bd;">${match.id}</span>
                                     </div>
                                     <div class="cat-match-text" style="font-size: 0.95em;">${cleanContent}</div>
                                 `;
