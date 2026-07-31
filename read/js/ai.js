@@ -93,14 +93,14 @@ async function buildSutta(slug) {
 
   const rootResponse = fetch(rootpath).then(res => res.ok ? res.json() : fetch(`${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slugReady}_root-pli-ms.json`).then(r => r.json())).catch(() => ({}));
 
-  // Единая функция загрузки с приоритетом AI перед английским
+  // Единая функция загрузки с приоритетом AI для первого перевода
   async function fetchTranslation() {
       const enFallbackTranslator = texttype === "vinaya" ? "brahmali" : "sujato";
       
       const sources = [
-          { path: `/assets/texts/ru/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`, author: translator },
+          { path: `/assets/texts/ai/${texttype}/${slugReady}_translation-ru-ai.json`, author: "ai" }, // Главный приоритет 1-го перевода
+          { path: `/assets/texts/ru/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`, author: translator }, // Резерв на случай отсутствия AI
           { path: `${Sccopy}/sc-data/sc_bilara_data/translation/ru/${translator}/${texttype}/${slugReady}_translation-ru-${translator}.json`, author: translator },
-          { path: `/assets/texts/ai/${texttype}/${slugReady}_translation-ru-ai.json`, author: "ai" },
           { path: `${Sccopy}/sc-data/sc_bilara_data/translation/en/${enFallbackTranslator}/${texttype}/${slugReady}_translation-en-${enFallbackTranslator}.json`, author: enFallbackTranslator }
       ];
 
@@ -123,9 +123,32 @@ async function buildSutta(slug) {
   async function fetchSecondTranslation() {
       const otherRuPath = "/assets/texts/ru_other";
       const scRuPath = `${Sccopy}/sc-data/sc_bilara_data/translation/ru`;
-      const authors = ["sv", "khantibalo", "syrkin", "narinyanievmenenko"];
+      
+      // Главный приоритет второго перевода - запрошенный переводчик (сохраненный в переменной translator)
+      const prioritySources = [
+          { path: `/assets/texts/ru/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`, author: translator },
+          { path: `${otherRuPath}/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`, author: translator },
+          { path: `${scRuPath}/${translator}/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`, author: translator }
+      ];
 
-      for (const author of authors) {
+      for (const source of prioritySources) {
+          try {
+              const response = await fetch(source.path);
+              if (response.ok) {
+                  const data = await response.json();
+                  if (data && Object.keys(data).length > 0) {
+                      data._authorId = source.author;
+                      return data;
+                  }
+              }
+          } catch (error) {}
+      }
+
+      // Если приоритетный переводчик не найден, ищем по запасному списку авторов
+      const fallbackAuthors = ["o", "sv", "khantibalo", "syrkin", "narinyanievmenenko"];
+      const authorsToTry = fallbackAuthors.filter(a => a !== translator); // Исключаем того, кого уже проверили
+
+      for (const author of authorsToTry) {
           try {
               const localPath = `${otherRuPath}/${texttype}/${slugReady}_translation-ru-${author}.json`;
               const response = await fetch(localPath);
@@ -139,7 +162,7 @@ async function buildSutta(slug) {
           } catch (error) {}
       }
 
-      for (const author of authors) {
+      for (const author of authorsToTry) {
           try {
               const scPath = `${scRuPath}/${author}/${texttype}/${slugReady}_translation-ru-${author}.json`;
               const response = await fetch(scPath);
