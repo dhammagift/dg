@@ -2115,10 +2115,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
                                 itemDiv.innerHTML = `
                                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-bottom:1px solid #ddd; padding-bottom:4px;">
-                                        <span class="badge bg-secondary" style="font-size: 0.8em; font-weight: normal; letter-spacing: 0.5px;">
-                                            <span style="text-transform:uppercase; opacity: 0.8;">${match.folder}</span> | ${shortTranslator}
-                                        </span>
                                         <span style="font-size: 0.7em; color: #adb5bd;">${match.id}</span>
+                                        <span class="badge bg-secondary" style="font-size: 0.8em; font-weight: normal; letter-spacing: 0.5px;">
+                                            <span style="opacity: 0.8;">${match.folder}</span> | ${shortTranslator}
+                                        </span>
                                     </div>
                                     <div class="cat-match-text" style="font-size: 0.95em;">${cleanContent}</div>
                                 `;
@@ -2168,6 +2168,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 </script>
+
 
 </body>
 </html>
