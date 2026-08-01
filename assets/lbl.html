@@ -123,8 +123,7 @@
             const qParam = urlParams.get('q');
             if (qParam) {
                 document.getElementById('indexInput').value = qParam;
-				loadText();
-				window.history.replaceState(null, '', window.location.origin + window.location.pathname);
+                loadText();
             }
         };
 
@@ -1398,13 +1397,20 @@ document.addEventListener('keydown', function(event) {
 const customTranslatorCheckbox = document.getElementById('customTranslatorName');
 const languageSelect = document.getElementById('languageSelect');
 
-// Функция для сохранения значений
+// Функция для сохранения значений и синхронизации адресной строки
 function saveInputs() {
   localStorage.setItem('indexValue', indexInput.value);
   localStorage.setItem('translationValue', translationInput.value);
   localStorage.setItem('customTranslatorCheckboxState', customTranslatorCheckbox.checked);
   // Сохраняем состояние списка языков
   localStorage.setItem('languageSelectValue', languageSelect.value);
+
+  // Синхронизируем текущее значение с параметром q в адресной строке
+  if (indexInput.value) {
+      const currentUrl = new URL(window.location);
+      currentUrl.searchParams.set('q', indexInput.value);
+      window.history.replaceState(null, '', currentUrl);
+  }
 }
 
 // Слушатель для сохранения при каждом изменении translationInput
