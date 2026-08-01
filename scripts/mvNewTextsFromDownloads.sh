@@ -8,23 +8,6 @@ lbldir=$apachesitepath/assets/texts/lbl/
 
 
 
-cd $apachesitepath
-cd ../offline-data/dhammagift/ru/sutta 
-
-for i in `find . -type f | awk -F'_' '{print $1}' | sort -V | uniq -c | sort -V | awk '{print $1, $2}' | grep -v "^1" | awk '{print $2}'`
-do
-    # Если есть o - переносим sv и edited
-    if ls ${i}_*o.json >/dev/null 2>&1; then
-        mv ${i}_*sv.json ../../svEtc/automatic/
-        mv ${i}_*edited* ../../svEtc/automatic/
-    
-    # Если есть sv+edited+o - переносим только sv
-    elif ls ${i}_*sv+edited+o.json >/dev/null 2>&1; then
-        mv ${i}_*sv.json ../../svEtc/automatic/
-    fi
-done
-
-
 
 cd $downloaddir
 for file in `find . -maxdepth 1 -type f -size +0 -name "*root-pli-ms.json" 2>/dev/null`
@@ -92,6 +75,23 @@ fi
 mkdir $thtrndir/$nikaya/$booknumber/ 2>/dev/null
 mv $file $thtrndir/$nikaya/$booknumber/
 echo "moved $suttaname to thai ./$nikaya/$booknumber" 
+done
+
+
+cd $apachesitepath
+cd ../offline-data/dhammagift/ru/sutta 
+
+for i in `find . -type f | awk -F'_' '{print $1}' | sort -V | uniq -c | sort -V | awk '{print $1, $2}' | grep -v "^1" | awk '{print $2}'`
+do
+    # Если есть o - переносим sv и edited
+    if ls ${i}_*o.json >/dev/null 2>&1; then
+        mv ${i}_*sv.json ../../svEtc/automatic/
+        mv ${i}_*edited* ../../svEtc/automatic/
+    
+    # Если есть sv+edited+o - переносим только sv
+    elif ls ${i}_*sv+edited+o.json >/dev/null 2>&1; then
+        mv ${i}_*sv.json ../../svEtc/automatic/
+    fi
 done
 
 
