@@ -831,37 +831,27 @@ function loadText() {
               const trimmedUrl = pliUrl.match(/\/(sutta|vinaya)\/.*/)[0];
               const pathPart = trimmedUrl.split('_')[0];
               
-              const group1 = [];
-              const group2 = [];
-              const group3 = [];
-              const group4 = [];
+              const priorityGroup = [];
+              const otherGroup = [];
 
-              // 1. Папка 1 (lbl и ru) и пул
+              // 1. Собираем ссылки на приоритетные переводы
               priorityKeys.forEach(key => {
-                  group1.push({ name: `${key} (Неопублик)`, url: `/assets/texts/lbl/${indexValue}_translation-ru-${key}.json` });
-                  group1.push({ name: `${key} (ru)`, url: `/assets/texts/ru${pathPart}_translation-ru-${key}.json` });
+                  priorityGroup.push({ name: `${key} (Неопублик)`, url: `/assets/texts/lbl/${indexValue}_translation-ru-${key}.json` });
+                  priorityGroup.push({ name: `${key} (ru)`, url: `/assets/texts/ru${pathPart}_translation-ru-${key}.json` });
+                  priorityGroup.push({ name: `${key} (ru_other)`, url: `/assets/texts/ru_other${pathPart}_translation-ru-${key}.json` });
                   if (key === 'ai') {
-                      group1.push({ name: `ai (ai)`, url: `/assets/texts/ai${pathPart}_translation-ru-ai.json` });
+                      priorityGroup.push({ name: `ai (ai)`, url: `/assets/texts/ai${pathPart}_translation-ru-ai.json` });
                   }
               });
 
-              // 2. Папка 1 (lbl и ru) и остальные
+              // 2. Собираем ссылки на остальные переводы
               otherKeys.forEach(key => {
-                  group2.push({ name: `${key} (Неопублик)`, url: `/assets/texts/lbl/${indexValue}_translation-ru-${key}.json` });
-                  group2.push({ name: `${key} (ru)`, url: `/assets/texts/ru${pathPart}_translation-ru-${key}.json` });
+                  otherGroup.push({ name: `${key} (Неопублик)`, url: `/assets/texts/lbl/${indexValue}_translation-ru-${key}.json` });
+                  otherGroup.push({ name: `${key} (ru)`, url: `/assets/texts/ru${pathPart}_translation-ru-${key}.json` });
+                  otherGroup.push({ name: `${key} (ru_other)`, url: `/assets/texts/ru_other${pathPart}_translation-ru-${key}.json` });
               });
 
-              // 3. Папка 2 (ru_other) и пул
-              priorityKeys.forEach(key => {
-                  group3.push({ name: `${key} (ru_other)`, url: `/assets/texts/ru_other${pathPart}_translation-ru-${key}.json` });
-              });
-
-              // 4. Папка 2 (ru_other) и остальные
-              otherKeys.forEach(key => {
-                  group4.push({ name: `${key} (ru_other)`, url: `/assets/texts/ru_other${pathPart}_translation-ru-${key}.json` });
-              });
-
-              // Функция для параллельной проверки массива ссылок
+              // Функция для параллельной проверки наличия файлов в переданной группе
               async function checkBatch(urls) {
                   const checks = urls.map(async item => {
                       if (await checkFileExists(item.url)) return item;
@@ -871,83 +861,86 @@ function loadText() {
                   return results.filter(item => item !== null);
               }
 
-              // Визуальный индикатор поиска на кнопке
               const originalBtnHtml = newLoadBtn.innerHTML;
               newLoadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
-              // Выполняем поиск по группам, прерываем, если нашли вариант
-              let availableOptions = await checkBatch(group1);
-              
-              if (availableOptions.length === 0) {
-                  availableOptions = await checkBatch(group2);
-              }
-              if (availableOptions.length === 0) {
-                  availableOptions = await checkBatch(group3);
-              }
-              if (availableOptions.length === 0) {
-                  availableOptions = await checkBatch(group4);
-              }
+              // Запускаем оба поиска одновременно, чтобы не терять время
+              const priorityPromise = checkBatch(priorityGroup);
+              const otherPromise = checkBatch(otherGroup);
 
-              newLoadBtn.innerHTML = originalBtnHtml; // Возвращаем иконку
+              // Сначала дожидаемся ответа только от приоритетных вариантов
+              const priorityOptions = await priorityPromise;
 
-              if (availableOptions.length === 0) {
-                  alert('Переводы для этого текста не найдены на сервере.');
-                  return;
-              }
-
-              if (availableOptions.length === 1) {
-                  // Если файл всего один, скачиваем его без лишних вопросов
-                  loadSelectedFile(availableOptions[0].url);
+              if (priorityOptions.length > 1) {
+                  // Показываем окно сразу, если есть из чего выбрать среди приоритетных
+                  newLoadBtn.innerHTML = originalBtnHtml;
+                  showModernSelectionModal(priorityOptions, true);
+                  
+                  // Ждем остальные варианты на фоне
+                  const otherOptions = await otherPromise;
+                  if (otherOptions.length > 0) {
+                      appendOptionsToModal(otherOptions);
+                  }
+                  removeSpinnerFromModal();
               } else {
-                  // Если вариантов несколько, показываем современное модальное окно
-                  showModernSelectionModal(availableOptions);
+                  // Если приоритетных 0 или 1, ждем остальные, чтобы понять точное общее число вариантов
+                  const otherOptions = await otherPromise;
+                  const allOptions = [...priorityOptions, ...otherOptions];
+                  
+                  newLoadBtn.innerHTML = originalBtnHtml;
+
+                  if (allOptions.length === 0) {
+                      alert('Переводы для этого текста не найдены на сервере.');
+                  } else if (allOptions.length === 1) {
+                      // Только если вариант вообще один из всех возможных, загружаем молча
+                      loadSelectedFile(allOptions[0].url);
+                  } else {
+                      // Если вариантов несколько, показываем окно
+                      showModernSelectionModal(allOptions, false);
+                  }
               }
 
-              // Функция генерации и показа модального окна
-              function showModernSelectionModal(options) {
-                  // Удаляем старое окно, если оно почему-то осталось в DOM
+              // --- Функции для работы с диалоговым окном ---
+              
+              function showModernSelectionModal(options, isWaitingForMore) {
                   const existingModal = document.getElementById('modernFileSelectModal');
                   if (existingModal) existingModal.remove();
 
-                  // Создаем чистую структуру окна
+                  const spinnerHtml = isWaitingForMore 
+                      ? '<span id="searchMoreSpinner" class="text-muted ms-2" style="font-size: 1rem;"><i class="fa-solid fa-spinner fa-spin"></i></span>' 
+                      : '';
+
                   const modalHtml = `
                   <div class="modal fade" id="modernFileSelectModal" tabindex="-1" aria-hidden="true">
                       <div class="modal-dialog modal-dialog-centered">
                           <div class="modal-content">
-                              <div class="modal-header border-bottom-0">
-                                  <h5 class="modal-title">Выберите версию перевода</h5>
+                              <div class="modal-header border-bottom-0 align-items-center">
+                                  <h5 class="modal-title mb-0">Выберите версию перевода ${spinnerHtml}</h5>
                                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                               </div>
                               <div class="modal-body pt-0">
                                   <ul class="server-file-list" id="serverFileList">
-                                      ${options.map(opt => `
-                                          <li data-url="${opt.url}">
-                                              <i class="fa-solid fa-file-code"></i>
-                                              <span>Переводчик: <strong>${opt.name}</strong></span>
-                                          </li>
-                                      `).join('')}
+                                      ${options.map(opt => createListItem(opt)).join('')}
                                   </ul>
                               </div>
                           </div>
                       </div>
                   </div>`;
 
-                  // Вставляем окно в конец body
                   document.body.insertAdjacentHTML('beforeend', modalHtml);
                   const modalElement = document.getElementById('modernFileSelectModal');
                   const bsModal = new bootstrap.Modal(modalElement);
 
-                  // Обработка клика по элементу списка
-                  const listItems = modalElement.querySelectorAll('#serverFileList li');
-                  listItems.forEach(item => {
-                      item.addEventListener('click', function() {
-                          const selectedUrl = this.getAttribute('data-url');
-                          bsModal.hide(); // Прячем окно
-                          loadSelectedFile(selectedUrl); // Запускаем загрузку
-                      });
+                  const listContainer = document.getElementById('serverFileList');
+                  listContainer.addEventListener('click', function(e) {
+                      const li = e.target.closest('li[data-url]');
+                      if (li) {
+                          const selectedUrl = li.getAttribute('data-url');
+                          bsModal.hide();
+                          loadSelectedFile(selectedUrl);
+                      }
                   });
 
-                  // Полная очистка DOM после закрытия окна
                   modalElement.addEventListener('hidden.bs.modal', function () {
                       modalElement.remove();
                   });
@@ -955,7 +948,28 @@ function loadText() {
                   bsModal.show();
               }
 
-              // Функция загрузки выбранного файла
+              function createListItem(opt) {
+                  return `
+                      <li data-url="${opt.url}">
+                          <i class="fa-solid fa-file-code"></i>
+                          <span>Переводчик: <strong>${opt.name}</strong></span>
+                      </li>
+                  `;
+              }
+
+              function appendOptionsToModal(options) {
+                  const listContainer = document.getElementById('serverFileList');
+                  if (!listContainer) return; 
+                  
+                  const newItemsHtml = options.map(opt => createListItem(opt)).join('');
+                  listContainer.insertAdjacentHTML('beforeend', newItemsHtml);
+              }
+
+              function removeSpinnerFromModal() {
+                  const spinner = document.getElementById('searchMoreSpinner');
+                  if (spinner) spinner.remove();
+              }
+
               async function loadSelectedFile(selectedUrl) {
                   try {
                       newLoadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
@@ -964,7 +978,6 @@ function loadText() {
                           const content = await response.text(); 
                           document.getElementById('translationInput').value = content;
                           
-                          // Уведомление (Toast) об успехе
                           const toastEl = document.getElementById('toastMessage');
                           const toastText = document.getElementById('toastText');
                           if (toastEl && toastText) {
@@ -974,9 +987,7 @@ function loadText() {
                               new bootstrap.Toast(toastEl, { autohide: true }).show();
                           }
 
-                          // Сразу очищаем от JSON и строим таблицу
                           loadText();
-                          
                       } else {
                           throw new Error('Network response was not ok');
                       }
