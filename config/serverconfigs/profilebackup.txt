@@ -524,35 +524,61 @@ ck() {
     total_ai=$(find "$ai_dir" -maxdepth 1 -name '*.json' 2>/dev/null | wc -l)
 
     local ai_files
-    ai_files=$(find "$ai_dir" -maxdepth 1 -name '*.json' -printf '%f\n' 2>/dev/null | sed 's/-ru-ai\.json$//' | sort)
+    ai_files=$(find "$ai_dir" -maxdepth 1 -name '*.json' -printf '%f\n' 2>/dev/null |
+        sed 's/-ru-ai\.json$//' |
+        sort)
 
     local ru_files
-    ru_files=$(find "$ru_dir" -maxdepth 1 -name '*ru-o.json' -printf '%f\n' 2>/dev/null | sed 's/-ru-o\.json$//' | sort)
+    ru_files=$(find "$ru_dir" -maxdepth 1 -name '*ru-o.json' -printf '%f\n' 2>/dev/null |
+        sed 's/-ru-o\.json$//' |
+        sort)
 
     local diff_files
     diff_files=$(comm -13 <(echo "$ru_files") <(echo "$ai_files"))
 
     local remaining_count=0
     local done_count=0
+    local last_sutta=""
 
-    if [[ -n "$diff_files" && "$diff_files" != $'\n' ]]; then
+    if [[ -n "$diff_files" ]]; then
         remaining_count=$(echo "$diff_files" | wc -l)
 
-        while read -r f; do
-            [[ -z "$f" ]] && continue
-            local file_path="$ai_dir/$f-ru-ai.json"
-            if [[ -f "$file_path" ]]; then
-                local lines
-                lines=$(wc -l < "$file_path")
-                printf "%6d  %s\n" "$lines" "$file_path"
-            fi
-        done <<< "$diff_files" | sort -k1,1n -k2,2V | tac
+        local sorted_output
+        sorted_output=$(
+            while read -r f; do
+                [[ -z "$f" ]] && continue
+
+                local file_path="$ai_dir/$f-ru-ai.json"
+
+                if [[ -f "$file_path" ]]; then
+                    local lines
+                    lines=$(wc -l < "$file_path")
+                    printf "%6d  %s\n" "$lines" "$file_path"
+                fi
+            done <<< "$diff_files" |
+            sort -k1,1n -k2,2V |
+            tac
+        )
+
+        echo "$sorted_output"
+
+        last_sutta=$(
+            echo "$sorted_output" |
+            tail -n1 |
+            awk '{print $NF}' |
+            awk -F'/' '{print $NF}' |
+            cut -d'_' -f1
+        )
     fi
 
-    done_count=$(( total_ai - remaining_count ))
-echo
-echo "Всего: $total_ai | Готово: $done_count | Осталось: $remaining_count"
-cd - 
+    done_count=$((total_ai - remaining_count))
+
+    echo
+    echo "Всего: $total_ai | Готово: $done_count | Осталось: $remaining_count"
+
+    if [[ -n "$last_sutta" ]]; then
+        echo "f.dhamma.gift/assets/lbl.html?q=$last_sutta"
+    fi
+
+    cd - >/dev/null
 }
-
-
