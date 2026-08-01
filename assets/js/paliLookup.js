@@ -209,6 +209,9 @@ function applyDictConfig(newDict) {
         } else if (savedDict.includes("compact")) {
             dictUrl += "/gd?search=";
         }
+    } else if (savedDict === "dictapp") {
+        externalDict = true;
+        dictUrl = "dpd://word/";
     } else if (savedDict === "dicttango") {
         externalDict = true;
         dictUrl = "dttp://app.dicttango/WordLookup?word=";
@@ -260,6 +263,9 @@ if (savedDict.includes("dpd")) {
   } else if (savedDict.includes("compact")) {
     dictUrl += "/gd?search=";
   }
+} else if (savedDict === "dictapp") {
+        externalDict = true;
+        dictUrl = "dpd://word/";
 } else if (savedDict === "dicttango") {
   externalDict = true;
   dictUrl = "dttp://app.dicttango/WordLookup?word=";

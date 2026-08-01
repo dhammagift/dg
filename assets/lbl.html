@@ -71,14 +71,14 @@
 
                 <div class="input-group-append ms-1 me-3">
                     <button class="btn btn-primary ms-2 me-1 input-group-append " title="Обновить перевод" onclick="loadText()">Обновить <i class="fa-solid fa-arrow-rotate-right"></i></button>
-                    <button type="button" class="btn btn-outline-secondary me-1" id="catToggleBtn" title="Режим подсказок перевода"><span class="catIcon">🐱</span></button>
+                   <!-- <button type="button" class="btn btn-outline-secondary me-1" id="catToggleBtn" title="Режим подсказок перевода"><span class="catIcon">🐱</span></button> -->
 
                     <button class="btn btn-primary me-1" title="Найти и Заменить" onclick="openSearchModal();"><i class="fas fa-search"></i></button>
                     <button class="btn btn-primary me-1" title="Найти и Заменить" id="formatButton"><i class="fa-solid fa-text-width"></i></button>
                     <button class="btn btn-danger me-1" title="Очистить окно ввода текста" onclick="clearInputs()"><i class="fa-solid fa-eraser"></i></button>
                     <button id="uploadButton" title="Открыть сохраненный файл" class="btn btn-secondary me-1"><i class="fa-solid fa-upload"></i></button>
-                    <button id="loadFromServerButton" class="btn btn-secondary me-1" title="Загрузить перевод с сервера (beta)"><i class="fa-regular fa-folder-open"></i></button>
-                    <button class="btn btn-primary me-1" title="Сохранить JSON" onclick="downloadJson()">Сохранить <i class="fa-solid fa-download"></i></button>
+                    <button id="loadFromServerButton" class="btn btn-secondary me-1" title="Загрузить перевод с сервера (Alt + O)"><i class="fa-regular fa-folder-open"></i></button>
+                    <button class="btn btn-primary me-1" title="Сохранить JSON на сервер и в файл (Alt + S)" onclick="downloadJson()">Сохранить <i class="fa-solid fa-download"></i></button>
                     
                     <div class="d-flex align-items-center">
                         <div class="form-check me-2">
@@ -123,8 +123,7 @@
             const qParam = urlParams.get('q');
             if (qParam) {
                 document.getElementById('indexInput').value = qParam;
-				loadText();
-				window.history.replaceState(null, '', window.location.origin + window.location.pathname);
+                loadText();
             }
         };
 
@@ -1398,13 +1397,20 @@ document.addEventListener('keydown', function(event) {
 const customTranslatorCheckbox = document.getElementById('customTranslatorName');
 const languageSelect = document.getElementById('languageSelect');
 
-// Функция для сохранения значений
+// Функция для сохранения значений и синхронизации адресной строки
 function saveInputs() {
   localStorage.setItem('indexValue', indexInput.value);
   localStorage.setItem('translationValue', translationInput.value);
   localStorage.setItem('customTranslatorCheckboxState', customTranslatorCheckbox.checked);
   // Сохраняем состояние списка языков
   localStorage.setItem('languageSelectValue', languageSelect.value);
+
+  // Синхронизируем текущее значение с параметром q в адресной строке
+  if (indexInput.value) {
+      const currentUrl = new URL(window.location);
+      currentUrl.searchParams.set('q', indexInput.value);
+      window.history.replaceState(null, '', currentUrl);
+  }
 }
 
 // Слушатель для сохранения при каждом изменении translationInput
@@ -1906,6 +1912,8 @@ function init() {
 document.addEventListener('DOMContentLoaded', init);
 </script>
 
+
+
 <script>
 document.getElementById("formatButton").addEventListener("click", joinSelectedText);
 
@@ -1913,6 +1921,19 @@ document.addEventListener("keydown", function(event) {
     if (event.ctrlKey && event.code === 'KeyQ') {
         event.preventDefault();
         joinSelectedText(); // Новая функция для выпрямления
+    }
+    
+    if (event.altKey && event.code === 'KeyO') {
+        event.preventDefault();
+        const loadBtn = document.getElementById('loadFromServerButton');
+        if (loadBtn) {
+            loadBtn.click();
+        }
+    }
+
+    if (event.altKey && event.code === 'KeyS') {
+        event.preventDefault();
+        downloadJson(); // Функция сохранения и отправки на сервер
     }
 });
 
@@ -1947,7 +1968,6 @@ function formatSelectedText() {
     }
 }
 
-
 function joinSelectedText() {
     const textarea = document.getElementById("translationInput");
     const selectionStart = textarea.selectionStart;
@@ -1970,8 +1990,6 @@ function joinSelectedText() {
     }
 }
 
-
-
 document.addEventListener("DOMContentLoaded", function() {
     let timeoutId;
     const indexInput = document.getElementById("indexInput");
@@ -1987,6 +2005,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 </script>
+
 <script src="/assets/js/settings.js"></script>
 <div id="statusNotification" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
     <div id="toastMessage" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">

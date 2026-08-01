@@ -70,6 +70,23 @@ function buildQuickModalDOM() {
             <span class="action-btn cursor-pointer" id="main-open-window-icon" title="${window.isRu ? 'Открыть в новом окне' : 'Open in new window'}" style="display: none;">
                <img src="/assets/svg/open-link.svg" width="20" height="20" alt="Open">
             </span>
+            
+            <span class="action-btn cursor-pointer quick-dict-wrapper" style="position: relative; display: inline-flex; align-items: center; justify-content: center;" title="${window.isRu ? 'Выбор словаря' : 'Dictionary Selection'}">
+                <img src="/assets/svg/gear.svg" width="20" height="20" alt="Dict Settings">
+                <select id="quick-dict-select" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10;">
+                    <option value="standalone">DPD Built-in</option>
+                    <option value="dpdfull">DPD Online Popup</option>
+                    <option value="newwindow">DPD Online New Window</option>
+                    <option value="machinetranslation">DharmaMitra.org</option>
+                    <option value="searchonly">Search Only</option>
+                    <option value="dictapp">DictApp Android</option>
+                    <option value="dicttango">DictTango Android</option>
+                    <option value="mdict">Mdict IOS</option>
+                    <option value="goldenpc">GoldenDict Desktop</option>
+                    <option value="standaloneru">Ru DPD Built-in</option>
+                    <option value="newwindowru">Ru DPD Online New Window</option>
+                </select>
+            </span>
         </div>
       </div>
 
@@ -244,14 +261,10 @@ function buildQuickModalDOM() {
       btnSyncNow.addEventListener('auxclick', (e) => {
           if (e.button === 1) { // button 1 означает среднюю кнопку (колесико)
               e.preventDefault();
-              // Если нужно открывать в новой вкладке при клике колесиком:
-              // window.open(window.isRu ? '/ru/login' : '/login', '_blank');
-              // Или в той же вкладке, как просили:
               window.location.href = window.isRu ? '/ru/login' : '/login';
           }
       });
   }
-
 
   const closeQuickModal = () => {
     if(quickModalIsOpen) toggleQuickModal();
@@ -322,8 +335,6 @@ function buildQuickModalDOM() {
               }
           }
       }
-
-
   });
 
   histContainer.addEventListener('click', (e) => {
@@ -416,6 +427,29 @@ function buildQuickModalDOM() {
 
           const urlToOpen = iframe.getAttribute('src') || iframe.getAttribute('data-src');
           if (urlToOpen) window.open(urlToOpen, '_blank');
+      });
+  }
+
+  // Настройка выпадающего списка словарей
+  const dictSelect = quickModal.querySelector('#quick-dict-select');
+  if (dictSelect) {
+      // Обновляем визуально выбранный пункт перед открытием меню
+      const syncDictValue = () => {
+          const currentDict = localStorage.getItem('selectedDict') || 'standalone';
+          dictSelect.value = currentDict.toLowerCase();
+      };
+      dictSelect.addEventListener('mousedown', syncDictValue);
+      dictSelect.addEventListener('touchstart', syncDictValue, {passive: true});
+
+      dictSelect.addEventListener('change', (e) => {
+          const newDict = e.target.value.toLowerCase();
+          if (typeof applyDictConfig === 'function') {
+              applyDictConfig(newDict);
+          } else if (typeof window.applyDictConfig === 'function') {
+              window.applyDictConfig(newDict);
+          } else {
+              localStorage.setItem('selectedDict', newDict);
+          }
       });
   }
 
