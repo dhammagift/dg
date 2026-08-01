@@ -1918,12 +1918,15 @@ document.addEventListener('DOMContentLoaded', init);
 document.getElementById("formatButton").addEventListener("click", joinSelectedText);
 
 document.addEventListener("keydown", function(event) {
-    if (event.ctrlKey && event.code === 'KeyQ') {
+    // Выпрямление текста (Ctrl + Q)
+    // Добавлена проверка !event.altKey, чтобы избежать конфликтов
+    if (event.ctrlKey && !event.altKey && event.code === 'KeyQ') {
         event.preventDefault();
-        joinSelectedText(); // Новая функция для выпрямления
+        joinSelectedText(); 
     }
     
-    if (event.altKey && event.code === 'KeyO') {
+    // Загрузка перевода с сервера (Левый Alt + O или Правый AltGr + O)
+    if ((event.altKey || event.getModifierState("AltGraph")) && event.code === 'KeyO') {
         event.preventDefault();
         const loadBtn = document.getElementById('loadFromServerButton');
         if (loadBtn) {
@@ -1931,9 +1934,10 @@ document.addEventListener("keydown", function(event) {
         }
     }
 
-    if (event.altKey && event.code === 'KeyS') {
+    // Сохранение JSON на сервер (Левый Alt + S или Правый AltGr + S)
+    if ((event.altKey || event.getModifierState("AltGraph")) && event.code === 'KeyS') {
         event.preventDefault();
-        downloadJson(); // Функция сохранения и отправки на сервер
+        downloadJson(); 
     }
 });
 
@@ -1994,15 +1998,17 @@ document.addEventListener("DOMContentLoaded", function() {
     let timeoutId;
     const indexInput = document.getElementById("indexInput");
 
-    indexInput.addEventListener("input", function() {
-        clearTimeout(timeoutId); 
-        timeoutId = setTimeout(function() {
-            const textIndex = indexInput.value;
-            if (textIndex) {
-                document.title = textIndex;
-            }
-        }, 1000); 
-    });
+    if (indexInput) {
+        indexInput.addEventListener("input", function() {
+            clearTimeout(timeoutId); 
+            timeoutId = setTimeout(function() {
+                const textIndex = indexInput.value;
+                if (textIndex) {
+                    document.title = textIndex;
+                }
+            }, 1000); 
+        });
+    }
 });
 </script>
 
@@ -2083,10 +2089,22 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (dropdown) {
                 dropdown.innerHTML = `<div class="cat-dropdown-item text-muted">Ищем...<br><small>Текст: ${sourceText.substring(0, 30)}...</small></div>`;
-                const rect = catTrigger.getBoundingClientRect();
-                dropdown.style.left = (rect.left + window.scrollX + 25) + 'px';
-                dropdown.style.top = (rect.bottom + window.scrollY) + 'px';
+                
+                const translationCellRect = row.cells[2].getBoundingClientRect();
+                
+                // Фиксированное позиционирование: всегда в одном месте, всегда вниз
                 dropdown.style.display = 'block';
+                dropdown.style.position = 'fixed';
+                dropdown.style.width = '45vw';
+                dropdown.style.minWidth = '450px';
+                dropdown.style.left = translationCellRect.left + 'px'; // Ровно по левому краю колонки перевода
+                dropdown.style.top = '15vh'; // Всегда отступ 15% сверху
+                dropdown.style.bottom = 'auto'; // Отключаем привязку к низу
+                dropdown.style.maxHeight = '75vh'; // Максимальная высота, чтобы не уходило за экран
+                dropdown.style.overflowY = 'auto';
+                dropdown.style.zIndex = '1060';
+                dropdown.style.boxShadow = '0px 10px 30px rgba(0, 0, 0, 0.2)'; // Тень для лучшей видимости
+                dropdown.style.borderRadius = '8px';
             }
 
             try {
@@ -2105,12 +2123,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
 
-                if (dropdown) dropdown.innerHTML = '';
-
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder('utf-8');
                 let buffer = '';
                 let matchCount = 0;
+                let isFirstResult = true;
+                
+                // Объект для агрегации одинаковых переводов
+                const aggregatedMatches = {};
 
                 while (true) {
                     const { done, value } = await reader.read();
@@ -2126,53 +2146,127 @@ document.addEventListener('DOMContentLoaded', function() {
                             matchCount++;
                             
                             if (dropdown) {
-                                const itemDiv = document.createElement('div');
-                                itemDiv.className = 'cat-dropdown-item';
-                                
-                                // Вырезаем имя переводчика
+                                if (isFirstResult) {
+                                    dropdown.innerHTML = `
+                                        <div id="cat-group-o"></div>
+                                        <div id="cat-group-ai"></div>
+                                        <div id="cat-group-sv-edited"></div>
+                                        <div id="cat-group-sv"></div>
+                                        <div id="cat-group-other"></div>
+                                    `;
+                                    isFirstResult = false;
+                                }
+
                                 let shortTranslator = match.translator;
                                 const trMatch = shortTranslator.match(/-([^-]+)\.json$/);
                                 if (trMatch && trMatch[1]) {
                                     shortTranslator = trMatch[1];
                                 }
 
-                                // Очищаем текст
                                 let cleanContent = match.content;
                                 const contentMatch = cleanContent.match(/^"[^"]+"\s*:\s*"(.*)"\s*,?$/);
                                 if (contentMatch && contentMatch[1]) {
                                     cleanContent = contentMatch[1];
                                 }
 
-                                itemDiv.innerHTML = `
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-bottom:1px solid #ddd; padding-bottom:4px;">
-                                        <span style="font-size: 0.7em; color: #adb5bd;">${match.id}</span>
-                                        <span class="badge bg-secondary" style="font-size: 0.8em; font-weight: normal; letter-spacing: 0.5px;">
-                                            <span style="opacity: 0.8;">${match.folder}</span> | ${shortTranslator}
-                                        </span>
-                                    </div>
-                                    <div class="cat-match-text" style="font-size: 0.95em;">${cleanContent}</div>
-                                `;
+                                // Определяем целевой контейнер
+                                let targetContainerId = 'cat-group-other';
+                                if (shortTranslator === 'o' || shortTranslator === 'ru') {
+                                    targetContainerId = 'cat-group-o';
+                                } else if (shortTranslator === 'ai') {
+                                    targetContainerId = 'cat-group-ai';
+                                } else if (shortTranslator === 'sv+edited+o') {
+                                    targetContainerId = 'cat-group-sv-edited';
+                                } else if (shortTranslator === 'sv') {
+                                    targetContainerId = 'cat-group-sv';
+                                }
 
-                                itemDiv.addEventListener('click', function (e) {
-                                    e.stopPropagation();
+                                // Ключ для группировки
+                                const aggKey = `${targetContainerId}|${shortTranslator}|${cleanContent}`;
 
-                                    if (currentTargetRowIndex !== null) {
-                                        const textarea = document.getElementById('translationInput');
-                                        if (textarea) {
-                                            let linesText = textarea.value.split('\n');
-                                            while (linesText.length <= currentTargetRowIndex) linesText.push('');
-
-                                            linesText[currentTargetRowIndex] = cleanContent + ' ';
-                                            textarea.value = linesText.join('\n');
-
-                                            if (typeof syncTextToTable === 'function') syncTextToTable();
-                                            if (typeof saveInputs === 'function') saveInputs();
-                                        }
-                                        dropdown.style.display = 'none';
+                                // Функция генерации ссылки
+                                const generateIdHtml = (idStr) => {
+                                    if (idStr && idStr.includes(':')) {
+                                        const parts = idStr.split(':');
+                                        const linkUrl = `${currentLang === 'en' ? '/multi/' : '/mt/'}?q=${parts[0]}#${parts[1]}`;
+                                        return `<a href="${linkUrl}" target="_blank" style="font-size: 0.75em; color: #0d6efd; text-decoration: none;" class="cat-id-link">${idStr}</a>`;
                                     }
-                                });
+                                    return `<span style="font-size: 0.7em; color: #adb5bd;">${idStr}</span>`;
+                                };
 
-                                dropdown.appendChild(itemDiv);
+                                if (aggregatedMatches[aggKey]) {
+                                    // Если такой текст от этого переводчика уже есть — добавляем ID
+                                    const aggData = aggregatedMatches[aggKey];
+                                    aggData.idCount++;
+                                    
+                                    if (aggData.idCount <= 5) {
+                                        const newIdHtml = generateIdHtml(match.id);
+                                        aggData.idsContainer.insertAdjacentHTML('beforeend', ', ' + newIdHtml);
+                                        
+                                        // Блокируем клик на новой ссылке
+                                        const newLinks = aggData.idsContainer.querySelectorAll('.cat-id-link');
+                                        const lastLink = newLinks[newLinks.length - 1];
+                                        if (lastLink) {
+                                            lastLink.addEventListener('click', e => e.stopPropagation());
+                                        }
+                                    } else if (aggData.idCount === 6) {
+                                        aggData.idsContainer.insertAdjacentHTML('beforeend', `<span style="font-size: 0.7em; color: #6c757d; margin-left: 5px;">[ещё...]</span>`);
+                                    }
+                                } else {
+                                    // Создаем новую карточку
+                                    const itemDiv = document.createElement('div');
+                                    itemDiv.className = 'cat-dropdown-item';
+                                    
+                                    const initialIdHtml = generateIdHtml(match.id);
+
+                                    itemDiv.innerHTML = `
+                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-bottom:1px solid #ddd; padding-bottom:4px;">
+                                            <div class="cat-ids-wrapper" style="flex-grow: 1; padding-right: 10px;">${initialIdHtml}</div>
+                                            <span class="badge bg-secondary" style="font-size: 0.8em; font-weight: normal; letter-spacing: 0.5px; flex-shrink: 0;">
+                                                <span style="opacity: 0.8;">${match.folder}</span> | ${shortTranslator}
+                                            </span>
+                                        </div>
+                                        <div class="cat-match-text" style="font-size: 0.95em; white-space: pre-wrap;">${cleanContent}</div>
+                                    `;
+
+                                    const linkElement = itemDiv.querySelector('.cat-id-link');
+                                    if (linkElement) {
+                                        linkElement.addEventListener('click', function(e) {
+                                            e.stopPropagation();
+                                        });
+                                    }
+
+                                    itemDiv.addEventListener('click', function (e) {
+                                        e.stopPropagation();
+
+                                        if (currentTargetRowIndex !== null) {
+                                            const textarea = document.getElementById('translationInput');
+                                            if (textarea) {
+                                                let linesText = textarea.value.split('\n');
+                                                while (linesText.length <= currentTargetRowIndex) linesText.push('');
+
+                                                linesText[currentTargetRowIndex] = cleanContent + ' ';
+                                                textarea.value = linesText.join('\n');
+
+                                                if (typeof syncTextToTable === 'function') syncTextToTable();
+                                                if (typeof saveInputs === 'function') saveInputs();
+                                            }
+                                            dropdown.style.display = 'none';
+                                        }
+                                    });
+
+                                    const targetContainer = document.getElementById(targetContainerId);
+                                    if (targetContainer) {
+                                        targetContainer.appendChild(itemDiv);
+                                    }
+
+                                    // Сохраняем ссылку для будущих добавлений
+                                    aggregatedMatches[aggKey] = {
+                                        element: itemDiv,
+                                        idCount: 1,
+                                        idsContainer: itemDiv.querySelector('.cat-ids-wrapper')
+                                    };
+                                }
                             }
                         }
                     }
@@ -2195,7 +2289,6 @@ document.addEventListener('DOMContentLoaded', function() {
             dropdown.style.display = 'none';
         }
     });
-
 });
 </script>
 
