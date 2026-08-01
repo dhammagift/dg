@@ -506,12 +506,21 @@ apa; bash scripts/checknewlinebylineinscrepo.sh | grep -v done ; cd - >/dev/null
 alias dpd='cd /data/data/com.termux/files/usr/share/apache2/default-site/dpd-ui'
 apachectl start
 
-
 ck() {
+    local n="45"
+    local sort_by_name=false
+
+    # Разбор аргументов
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -o) sort_by_name=true; shift ;;
+            *) n=$1; shift ;;
+        esac
+    done
+
     local basedir_path="$basedir/../offline-data/dhammagift"
     cd "$basedir_path" || return 1
 
-    local n="${1:-45}"
     local ru_dir="ru/sutta/sn/sn$n"
     local ai_dir="ai/sutta/sn/sn$n"
     local lbl_dir="../lbl"
@@ -565,8 +574,11 @@ ck() {
                     printf "%6d  %s\n" "$lines" "$file_path"
                 fi
             done <<< "$diff_files" |
-            sort -k1,1n -k2,2V |
-            tac
+            if [[ "$sort_by_name" == true ]]; then
+                sort -k2,2V | tac
+            else
+                sort -k1,1n -k2,2V | tac
+            fi
         )
 
         echo "$sorted_output"
@@ -586,6 +598,7 @@ ck() {
     echo "Всего: $total_ai | Готово: $done_count | Осталось: $remaining_count"
 
     if [[ -n "$last_sutta" ]]; then
+        echo
         echo "f.dhamma.gift/assets/lbl.html?q=$last_sutta"
     fi
 
