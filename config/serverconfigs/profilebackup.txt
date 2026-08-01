@@ -514,6 +514,7 @@ ck() {
     local n="${1:-45}"
     local ru_dir="ru/sutta/sn/sn$n"
     local ai_dir="ai/sutta/sn/sn$n"
+    local lbl_dir="../lbl"
 
     if [[ ! -d "$ai_dir" ]]; then
         echo "Папка $ai_dir не найдена."
@@ -533,8 +534,16 @@ ck() {
         sed 's/-ru-o\.json$//' |
         sort)
 
+    local lbl_files
+    lbl_files=$(find "$lbl_dir" -maxdepth 1 -name '*ru-o.json' -printf '%f\n' 2>/dev/null |
+        sed 's/-ru-o\.json$//' |
+        sort)
+
+    local ready_files
+    ready_files=$(echo -e "${ru_files}\n${lbl_files}" | sed '/^$/d' | sort -u)
+
     local diff_files
-    diff_files=$(comm -13 <(echo "$ru_files") <(echo "$ai_files"))
+    diff_files=$(comm -13 <(echo "$ready_files") <(echo "$ai_files"))
 
     local remaining_count=0
     local done_count=0
