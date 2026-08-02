@@ -317,12 +317,10 @@ function loadDictCSS() {
 async function handleWordLookup(word, event) {
     if (!dictionaryVisible) return;
 
-    // 1. Быстрая защита до очистки: игнорируем, если кликнули чисто на цифры или знаки
     if (!word || /^[\d\-.,:; ]+$/.test(word.trim())) return;
 
     let cleanedWord = cleanWord(word);
     
-    // 2. Вторая защита: если после очистки осталась пустая строка, прерываем
     if (!cleanedWord) return;
 
     await loadDictCSS();
@@ -338,12 +336,10 @@ async function handleWordLookup(word, event) {
 
     let translation = "";
 
-    // --- Ждем базы перед поиском ---
     if (dictUrl === "standalone" || dictUrl === "standaloneru" || savedDict === "standalone" || savedDict === "standaloneru") {
         const lang = window.isRu ? "ru" : "en";
         await lazyLoadStandaloneScripts(lang);
     }
-    // -------------------------------
 
     if (dictUrl === "standalone" || dictUrl === "standaloneru") {
         const phraseTranslation = lookupWordInStandaloneDict(cleanedWord);
@@ -439,7 +435,6 @@ async function handleWordLookup(word, event) {
 
         let finalHeight = Math.min(Math.max(contentHeight + 20, minHeight), maxHeight);
 
-        // Вставляем чистый HTML и линкуем внешний CSS файл
         iframe.srcdoc = `
             <!DOCTYPE html>
             <html lang="en" class="dict-iframe-html ${themeClass}">
@@ -475,6 +470,7 @@ async function handleWordLookup(word, event) {
 
     const dictBtn = document.querySelector('.dict-btn');
     dictBtn.href = dictSearchUrl;
+    dictBtn.dataset.grammarWord = wordForSearch; 
 
     if (savedDict === "standalone" || savedDict === "standaloneru") {
       dictBtn.onclick = (e) => {
@@ -484,15 +480,15 @@ async function handleWordLookup(word, event) {
       };
     }
 
-function showSearchButton() {
+    function showSearchButton() {
         const existingBtn = document.querySelector('.quick-search-float-btn');
         if (existingBtn) {
             existingBtn.remove();
         }
 
-        const wordForSearch = cleanedWord.replace(/'ti/, '');
+        const wordForSearchBtn = cleanedWord.replace(/'ti/, '');
         const searchBtn = document.createElement('a');
-        searchBtn.href = `${dhammaGift}${encodeURIComponent(wordForSearch)}${dgParams}`;
+        searchBtn.href = `${dhammaGift}${encodeURIComponent(wordForSearchBtn)}${dgParams}`;
         searchBtn.className = 'quick-search-float-btn';
         searchBtn.target = '_blank';
         searchBtn.style.top = `${event.clientY - 10}px`;
@@ -504,7 +500,6 @@ function showSearchButton() {
         `;
         document.body.appendChild(searchBtn);
 
-        // Плавное появление (fade-in)
         setTimeout(() => {
             searchBtn.classList.add('show');
         }, 10);
@@ -513,12 +508,10 @@ function showSearchButton() {
             searchBtn.remove();
         });
         
-        // Плавное исчезновение (fade-out)
         setTimeout(() => {
             if (document.body.contains(searchBtn)) {
                 searchBtn.classList.remove('show');
                 
-                // Ждем окончания CSS-анимации перед удалением из DOM
                 setTimeout(() => {
                     if (document.body.contains(searchBtn)) {
                         searchBtn.remove();
@@ -743,8 +736,30 @@ function createPopup() {
     const dictBtn = document.createElement('a');
     dictBtn.className = 'dict-btn popup-action-btn popup-dict-btn';
     dictBtn.target = '_blank';
-    dictBtn.title = 'Open in dict.dhamma.gift';
+    dictBtn.title = 'Open in dict.dhamma.gift (Right-click or Long-tap for Grammar)';
     dictBtn.innerHTML = `<img src="/assets/svg/dpd-logo-dark.svg" width="18" height="18">`;
+
+    // Обработчик правого клика и нативного долгого тапа на мобильных
+    dictBtn.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        const word = dictBtn.dataset.grammarWord || '';
+        if (word) {
+            const url = `https://dharmamitra.org/translate?translate_mode=explain-grammar&input_sentence=${encodeURIComponent(word)}`;
+            window.open(url, '_blank');
+        }
+    });
+
+    // Обработчик клика колесиком мыши
+    dictBtn.addEventListener('auxclick', (e) => {
+        if (e.button === 1) {
+            e.preventDefault();
+            const word = dictBtn.dataset.grammarWord || '';
+            if (word) {
+                const url = `https://dharmamitra.org/translate?translate_mode=explain-grammar&input_sentence=${encodeURIComponent(word)}`;
+                window.open(url, '_blank');
+            }
+        }
+    });
 
     const iframe = document.createElement('iframe');
     iframe.className = 'popup-iframe';

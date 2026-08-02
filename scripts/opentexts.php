@@ -1,6 +1,9 @@
 <?php
 include_once('./config/config.php');
+
 $actual_link = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+$referer = $_SERVER['HTTP_REFERER'] ?? '';
+
 function getRanges($string) {
   include_once('./config/config.php');
   $check = shell_exec("grep -m1 -i \"{$string}_\" $indexesfile | awk '{print \$0}'");
@@ -15,7 +18,7 @@ if (empty($check)) {
 }
 
 
-if ( preg_match('/\/ru/', $actual_link)) {
+if ( preg_match('/\/ru/', $actual_link) || preg_match('/\/ru\//', $referer) ) {
   $defaultlang = 'lang=pli-rus';
   $outputlang = "-oru";
   $base = "/ru/";
@@ -25,7 +28,7 @@ if ( preg_match('/\/ru/', $actual_link)) {
     echo "На латинице вы искали $convertedStr<br><br>";
   }
 }
-else if ( preg_match('/\/th/', $actual_link)) {
+else if ( preg_match('/\/th/', $actual_link) || preg_match('/\/th\//', $referer) ) {
   $defaultlang = 'lang=pli-eng';
   $outputlang = "";
   $base = "/th/";
@@ -50,7 +53,7 @@ else {
 
 
 	
-	if ( preg_match('/\/ml\//', $actual_link)) {
+if ( preg_match('/\/ml\//', $actual_link) || preg_match('/\/ml\//', $referer) ) {
   $defaultlang = 'lang=pli-rus';
   $outputlang = "-oru";
   $base = "/";
@@ -58,7 +61,7 @@ else {
 
 } 	
 
-if ( preg_match('/\/mt\//', $actual_link)) {
+if ( preg_match('/\/mt\//', $actual_link) || preg_match('/\/mt\//', $referer) ) {
   $defaultlang = 'lang=pli-rus';
   $outputlang = "-oru";
   $base = "/";
@@ -66,7 +69,7 @@ if ( preg_match('/\/mt\//', $actual_link)) {
 
 } 	
 
-if ( preg_match('/\/mlth\//', $actual_link)) {
+if ( preg_match('/\/mlth\//', $actual_link) || preg_match('/\/mlth\//', $referer) ) {
   $defaultlang = 'lang=pli-rus';
   $outputlang = "";
   $base = "/";
@@ -74,7 +77,6 @@ if ( preg_match('/\/mlth\//', $actual_link)) {
 
 }
 
-    
 		// Defining variables
 $nameErr = $languageErr  = "";
 $cb = $q = $extra = $la = $p = $arg = $string = $sutta = $ml = "";
