@@ -297,7 +297,7 @@ if ($isProblematicSlug) {
     $_SESSION['processed_slug'] = $stringForOpen;
 }
 
-if (preg_match("/^(bv|ja|ne|pv[0-9]|cnd|mil|pe|thi-ap|tha-ap|cp|kp|mnd|ps|vv|ds|dt|kv|patthana|pp|ya|vb[0-9]*)/i", $stringForOpen)) {
+if (preg_match("/^(bv|ja|ne|pv|cnd|mil|pe|thi-ap|tha-ap|cp|kp|mnd|ps|vv|ds|dt|kv|patthana|pp|ya|vb)[0-9]*/i", $stringForOpen)) {
     echo "<script>window.location.href='/4nt/?q=$stringForOpen';</script>";
     exit();
 } else if (preg_match("/^(snp|iti|thig|thag)[0-9]{1,3}.*/i", $stringForOpen)) {
