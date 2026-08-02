@@ -27,34 +27,6 @@ const DIRS_MAP = {
     'en_other': { path: path.resolve(DHAMMAGIFT_DIR, 'en_other'), stripPrefix: DHAMMAGIFT_DIR + '/' }
 };
 
-// Функция расчета схожести двух строк (Коэффициент Дайса по биграммам)
-function calculateSimilarity(str1, str2) {
-    if (!str1 || !str2) return 0.0;
-    const s1 = str1.toLowerCase().replace(/[^\p{L}]/gu, '');
-    const s2 = str2.toLowerCase().replace(/[^\p{L}]/gu, '');
-
-    if (s1 === s2) return 1.0;
-    if (s1.length < 2 || s2.length < 2) return 0.0;
-
-    const bigrams1 = new Map();
-    for (let i = 0; i < s1.length - 1; i++) {
-        const bigram = s1.substring(i, i + 2);
-        bigrams1.set(bigram, (bigrams1.get(bigram) || 0) + 1);
-    }
-
-    let intersection = 0;
-    for (let i = 0; i < s2.length - 1; i++) {
-        const bigram = s2.substring(i, i + 2);
-        const count = bigrams1.get(bigram) || 0;
-        if (count > 0) {
-            bigrams1.set(bigram, count - 1);
-            intersection++;
-        }
-    }
-
-    return (2.0 * intersection) / ((s1.length - 1) + (s2.length - 1));
-}
-
 async function runGrepInFolder(searchQuery, targetDir, isRegex = false) {
     try {
         const stat = await fs.stat(targetDir);
@@ -103,41 +75,36 @@ app.post('/api/find-match-stream', async (req, res) => {
     const sentFiles = new Set();
     let globalSentCount = 0;
     const MAX_RESULTS = 30; 
-    const MIN_SCORE_THRESHOLD = 20; 
 
-    async function getPaliIdsWithScores(text) {
-        const foundScores = new Map();
-        if (!text) return foundScores;
+    // Получаем ID из Пали с учетом частей предложений
+    async function getPaliIds(text) {
+        const foundIds = new Set();
+        if (!text) return Array.from(foundIds);
 
+        // 1. Сначала точное совпадение
         const exactLines = await runGrepInFolder(text, PALI_DIR, false);
         exactLines.forEach(line => {
-            const match = line.match(/"([^"]+)"\s*:\s*"(.*?)"/);
-            if (match) {
-                foundScores.set(match[1], 100);
-            }
+            const match = line.match(/"([^"]+)"\s*:/);
+            if (match) foundIds.add(match[1]);
         });
 
-        if (foundScores.size < 5) {
-            const subPhrases = text.split(/[,;,—\.\?]/).map(s => s.trim()).filter(s => s.length >= 10);
+        // 2. Если точных мало, бьем на фразы, чтобы не пропускать длинные куски
+        if (foundIds.size < 5) {
+            const subPhrases = text.split(/[,;,—\.\?]/).map(s => s.trim()).filter(s => s.length >= 15);
             for (const phrase of subPhrases) {
                 const phraseLines = await runGrepInFolder(phrase, PALI_DIR, false);
                 phraseLines.forEach(line => {
-                    const match = line.match(/"([^"]+)"\s*:\s*"(.*?)"/);
-                    if (match && !foundScores.has(match[1])) {
-                        const score = Math.round(calculateSimilarity(text, match[2]) * 100);
-                        if (score >= MIN_SCORE_THRESHOLD) {
-                            foundScores.set(match[1], score);
-                        }
-                    }
+                    const match = line.match(/"([^"]+)"\s*:/);
+                    if (match) foundIds.add(match[1]);
                 });
             }
         }
 
-        return foundScores;
+        return Array.from(foundIds);
     }
 
-    async function streamStage(stage, idScoresMap, matchType) {
-        const idsArray = Array.from(idScoresMap.keys());
+    // Поиск и немедленный стриминг для конкретного этапа
+    async function streamStage(stage, idsArray, matchType) {
         if (idsArray.length === 0 || globalSentCount >= MAX_RESULTS) return;
 
         const tmpFilePath = path.join(__dirname, `grep_ids_${Date.now()}_${Math.random().toString(36).substring(7)}.txt`);
@@ -174,18 +141,14 @@ app.post('/api/find-match-stream', async (req, res) => {
                     const matchKey = `${actualId}_${relativePath}`;
                     if (!sentFiles.has(matchKey)) {
                         sentFiles.add(matchKey);
-                        
-                        const score = idScoresMap.has(actualId) ? idScoresMap.get(actualId) : 100;
-
                         const matchObj = {
                             matchType: matchType,
                             folder: folder,
                             translator: relativePath,
                             content: content,
-                            id: actualId,
-                            score: score 
+                            id: actualId
                         };
-                        
+                        // Моментальная отправка найденного
                         res.write(JSON.stringify(matchObj) + '\n');
                         globalSentCount++;
                     }
@@ -200,24 +163,27 @@ app.post('/api/find-match-stream', async (req, res) => {
         } catch(e) {}
     }
 
+    // Шаг 1: Поиск и стриминг по ID (если есть)
     if (segmentId) {
-        const idMap = new Map();
-        idMap.set(segmentId, 100);
         for (const stage of searchStages) {
-            await streamStage(stage, idMap, 'id');
+            await streamStage(stage, [segmentId], 'id');
         }
     }
 
+    // Шаг 2: Поиск и стриминг по тексту
     if (sourceText && globalSentCount < MAX_RESULTS) {
-        const foundScoresMap = await getPaliIdsWithScores(sourceText);
+        const textIds = await getPaliIds(sourceText);
         
-        if (segmentId && foundScoresMap.has(segmentId)) {
-            foundScoresMap.delete(segmentId);
+        // Убираем ID, который уже обработали на Шаге 1
+        if (segmentId) {
+            const index = textIds.indexOf(segmentId);
+            if (index > -1) textIds.splice(index, 1);
         }
 
-        if (foundScoresMap.size > 0) {
+        if (textIds.length > 0) {
+            // Сначала отдаем все переводы из первой группы, затем из второй и т.д.
             for (const stage of searchStages) {
-                await streamStage(stage, foundScoresMap, 'text');
+                await streamStage(stage, textIds, 'text');
             }
         }
     }

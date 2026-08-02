@@ -2092,18 +2092,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 const translationCellRect = row.cells[2].getBoundingClientRect();
                 
-                // Фиксированное позиционирование: всегда в одном месте, всегда вниз
                 dropdown.style.display = 'block';
                 dropdown.style.position = 'fixed';
                 dropdown.style.width = '45vw';
                 dropdown.style.minWidth = '450px';
-                dropdown.style.left = translationCellRect.left + 'px'; // Ровно по левому краю колонки перевода
-                dropdown.style.top = '15vh'; // Всегда отступ 15% сверху
-                dropdown.style.bottom = 'auto'; // Отключаем привязку к низу
-                dropdown.style.maxHeight = '75vh'; // Максимальная высота, чтобы не уходило за экран
+                dropdown.style.left = translationCellRect.left + 'px'; 
+                dropdown.style.top = '15vh'; 
+                dropdown.style.bottom = 'auto'; 
+                dropdown.style.maxHeight = '75vh'; 
                 dropdown.style.overflowY = 'auto';
                 dropdown.style.zIndex = '1060';
-                dropdown.style.boxShadow = '0px 10px 30px rgba(0, 0, 0, 0.2)'; // Тень для лучшей видимости
+                dropdown.style.boxShadow = '0px 10px 30px rgba(0, 0, 0, 0.2)'; 
                 dropdown.style.borderRadius = '8px';
             }
 
@@ -2129,7 +2128,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 let matchCount = 0;
                 let isFirstResult = true;
                 
-                // Объект для агрегации одинаковых переводов
                 const aggregatedMatches = {};
 
                 while (true) {
@@ -2169,7 +2167,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                     cleanContent = contentMatch[1];
                                 }
 
-                                // Определяем целевой контейнер
                                 let targetContainerId = 'cat-group-other';
                                 if (shortTranslator === 'o' || shortTranslator === 'ru') {
                                     targetContainerId = 'cat-group-o';
@@ -2181,10 +2178,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                     targetContainerId = 'cat-group-sv';
                                 }
 
-                                // Ключ для группировки
                                 const aggKey = `${targetContainerId}|${shortTranslator}|${cleanContent}`;
 
-                                // Функция генерации ссылки
                                 const generateIdHtml = (idStr) => {
                                     if (idStr && idStr.includes(':')) {
                                         const parts = idStr.split(':');
@@ -2195,7 +2190,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                 };
 
                                 if (aggregatedMatches[aggKey]) {
-                                    // Если такой текст от этого переводчика уже есть — добавляем ID
                                     const aggData = aggregatedMatches[aggKey];
                                     aggData.idCount++;
                                     
@@ -2203,7 +2197,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                         const newIdHtml = generateIdHtml(match.id);
                                         aggData.idsContainer.insertAdjacentHTML('beforeend', ', ' + newIdHtml);
                                         
-                                        // Блокируем клик на новой ссылке
                                         const newLinks = aggData.idsContainer.querySelectorAll('.cat-id-link');
                                         const lastLink = newLinks[newLinks.length - 1];
                                         if (lastLink) {
@@ -2213,18 +2206,40 @@ document.addEventListener('DOMContentLoaded', function() {
                                         aggData.idsContainer.insertAdjacentHTML('beforeend', `<span style="font-size: 0.7em; color: #6c757d; margin-left: 5px;">[ещё...]</span>`);
                                     }
                                 } else {
-                                    // Создаем новую карточку
                                     const itemDiv = document.createElement('div');
                                     itemDiv.className = 'cat-dropdown-item';
                                     
                                     const initialIdHtml = generateIdHtml(match.id);
+                                    
+                                    let scoreDisplay = '';
+                                    if ('score' in match && match.score !== null) {
+                                        let badgeClass = 'badge';
+                                        let badgeStyle = 'margin-right: 8px; color: #fff;';
+                                        
+                                        if (match.score === 100) {
+                                            badgeClass = 'badge bg-primary';
+                                        } else if (match.score < 50) {
+                                            badgeClass = 'badge bg-secondary';
+                                        } else {
+                                            // Считаем долю primary в смешанном цвете (50% score = 0% primary, 99% score = 98% primary)
+                                            const primaryPercent = (match.score - 50) * 2;
+                                            badgeStyle += `background-color: color-mix(in srgb, var(--bs-primary) ${primaryPercent}%, var(--bs-secondary));`;
+                                        }
+
+                                        scoreDisplay = `<span class="${badgeClass}" style="${badgeStyle}" title="Процент совпадения текста">${match.score}%</span>`;
+                                    } else {
+                                        scoreDisplay = `<span class="badge bg-danger" style="margin-right: 8px;" title="Сервер не прислал процент">?%</span>`;
+                                    }
 
                                     itemDiv.innerHTML = `
                                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-bottom:1px solid #ddd; padding-bottom:4px;">
                                             <div class="cat-ids-wrapper" style="flex-grow: 1; padding-right: 10px;">${initialIdHtml}</div>
-                                            <span class="badge bg-secondary" style="font-size: 0.8em; font-weight: normal; letter-spacing: 0.5px; flex-shrink: 0;">
-                                                <span style="opacity: 0.8;">${match.folder}</span> | ${shortTranslator}
-                                            </span>
+                                            <div style="display:flex; align-items:center;">
+                                                ${scoreDisplay}
+                                                <span class="badge bg-secondary" style="font-size: 0.8em; font-weight: normal; letter-spacing: 0.5px; flex-shrink: 0;">
+                                                    ${shortTranslator} | <span style="opacity: 0.8;">${match.folder}</span>
+                                                </span>
+                                            </div>
                                         </div>
                                         <div class="cat-match-text" style="font-size: 0.95em; white-space: pre-wrap;">${cleanContent}</div>
                                     `;
@@ -2260,7 +2275,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                         targetContainer.appendChild(itemDiv);
                                     }
 
-                                    // Сохраняем ссылку для будущих добавлений
                                     aggregatedMatches[aggKey] = {
                                         element: itemDiv,
                                         idCount: 1,
@@ -2291,7 +2305,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-
 
 </body>
 </html>
