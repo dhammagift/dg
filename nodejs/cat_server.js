@@ -27,7 +27,7 @@ const DIRS_MAP = {
     'en_other': { path: path.resolve(DHAMMAGIFT_DIR, 'en_other'), stripPrefix: DHAMMAGIFT_DIR + '/' }
 };
 
-async function runGrepInFolder(searchQuery, targetDir) {
+async function runGrepInFolder(searchQuery, targetDir, isRegex = false) {
     try {
         const stat = await fs.stat(targetDir);
         if (!stat.isDirectory()) return [];
@@ -36,8 +36,9 @@ async function runGrepInFolder(searchQuery, targetDir) {
     }
 
     try {
-        const args = ['-r', '-F', '-i', searchQuery, targetDir];
-        const { stdout } = await execFileAsync('grep', args, { maxBuffer: 1024 * 1024 * 10 });
+        const flag = isRegex ? '-E' : '-F';
+        const args = ['-r', flag, '-i', searchQuery, targetDir];
+        const { stdout } = await execFileAsync('grep', args, { maxBuffer: 1024 * 1024 * 20 });
         return stdout.split('\n').filter(l => l.trim() !== '');
     } catch (error) {
         return [];
@@ -57,18 +58,17 @@ app.post('/api/find-match-stream', async (req, res) => {
     res.setHeader('Transfer-Encoding', 'chunked');
     res.setHeader('Cache-Control', 'no-cache');
 
-    // Определяем каскадные этапы (группы папок)
     let searchStages = [];
     if (requestedLang === 'ru') {
         searchStages = [
-            ['lbl', 'ru'],       // Этап 1: Главные переводы
-            ['ai'],              // Этап 2: ИИ
-            ['ru_other']         // Этап 3: Остальные
+            { folders: ['lbl', 'ru'], name: 'o' },
+            { folders: ['ai'], name: 'ai' },
+            { folders: ['ru_other'], name: 'other' }
         ];
     } else if (requestedLang === 'en') {
         searchStages = [
-            ['lbl', 'en'],       // Этап 1: Главные
-            ['en_other']         // Этап 2: Остальные
+            { folders: ['lbl', 'en'], name: 'en_main' },
+            { folders: ['en_other'], name: 'en_other' }
         ];
     }
 
@@ -76,85 +76,85 @@ app.post('/api/find-match-stream', async (req, res) => {
     let globalSentCount = 0;
     const MAX_RESULTS = 30; 
 
-    // Функция для весов сортировки внутри этапа
-    const getSortWeight = (translatorPath) => {
-        const match = translatorPath.match(/-([^-]+)\.json$/);
-        const name = match ? match[1] : '';
-        if (name === 'o' || name === 'ru') return 1;
-        if (name === 'ai') return 2;
-        if (name === 'sv+edited+o') return 3;
-        if (name === 'sv') return 4;
-        return 5;
-    };
+    // Получаем ID из Пали с учетом частей предложений
+    async function getPaliIds(text) {
+        const foundIds = new Set();
+        if (!text) return Array.from(foundIds);
 
-    async function fetchAndSendTranslations(idsArray, matchTypeInfo) {
+        // 1. Сначала точное совпадение
+        const exactLines = await runGrepInFolder(text, PALI_DIR, false);
+        exactLines.forEach(line => {
+            const match = line.match(/"([^"]+)"\s*:/);
+            if (match) foundIds.add(match[1]);
+        });
+
+        // 2. Если точных мало, бьем на фразы, чтобы не пропускать длинные куски
+        if (foundIds.size < 5) {
+            const subPhrases = text.split(/[,;,—\.\?]/).map(s => s.trim()).filter(s => s.length >= 15);
+            for (const phrase of subPhrases) {
+                const phraseLines = await runGrepInFolder(phrase, PALI_DIR, false);
+                phraseLines.forEach(line => {
+                    const match = line.match(/"([^"]+)"\s*:/);
+                    if (match) foundIds.add(match[1]);
+                });
+            }
+        }
+
+        return Array.from(foundIds);
+    }
+
+    // Поиск и немедленный стриминг для конкретного этапа
+    async function streamStage(stage, idsArray, matchType) {
         if (idsArray.length === 0 || globalSentCount >= MAX_RESULTS) return;
 
         const tmpFilePath = path.join(__dirname, `grep_ids_${Date.now()}_${Math.random().toString(36).substring(7)}.txt`);
         const patterns = idsArray.map(id => `"${id}":`).join('\n');
         await fs.writeFile(tmpFilePath, patterns);
 
-        // Проходим по этапам последовательно
-        for (const stageFolders of searchStages) {
-            if (globalSentCount >= MAX_RESULTS) break;
+        for (const folder of stage.folders) {
+            const dirInfo = DIRS_MAP[folder];
+            if (!dirInfo) continue;
 
-            let stageMatches = [];
+            try {
+                const stat = await fs.stat(dirInfo.path);
+                if (!stat.isDirectory()) continue;
+            } catch(e) { continue; }
 
-            // Ищем по всем папкам текущего этапа
-            for (const folder of stageFolders) {
-                const dirInfo = DIRS_MAP[folder];
-                if (!dirInfo) continue;
+            try {
+                const args = ['-r', '-F', '-f', tmpFilePath, dirInfo.path];
+                const { stdout } = await execFileAsync('grep', args, { maxBuffer: 1024 * 1024 * 20 });
+                const lines = stdout.split('\n').filter(l => l.trim() !== '');
 
-                try {
-                    const stat = await fs.stat(dirInfo.path);
-                    if (!stat.isDirectory()) continue;
-                } catch(e) { continue; }
-
-                try {
-                    const args = ['-r', '-F', '-f', tmpFilePath, dirInfo.path];
-                    const { stdout } = await execFileAsync('grep', args, { maxBuffer: 1024 * 1024 * 20 });
-                    const lines = stdout.split('\n').filter(l => l.trim() !== '');
-
-                    for (const line of lines) {
-                        const firstColon = line.indexOf(':');
-                        const filePath = firstColon !== -1 ? line.substring(0, firstColon) : 'unknown';
-                        let content = firstColon !== -1 ? line.substring(firstColon + 1).trim() : line;
-                        const relativePath = filePath.replace(dirInfo.stripPrefix, '');
-
-                        const idMatch = content.match(/"([^"]+)"\s*:/);
-                        const actualId = idMatch ? idMatch[1] : 'unknown';
-
-                        const matchKey = `${actualId}_${relativePath}`;
-                        if (!sentFiles.has(matchKey)) {
-                            sentFiles.add(matchKey);
-                            stageMatches.push({
-                                matchType: matchTypeInfo,
-                                folder: folder,
-                                translator: relativePath,
-                                content: content,
-                                id: actualId
-                            });
-                        }
-                    }
-                } catch (error) {
-                    // Игнорируем ошибки grep, если ничего не найдено
-                }
-            }
-
-            // Если на этом этапе что-то нашли — сортируем и отдаем
-            if (stageMatches.length > 0) {
-                stageMatches.sort((a, b) => {
-                    const weightA = getSortWeight(a.translator);
-                    const weightB = getSortWeight(b.translator);
-                    if (weightA !== weightB) return weightA - weightB;
-                    return a.translator.localeCompare(b.translator);
-                });
-
-                for (const matchObj of stageMatches) {
+                for (const line of lines) {
                     if (globalSentCount >= MAX_RESULTS) break;
-                    res.write(JSON.stringify(matchObj) + '\n');
-                    globalSentCount++;
+
+                    const firstColon = line.indexOf(':');
+                    if (firstColon === -1) continue;
+                    
+                    const filePath = line.substring(0, firstColon);
+                    const content = line.substring(firstColon + 1).trim();
+                    const relativePath = filePath.replace(dirInfo.stripPrefix, '');
+
+                    const idMatch = content.match(/"([^"]+)"\s*:/);
+                    const actualId = idMatch ? idMatch[1] : 'unknown';
+
+                    const matchKey = `${actualId}_${relativePath}`;
+                    if (!sentFiles.has(matchKey)) {
+                        sentFiles.add(matchKey);
+                        const matchObj = {
+                            matchType: matchType,
+                            folder: folder,
+                            translator: relativePath,
+                            content: content,
+                            id: actualId
+                        };
+                        // Моментальная отправка найденного
+                        res.write(JSON.stringify(matchObj) + '\n');
+                        globalSentCount++;
+                    }
                 }
+            } catch (error) {
+                // Игнорируем ошибки grep
             }
         }
         
@@ -163,27 +163,28 @@ app.post('/api/find-match-stream', async (req, res) => {
         } catch(e) {}
     }
 
+    // Шаг 1: Поиск и стриминг по ID (если есть)
     if (segmentId) {
-        // Сначала ищем точное совпадение по ID
-        await fetchAndSendTranslations([segmentId], 'id');
+        for (const stage of searchStages) {
+            await streamStage(stage, [segmentId], 'id');
+        }
     }
 
+    // Шаг 2: Поиск и стриминг по тексту
     if (sourceText && globalSentCount < MAX_RESULTS) {
-        // Если лимит не исчерпан, ищем по тексту
-        const paliLines = await runGrepInFolder(sourceText, PALI_DIR);
+        const textIds = await getPaliIds(sourceText);
         
-        const foundIds = new Set();
-        for (const line of paliLines) {
-            const match = line.match(/"([^"]+)"\s*:/);
-            if (match && match[1]) foundIds.add(match[1]);
-        }
-
+        // Убираем ID, который уже обработали на Шаге 1
         if (segmentId) {
-            foundIds.delete(segmentId); // Исключаем уже найденный ID
+            const index = textIds.indexOf(segmentId);
+            if (index > -1) textIds.splice(index, 1);
         }
 
-        if (foundIds.size > 0) {
-            await fetchAndSendTranslations(Array.from(foundIds), 'text');
+        if (textIds.length > 0) {
+            // Сначала отдаем все переводы из первой группы, затем из второй и т.д.
+            for (const stage of searchStages) {
+                await streamStage(stage, textIds, 'text');
+            }
         }
     }
 
