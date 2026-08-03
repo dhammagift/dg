@@ -74,7 +74,7 @@
                 </div>
 
                 <div class="input-group-append ms-1 mb-2">
-                    <button class="btn btn-primary me-1" title="Обновить перевод" onclick="loadText()">Обновить <i class="fa-solid fa-arrow-rotate-right"></i></button>
+                    <button class="btn btn-primary me-1" title="Обновить перевод" onclick="loadText();                 loadAndCheckRanges();">Обновить <i class="fa-solid fa-arrow-rotate-right"></i></button>
                     <button class="btn btn-primary me-1" title="Найти и Заменить" onclick="openSearchModal();"><i class="fas fa-search"></i></button>
                     <button class="btn btn-primary me-1" title="Найти и Заменить" id="formatButton"><i class="fa-solid fa-text-width"></i></button>
                     <button class="btn btn-danger me-1" title="Очистить окно ввода текста" onclick="clearInputs()"><i class="fa-solid fa-eraser"></i></button>
@@ -128,6 +128,7 @@
             if (qParam) {
                 document.getElementById('indexInput').value = qParam;
                 loadText();
+                loadAndCheckRanges();
             }
         };
 
@@ -530,6 +531,8 @@ function downloadJson() {
                 } else {
                     throw new Error('Upload failed');
                 }
+                  loadAndCheckRanges();
+
             })
             .catch(err => {
                 console.error('Network error:', err);
