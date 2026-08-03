@@ -371,3 +371,14 @@ button:hover {
     filter: grayscale(100%);
     opacity: 0.5;
 }
+
+td.pli-lang {
+  position: relative;
+  padding-right: 15px; 
+}
+
+.cat-trigger {
+  position: absolute;
+  top: 8px; 
+  right: 0px; 
+}

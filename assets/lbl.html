@@ -492,13 +492,39 @@ function downloadJson() {
         })
         .then(data => {
             const dataArray = Object.entries(data);
-            dataArray.forEach(([key, value], index) => {
-                let translationLine = translationLines[index] || '';
-                if (translations[value.trim()]) {
-                    translationLine = translations[value.trim()];
+          dataArray.forEach(([key, pliValue], index) => {
+            const translationLine = translationLines[index] || ''; 
+            const texts = translationLine.split('\n'); 
+            
+            // Логика подстановки Пали, Русского или Английского в левую колонку
+            let sourceText = pliValue.trimEnd();
+            if (language === 'en') {
+                const enValue = enData[key];
+                if (enValue && enValue.trim() !== '') {
+                    sourceText = enValue.trimEnd();
                 }
-                jsonData[key] = translationLine;
+            } else if (language === 'ru') {
+                const ruValue = ruData[key];
+                if (ruValue && ruValue.trim() !== '') {
+                    sourceText = ruValue.trimEnd();
+                }
+            }
+
+            texts.forEach((text, textIndex) => {
+              const currentText = texts[textIndex] || ''; 
+              rowCounter++;
+              const row = `<tr>
+                            <td class="pli-lang">
+                                <a href="#" class="cat-trigger text-muted text-decoration-none ms-2 float-end" style="opacity: 0.3;" title="Искать перевод" onclick="event.preventDefault();"><i class="fa-solid fa-link"></i></a>
+                                <span class="source-text">${sourceText}</span>
+                            </td>
+                            <td>${key}</td>
+                            <td>${currentText}</td>
+                            <td><a href="#" title="${key}" onmousedown="gotoLine(${rowCounter})"><i class="fa-solid fa-link"></i></a></td>
+                          </tr>`;
+              tableHtml += row;
             });
+          });
 
             const jsonString = JSON.stringify(jsonData, null, 2);
             let translatorName = 'sv+edited+o';
