@@ -107,8 +107,7 @@ if [[ "$1" == "-g" ]]; then
         echo -n "sn$i "
         ck "$i" | grep Всег
     done | sort -k9,9n
-else
-    ck "$@"
+    exit 0
 fi
 
 ck "$@"
