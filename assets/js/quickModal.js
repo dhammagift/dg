@@ -196,6 +196,21 @@ function buildQuickModalDOM() {
   document.body.appendChild(quickOverlay);
   document.body.appendChild(quickModal);
 
+  // Обработка клика правой кнопкой / долгого нажатия по кнопке поиска
+  const quickSearchBtn = quickModal.querySelector('#quickSearchBtn');
+  const quickSearchInput = quickModal.querySelector('#quickSearchInput');
+  const quickSearchForm = quickModal.querySelector('#quickSearchForm');
+
+  quickSearchBtn.addEventListener('contextmenu', (e) => {
+      e.preventDefault(); // Отключаем контекстное меню браузера
+      const query = quickSearchInput.value.trim();
+      if (query) {
+          const action = quickSearchForm.getAttribute('action');
+          const url = `${action}?q=${encodeURIComponent(query)}`;
+          window.open(url, '_blank');
+      }
+  });
+
   // Обработка вкладок
   const tabBtns = quickModal.querySelectorAll('.quick-tab-btn');
   const tabContents = quickModal.querySelectorAll('.quick-tab-content');
