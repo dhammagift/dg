@@ -101,6 +101,16 @@ ck() {
     cd - >/dev/null
 }
 
+if [[ "$1" == "-g" ]]; then
+    shift
+    for i in 13 15 20 21 23 24 28 29 30 31 32 33 36 38 40 41 42 43 44 45 46 47 48 49 50 52 53 54; do
+        echo -n "sn$i "
+        ck "$i" | grep Всег
+    done | sort -k9,9n
+else
+    ck "$@"
+fi
+
 ck "$@"
 
 exit 0
