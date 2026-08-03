@@ -24,30 +24,32 @@
 </head>
 <body>
     <div class="mt-3">
-        <div class="align-items-center align-items-center toggle-switch input-group-append">
-            <div id="" class="input-group">
-                <div style="display: inline-flex; margin-top: -60px;">
-                    <top-nav-icons type="read" show-dict></top-nav-icons>
-                </div>
-<a id="ttsLink" href="javascript:void(0)" class="ms-2 text-muted text-decoration-none voice-link tts-ignore" title="Text-to-Speech Mode">
-                    <img src="/assets/svg/volume-high.svg" style="width: 20px; height: 20px; opacity: 0.6;" alt="TTS">
-                </a>
-
-                <a href="#" onclick="openHelpModal();" title="Инструкция" class="ms-2 text-muted" target=""><i class="fa-solid fa-question"></i></a>
-   <a href="/assets/readylinebyline.html" title="Обновить Список Готовых" class=" ms-2 me-2 text-muted" target="_blank">
-<i class="fa-solid fa-list"></i>
-   </a>  
-                <a href="/assets/lbl-en.html"  title="English " class=" ms-0 me-2 text-muted text-decoration-none">en</a>  
-                            <a href="https://ruscorpora.ru/" target="_blank" title="Russian texual corpus" class=" ms-0 me-2 text-muted text-decoration-none">crp</a>  
-
-            
+        <div class="align-items-center toggle-switch input-group-append">
+            <div id="" class="input-group align-items-center">
                 
+                <!-- Переносим margin-top на общий контейнер, чтобы выравнивание внутри было идеальным -->
+                <div class="d-flex align-items-center mb-2 me-3" style="margin-top: -5px;">
+                    <top-nav-icons type="read" show-dict></top-nav-icons>
+                    
+                    <a id="ttsLink" href="javascript:void(0)" class="ms-2 text-muted text-decoration-none voice-link tts-ignore" title="Text-to-Speech Mode" style="display: flex; align-items: center;">
+                        <img src="/assets/svg/volume-high.svg" style="width: 20px; height: 20px; opacity: 0.6;" alt="TTS">
+                    </a>
+
+                    <a href="#" onclick="openHelpModal();" title="Инструкция" class="ms-2 text-muted" style="display: flex; align-items: center;"><i class="fa-solid fa-question"></i></a>
+                    
+                    <a href="https://docs.google.com/spreadsheets/d/1s7n7ogJhdtSIweVO9aad63_k7lWrZgyPRUFg34AobMg/edit?usp=drivesdk" title=" Список Терминов" class="ms-2 text-muted" target="_blank" style="display: flex; align-items: center;"><i class="fa-solid fa-list"></i></a>  
+                    
+                    <a href="/assets/lbl-en.html" title="English" class="ms-2 text-muted text-decoration-none" style="display: flex; align-items: center;">en</a>  
+                    
+                    <a href="https://ruscorpora.ru/" target="_blank" title="Russian texual corpus" class="ms-2 text-muted text-decoration-none" style="display: flex; align-items: center;">crp</a>  
+                </div>
+
                 <div class="input-group-append ms-1 me-3 mb-2">
-                    <div class=" ms-1">
-                        <button title="Предыдущий текст" class="input-group-append btn btn-primary" onclick="loadPrev(); loadAndCheckRanges()">
+                    <div class="ms-1">
+                        <button title="Предыдущий текст" class="btn btn-primary" onclick="loadPrev(); loadAndCheckRanges()">
                             <i class="fa-solid fa-chevron-left"></i>
                         </button>
-                        <button title="Следующий текст" class="input-group-append btn btn-primary" onclick="loadNext(); loadAndCheckRanges()">
+                        <button title="Следующий текст" class="btn btn-primary" onclick="loadNext(); loadAndCheckRanges()">
                             <i class="fa-solid fa-chevron-right"></i>
                         </button>
                     </div>
@@ -56,10 +58,9 @@
                 
                 <div>
                     <input style="width: 150px;" type="search" onclick="loadAndCheckRanges()" class="form-control input-sm mb-2" id="indexInput" title="Индекс Текста пример sn56.11, an3.70, sn23.1 и т.п." placeholder="Номер Сутты" autofocus>   
-                  
                 </div>
 
-                <div class="input-group-append ms-1">
+                <div class="input-group-append ms-1 mb-2">
                     <select title="Язык левой колонки" class="form-select input-sm" id="languageSelect">
                         <option value="pli">Пали</option>
                         <option value="ru">Русский</option>
@@ -67,37 +68,36 @@
                     </select>
                 </div>
   
-                <div class="input-group-append ms-1 me-3">
-
-                    <button class="btn btn-primary mb-1" title="Открыть текст на dhamma.gift" id="linkButton1">DG</button>
-                   <button class="btn btn-primary mb-1" title="Открыть текст на dhamma.gift" id="linkButton3">4nt</button>
+                <div class="input-group-append ms-3 me-3 mb-2">
+                    <button class="btn btn-primary" title="Открыть текст на dhamma.gift" id="linkButton1">DG</button>
+                    <button class="btn btn-primary ms-1" title="Открыть текст на dhamma.gift" id="linkButton3">4nt</button>
                 </div>
 
-                <div class="input-group-append ms-1 me-3">
-                    <button class="btn btn-primary ms-2 me-1 input-group-append " title="Обновить перевод" onclick="loadText()">Обновить <i class="fa-solid fa-arrow-rotate-right"></i></button>
-                   <!-- <button type="button" class="btn btn-outline-secondary me-1" id="catToggleBtn" title="Режим подсказок перевода"><span class="catIcon">🐱</span></button> -->
-
+                <div class="input-group-append ms-1 mb-2">
+                    <button class="btn btn-primary me-1" title="Обновить перевод" onclick="loadText()">Обновить <i class="fa-solid fa-arrow-rotate-right"></i></button>
                     <button class="btn btn-primary me-1" title="Найти и Заменить" onclick="openSearchModal();"><i class="fas fa-search"></i></button>
                     <button class="btn btn-primary me-1" title="Найти и Заменить" id="formatButton"><i class="fa-solid fa-text-width"></i></button>
                     <button class="btn btn-danger me-1" title="Очистить окно ввода текста" onclick="clearInputs()"><i class="fa-solid fa-eraser"></i></button>
                     <button id="uploadButton" title="Открыть сохраненный файл" class="btn btn-secondary me-1"><i class="fa-solid fa-upload"></i></button>
                     <button id="loadFromServerButton" class="btn btn-secondary me-1" title="Загрузить перевод с сервера (Alt + O)"><i class="fa-regular fa-folder-open"></i></button>
                     <button class="btn btn-primary me-1" title="Сохранить JSON на сервер и в файл (Alt + S)" onclick="downloadJson()">Сохранить <i class="fa-solid fa-download"></i></button>
-                    
-                    <div class="d-flex align-items-center">
-                        <div class="form-check me-2">
-                            <input class="form-check-input" title="Отформатировать текст" type="checkbox" id="lineBreakCheckbox">
-                            <label class="form-check-label" for="lineBreakCheckbox">Формат</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" title="Заменить +edited+o в название файла на o" type="checkbox" id="customTranslatorName">
-                            <label class="form-check-label" for="customTranslatorName">пер. o</label>
-                        </div>
+                </div>
+                
+                <div class="d-flex align-items-center mb-2 ms-2">
+                    <div class="form-check me-2">
+                        <input class="form-check-input" title="Отформатировать текст" type="checkbox" id="lineBreakCheckbox">
+                        <label class="form-check-label" for="lineBreakCheckbox">Формат</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" title="Заменить +edited+o в название файла на o" type="checkbox" id="customTranslatorName">
+                        <label class="form-check-label" for="customTranslatorName">пер. o</label>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
+
 
 <div id="translationJsonOutput"></div>
 
