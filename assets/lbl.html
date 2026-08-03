@@ -796,7 +796,7 @@ function loadText() {
               // КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Добавлен id="${key}" к <tr> для работы очередей TTS
               const row = `<tr id="${key}">
                             <td class="pli-lang" lang="pi">
-                                <a href="#" class="cat-trigger text-muted text-decoration-none me-2 tts-ignore" style="opacity: 0.3;" title="Искать перевод" onclick="event.preventDefault();"><i class="fa-solid fa-link"></i></a>
+                                <a href="#" class="cat-trigger text-decoration-none me-2 tts-ignore" style="opacity: 0.5;" title="Искать перевод" onclick="event.preventDefault();"><i class="fa-solid fa-link"></i></a>
                                 <span class="source-text">${sourceText}</span>
                             </td>
                             <td class="tts-ignore">${key}</td>

@@ -465,6 +465,18 @@ function buildQuickModalDOM() {
           } else {
               localStorage.setItem('selectedDict', newDict);
           }
+
+          const selectedLabel = e.target.options[e.target.selectedIndex].text;
+          if (typeof showBubbleNotification === 'function') {
+              showBubbleNotification(`Dict: ${selectedLabel}`);
+          }
+
+          if (typeof popupElements !== 'undefined' && popupElements) {
+              popupElements.popup.style.display = 'none';
+              popupElements.overlay.style.display = 'none';
+              popupElements.iframe.removeAttribute('srcdoc');
+              popupElements.iframe.src = '';
+          }
       });
   }
 

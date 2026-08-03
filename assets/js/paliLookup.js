@@ -115,10 +115,11 @@ function isSelectionWithinElement(element) {
 
 function savePopupState() {
     if (!popupElements) return;
-    localStorage.setItem('popupWidth', popupElements.popup.style.width);
-    localStorage.setItem('popupHeight', popupElements.popup.style.height);
-    localStorage.setItem('popupTop', popupElements.popup.style.top);
-    localStorage.setItem('popupLeft', popupElements.popup.style.left);
+    const mode = (savedDict === "standalone" || savedDict === "standaloneru") ? "standalone" : "iframe";
+    localStorage.setItem(`popupWidth_${mode}`, popupElements.popup.style.width);
+    localStorage.setItem(`popupHeight_${mode}`, popupElements.popup.style.height);
+    localStorage.setItem(`popupTop_${mode}`, popupElements.popup.style.top);
+    localStorage.setItem(`popupLeft_${mode}`, popupElements.popup.style.left);
 }
 
 if (savedDict) {
@@ -164,38 +165,23 @@ function applyDictConfig(newDict) {
     externalDict = false;
     inNewWindow = false;
 
-    // Принудительно меняем сохраненный словарь в зависимости от текущего языка
-    if (savedDict === "standalone" || savedDict === "standaloneru") {
-        savedDict = window.isRu ? "standaloneru" : "standalone";
-        localStorage.setItem('selectedDict', savedDict);
-    } else if (savedDict === "newwindow" || savedDict === "newwindowru") {
-        savedDict = window.isRu ? "newwindowru" : "newwindow";
-        localStorage.setItem('selectedDict', savedDict);
-    } else if (savedDict === "machinetranslation") {
+    if (savedDict === "machinetranslation") {
         inNewWindow = true;
     }
 
-    // --- МАГИЯ ОЧИСТКИ ДЛЯ КОРРЕКТНОГО ПЕРЕКЛЮЧЕНИЯ ---
-    // Определяем путь скрипта, который нам БОЛЬШЕ НЕ НУЖЕН
-    const oldLangScriptUrl = window.isRu 
-        ? '/assets/js/standalone-dpd/dpd_ebts.js' 
-        : '/assets/js/standalone-dpd/ru/dpd_ebts.js';
-    
-    // Удаляем старый тег из DOM, чтобы загрузчик не считал, что база уже готова
-    const oldScriptElement = document.querySelector(`script[src="${oldLangScriptUrl}"]`);
-    if (oldScriptElement) {
-        oldScriptElement.remove();
+    // Удаляем скрипт противоположного языка при переключении standalone-режима
+    if (savedDict === "standalone") {
+        const urlToRemove = '/assets/js/standalone-dpd/ru/dpd_ebts.js';
+        const el = document.querySelector(`script[src="${urlToRemove}"]`);
+        if (el) el.remove();
+        if (typeof scriptCache !== 'undefined') scriptCache.delete(urlToRemove);
+    } else if (savedDict === "standaloneru") {
+        const urlToRemove = '/assets/js/standalone-dpd/dpd_ebts.js';
+        const el = document.querySelector(`script[src="${urlToRemove}"]`);
+        if (el) el.remove();
+        if (typeof scriptCache !== 'undefined') scriptCache.delete(urlToRemove);
     }
-    
-    // Удаляем из нашего внутреннего кэша загруженных скриптов
-    if (typeof scriptCache !== 'undefined') {
-        scriptCache.delete(oldLangScriptUrl);
-    }
-    
-    // Сбрасываем промис. При следующем клике браузер мгновенно 
-    // достанет нужный файл из своего HTTP-кэша и обновит базу.
-    dbLoadPromise = null; 
-    // ----------------------------------------------------
+    dbLoadPromise = null;
 
     const theme = getEffectiveTheme();
 
@@ -337,7 +323,7 @@ async function handleWordLookup(word, event) {
     let translation = "";
 
     if (dictUrl === "standalone" || dictUrl === "standaloneru" || savedDict === "standalone" || savedDict === "standaloneru") {
-        const lang = window.isRu ? "ru" : "en";
+        const lang = savedDict === "standaloneru" ? "ru" : "en";
         await lazyLoadStandaloneScripts(lang);
     }
 
@@ -375,6 +361,7 @@ async function handleWordLookup(word, event) {
     }
     else {
         const url = `${dictUrl}${encodeURIComponent(cleanedWord)}`;
+        iframe.removeAttribute('srcdoc');
         iframe.src = url;
     }
 
@@ -449,6 +436,7 @@ async function handleWordLookup(word, event) {
             </html>
         `;
 
+        applyPopupSizeForMode(popup);
         popup.style.height = `${finalHeight}px`;
         popup.style.display = 'block';
         overlay.style.display = 'block';
@@ -473,11 +461,13 @@ async function handleWordLookup(word, event) {
     dictBtn.dataset.grammarWord = wordForSearch; 
 
     if (savedDict === "standalone" || savedDict === "standaloneru") {
-      dictBtn.onclick = (e) => {
-        e.preventDefault();
-        parent.openDictionaryWindow(dictSearchUrl);
-        return false;
-      };
+        dictBtn.onclick = (e) => {
+            e.preventDefault();
+            parent.openDictionaryWindow(dictSearchUrl);
+            return false;
+        };
+    } else {
+        dictBtn.onclick = null;
     }
 
     function showSearchButton() {
@@ -530,6 +520,7 @@ async function handleWordLookup(word, event) {
         overlay.style.display = 'none';
         showSearchButton();
     } else {
+        applyPopupSizeForMode(popup);
         popup.style.display = 'block';
         overlay.style.display = 'block';
     }
@@ -671,8 +662,45 @@ function lookupWordInStandaloneDict(word) {
 }
 
 function clearParams() {
-    const keys = ['popupWidth', 'popupHeight', 'popupTop', 'popupLeft', 'windowWidth', 'windowHeight', 'isFirstDrag'];
+    const keys = [
+        'popupWidth', 'popupHeight', 'popupTop', 'popupLeft',
+        'popupWidth_standalone', 'popupHeight_standalone', 'popupTop_standalone', 'popupLeft_standalone',
+        'popupWidth_iframe', 'popupHeight_iframe', 'popupTop_iframe', 'popupLeft_iframe',
+        'windowWidth', 'windowHeight', 'isFirstDrag'
+    ];
     keys.forEach(key => localStorage.removeItem(key));
+}
+
+function applyPopupSizeForMode(popup) {
+    const isStandalone = (savedDict === "standalone" || savedDict === "standaloneru");
+    const mode = isStandalone ? "standalone" : "iframe";
+
+    const w = localStorage.getItem(`popupWidth_${mode}`);
+    const h = localStorage.getItem(`popupHeight_${mode}`);
+    const t = localStorage.getItem(`popupTop_${mode}`);
+    const l = localStorage.getItem(`popupLeft_${mode}`);
+
+    if (w && t) {
+        popup.style.width = w;
+        if (h) popup.style.height = h;
+        popup.style.top = t;
+        popup.style.left = l || '';
+        popup.style.right = '';
+        popup.style.transform = 'none';
+    } else if (isStandalone) {
+        popup.style.width = '749px';
+        popup.style.top = '50%';
+        popup.style.left = '50%';
+        popup.style.right = '';
+        popup.style.transform = 'translate(-50%, -50%)';
+    } else {
+        popup.style.width = '500px';
+        popup.style.height = '500px';
+        popup.style.top = `${window.innerHeight - 510}px`;
+        popup.style.right = `${isMobileLike ? 0 : 15}px`;
+        popup.style.left = '';
+        popup.style.transform = 'none';
+    }
 }
 
 function createPopup() {
@@ -705,15 +733,6 @@ function createPopup() {
     localStorage.setItem('windowWidth', currentWindowWidth);
     localStorage.setItem('windowHeight', currentWindowHeight);
 
-    const savedWidth = localStorage.getItem('popupWidth');
-    const savedHeight = localStorage.getItem('popupHeight');
-    const savedTop = localStorage.getItem('popupTop');
-    const savedLeft = localStorage.getItem('popupLeft');
-
-    if (savedWidth) popup.style.width = savedWidth;
-    if (savedHeight) popup.style.height = savedHeight;
-    if (savedTop) popup.style.top = savedTop;
-    if (savedLeft) popup.style.left = savedLeft;
 
     const closeBtn = document.createElement('button');
     closeBtn.classList.add('close-btn');
@@ -796,37 +815,18 @@ function createPopup() {
     let currentResizeType = 'corner';
 
     let startX, startY, initialLeft, initialTop;
-    let isFirstDrag = localStorage.getItem('isFirstDrag') === 'false' ? false : true;
-
-    if (isFirstDrag) {
-        if (savedDict && savedDict.includes("standalone")) {
-            popup.style.top = '50%';
-            popup.style.left = '50%';
-            popup.style.width = '749px';
-            popup.style.height = '600px';
-            popup.style.transform = 'translate(-50%, -50%)';
-        } else {
-            popup.style.width = '500px';
-            popup.style.height = '500px';
-            const rightMargin = isMobileLike ? 0 : 15;
-            popup.style.right = `${rightMargin}px`;
-            popup.style.top = `${window.innerHeight - 510}px`;
-            popup.style.transform = 'none';
-        }
-    }
 
     function startDrag(e) {
         isDragging = true;
         iframe.style.pointerEvents = 'none';
         popup.classList.add('dragging');
 
-        if (isFirstDrag) {
+        if (popup.style.transform && popup.style.transform !== 'none') {
             const rect = popup.getBoundingClientRect();
             popup.style.transform = 'none';
             popup.style.top = rect.top + 'px';
             popup.style.left = rect.left + 'px';
-            isFirstDrag = false;
-            localStorage.setItem('isFirstDrag', isFirstDrag);
+            popup.style.right = '';
         }
 
         startX = e.clientX || e.touches[0].clientX;
@@ -952,6 +952,7 @@ function getPopup() {
         event.stopPropagation();
         popupElements.popup.style.display = 'none';
         popupElements.overlay.style.display = 'none';
+        popupElements.iframe.removeAttribute('srcdoc');
         popupElements.iframe.src = '';
     });
 
@@ -959,6 +960,7 @@ function getPopup() {
         event.stopPropagation();
         popupElements.popup.style.display = 'none';
         popupElements.overlay.style.display = 'none';
+        popupElements.iframe.removeAttribute('srcdoc');
         popupElements.iframe.src = '';
     });
 
