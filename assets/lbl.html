@@ -29,6 +29,10 @@
                 <div style="display: inline-flex; margin-top: -60px;">
                     <top-nav-icons type="read" show-dict></top-nav-icons>
                 </div>
+<a id="ttsLink" href="javascript:void(0)" class="ms-2 text-muted text-decoration-none voice-link tts-ignore" title="Text-to-Speech Mode">
+                    <img src="/assets/svg/volume-high.svg" style="width: 20px; height: 20px; opacity: 0.6;" alt="TTS">
+                </a>
+
                 <a href="#" onclick="openHelpModal();" title="Инструкция" class="ms-2 text-muted" target=""><i class="fa-solid fa-question"></i></a>
    <a href="/assets/readylinebyline.html" title="Обновить Список Готовых" class=" ms-2 me-2 text-muted" target="_blank">
 <i class="fa-solid fa-list"></i>
@@ -780,21 +784,26 @@ function loadText() {
                 }
             }
 
+            // Выбираем класс для языка перевода
+            const translationClass = (language === 'en') ? 'eng-lang' : 'rus-lang';
+
             texts.forEach((text, textIndex) => {
               const currentText = texts[textIndex] || ''; 
               rowCounter++;
-              const row = `<tr>
-                            <td class="pli-lang">
-                                <a href="#" class="cat-trigger text-muted text-decoration-none me-2" style="opacity: 0.3;" title="Искать перевод" onclick="event.preventDefault();"><i class="fa-solid fa-link"></i></a>
+              // КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Добавлен id="${key}" к <tr> для работы очередей TTS
+              const row = `<tr id="${key}">
+                            <td class="pli-lang" lang="pi">
+                                <a href="#" class="cat-trigger text-muted text-decoration-none me-2 tts-ignore" style="opacity: 0.3;" title="Искать перевод" onclick="event.preventDefault();"><i class="fa-solid fa-link"></i></a>
                                 <span class="source-text">${sourceText}</span>
                             </td>
-                            <td>${key}</td>
-                            <td>${currentText}</td>
-                            <td><a href="#" title="${key}" onmousedown="gotoLine(${rowCounter})"><i class="fa-solid fa-link"></i></a></td>
+                            <td class="tts-ignore">${key}</td>
+                            <td class="${translationClass}" lang="${language === 'en' ? 'en' : 'ru'}">${currentText}</td>
+                            <td class="tts-ignore"><a href="#" title="${key}" onmousedown="gotoLine(${rowCounter})"><i class="fa-solid fa-link"></i></a></td>
                           </tr>`;
               tableHtml += row;
             });
           });
+
 
           if (translationLines.length > dataArray.length) {
             for (let i = dataArray.length; i < translationLines.length; i++) {
@@ -2021,22 +2030,6 @@ document.addEventListener("DOMContentLoaded", function() {
         </div>
     </div>
 </div>
-
-
-<script>
-    // Блокировка кнопки TTS на странице lbl-en
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            mutation.addedNodes.forEach((node) => {
-                if (node.classList && node.classList.contains('dynamic-tts-btn')) {
-                    node.remove();
-                }
-            });
-        });
-    });
-
-    observer.observe(document.body, { childList: true });
-</script>
 
 <div id="catDropdown" class="cat-dropdown"></div>
 

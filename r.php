@@ -269,6 +269,24 @@ if ($is_dev) {
  </script>
  <style>
   /* --- ОБЩИЕ СТИЛИ --- */
+  /* Гарантированная видимость выделения для ТТС в таблице */
+#sutta-table td.active-word {
+    background-color: rgba(13, 110, 253, 0.25) !important;
+    box-shadow: inset 0 0 0 9999px rgba(13, 110, 253, 0.15) !important;
+    outline: 2px solid #0d6efd !important;
+    outline-offset: -2px;
+    transition: all 0.2s ease;
+}
+
+body.dark #sutta-table td.active-word {
+    background-color: rgba(13, 110, 253, 0.4) !important;
+    box-shadow: inset 0 0 0 9999px rgba(13, 110, 253, 0.2) !important;
+    outline: 2px solid #6ea8fe !important;
+}
+
+  
+  
+  
 .controls-container {
   position: sticky;
   top: 0;
@@ -559,7 +577,7 @@ body.dark .dt-button-background {
     <button type="submit" id="searchbtn" class="btn btn-sm btn-outline-secondary rounded-circle p-1 ms-1 flex-shrink-0" style="width:30px; height:30px;">Go</button>
    </form>
    
-   <a id="ttsLink" href="javascript:void(0)" data-slug="<?= htmlspecialchars($slug) ?>" class="mode-switch text-decoration-none text-dark me-2 voice-link" title="Text-to-Speech Mode">
+   <a id="ttsLink" href="javascript:void(0)" data-slug="<?= htmlspecialchars($slug) ?>" class="mode-switch text-decoration-none text-dark me-2 voice-link tts-ignore" title="Text-to-Speech Mode">
       <img src="/assets/svg/volume-high.svg" style="width: 25px; height: 25px;">
    </a>
   </div>
