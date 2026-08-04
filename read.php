@@ -8700,7 +8700,7 @@ clearBtn.style.display = 'block';
 
 		 
 		 <div class="mt-3">
- <span class="level5" id="sn45.146-148"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn45.146-148">sn45.146-148</a> Candimādisutta <?php echo $ifEnSujTrn;?> <?php echo $ifRuSvOTrn;?></span>
+ <span class="level5" id="sn45.146-148"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn45.146-148">sn45.146-148</a> Candimādisutta <?php echo $ifEnSujTrn;?> <?php echo $ifRuLitTrn;?></span>
  </div>
 <div class="level4 my-3">
 		 <h5>12. Balakaraṇīyavagga</h5>
@@ -8708,7 +8708,7 @@ clearBtn.style.display = 'block';
 
 		 
 		 <div class="mt-3">
- <span class="level5" id="sn45.149"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn45.149">sn45.149</a> Balasutta <?php echo $ifEnSujTrn;?> <?php echo $ifRuSvOTrn;?></span>
+ <span class="level5" id="sn45.149"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn45.149">sn45.149</a> Balasutta <?php echo $ifEnSujTrn;?> <?php echo $ifRuLitTrn;?></span>
  </div>
 
 		 
@@ -8758,12 +8758,12 @@ clearBtn.style.display = 'block';
 
 		 
 		 <div class="mt-3">
- <span class="level5" id="sn45.159"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn45.159">sn45.159</a> Āgantukasutta <?php echo $ifEnThanTrn;?> <?php echo $ifRuSvOTrn;?></span>
+ <span class="level5" id="sn45.159"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn45.159">sn45.159</a> Āgantukasutta <?php echo $ifEnThanTrn;?> <?php echo $ifRuLitTrn;?></span>
  </div>
 
 		 
 		 <div class="mt-3">
- <span class="level5" id="sn45.160"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn45.160">sn45.160</a> Nadīsutta <?php echo $ifEnSujTrn;?> <?php echo $ifRuSvOTrn;?></span>
+ <span class="level5" id="sn45.160"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn45.160">sn45.160</a> Nadīsutta <?php echo $ifEnSujTrn;?> <?php echo $ifRuLitTrn;?></span>
  </div>
 <div class="level4 my-3">
 		 <h5>13. Esanāvagga</h5>
