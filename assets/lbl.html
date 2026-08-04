@@ -75,6 +75,7 @@
 
                 <div class="input-group-append ms-1 mb-2">
                     <button class="btn btn-primary me-1" title="Обновить перевод" onclick="loadText();                 loadAndCheckRanges();">Обновить <i class="fa-solid fa-arrow-rotate-right"></i></button>
+                    <button class="btn btn-warning me-1" title="✨ AI: переписать нижние строки в стиле верхних" onclick="aiStyleRows()">✨</button>
                     <button class="btn btn-primary me-1" title="Найти и Заменить" onclick="openSearchModal();"><i class="fas fa-search"></i></button>
                     <button class="btn btn-primary me-1" title="Найти и Заменить" id="formatButton"><i class="fa-solid fa-text-width"></i></button>
                     <button class="btn btn-danger me-1" title="Очистить окно ввода текста" onclick="clearInputs()"><i class="fa-solid fa-eraser"></i></button>
@@ -1119,7 +1120,7 @@ function loadText() {
                   const rowIndex = rows.indexOf(currentRow);
 
                   if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-                      if (textarea.selectionStart === textarea.value.length) {
+                      if (!event.ctrlKey && !event.shiftKey && textarea.selectionStart === textarea.value.length) {
                           event.preventDefault();
                           const nextRow = currentRow.nextElementSibling;
                           if (nextRow) makeCellEditable(nextRow.cells[2], 0);
@@ -1128,7 +1129,7 @@ function loadText() {
                   }
 
                   if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
-                      if (textarea.selectionStart === 0) {
+                      if (!event.ctrlKey && !event.shiftKey && textarea.selectionStart === 0) {
                           event.preventDefault();
                           const prevRow = currentRow.previousElementSibling;
                           if (prevRow) makeCellEditable(prevRow.cells[2], 'end');
@@ -2300,6 +2301,76 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+</script>
+
+<script>
+function aiStyleRows() {
+    const tbody = document.getElementById('outputTableBody');
+    if (!tbody) return;
+
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    if (!rows.length) return;
+
+    // Определяем активную строку: active-word на tr/td, или focused textarea, или последний клик
+    let activeRow = null;
+    const activeWordEl = document.querySelector('#outputTableBody .active-word');
+    if (activeWordEl) {
+        activeRow = activeWordEl.closest('tr');
+    }
+    if (!activeRow) {
+        const focused = document.querySelector('#outputTableBody textarea:focus');
+        if (focused) activeRow = focused.closest('tr');
+    }
+    if (!activeRow) {
+        alert('Кликните на строку в таблице, чтобы обозначить позицию.');
+        return;
+    }
+
+    const activeIdx = rows.indexOf(activeRow);
+    const CONTEXT_ABOVE = 5;
+    const CONTEXT_BELOW = 8;
+
+    const refStart = Math.max(0, activeIdx - CONTEXT_ABOVE);
+    const refRows = rows.slice(refStart, activeIdx);
+    const targetRows = rows.slice(activeIdx, Math.min(rows.length, activeIdx + CONTEXT_BELOW + 1));
+
+    function getRowText(row) {
+        const pali = (row.querySelector('.source-text') || row.querySelector('td:first-child'))?.textContent?.trim() || '';
+        const ruCell = row.querySelector('td.rus-lang, td.eng-lang');
+        const ru = ruCell
+            ? (ruCell.querySelector('textarea')?.value?.trim() || ruCell.textContent?.trim())
+            : (row.querySelector('td:nth-child(3)')?.textContent?.trim() || '');
+        return { pali, ru };
+    }
+
+    const refLines = refRows.map(r => {
+        const t = getRowText(r);
+        return t.pali && t.ru ? `${t.pali}\n${t.ru}` : (t.pali || t.ru);
+    }).filter(Boolean).join('\n\n');
+
+    const targetLines = targetRows.map(r => {
+        const t = getRowText(r);
+        return t.pali && t.ru ? `${t.pali}\n${t.ru}` : (t.pali || t.ru);
+    }).filter(Boolean).join('\n\n');
+
+    if (!refLines && !targetLines) {
+        alert('Нет текста для обработки.');
+        return;
+    }
+
+    const prompt = `Pali translator. Format: Pali line then its translation.
+
+REFERENCE (match their style, word order, terms):
+${refLines}
+
+REWORK (from highlighted):
+${targetLines}
+
+Rewrite translations to match reference style/word-order/terms. Keep any abbreviations ("...", "pe", etc.) as-is. Return ONLY the translations (no Pali), one per line, same line breaks as given.`;
+
+    const encoded = encodeURIComponent(prompt);
+    window.open(`https://chatgpt.com/?q=${encoded}`, '_blank');
+}
 </script>
 
 </body>
