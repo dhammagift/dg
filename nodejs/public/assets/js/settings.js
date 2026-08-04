@@ -1,4 +1,6 @@
 
+
+
 window.notEn= /^\/(ru|r|ml|mt)(\/|$)/.test(window.location.pathname)
     || (localStorage.getItem('siteLanguage') || 'en') !== 'en';    
 
@@ -669,40 +671,70 @@ async function saveToHistory(key, url) {
 
 //установка фокуса в инпуте по нажатию / 
 document.addEventListener('keydown', function(event) {
-    // Отключаем перехват, если мы УЖЕ печатаем внутри любого поля ввода
-    const activeTag = document.activeElement ? document.activeElement.tagName : '';
-    if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || document.activeElement.isContentEditable) {
-        return; 
-    }
-
-    // Ловим нажатие слэша
+    // Проверяем именно символ / (код 191 или Slash)
     if (event.key === '/' || event.code === 'Slash') {
-        event.preventDefault();
+        // Проверяем, активно ли модальное окно через глобальный window (защита от ReferenceError)
+        const isModalActive = window.quickModalIsOpen && document.getElementById('quickSearchInput');
 
-        // 1. Приоритет: Модальное окно
-        if (window.quickModalIsOpen) {
+        
+        // Если модальное окно активно, устанавливаем фокус в его поле ввода
+        if (isModalActive) {
             const modalInput = document.getElementById('quickSearchInput');
-            if (modalInput) {
-                modalInput.focus();
-                modalInput.setSelectionRange(modalInput.value.length, modalInput.value.length);
-            }
-            return;
+            event.preventDefault();
+            modalInput.focus();
+            modalInput.setSelectionRange(modalInput.value.length, modalInput.value.length);
+            return; // Прерываем выполнение, так как модальное окно активно
         }
         
-        // 2. Приоритет: Основной инпут или любой подходящий резервный
+        // Ищем все возможные инпуты (оригинальная логика)
         const inputs = document.querySelectorAll(
-            '#paliauto[type="search"], #paliauto[type="text"], .dtsb-value.dtsb-input, input[type="search"], input[type="text"]'
+            '#paliauto[type="search"], #paliauto[type="text"], .dtsb-value.dtsb-input'
         );
         
-        // Берем первый подходящий инпут из списка
-        if (inputs.length > 0) {
-            const targetInput = inputs[0];
-            targetInput.focus();
-            targetInput.setSelectionRange(targetInput.value.length, targetInput.value.length);
-        }
+        // Если нет ни одного подходящего инпута - выходим
+        if (inputs.length === 0) return;
+        
+        // Берем первый подходящий инпут
+        const input = inputs[0];
+        
+        // Предотвращаем действие по умолчанию только если нашли инпут
+        event.preventDefault();
+        
+        // Фокусируемся и перемещаем курсор в конец
+        input.focus();
+        input.setSelectionRange(input.value.length, input.value.length);
     }
 }); 
+
+// Отключаем перехват / когда фокус уже в инпуте
+const handleInputKeydown = (event) => {
+    if (event.key === '/' || event.code === 'Slash') {
+        event.stopPropagation();
+    }
+};
+
+// Вешаем обработчики на все существующие и будущие инпуты
+document.querySelectorAll('input').forEach(input => {
+    input.addEventListener('keydown', handleInputKeydown);
+});
+
+// Наблюдатель для динамически добавляемых инпутов
+new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+            if (node.nodeName === 'INPUT') {
+                node.addEventListener('keydown', handleInputKeydown);
+            } else if (node.querySelectorAll) {
+                node.querySelectorAll('input').forEach(input => {
+                    input.addEventListener('keydown', handleInputKeydown);
+                });
+            }
+        });
+    });
+}).observe(document.body, { childList: true, subtree: true });
+
 //конец фокуса в инпуте по нажатию / 
+
 
 function loadModal(modalId, modalFile) {
     fetch(modalFile)
@@ -1213,7 +1245,7 @@ if (event.altKey && event.code === "KeyJ") {
   let historyPhpPath, historyHtmlPath;
 
   // Если URL содержит языковой префикс (/ru/, /r/, /ml/)
-  if (currentUrl.match(/\/(ru|r|ml|mt)\//)) {
+  if (currentUrl.match(/\/(ru|r|ml)\//)) {
     const langPrefix = 'ru/';
     historyPhpPath = `/${langPrefix}history.php`;
     historyHtmlPath = `/${langPrefix}assets/common/history.html`;
@@ -2073,51 +2105,16 @@ function normalizeQuery(rawQuery) {
 
     q = q.replace(/([a-z])\s+(\d)/g, '$1$2');
 
-    // Подстановка полных префиксов Винаи (включая алиасы по умолчанию для bu)
-    const vinayaFolderMap = {
-        "bu-pj": "pli-tv-bu-vb-pj", "bi-pj": "pli-tv-bi-vb-pj",
-        "bu-ss": "pli-tv-bu-vb-ss", "bi-ss": "pli-tv-bi-vb-ss",
-        "bu-ay": "pli-tv-bu-vb-ay", "bi-ay": "pli-tv-bi-vb-ay",
-        "bu-np": "pli-tv-bu-vb-np", "bi-np": "pli-tv-bi-vb-np",
-        "bu-pc": "pli-tv-bu-vb-pc", "bi-pc": "pli-tv-bi-vb-pc",
-        "bu-pd": "pli-tv-bu-vb-pd", "bi-pd": "pli-tv-bi-vb-pd",
-        "bu-sk": "pli-tv-bu-vb-sk", "bi-sk": "pli-tv-bi-vb-sk",
-        "bu-as": "pli-tv-bu-vb-as", "bi-as": "pli-tv-bi-vb-as",
-        "bu-pm": "pli-tv-bu-pm",    "bi-pm": "pli-tv-bi-pm",
-        "bupm": "pli-tv-bu-pm",     "bipm": "pli-tv-bi-pm",
-        "pvr": "pli-tv-pvr",        "kd": "pli-tv-kd",
-        "pj": "pli-tv-bu-vb-pj",
-        "ss": "pli-tv-bu-vb-ss",
-        "ay": "pli-tv-bu-vb-ay",
-        "np": "pli-tv-bu-vb-np",
-        "pc": "pli-tv-bu-vb-pc",
-        "pd": "pli-tv-bu-vb-pd",
-        "sk": "pli-tv-bu-vb-sk",
-        "as": "pli-tv-bu-vb-as",
-        "pm": "pli-tv-bu-pm"
-    };
-
-    // Заменяем префикс только если это точное совпадение или за ним идет цифра 
-    // (чтобы поиск слова "asoka" не сломался об алиас "as")
-    for (const [shortKey, fullFolder] of Object.entries(vinayaFolderMap)) {
-        const regex = new RegExp(`^${shortKey}(?=$|\\d)`);
-        if (regex.test(q)) {
-            q = q.replace(shortKey, fullFolder);
-            break;
-        }
-    }
-
-    // Захватываем дефисы для уже расширенных ключей
-    const match = q.match(/^([a-z-]+)(\d.*)$/);
+    const match = q.match(/^([a-z]+)(\d.*)$/);
     if (match) {
         let letters = match[1];
         let rest = match[2];
 
-        const keepAsIs = ['iti', 'snp', 'ud', 'thig', 'thag', 'dhp', 'kp', 'ja'];
+        const keepAsIs = ['iti', 'snp', 'ud', 'thig', 'thag', 'dhp', 'pj', 'ss', 'ay', 'np', 'pc', 'pd', 'sk', 'as', 'bu', 'bi'];
 
-        if (keepAsIs.includes(letters) || letters.startsWith('pli-tv-')) {
+        if (keepAsIs.includes(letters) || letters.startsWith('bu-') || letters.startsWith('bi-')) {
              q = letters + rest;
-        } else if (!letters.startsWith('pli-tv-')) {
+        } else {
             const first = letters[0];
             if (first === 'm') q = 'mn' + rest;
             else if (first === 'd') q = 'dn' + rest;
@@ -3333,320 +3330,3 @@ window.addEventListener('hashchange', applyHashHighlights);
         document.head.appendChild(script);
     }
 })();
-
-document.addEventListener('click', function (e) {
-    const link = e.target.closest('.s4ntLink');
-
-    if (!link) return;
-
-    const url = get4ntUrl();
-
-    if (url) {
-        link.href = url;
-    }
-});
-
-function getSlug(slug = null) {
-    if (slug) return slug.trim().toLowerCase();
-
-    return (
-        document.querySelector('#paliauto')?.value.trim() ||
-        document.querySelector('input[name="q"]')?.value.trim() ||
-        new URLSearchParams(location.search).get('q')?.trim() ||
-        null
-    )?.toLowerCase();
-}
-
-function get4ntUrl(slug = null) {
-    slug = getSlug(slug);
-    if (!slug) return null;
-
-    const basePath = "/4nt";
-
-    // =========================================================
-    // 1. ЛОГИКА ДЛЯ ВИНАИ (Vinaya)
-    // =========================================================
-    
-    // Словарь для преобразования коротких имен в полные имена папок 4nt
-    const vinayaFolderMap = {
-        // Параджика (Parajika)
-        "bu-pj": "pli-tv-bu-vb-pj",
-        "bi-pj": "pli-tv-bi-vb-pj",
-
-        // Сангхадисеса (Sanghadisesa)
-        "bu-ss": "pli-tv-bu-vb-ss",
-        "bi-ss": "pli-tv-bi-vb-ss",
-
-        // Анията (Aniyata)
-        "bu-ay": "pli-tv-bu-vb-ay",
-        "bi-ay": "pli-tv-bi-vb-ay",
-
-        // Ниссаггия Пачиттия (Nissaggiya Pacittiya)
-        "bu-np": "pli-tv-bu-vb-np",
-        "bi-np": "pli-tv-bi-vb-np",
-
-        // Пачиттия (Pacittiya)
-        "bu-pc": "pli-tv-bu-vb-pc",
-        "bi-pc": "pli-tv-bi-vb-pc",
-        "bu-vb-pc": "pli-tv-bu-vb-pc", // Оставляем на случай, если уже приходит такой формат
-        "bi-vb-pc": "pli-tv-bi-vb-pc",
-
-        // Патидесания (Patidesaniya)
-        "bu-pd": "pli-tv-bu-vb-pd",
-        "bi-pd": "pli-tv-bi-vb-pd",
-
-        // Секхия (Sekhiya)
-        "bu-sk": "pli-tv-bu-vb-sk",
-        "bi-sk": "pli-tv-bi-vb-sk",
-
-        // Адхикарана-саматха (Adhikarana-samatha)
-        "bu-as": "pli-tv-bu-vb-as",
-        "bi-as": "pli-tv-bi-vb-as",
-        "bu-vb-as": "pli-tv-bu-vb-as",
-        "bi-vb-as": "pli-tv-bi-vb-as",
-
-        // Патимоккха (Patimokkha)
-        "bu-pm": "pli-tv-bu-pm",
-        "bupm": "pli-tv-bu-pm",
-        "bi-pm": "pli-tv-bi-pm",
-        "bipm": "pli-tv-bi-pm",
-
-        // Кхандхака и Паривара
-        "pvr": "pli-tv-pvr",
-        "kd": "pli-tv-kd"
-    };
-
-    let vinayaBook = "";
-    let anchorBase = slug;
-
-    // Вариант А: Slug уже нормализован вашей функцией parseSlug и начинается с "pli-tv-"
-    if (slug.startsWith("pli-tv-")) {
-        // 1. Для Patimokkha, Pacittiya, Aniyata/Sekhiya (цифры правила идут после, в якоре)
-        const matchVb = slug.match(/^(pli-tv-(?:bu|bi)-(?:vb-)?(?:pc|as|pm))/);
-        if (matchVb) {
-            vinayaBook = matchVb[1]; // например, "pli-tv-bu-vb-pc"
-        } else {
-            // 2. Для Khandhaka и Parivara, где цифра может быть частью имени папки (как в примере pli-tv-pvr15)
-            const matchKdPvr = slug.match(/^(pli-tv-(?:pvr|kd)\d*)/);
-            if (matchKdPvr) {
-                vinayaBook = matchKdPvr[1]; // например, "pli-tv-pvr15"
-            } else {
-                // 3. Запасной вариант: берем все буквы и дефисы до первой цифры
-                const matchFallback = slug.match(/^(pli-tv-[a-z-]+)/);
-                if (matchFallback) {
-                    vinayaBook = matchFallback[1];
-                }
-            }
-        }
-    } 
-    // Вариант Б: Slug короткий (например, "bu-pc34" или "bupm227")
-    else {
-        for (const [shortKey, fullFolder] of Object.entries(vinayaFolderMap)) {
-            if (slug.startsWith(shortKey)) {
-                vinayaBook = fullFolder;
-                // Заменяем короткое имя на полное для формирования корректного якоря
-                // Например: "bu-pc34" -> "pli-tv-bu-vb-pc34"
-                anchorBase = slug.replace(shortKey, fullFolder);
-                break;
-            }
-        }
-    }
-
-    // Если мы успешно распознали Винаю, формируем специальный URL и сразу возвращаем его
-    if (vinayaBook) {
-        return `${basePath}/vin/tv/${vinayaBook}/index.html#${anchorBase}`;
-    }
-
-    // =========================================================
-    // 2. СУЩЕСТВУЮЩАЯ ЛОГИКА ДЛЯ СУТТ (Nikayas)
-    // =========================================================
-    const slugParts = slug.match(/^([a-z]+)(\d*)/);
-    if (!slugParts) return null;
-
-    const book = slugParts[1];
-    const firstNum = slugParts[2];
-
-    if (book === "dn" || book === "mn") {
-//        return `${basePath}/${book}/#${slug}`;
-          return `${basePath}/${book}/${slug}`;
-
-    }
-
-    if (book === "sn" || book === "an") {
-        return `${basePath}/${book}/${book}${firstNum}/#${slug}`;
-    }
-
-    if (["ud", "iti", "snp", "dhp", "thig", "thag", "kp"].includes(book)) {
-        return `${basePath}/kn/${book}/#${slug}`;
-    }
-
-    return null;
-}
-
-
-function checkForceLocalFlag() {
-    const urlParams = new URLSearchParams(window.location.search);
-    let changed = false;
-    let isSet = false;
-
-    if (urlParams.has('force_local')) {
-        localStorage.setItem('forceLocal', 'true');
-        changed = true;
-        isSet = true;
-      //  alert("Флаг forceLocal установлен и готовится к отправке в облако!");
-    } else if (urlParams.has('clear_local')) {
-        localStorage.removeItem('forceLocal');
-        changed = true;
-        isSet = false;
-      //  alert("Флаг forceLocal удален локально и в облаке!");
-    }
-
-
-}
-
-// Запускаем сразу при чтении скрипта
-checkForceLocalFlag();
-// console.log("Статус при запуске скрипта: forceLocal =", localStorage.getItem('forceLocal'));
-
-// PDF export — lazy load только по клику
-document.addEventListener('click', function (e) {
-    var btn = e.target.closest('#pdf-btn');
-    if (!btn) return;
-
-    function doExport() {
-        var suttaArea = document.getElementById('sutta');
-        if (!suttaArea) return;
-
-        var title = document.title || 'Sutta';
-        var isColumns = suttaArea.classList.contains('column-view');
-
-        // Ссылки из верхней панели
-        var linkItems = [];
-        var topLinks = document.getElementById('top-links-container');
-        if (topLinks) {
-            topLinks.querySelectorAll('a').forEach(function (a) {
-                var txt = (a.textContent || '').trim();
-                if (!txt) return;
-                linkItems.push({ text: txt + '  ', link: a.href, color: '#0d6efd', decoration: 'underline' });
-            });
-        }
-
-        // Byline переводчика из первого #trn
-        var bylineParts = [];
-        var bylineEl = suttaArea.querySelector('#trn');
-        if (bylineEl) {
-            var bPali = bylineEl.querySelector('.pli-lang');
-            var bTrans = bylineEl.querySelector('.rus-lang');
-            if (bPali && bPali.textContent.trim()) bylineParts.push({ text: bPali.textContent.trim() + '   ', color: '#000' });
-            if (bTrans && bTrans.textContent.trim()) bylineParts.push({ text: bTrans.textContent.trim(), color: '#666' });
-        }
-
-        var content = [];
-        content.push({ text: title, style: 'title' });
-        if (linkItems.length) content.push({ text: linkItems, margin: [0, 4, 0, 6] });
-        if (bylineParts.length) content.push({ text: bylineParts, style: 'byline' });
-
-        // Хелпер: клонировать элемент, убрать .copyLink, вернуть чистый текст
-        function cleanText(el) {
-            if (!el) return '';
-            var clone = el.cloneNode(true);
-            clone.querySelectorAll('.copyLink, a.copyLink-start').forEach(function (a) { a.remove(); });
-            return clone.textContent.replace(/\s+/g, ' ').trim();
-        }
-
-        // Обходим все span[id] в DOM-порядке — querySelectorAll гарантирует порядок документа
-        suttaArea.querySelectorAll('span[id]').forEach(function (node) {
-            // Пропускаем служебные контейнеры
-            if (node.closest('#trn, #top-links-container, #bottom-links-container')) return;
-            if (!node.querySelector('.pli-lang') && !node.querySelector('.rus-lang')) return;
-
-            // Контекст заголовка: span[id] может лежать внутри h1/h2/h3
-            var headingEl = node.closest('h1, h2, h3');
-
-            var paliEl = node.querySelector('.pli-lang');
-            var transEl = node.querySelector('.rus-lang');
-
-            // Чистый пали + вариант (вытаскиваем .variant перед cleanText)
-            var pali = '', variant = '';
-            if (paliEl) {
-                var paliClone = paliEl.cloneNode(true);
-                paliClone.querySelectorAll('.copyLink, a.copyLink-start').forEach(function (a) { a.remove(); });
-                var varEl = paliClone.querySelector('.variant');
-                if (varEl) {
-                    variant = varEl.textContent.replace(/\s+/g, ' ').trim();
-                    varEl.remove();
-                }
-                pali = paliClone.textContent.replace(/\s+/g, ' ').trim();
-            }
-            var trans = cleanText(transEl);
-            if (!pali && !trans) return;
-
-            if (headingEl) {
-                // Сегмент внутри заголовка — выводим как заголовок
-                var hTag = headingEl.tagName; // H1, H2, H3
-                var hStyle = hTag === 'H1' ? 'h1' : (hTag === 'H2' ? 'h2' : 'h3');
-                var hParts = [];
-                if (pali) hParts.push({ text: pali + (trans ? '\n' : ''), color: '#000000' });
-                if (trans) hParts.push({ text: trans, color: '#555555' });
-                content.push({ text: hParts, style: hStyle });
-
-            } else if (isColumns) {
-                var paliStack = [{ text: pali, color: '#000000' }];
-                if (variant) paliStack.push({ text: '↕ ' + variant, fontSize: 8, color: '#999999', italics: true });
-                content.push({
-                    columns: [
-                        { stack: paliStack, width: '50%' },
-                        { text: trans, width: '50%', color: '#444444' }
-                    ],
-                    margin: [0, 1, 0, 1],
-                    fontSize: 10
-                });
-
-            } else {
-                var parts = [];
-                if (pali) parts.push({ text: pali + '\n', color: '#000000' });
-                if (variant) parts.push({ text: '↕ ' + variant + '\n', fontSize: 8, color: '#999999', italics: true });
-                if (trans) parts.push({ text: trans, color: '#555555' });
-                content.push({ text: parts, margin: [0, 2, 0, 4] });
-            }
-        });
-
-        pdfMake.fonts = {
-            NotoSans: {
-                normal: 'NotoSans-Regular.ttf',
-                bold: 'NotoSans-Bold.ttf',
-                italics: 'NotoSans-Italic.ttf',
-                bolditalics: 'NotoSans-BoldItalic.ttf'
-            }
-        };
-
-        pdfMake.createPdf({
-            content: content,
-            defaultStyle: { font: 'NotoSans', fontSize: 11, lineHeight: 1.4 },
-            styles: {
-                title:  { fontSize: 16, bold: true, margin: [0, 0, 0, 6] },
-                byline: { fontSize: 9, color: '#888888', margin: [0, 0, 0, 12] },
-                h1:     { fontSize: 14, bold: true, margin: [0, 12, 0, 4] },
-                h2:     { fontSize: 12, bold: true, margin: [0, 8, 0, 3] },
-                h3:     { fontSize: 11, bold: true, margin: [0, 6, 0, 2] }
-            },
-            pageOrientation: isColumns ? 'landscape' : 'portrait',
-            pageMargins: [50, 60, 50, 60]
-        }).download(title + '.pdf');
-    }
-
-    function loadScript(url, cb) {
-        var s = document.createElement('script');
-        s.src = url;
-        s.onload = cb;
-        document.head.appendChild(s);
-    }
-
-    if (typeof pdfMake === 'undefined') {
-        loadScript('/assets/js/pdfmake.min.js', function () {
-            loadScript('/assets/js/vfs_fonts.js', doExport);
-        });
-    } else {
-        doExport();
-    }
-});
