@@ -7,8 +7,6 @@ thtrndir=/data/data/com.termux/files/usr/share/apache2/default-site/htdocs/asset
 lbldir=$apachesitepath/assets/texts/lbl/
 
 
-
-
 cd $downloaddir
 for file in `find . -maxdepth 1 -type f -size +0 -name "*root-pli-ms.json" 2>/dev/null`
 do
@@ -94,6 +92,9 @@ do
     fi
 done
 
+cd $apachesitepath	
+python scripts/updateReadPHPRu.py 2>&1 > /dev/null
+bash scripts/updateTextInfoJS.sh
 
 
 if [[ "`uname -a`" != *"Android"* ]]; then 

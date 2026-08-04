@@ -16,6 +16,50 @@ function getEffectiveTheme() {
     : 'light';
 }
 
+function resolveDictConfig(dict) {
+    const theme = getEffectiveTheme();
+    let dictUrl;
+    let externalDict = false;
+    let inNewWindow = false;
+
+    if (dict.includes("dpd")) {
+        dictUrl = "https://dict.dhamma.gift";
+        if (dict.includes("ru")) {
+            dictUrl += "/ru";
+        }
+        if (dict.includes("full")) {
+            dictUrl += `/?silent&theme=${theme}&q=`;
+        } else if (dict.includes("compact")) {
+            dictUrl += "/gd?search=";
+        }
+    } else if (dict === "dictapp") {
+        externalDict = true;
+        dictUrl = "dpd://word/";
+    } else if (dict === "dicttango") {
+        externalDict = true;
+        dictUrl = "dttp://app.dicttango/WordLookup?word=";
+    } else if (dict === "goldenpc") {
+        externalDict = true;
+        dictUrl = "goldendict://";
+    } else if (dict === "mdict") {
+        externalDict = true;
+        dictUrl = "mdict://mdict.cn/search?text=";
+    } else if (dict === "newwindow" || dict === "newwindowru") {
+        dictUrl = `https://dict.dhamma.gift/${window.isRu ? "ru/" : ""}?silent&theme=${theme}&q=`;
+    } else if (dict === "standaloneru") {
+        dictUrl = "standaloneru";
+    } else if (dict === "standalone") {
+        dictUrl = "standalone";
+    } else if (dict === "machinetranslation") {
+        inNewWindow = true;
+        dictUrl = "https://dharmamitra.org/translate?input_sentence=";
+    } else {
+        dictUrl = "searchonly";
+    }
+
+    return { dictUrl, externalDict, inNewWindow };
+}
+
 const newWindowWidth = 500;
 const newWindowHeight = 500;
 
@@ -162,13 +206,6 @@ function applyDictConfig(newDict) {
     savedDict = newDict;
     localStorage.setItem('selectedDict', newDict);
 
-    externalDict = false;
-    inNewWindow = false;
-
-    if (savedDict === "machinetranslation") {
-        inNewWindow = true;
-    }
-
     // Удаляем скрипт противоположного языка при переключении standalone-режима
     if (savedDict === "standalone") {
         const urlToRemove = '/assets/js/standalone-dpd/ru/dpd_ebts.js';
@@ -183,52 +220,11 @@ function applyDictConfig(newDict) {
     }
     dbLoadPromise = null;
 
-    const theme = getEffectiveTheme();
-
-    if (savedDict.includes("dpd")) {
-        dictUrl = "https://dict.dhamma.gift";
-        if (savedDict.includes("ru")) {
-            dictUrl += "/ru";
-        }
-        if (savedDict.includes("full")) {
-            dictUrl += `/?silent&theme=${theme}&q=`;
-        } else if (savedDict.includes("compact")) {
-            dictUrl += "/gd?search=";
-        }
-    } else if (savedDict === "dictapp") {
-        externalDict = true;
-        dictUrl = "dpd://word/";
-    } else if (savedDict === "dicttango") {
-        externalDict = true;
-        dictUrl = "dttp://app.dicttango/WordLookup?word=";
-    } else if (savedDict === "goldenpc") {
-        externalDict = true;
-        dictUrl = "goldendict://";
-    } else if (savedDict === "mdict") {
-        externalDict = true;
-        dictUrl = "mdict://mdict.cn/search?text=";
-    } else if (savedDict === "newwindow" || savedDict === "newwindowru") {
-        dictUrl = `https://dict.dhamma.gift/${window.isRu ? "ru/" : ""}?silent&theme=${theme}&q=`;
-    } else if (savedDict === "standaloneru") {
-        dictUrl = "standaloneru"; 
-    } else if (savedDict === "standalone") {
-        dictUrl = "standalone"; 
-    } else if (savedDict === "machinetranslation") {
-        dictUrl = "https://dharmamitra.org/translate?input_sentence="; 
-    } else {
-        dictUrl = "searchonly";
-    }
+    ({ dictUrl, externalDict, inNewWindow } = resolveDictConfig(savedDict));
 }
 
 
 dhammaGift = '';
-if (isLocalhost) {
-  dictUrl = "https://dict.dhamma.gift";
-} else if (savedDict.includes("compact")) {
-    dictUrl = "https://dict.dhamma.gift";
-} else {
-    dictUrl = "https://dict.dhamma.gift";
-}
 
 if (window.location.href.includes('/r/') || window.location.href.includes('/ru/') || window.location.href.includes('/ml/') || (localStorage.siteLanguage && localStorage.siteLanguage === 'ru')) {
    dhammaGift += '/ru';
@@ -237,47 +233,7 @@ dhammaGift += '/?q=';
 
 dgParams = '&p=-kn';
 
-const theme = getEffectiveTheme();   
-
-if (savedDict.includes("dpd")) {
-  if (savedDict.includes("ru")) {
-    dictUrl += "/ru";
-  }
-
-  if (savedDict.includes("full")) {
-    dictUrl += `/?silent&theme=${theme}&q=`;
-  } else if (savedDict.includes("compact")) {
-    dictUrl += "/gd?search=";
-  }
-} else if (savedDict === "dictapp") {
-        externalDict = true;
-        dictUrl = "dpd://word/";
-} else if (savedDict === "dicttango") {
-  externalDict = true;
-  dictUrl = "dttp://app.dicttango/WordLookup?word=";
-} else if (savedDict === "goldenpc") {
-  externalDict = true;
-  dictUrl = "goldendict://";
-} else if (savedDict === "mdict") {
-  externalDict = true;
-  dictUrl = "mdict://mdict.cn/search?text=";
-} else if (savedDict === "newwindow") {
-  dictUrl = `https://dict.dhamma.gift/?silent&theme=${theme}&q=`;
-} else if (savedDict === "newwindowru") {
-  dictUrl = `https://dict.dhamma.gift/ru/?silent&theme=${theme}&q=`;
-}
-else if (savedDict === "standaloneru") {
-  dictUrl = "standaloneru"; 
-} else if (savedDict === "standalone") {
-  dictUrl = "standalone"; 
-} else {
-   dictUrl = "searchonly";
-}
-
-if (savedDict === "machinetranslation") {
-    inNewWindow = true;
-  dictUrl = "https://dharmamitra.org/translate?input_sentence="; 
-}
+({ dictUrl, externalDict, inNewWindow } = resolveDictConfig(savedDict));
 
 const scriptCache = new Map();
 const requestIdleCallback = window.requestIdleCallback ||
