@@ -1,8 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
-// Проверка наличия флага --no-html в аргументах командной строки
-const stripHtml = process.argv.includes('--no-html');
+// По умолчанию HTML убирается; флаг --with-html оставляет теги
+const stripHtml = !process.argv.includes('--with-html');
 
 // Функция для рекурсивного поиска всех файлов в директории
 function getAllFiles(dirPath, arrayOfFiles) {
@@ -21,7 +21,7 @@ function getAllFiles(dirPath, arrayOfFiles) {
     return arrayOfFiles;
 }
 
-function updateSuttaTranslators() {
+async function updateSuttaTranslators() {
     // Определение базовой директории по абсолютным путям
     const termuxDir = '/data/data/com.termux/files/usr/share/apache2/default-site';
     const varWwwDir = '/var/www';
@@ -64,6 +64,23 @@ function updateSuttaTranslators() {
 
     // Целевая директория (создаем папку ru в текущем рабочем каталоге)
     const targetDataDir = path.join(process.cwd(), 'ru');
+
+    // Чистим целевую директорию перед копированием
+    if (fs.existsSync(targetDataDir)) {
+        const readline = require('readline');
+        const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+        await new Promise((resolve) => {
+            rl.question(`\nВНИМАНИЕ: будет удалена папка "${targetDataDir}"\nПродолжить? (y/N) `, (answer) => {
+                rl.close();
+                if (answer.toLowerCase() !== 'y') {
+                    console.log('Отменено.');
+                    process.exit(0);
+                }
+                resolve();
+            });
+        });
+        fs.rmSync(targetDataDir, { recursive: true, force: true });
+    }
 
     // Получаем все файлы, включая те, что во вложенных папках
     const allFiles = getAllFiles(sourceDataDir);
