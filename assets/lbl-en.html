@@ -1072,7 +1072,7 @@ function loadText() {
                   const rowIndex = rows.indexOf(currentRow);
 
                   if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-                      if (textarea.selectionStart === textarea.value.length) {
+                      if (!event.ctrlKey && !event.shiftKey && textarea.selectionStart === textarea.value.length) {
                           event.preventDefault();
                           const nextRow = currentRow.nextElementSibling;
                           if (nextRow) makeCellEditable(nextRow.cells[2], 0);
@@ -1081,7 +1081,7 @@ function loadText() {
                   }
 
                   if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
-                      if (textarea.selectionStart === 0) {
+                      if (!event.ctrlKey && !event.shiftKey && textarea.selectionStart === 0) {
                           event.preventDefault();
                           const prevRow = currentRow.previousElementSibling;
                           if (prevRow) makeCellEditable(prevRow.cells[2], 'end');

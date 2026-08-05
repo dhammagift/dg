@@ -144,6 +144,17 @@ button:hover {
   background-color: #0056b3;
 }
 
+button.btn-warning {
+  background-color: #7a01ae;
+  color: #fff;
+  border-color: #7a01ae;
+}
+
+button.btn-warning:hover {
+  background-color: #9802d9;
+  border-color: #9802d9;
+}
+
 /* --- Модальные окна --- */
 .modal {
   display: none;
