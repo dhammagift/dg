@@ -507,3 +507,5 @@ ck() {
     bash scripts/checkOTrnStatus.sh "$@"
     cd - > /dev/null
 }
+export DISABLE_UPDATES=1
+export DISABLE_AUTOUPDATER=1
