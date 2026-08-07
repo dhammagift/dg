@@ -184,6 +184,7 @@ h5 {
 .dark h5 {
  /* color: var(--light-gray); */
 }
+
 /*
 p .pli-lang,
 dt .pli-lang,
@@ -194,9 +195,9 @@ h2 .pli-lang,
 h3 .pli-lang,
 h4 .pli-lang,
 h5 .pli-lang {
-  color: var(--off-black);*/
+  color: var(--off-black);
 }
- /*
+
 .dark p .pli-lang,
 .dark dt .pli-lang,
 .dark li .pli-lang,
@@ -215,7 +216,8 @@ a {
 
 .dark a {
   color: rgb(122, 122, 249);
-}*/
+}
+*/
 
 dt {
   font-weight: bold;
@@ -370,4 +372,3 @@ a:hover {
   background-color: var(--blue);
   color: var(--off-white);
 }
-
