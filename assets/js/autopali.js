@@ -262,6 +262,7 @@ function bindAutocomplete(selector, allWords) {
         focus: function() { return false; },
         select: function(event, ui) {
             if (ui.item.url && /\d/.test(ui.item.value)) {
+                $(this).autocomplete("close");
                 window.location.href = ui.item.url;
                 return false;
             }
@@ -276,6 +277,8 @@ function bindAutocomplete(selector, allWords) {
             
             if (/\d/.test(selectedValue)) {
                 this.value = selectedValue.split(/\s+/)[0]; 
+                
+                $(this).autocomplete("close");
                 
                 const form = this.closest('form');
                 if (form) {
@@ -300,6 +303,13 @@ function bindAutocomplete(selector, allWords) {
     }).data("ui-autocomplete");
 
     $(selector).autocomplete("widget").addClass("fixed-height");
+
+    // Обработчик нажатия клавиши Enter для закрытия дропдауна
+    $(selector).on("keydown", function(event) {
+        if (event.key === "Enter" || event.keyCode === 13) {
+            $(this).autocomplete("close");
+        }
+    });
 
     autocompleteInstance._renderItem = function(ul, item) {
         var $div = $("<div>").addClass("autopali-dropdown-item");
