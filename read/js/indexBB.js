@@ -114,16 +114,16 @@ let params = new URLSearchParams(document.location.search);
    const savedScript = localStorage.getItem('selectedScript');
 
  if (( script === "devanagari" ) || ( savedScript === "Devanagari" ) ) {
-var rootpath = `/assets/texts/en/${texttype}/${slugReady}_root-pli-ms.json`
+var rootpath = `/assets/texts/b/${texttype}/${slugReady}_root-pli-ms.json`
  } 
  else if (( script === "thai" ) || ( savedScript === "Thai" ) ) {
-var rootpath = `/assets/texts/en/${texttype}/${slugReady}_root-pli-ms.json`
+var rootpath = `/assets/texts/b/${texttype}/${slugReady}_root-pli-ms.json`
  } 
 else {
-var rootpath = `/assets/texts/en/${texttype}/${slugReady}_root-pli-ms.json`
+var rootpath = `/assets/texts/b/${texttype}/${slugReady}_root-pli-ms.json`
  }
 
-   var htmlpath = `/assets/texts/en/${texttype}/${slugReady}_html.json`;
+   var htmlpath = `/assets/texts/b/${texttype}/${slugReady}_html.json`;
  
    //  //  let otrnranges = ['sn56.11', 'sn12.2'];
   
@@ -165,7 +165,7 @@ var rootpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slug}
 } */ 
 
 else {
-  var trnpath = `/assets/texts/en/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`;
+  var trnpath = `/assets/texts/b/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`;
 }
 
 var varpath = `${Sccopy}/sc-data/sc_bilara_data/variant/pli/ms/${texttype}/${slugReady}_variant-pli-ms.json`
@@ -212,7 +212,7 @@ async function fetchTranslationWithFallback(slugReady, texttype, pathLang, initi
   ];
 
   for (const translator of translators) {
-    const trnpath = `/assets/texts/en/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`;
+    const trnpath = `/assets/texts/b/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`;
     try {
       const response = await fetch(trnpath);
       if (response.ok) {
