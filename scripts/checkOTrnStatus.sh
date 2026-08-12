@@ -108,16 +108,37 @@ ck() {
 }
 
 
+source ~/.bashrc
+apa
+bash  scripts/mvNewTextsFromDownloads.sh 
+cd - 
+if [[ "$1" == "-aa" ]]; then
+    cd "$basedir_path/ru" || exit 1
+    output=$(
+        find . -type f |
+        grep -v 'ru-o.json' |
+        #grep -E "sn(46|47|48|49|50|51|52|53|54|55)" |
+        xargs wc -l |
+        sort -n | 
+        #head -n10 |
+        tac
+    )
+
+    echo "$output"
+    make_sutta_link "$output"
+
+    exit 0
+fi
+
 
 if [[ "$1" == "-a" ]]; then
     cd "$basedir_path/ru" || exit 1
-
     output=$(
         find . -type f |
         grep -v 'ru-o.json' |
         grep -E "sn(46|47|48|49|50|51|52|53|54|55)" |
         xargs wc -l |
-        sort -n | 
+        sort -n |
         head -n10 |
         tac
     )

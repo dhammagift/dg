@@ -22,7 +22,7 @@ alias ll="ls -ahtr"
 alias lls="ll | sort -V"
 alias grep="grep --color"
 alias apa="cd $basedir"
-alias off="cd $basedir; cd ../offline-data"
+alias off="cd $basedir; cd ../offline-data/dhammagift"
 alias tst="cd /var/www/test"
 
 #SC relate
