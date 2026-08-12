@@ -57,17 +57,15 @@ async function buildSutta(slug) {
   let html = `<div class="button-area"><button title="Переключить язык (Atl+Z или Alt+Space)" id="language-button" class="hide-button">Pāḷi Рус</button></div>`;
   const slugReady = parseSlug(slug);
 
-  // Получаем переводчика через PHP или HEAD-запросы из common.js
   if (translator === "") {
       translator = await getTranslator(texttype, slugReady, pathLang);
-      if (!translator) translator = "o"; // Глубокий фолбек
+      if (!translator) translator = "o"; 
   }
 
   let params = new URLSearchParams(document.location.search);
   let script = params.get("script");
   const savedScript = localStorage.getItem('selectedScript');
 
-  // Пути к Root файлам
   let rootpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slugReady}_root-pli-ms.json`;
   if (script === "devanagari" || savedScript === "Devanagari") {
       rootpath = `/assets/texts/devanagari/root/pli/ms/${texttype}/${slugReady}_rootd-pli-ms.json`;
@@ -93,13 +91,12 @@ async function buildSutta(slug) {
 
   const rootResponse = fetch(rootpath).then(res => res.ok ? res.json() : fetch(`${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slugReady}_root-pli-ms.json`).then(r => r.json())).catch(() => ({}));
 
-  // Единая функция загрузки с приоритетом AI для первого перевода
   async function fetchTranslation() {
       const enFallbackTranslator = texttype === "vinaya" ? "brahmali" : "sujato";
       
       const sources = [
-          { path: `/assets/texts/ai/${texttype}/${slugReady}_translation-ru-ai.json`, author: "ai" }, // Главный приоритет 1-го перевода
-          { path: `/assets/texts/ru/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`, author: translator }, // Резерв на случай отсутствия AI
+          { path: `/assets/texts/ai/${texttype}/${slugReady}_translation-ru-ai.json`, author: "ai" },
+          { path: `/assets/texts/ru/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`, author: translator }, 
           { path: `${Sccopy}/sc-data/sc_bilara_data/translation/ru/${translator}/${texttype}/${slugReady}_translation-ru-${translator}.json`, author: translator },
           { path: `${Sccopy}/sc-data/sc_bilara_data/translation/en/${enFallbackTranslator}/${texttype}/${slugReady}_translation-en-${enFallbackTranslator}.json`, author: enFallbackTranslator }
       ];
@@ -110,22 +107,22 @@ async function buildSutta(slug) {
               if (response.ok) {
                   const data = await response.json();
                   if (data && Object.keys(data).length > 0) {
-                      translator = source.author; // Перезаписываем глобальную переменную для корректного отображения имени
+                      translator = source.author; 
                       return data;
                   }
               }
-          } catch (error) {}
+          } catch (error) {
+              console.error(`Ошибка при разборе JSON из ${source.path}:`, error);
+          }
       }
       return {}; 
   }
 
-  // Для multilang/multitran - функция поиска второго перевода
   async function fetchSecondTranslation() {
       const mainRuPath = "/assets/texts/ru";
       const otherRuPath = "/assets/texts/ru_other";
       const scRuPath = `${Sccopy}/sc-data/sc_bilara_data/translation/ru`;
       
-      // Главный приоритет второго перевода - запрошенный переводчик (сохраненный в переменной translator)
       const prioritySources = [
           { path: `${mainRuPath}/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`, author: translator },
           { path: `${otherRuPath}/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`, author: translator },
@@ -142,12 +139,13 @@ async function buildSutta(slug) {
                       return data;
                   }
               }
-          } catch (error) {}
+          } catch (error) {
+              console.error(`Ошибка при разборе JSON из ${source.path}:`, error);
+          }
       }
 
-      // Если приоритетный переводчик не найден, ищем любого другого по всем доступным папкам
       const fallbackAuthors = ["o","sv+edited+o", "sv", "khantibalo", "syrkin+edited+o", "syrkin", "narinyanievmenenko"];
-      const authorsToTry = fallbackAuthors.filter(a => a !== translator); // Исключаем того, кого уже проверили
+      const authorsToTry = fallbackAuthors.filter(a => a !== translator); 
 
       for (const author of authorsToTry) {
           const fallbackSources = [
@@ -166,20 +164,26 @@ async function buildSutta(slug) {
                           return data;
                       }
                   }
-              } catch (error) {}
+              } catch (error) {
+                  console.error(`Ошибка при разборе JSON из ${source.path}:`, error);
+              }
           }
       }
       
       return null;
   }
 
-  const translationResponse = fetchTranslation(); 
-  const engtranslationResponse = typeof fetchSecondTranslation === 'function' ? fetchSecondTranslation() : Promise.resolve({});
+  // Решаем состояние гонки: дожидаемся первый перевод, чтобы обновилась переменная translator
+  const transData = await fetchTranslation(); 
+  
+  // Теперь второй переводчик гарантированно использует актуальное значение translator
+  const engTransData = await (typeof fetchSecondTranslation === 'function' ? fetchSecondTranslation() : Promise.resolve({}));
+  
   const htmlResponse = fetch(htmlpath).then(res => res.ok ? res.json() : {});
   const varResponse = window.fetchVariantData ? window.fetchVariantData(varpathLocal, varpath) : Promise.resolve({});
 
-  Promise.all([rootResponse, translationResponse, engtranslationResponse, htmlResponse, varResponse]).then(responses => {
-      const [paliData, transData, engTransData, htmlData, varData] = responses;
+  Promise.all([rootResponse, htmlResponse, varResponse]).then(responses => {
+      const [paliData, htmlData, varData] = responses;
 
       if (!htmlData || Object.keys(htmlData).length === 0) throw new Error("Text not found");
 
@@ -277,6 +281,7 @@ async function buildSutta(slug) {
       }
   });
 }
+
 
 
 
