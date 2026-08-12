@@ -558,10 +558,15 @@ function downloadJson() {
 }
 
 function loadText() {
+
   const language = document.getElementById('languageSelect').value;
   const indexValue = document.getElementById('indexInput').value.trim().toLowerCase();
   let translation = document.getElementById('translationInput').value;
   let cleanedTranslation = translation;
+
+  if (indexValue) {
+    document.title = indexValue;
+}
 
   try {
     const jsonObject = JSON.parse(translation);
@@ -1416,11 +1421,10 @@ function saveInputs() {
   localStorage.setItem('indexValue', indexInput.value);
   localStorage.setItem('translationValue', translationInput.value);
   localStorage.setItem('customTranslatorCheckboxState', customTranslatorCheckbox.checked);
-  // Сохраняем состояние списка языков
   localStorage.setItem('languageSelectValue', languageSelect.value);
 
-  // Синхронизируем текущее значение с параметром q в адресной строке
   if (indexInput.value) {
+      document.title = indexInput.value;
       const currentUrl = new URL(window.location);
       currentUrl.searchParams.set('q', indexInput.value);
       window.history.replaceState(null, '', currentUrl);
@@ -2007,23 +2011,6 @@ function joinSelectedText() {
         textarea.setSelectionRange(selectionStart, selectionStart + joinedText.length);
     }
 }
-
-document.addEventListener("DOMContentLoaded", function() {
-    let timeoutId;
-    const indexInput = document.getElementById("indexInput");
-
-    if (indexInput) {
-        indexInput.addEventListener("input", function() {
-            clearTimeout(timeoutId); 
-            timeoutId = setTimeout(function() {
-                const textIndex = indexInput.value;
-                if (textIndex) {
-                    document.title = textIndex;
-                }
-            }, 1000); 
-        });
-    }
-});
 </script>
 
 <script src="/assets/js/settings.js"></script>
