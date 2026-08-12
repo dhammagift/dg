@@ -117,7 +117,7 @@ if [[ "$1" == "-a" ]]; then
         grep -v 'ru-o.json' |
         grep -E "sn(46|47|48|49|50|51|52|53|54|55)" |
         xargs wc -l |
-        sort | 
+        sort -n | 
         head -n10 |
         tac
     )
