@@ -77,7 +77,7 @@ done
 
 
 cd $apachesitepath
-cd ../offline-data/dhammagift/ru/sutta 
+cd ../offline-data/dhammagift/translation/ru/sutta 
 
 for i in `find . -type f | awk -F'_' '{print $1}' | sort -V | uniq -c | sort -V | awk '{print $1, $2}' | grep -v "^1" | awk '{print $2}'`
 do

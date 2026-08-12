@@ -55,7 +55,7 @@ async function updateSuttaTranslators() {
     const ruTranslators = translatorsData.ru;
 
     // Директория с исходными данными (прод репо)
-    const sourceDataDir = path.join(baseDir, 'offline-data/dhammagift/ru');
+    const sourceDataDir = path.join(baseDir, 'offline-data/dhammagift/translation/ru');
     
     if (!fs.existsSync(sourceDataDir)) {
         console.error(`Директория с данными не найдена: ${sourceDataDir}`);

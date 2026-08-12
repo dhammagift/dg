@@ -1,9 +1,28 @@
 source ./config/script_config.sh --source-only
 
 basedir=$apachesitepath
+basedir_path="$basedir/../offline-data/dhammagift"
+
+make_sutta_link() {
+    local output="$1"
+
+    local last_sutta
+    last_sutta=$(
+        echo "$output" |
+        tail -n1 |
+        awk '{print $NF}' |
+        awk -F'/' '{print $NF}' |
+        cut -d'_' -f1
+    )
+
+    if [[ -n "$last_sutta" ]]; then
+        echo
+        echo "f.dhamma.gift/assets/lbl.html?q=$last_sutta"
+    fi
+}
 
 ck() {
-    local n="45"
+    local n="48"
     local sort_by_name=false
 
     # Разбор аргументов
@@ -14,7 +33,6 @@ ck() {
         esac
     done
 
-    local basedir_path="$basedir/../offline-data/dhammagift"
     cd "$basedir_path" || return 1
 
     local ru_dir="ru/sutta/sn/sn$n"
@@ -78,28 +96,39 @@ ck() {
         )
 
         echo "$sorted_output"
-
-        last_sutta=$(
-            echo "$sorted_output" |
-            tail -n1 |
-            awk '{print $NF}' |
-            awk -F'/' '{print $NF}' |
-            cut -d'_' -f1
-        )
     fi
-
     done_count=$((total_ai - remaining_count))
 
     echo
     echo "Всего: $total_ai | Готово: $done_count | Осталось: $remaining_count"
 
-    if [[ -n "$last_sutta" ]]; then
-        echo
-        echo "f.dhamma.gift/assets/lbl.html?q=$last_sutta"
-    fi
+  make_sutta_link "$sorted_output"
 
     cd - >/dev/null
 }
+
+
+
+if [[ "$1" == "-a" ]]; then
+    cd "$basedir_path/ru" || exit 1
+
+    output=$(
+        find . -type f |
+        grep -v 'ru-o.json' |
+        grep -E "sn(46|47|48|49|50|51|52|53|54|55)" |
+        xargs wc -l |
+        sort | 
+        head -n10 |
+        tac
+    )
+
+    echo "$output"
+    make_sutta_link "$output"
+
+    exit 0
+fi
+
+
 
 if [[ "$1" == "-g" ]]; then
     shift
