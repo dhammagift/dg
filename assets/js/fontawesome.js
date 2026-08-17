@@ -1,0 +1,1 @@
+fontawesome.7.3.1.all.min.js
