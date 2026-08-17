@@ -17,54 +17,7 @@ homeButton.addEventListener("click", () => {
   document.location.search = "";
 });
 
-
-function parseSlugBB(slug) {
-  if (
-    slug === 'bu-pm' || slug === 'bi-pm' ||
-    slug === 'pli-tv-bu-pm' || slug === 'pli-tv-bi-pm' ||
-    slug === 'bupm' || slug === 'bipm'
-  ) {
-    const gender = slug.includes('bi') ? 'bi' : 'bu';
-    return `pli-tv-${gender}-pm`;
-  }
-
-  if (
-    slug === 'bu-as' || slug === 'bu-vb-as1-7' || slug === 'pli-tv-bu-vb-as1-7' ||
-    slug === 'bi-as' || slug === 'bi-vb-as1-7' || slug === 'pli-tv-bi-vb-as1-7'
-  ) {
-    const fixforbivb = slug.replace(/(\d+)-(\d+)/g, '');
-    const bookWithoutNumber = fixforbivb.replace(/(\d+)/g, '');
-    const fixforbivb2 = slug.replace(/-([a-z]+)\d+/g, '');
-    const bookWithoutNumberAndRule = fixforbivb2.replace(/-\d+$/g, '');
-    return `${bookWithoutNumberAndRule}/${bookWithoutNumber}1-7`;
-  } else if (slug.match(/^([a-z]+)-([a-z]+)-([a-z]+)-([a-z]+)-([a-z]+)*(\d*)/)) {
-    const fixforbivb = slug.replace(/(\d+)-(\d+)/g, '');
-    const bookWithoutNumber = fixforbivb.replace(/(\d+)/g, '');
-    const fixforbivb2 = slug.replace(/-([a-z]+)\d+/g, '');
-    const bookWithoutNumberAndRule = fixforbivb2.replace(/-\d+$/g, '');
-    return `${bookWithoutNumberAndRule}/${bookWithoutNumber}/${slug}`;
-  } else if (slug.match(/^([a-z]+)-([a-z]+)-([a-z]+)*(\d*)/)) {
-    const bookWithoutNumber = slug.replace(/(\d+|\.)/g, '');
-    return `${bookWithoutNumber}/${slug}`;
-  }
-
-  const slugParts = slug.match(/^([a-z]+)(\d*)\.*(\d*)/);
-  const book = slugParts ? slugParts[1] : slug;
-  const firstNum = slugParts ? slugParts[2] : '';
-
-  if (book === "dn" || book === "mn") {
-    return `${book}/${slug}`;
-  } else if (book === "sn" || book === "an") {
-    return `${book}/${book}${firstNum}/${slug}`;
-  } else if (["kp", "dhp", "ud", "iti", "snp", "thag", "thig", "ja"].includes(book)) {
-    // В отличие от common.js, здесь мы отдаем плоский путь для KN-книг, без vagga
-    return `kn/${book}/${slug}`;
-  }
-  
-  return slug;
-}
-
-function buildSutta(slug) {
+async function buildSutta(slug) {
   let translator = "";
   let texttype = "sutta";
   let slugArray = slug.split("&");
@@ -72,7 +25,9 @@ function buildSutta(slug) {
   if (slugArray[1]) {
     translator = slugArray[1];
   } else {
-    translator = "bodhi";
+    // В английской версии мы не ставим sujato жестко сразу, 
+    // чтобы дать отработать getTranslator
+    translator = "";
   }
   slug = slug.toLowerCase();
 
@@ -101,341 +56,200 @@ function buildSutta(slug) {
     }
   }
 
-// console.log('texttype ' + texttype + ' translator ' + translator);
-
   let html = `<div class="button-area"><button title="Switch language (Atl+Z or Alt+Space)" id="language-button" class="hide-button">Pāḷi Eng</button></div>`;
-  
-  const slugReady = parseSlugBB(slug);
-  // console.log("slugReady is " + slugReady + " slug is " + slug); 
+  const slugReady = parseSlug(slug);
 
-let params = new URLSearchParams(document.location.search);
- let script = params.get("script");
- 
-   const savedScript = localStorage.getItem('selectedScript');
+  // Получаем переводчика напрямую через JS функцию
+  if (translator === "") {
+      // translator = await getTranslator(texttype, slug, pathLang);
+    translator = "unl";
+  }
 
- if (( script === "devanagari" ) || ( savedScript === "Devanagari" ) ) {
-var rootpath = `/assets/texts/b/${texttype}/${slugReady}_root-pli-ms.json`
- } 
- else if (( script === "thai" ) || ( savedScript === "Thai" ) ) {
-var rootpath = `/assets/texts/b/${texttype}/${slugReady}_root-pli-ms.json`
- } 
-else {
-var rootpath = `/assets/texts/b/${texttype}/${slugReady}_root-pli-ms.json`
- }
+  let params = new URLSearchParams(document.location.search);
+  let script = params.get("script");
+  const savedScript = localStorage.getItem('selectedScript');
 
-   var htmlpath = `/assets/texts/b/${texttype}/${slugReady}_html.json`;
- 
-   //  //  let otrnranges = ['sn56.11', 'sn12.2'];
-  
+  // Определение rootpath (Pali)
+  let rootpath = "";
+  if (( script === "devanagari" ) || ( savedScript === "Devanagari" ) ) {
+    rootpath = `/assets/texts/devanagari/root/pli/ms/${texttype}/${slugReady}_rootd-pli-ms.json`
+  } else if (( script === "thai" ) || ( savedScript === "Thai" ) ) {
+    rootpath = `/assets/texts/th/root/pli/ms/${texttype}/${slugReady}_rootth-pli-ms.json`
+  } else {
+    rootpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slugReady}_root-pli-ms.json`
+  }
+
+  let htmlpath = `${Sccopy}/sc-data/sc_bilara_data/html/pli/ms/${texttype}/${slugReady}_html.json`;
+  let trnpath = "";
+
+  // ВОССТАНОВЛЕННАЯ ЛОГИКА ПУТЕЙ ПЕРЕВОДА
   if (slug.match(/ja/)) {
-  let language = "pli";
-  let slugNumber = parseInt(slug.replace(/\D/g, ''), 10); // Извлекаем число из slug
-
-  if (slugNumber >= 1 && slugNumber <= 75) {
-    var trnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/${translator}/${texttype}/${slugReady}_translation-en-sujato.json`;
-  } else if (slugNumber > 70) {
-    var trnpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slugReady}_root-pli-ms.json`;
-  }
-  // console.log('ja case ', rootpath, trnpath, htmlpath);
-} else if (slug.match(/bu-pm|bi-pm/)) {
-    //let translator = "thanissaro+o";
-   // let translator = "thanissaro";
-    let translator = "brahmali";
-    texttype === "vinaya";
-      let language = "pli";
-
- if (( script === "devanagari" ) || ( savedScript === "Devanagari" ) ) {
-//       var rootpath = `/assets/texts/${texttype}/${slug}_root-pli-ms.json`;
-var rootpath = `/assets/texts/devanagari/root/pli/ms/${texttype}/${slug}_rootd-pli-ms.json`
- } 
- else if (( script === "thai" ) || ( savedScript === "Thai" ) ) {
-var rootpath = `/assets/texts/th/root/pli/ms/${texttype}/${slug}_rootth-pli-ms.json`
- } 
-else {
-var rootpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slug}_root-pli-ms.json`
- }
-    var trnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/brahmali/${texttype}/${slug}_translation-en-brahmali.json`;
-    var htmlpath = `/assets/html/${texttype}/${slug}_html.json`;
-  //  console.log(rootpath, trnpath, htmlpath);
-} 
-
-/* else if (otrnranges.indexOf(slug) !== -1) { 
-    var trnpath = `/assets/texts/en/o/${texttype}/${slugReady}_translation-en-o.json`;
-        translator = "o";
-} */ 
-
-else {
-  var trnpath = `/assets/texts/b/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`;
-}
-
-var varpath = `${Sccopy}/sc-data/sc_bilara_data/variant/pli/ms/${texttype}/${slugReady}_variant-pli-ms.json`
-var varpathLocal = `/assets/texts/variant/${texttype}/${slugReady}_variant-pli-ms.json`
-
-const rootResponse = fetch(rootpath)
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('Root file not found');
+    let slugNumber = parseInt(slug.replace(/\D/g, ''), 10);
+    if (slugNumber >= 1 && slugNumber <= 75) {
+      trnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/sujato/${texttype}/${slugReady}_translation-en-sujato.json`;
+    } else if (slugNumber > 70) {
+      trnpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slugReady}_root-pli-ms.json`;
     }
-    return response.json();
-  })
-  .catch(error => {
-  console.log('note: no root found, trying alternative path');
-    // Переключаем на второй путь
-    rootpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slugReady}_root-pli-ms.json`;
-    // Делаем новый запрос по второму пути
-    return fetch(rootpath)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Alternative root file not found');
-        }
-        return response.json();
-      })
-      .catch(error => {
-       console.log('note: no alternative root found either');
-        return {}; // Возвращаем пустой объект, если оба пути недоступны
-      });
-  });
+  } else if (slug.match(/bu-pm|bi-pm/)) {
+    translator = "brahmali";
+    if (( script === "devanagari" ) || ( savedScript === "Devanagari" ) ) {
+      rootpath = `/assets/texts/devanagari/root/pli/ms/${texttype}/${slug}_rootd-pli-ms.json`
+    } else if (( script === "thai" ) || ( savedScript === "Thai" ) ) {
+      rootpath = `/assets/texts/th/root/pli/ms/${texttype}/${slugReady}_rootth-pli-ms.json`
+    } else {
+      rootpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slug}_root-pli-ms.json`
+    }
+    trnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/en/brahmali/${texttype}/${slug}_translation-en-brahmali.json`;
+    htmlpath = `/assets/html/${texttype}/${slug}_html.json`;
+  } else if (translator === "o") { 
+    trnpath = `/assets/texts/en/o/${texttype}/${slugReady}_translation-en-o.json`;
+  } else if (translator === "thanissaro") { 
+    trnpath = `/assets/texts/en_other/${texttype}/${slugReady}_translation-en-thanissaro.json`;
+  } else if (translator === "unl") {
+    trnpath = `/assets/texts/unl/${texttype}/${slugReady}_translation-en-unl.json`;
+  } else {
+    trnpath = `${Sccopy}/sc-data/sc_bilara_data/translation/${pathLang}/${translator}/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`;
+  }
 
-// Add this function to handle fetching translations with fallback translators
-async function fetchTranslationWithFallback(slugReady, texttype, pathLang, initialTranslator) {
-  const translators = [
-    initialTranslator, // Try the original translator first
-    "bodhi",
-    "nyanamoli+bodhi",
-    "anandajoti",
-    "sujato+walton",
-    "walshe",
-    "buddharakkhita",
-    "thanissaro",
-    "kelly",
-    "sujato"
-  ];
+  var varpath = `${Sccopy}/sc-data/sc_bilara_data/variant/pli/ms/${texttype}/${slugReady}_variant-pli-ms.json`
+  var varpathLocal = `/assets/texts/variant/${texttype}/${slugReady}_variant-pli-ms.json`
 
-  for (const translator of translators) {
-    const trnpath = `/assets/texts/b/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`;
-    try {
-      const response = await fetch(trnpath);
-      if (response.ok) {
-        const data = await response.json();
-        return { data, translator }; // Return both the data and the translator that worked
+  const rootResponse = fetch(rootpath)
+    .then(response => {
+      if (!response.ok) throw new Error('Root not found');
+      return response.json();
+    })
+    .catch(() => {
+      rootpath = `${Sccopy}/sc-data/sc_bilara_data/root/pli/ms/${texttype}/${slugReady}_root-pli-ms.json`;
+      return fetch(rootpath).then(res => res.ok ? res.json() : {});
+    });
+
+const translationResponse = fetch(trnpath)
+  .then(async res => {
+    if (res.ok) {
+      const data = await res.json();
+
+      if (data && Object.keys(data).length > 0) {
+        return data;
       }
-    } catch (error) {
-      console.log(`Note: translation not found for ${translator}`);
     }
-  }
 
-  console.log('Note: no translation found in any fallback path');
-  return { data: {}, translator: initialTranslator }; // Return empty object if all paths fail
-}
+    // Fallback: если UNL отсутствует или пустой, ищем Sujato
+    const fallbackPath =
+      `${Sccopy}/sc-data/sc_bilara_data/translation/${pathLang}/sujato/${texttype}/${slugReady}_translation-${pathLang}-sujato.json`;
 
-// Then modify the Promise.all section to use this new function
-// Replace:
-// const translationResponse = fetch(trnpath).then(response => response.json());
-// With:
-const translationResponse = fetchTranslationWithFallback(slugReady, texttype, pathLang, translator)
-  .then(({ data, translator: usedTranslator }) => {
-    translator = usedTranslator; // Update the translator variable with the one that worked
-    return data;
-  });
+    console.log(`Translation not found for ${translator}, trying sujato: ${fallbackPath}`);
 
+    const fallbackRes = await fetch(fallbackPath);
 
-const htmlResponse = fetch(htmlpath).then(response => {
-  if (!response.ok) {
-    // Если файл не найден или другая ошибка, возвращаем пустой объект,
-    // чтобы Promise.all не завершился с ошибкой.
+    if (fallbackRes.ok) {
+      translator = "sujato";
+      return fallbackRes.json();
+    }
+
     return {};
-  }
-  return response.json();
-}).catch(error => {
-  // На случай других проблем, например, с сетью
-  console.log('HTML response fetch failed:', error);
-  return {};
-});
-
-//  const htmlResponse = fetch(htmlpath).then(response => response.json());
-
-const varResponse = window.fetchVariantData(varpathLocal, varpath);
+  });
+  
+  const htmlResponse = fetch(htmlpath).then(res => res.ok ? res.json() : {});
+  const varResponse = window.fetchVariantData ? window.fetchVariantData(varpathLocal, varpath) : Promise.resolve({});
 
   Promise.all([rootResponse, translationResponse, htmlResponse, varResponse]).then(responses => {
     const [paliData, transData, htmlData, varData] = responses;
 
-    // Проверка на отсутствие сутты
+    // ПРОВЕРКА: Если данные отсутствуют, вызываем ошибку для перехода в catch
     if (!htmlData || Object.keys(htmlData).length === 0) {
         throw new Error("Text not found - triggering catch block");
     }
 
-
-    Object.keys(htmlData).forEach(segment => {
-      if (transData[segment] === undefined) {
-        transData[segment] = "";
-      }
-      if (transData[segment] === "") {
-        transData[segment] = "";
-      }    
-      let [openHtml, closeHtml] = htmlData[segment].split(/{}/);
-   openHtml = openHtml || ''; // Запасное значение
-   closeHtml = closeHtml || ''; // Запасное значение
-      
-      
-      /* openHtml = openHtml.replace(/^<span class='verse-line'>/, "<br><span class='verse-line'>"); inputscript-IASTPali 
-      Roman (IAST)      IAST
-Roman (IAST: Pāḷi)      IASTPali
-Roman (IPA)             IPA
-Roman (ISO 15919)       ISO
-Roman (ISO 15919: Pāḷi) ISOPali */
-// ISOPali ISO IASTPali IAST
-
-let startIndex = segment.indexOf(':') + 1;
-let anchor = segment.substring(startIndex);
-
-if (slug.includes('-') && (slug.includes('an') || slug.includes('sn') || slug.includes('dhp'))) {
-anchor = segment;
-}
-
-var fullUrlWithAnchor = window.location.href.split('#')[0] + '#' + anchor;
-
-// Получаем параметры из текущего URL
-let finder = (params.get("s") || "").replace(/ṃ/g, "ṁ");
-
-// Если параметр 's' не найден в текущем URL, проверяем referer
-if (!finder) {
-  try {
-    if (document.referrer) {
-      const refererUrl = new URL(document.referrer);
-      const refererParams = new URLSearchParams(refererUrl.search);
-      const refererFinder = refererParams.get("s");
-      
-      if (refererFinder) {
-        finder = refererFinder;
-        // Можно также добавить параметр в текущий URL без перезагрузки
-        history.replaceState(null, '', `?q=${params.get("q")}&s=${encodeURIComponent(finder)}`);
+    // Логика Final Ruling
+    let finalRulingAnchor = "";
+    if (slug.includes("bu-") || slug.includes("bi-")) {
+      for (let seg in htmlData) {
+        if (htmlData[seg] && htmlData[seg].includes("patimokkha")) {
+          finalRulingAnchor = seg.substring(seg.indexOf(':') + 1);
+          break;
+        }
       }
     }
-  } catch (e) {
-    console.log("Could not parse referer URL:", e);
-  }
-}
 
+    // Обработка сегментов с объединением гатх
+    const segments = (typeof window.mergeGathas === 'function') ? 
+          window.mergeGathas(htmlData, paliData, transData, varData) : Object.keys(htmlData);
+
+    for (let i = 0; i < segments.length; i++) {
+      let segment = segments[i];
+      let [openHtml, closeHtml] = htmlData[segment].split(/{}/);
+      openHtml = openHtml || ''; 
+      closeHtml = closeHtml || ''; 
+
+      let startIndex = segment.indexOf(':') + 1;
+      let anchor = segment.substring(startIndex);
+      if (slug.includes('-') && (slug.includes('an') || slug.includes('sn') || slug.includes('dhp'))) {
+        anchor = segment;
+      }
+
+      var fullUrlWithAnchor = window.location.href.split('#')[0] + '#' + anchor;
+      let finder = (params.get("s") || "").replace(/ṃ/g, "ṁ");
+
+
+      if (finder && finder.trim() !== "") {
+        let regex = new RegExp(finder, 'gi'); 
+        const highlight = match => `<b class='match finder'>${match}</b>`;
+        if (paliData[segment]) paliData[segment] = paliData[segment].replace(regex, highlight);
+        if (transData[segment]) transData[segment] = transData[segment].replace(regex, highlight);
+        if (varData[segment]) varData[segment] = varData[segment].replace(regex, highlight);
+      }
          window.applyRemovePunct(paliData, segment);
 
+      const linkToCopyStart = `<a class="text-decoration-none copyLink copyLink-start" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;
+      let linkToCopy = `<a class="text-decoration-none copyLink" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;
 
-if (finder && finder.trim() !== "") {
-  let regex = new RegExp(finder, 'gi'); // 'gi' - игнорировать регистр
-
-  try {
-    paliData[segment] = paliData[segment]?.replace(regex, match => `<b class='match finder'>${match}</b>`);
-  } catch (error) {
- //   console.log("Ошибка при выделении совпадений в paliData:", info);
-  }
-
-  try {
-    transData[segment] = transData[segment]?.replace(regex, match => `<b class="match finder">${match}</b>`);
-  } catch (error) {
-  //  console.log("Ошибка при выделении совпадений в transData:", info);
-  }
-
-  if (varData[segment] !== undefined) {  
-    try {
-      varData[segment] = varData[segment].replace(regex, match => `<b class="match finder">${match}</b>`);
-    } catch (error) {
-      console.info("Ошибка при выделении совпадений в varData:", info);
-    }
-  }
-}
-
-
-const linkToCopyStart = `<a class="text-decoration-none copyLink copyLink-start" style="cursor: pointer;" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`;
-let linkToCopy = `<a class="text-decoration-none copyLink" style="cursor: pointer;" onclick="copyToClipboard('${fullUrlWithAnchor}')"></a>`
-let linkWithDataSet = `<a class="text-decoration-none copyLink" style="cursor: pointer;" data-copy-text="${fullUrlWithAnchor}">&nbsp;</a>`
-
-if (paliData[segment] !== undefined && transData[segment] !== undefined && varData[segment] !== undefined) {
-              html += `${openHtml}<span id="${anchor}">
-            <span class="pli-lang " lang="pi">${linkToCopyStart}${paliData[segment].trim()}${linkToCopy}
-      <font class="variant">
-	  <br>
-      ${linkToCopyStart}${varData[segment].trim()}${linkToCopy}   
-      </font>     
-            </span>
-            <span class="eng-lang" lang="en">${linkToCopyStart}${transData[segment].trim()}${linkToCopy}
-      </span>
-            </span>${closeHtml}\n\n`;
-      } else if (paliData[segment] !== undefined && transData[segment] !== undefined ) {
-              html += `${openHtml}<span id="${anchor}">
-            <span class="pli-lang " lang="pi">${linkToCopyStart}${paliData[segment].trim()}${linkToCopy}</span>
-            <span class="eng-lang" lang="en">${linkToCopyStart}${transData[segment].trim()}${linkToCopy}</span>
-            </span>${closeHtml}\n\n`;
-      } else if (paliData[segment] !== undefined) {
-        html += openHtml + '<span id="' + anchor + '"><span class="pli-lang inputscript-ISOPali" lang="pi">' + linkToCopyStart + paliData[segment].trim() + linkToCopy + '</span></span>' + closeHtml + '\n\n';
-      } else if (transData[segment] !== undefined) {
-        html += openHtml + '<span id="' + anchor + '"><span class="eng-lang" lang="en">' + linkToCopyStart + transData[segment].trim() + linkToCopy + '</span></span>' + closeHtml + '\n\n';
+      html += `${openHtml}<span id="${anchor}">`;
+      if (paliData[segment] !== undefined) {
+        html += `<span class="pli-lang" lang="pi">${linkToCopyStart}${paliData[segment].trim()}${linkToCopy}`;
+        if (varData[segment] !== undefined) {
+          html += `<font class="variant"><br>${linkToCopyStart}${varData[segment].trim()}${linkToCopy}</font>`;
+        }
+        html += `</span>`;
       }
-});
+      if (transData[segment] !== undefined) {
+        html += `<span class="eng-lang" lang="en">${linkToCopyStart}${transData[segment].trim()}${linkToCopy}</span>`;
+      }
+      html += `</span>${closeHtml}\n\n`;
+    }
 
-//console.log('texttype ' + texttype + ' translator ' + translator);
-if (translator === "o") {
-  translatorforuser = '<a href=/assets/common/o-en.html>o</a> from Pali';
-} else if (translator === "sv") {
-  translatorforuser = 'SV theravada.ru from Eng';
-} else if (translator === "anandajoti") {
-  translatorforuser = "Ānandajoti Bhikkhu";
-} else if (translator === "bodhi") {
-  translatorforuser = "Bhikkhu Bodhi";
-} else if (translator === "nyanamoli+bodhi") {
-  translatorforuser = "Bhikkhu Ñāṇamoli & Bhikkhu Bodhi";
-} else if (translator === "thanissaro") {
-  translatorforuser = "Thaissaro Bhikkhu";
-} else if (translator === "walshe") {
-  translatorforuser = "Maurice Walshe";
-} else if (translator === "kelly") {
-  translatorforuser = "John Kelly, Sue Sawyer & Victoria Yareham";
-} else if (translator === "buddharakkhita") {
-  translatorforuser = "Acharya Buddharakkhita";
-} else if (translator === "sujato+walton") {
-  translatorforuser = "Bhikkhu Sujato, Jessica Walton";
-} else if ((translator === "" && texttype === "sutta" ) || (translator === "sujato" )) {
-  translatorforuser = 'Bhikkhu Sujato';
-} else if ((translator === "" && texttype === "vinaya") || (translator === "brahmali" ))  {
-  translatorforuser = 'Bhikkhu Brahmali';
-} else if (translator === "syrkin" ) {
-  translatorforuser = 'A.Y. Syrkin from Pali';
-} else if (translator === "syrkin+edited+o" ) {
-  translatorforuser = 'A.Y. Syrkin from Pali, edited by <a href=/assets/common/o-en.html>o</a>';
-} else if (translator === "sv+edited+o" ) {
-  translatorforuser = 'SV theravada.ru from Eng, ed. <a href=/assets/common/o-en.html>o</a>';
-} else if (translator === "o+in+progress" ) {
-  translatorforuser = '<a href=/assets/common/o-en.html>o</a>, in progress';
-} else {
-  translatorforuser = translator ;
-}
+    // Подготовка Byline
+    let translatorforuser = translator;
+    if (translator === "o") {
+      translatorforuser = '<a href=/assets/common/o-en.html>o</a> from Pali';
+   
+    }  else if (translator === "unl") {
+      translatorforuser = 'Unlisted';
+    }
+  else if (translator === "sujato") {
+      translatorforuser = 'Bhikkhu Sujato';
+    } else if (translator === "brahmali") {
+      translatorforuser = 'Bhikkhu Brahmali';
+    } else if (translator === "thanissaro") {
+      translatorforuser = 'Thanissaro Bhikkhu <a href=https://dhammatalks.org/suttas/>source</a>';
+    }
 
-//console.log('texttype ' + texttype + ' translator ' + translator);
+    const translatorByline = `<div id="trn" class="byline">
+      <p><span class="pli-lang" lang="pi">Pāḷi <a class="text-decoration-none text-reset" href="/assets/texts/abbr.html?s=ms" title="Mahāsaṅgīti Pāḷi">MS</a></span> <span class="eng-lang" lang="en">Trn: ${translatorforuser}</span></p>
+    </div>`;
 
-//const translatorCapitalized = translator.charAt(0).toUpperCase() + translator.slice(1);
+    const ruUrl = window.location.href.replace("/read/", "/r/");
+    const mtUrl = window.location.href.replace("/read/", "/multi/");
+    
+    let scLink = `<p class="sc-link">
+    <a title="Multi Tran (Alt+2)" href="${mtUrl}">E+E</a>
+    <a title="Russian (Alt+1)" href="${ruUrl}">Ru</a>
+    `;
 
-     const translatorByline = `<div id="trn" class="byline">
-     <p>
-    <span class="pli-lang" lang="pi">Pāḷi <a class="text-decoration-none text-reset" href="/assets/texts/abbr.html?s=ms" title="Mahāsaṅgīti Pāḷi">MS</a> </span> <span class="eng-lang" lang="en">Trn: ${translatorforuser}</span>
-     </p>
-     </div>`;
-     
-      const enUrl = window.location.href;
-      let ruUrl = enUrl.replace("/read/", "/r/");
-      ruUrl = enUrl.replace("/b/", "/r/");
-      let altTrn = enUrl.replace("/b/", "/read/");
-      let mtTrn = enUrl.replace("/b/", "/multi/");
-
-      let scLink = `<p class="sc-link"><a title="English translation from SuttaCentral.net (Alt+1)" href="${altTrn}">En</a>
-      <a title="Mutli Tran (Alt+1)" href="${mtTrn}">E+E</a>
-      <a title="Russian (Alt+1)" href="${ruUrl}">Ru</a>
-      `;
-
-      // === 1. МГНОВЕННЫЙ ВЫВОД ТЕКСТА НА ЭКРАН ===
-      const origUrl = window.location.href;
-      let rvUrl = origUrl.replace("/r/", "/read/");
-      rvUrl = rvUrl.replace("/ml/", "");
-      rvUrl = rvUrl.replace("/read/", "/rev/");
-      let thUrl = origUrl.replace("/read/", "/th/read/");
-      let dUrl = origUrl.replace("/read/", "/d/");
+    // Интерфейсные элементы
+    const origUrl = window.location.href;
+    let dUrl = origUrl.replace("/read/", "/d/");
+    let thUrl = origUrl.replace("/read/", "/th/read/");
 
       const SHOW_CLOSE_AFTER = 10;
       let viewCount = parseInt(localStorage.getItem('warningViewCount')) || 0;
@@ -452,20 +266,17 @@ if (translator === "o") {
           </p>
         </div>
       `;
+      
+      
 
-      // Выводим текст СРАЗУ, оставив пустые <div> для верхних и нижних ссылок
-      suttaArea.innerHTML = 
-          `<div id="top-links-container" style="min-height: 24px;"></div><br>` + 
-          (!isWarningClosed ? warning : '') + 
-          translatorByline + 
-          html + 
-          translatorByline + 
-          (!isWarningClosed ? warning : '') + 
-          `<div id="bottom-links-container" style="min-height: 24px;"></div>`;
-window.dispatchEvent(new Event('suttaLoaded'));
-if (typeof window.setupVariantVisibility === 'function') {
-          window.setupVariantVisibility();
-      }
+    suttaArea.innerHTML = `<div id="top-links-container" class="min-h-24"></div><br>` + 
+        (!isWarningClosed ? warning : '') + translatorByline + html + translatorByline + 
+        (!isWarningClosed ? warning : '') + `<div id="bottom-links-container" class="min-h-24"></div>`;
+
+    window.dispatchEvent(new Event('suttaLoaded'));
+    if (typeof window.setupVariantVisibility === 'function') window.setupVariantVisibility();
+
+
       // === 2. НАСТРОЙКА ИНТЕРФЕЙСА (ПОКА ТЕКСТ УЖЕ МОЖНО ЧИТАТЬ) ===
       if (canShowClose && !isWarningClosed) {
         document.querySelectorAll('.close-warning').forEach(btn => {
@@ -476,85 +287,48 @@ if (typeof window.setupVariantVisibility === 'function') {
         });
       }
 
-      toggleThePali();
-
-      // === ГЕНЕРАЦИЯ ССЫЛОК (DPR, BJT, SC, BB, TBW, Th.ru, Th.su) ИЗ COMMON.JS ===
+    toggleThePali();
+    if (typeof generateThirdPartyLinks === 'function') {
       scLink += generateThirdPartyLinks(slug, slugReady, texttype, translator);
-      scLink += "</p>";
-
-      // Вставляем сгенерированные ссылки в контейнеры
-      const topContainer = document.getElementById('top-links-container');
-      const bottomContainer = document.getElementById('bottom-links-container');
-      if (topContainer) topContainer.innerHTML = scLink;
-      if (bottomContainer) bottomContainer.innerHTML = scLink;
-
-      // === ПОИСК ПРЕДЫДУЩЕЙ И СЛЕДУЮЩЕЙ СУТТЫ (ИЗ COMMON.JS) ===
-      renderNavigation(slug, slugReady);
-
-      addToSearchHistory();
-
-    })
-.catch(error => {
-  console.log('error: not found');
-  console.log('Slug:', slug, 'SlugReady:', slugReady);
-  console.log(`Paths:
-root: ${rootpath}
-trn : ${trnpath}
-html: ${htmlpath}
-var : ${varpath}`);
-
-  // Проверяем, не было ли уже слишком много попыток
-  const redirectKey = `redirect_${slug}`;
-  const redirectCount = localStorage.getItem(redirectKey) || 0;
-  
-  if (redirectCount >= 3) {
-    
-    console.error('Превышено максимальное количество редиректов для slug:', slug);
-      // Обновление сообщения об ошибке на странице
-        suttaArea.innerHTML = `<p>Search for "${decodeURIComponent(slug)}" failed. Please try another slug.</p>
-              <div class="spinner-border" role="status">
-                <span class="visually-hidden">Loading...</span>
-                  </div>
-    <br><br>
-  <p>  Note: <br>
-More search options available from the main page.</p>`;
-    
-    localStorage.removeItem(redirectKey);
-    return;
-  }
-
-  // Увеличиваем счетчик и сохраняем
-  localStorage.setItem(redirectKey, parseInt(redirectCount) + 1);
-
-
-// Отправка запроса по адресу http://localhost:8080/ru/?q= с использованием значения slug
-var xhr = new XMLHttpRequest();
-xhr.open("GET", "/?p=-kn&q=" + encodeURIComponent(slug), true);
-xhr.send();
-
-xhr.onreadystatechange = function() {
-  if (xhr.readyState == 4) {
-    if (xhr.status == 200) {
-      // Проверяем, что ответ не является страницей 404 или другой ошибкой
-      // Например, можно проверить наличие определенного текста или структуры ответа
-      if (!xhr.responseText.includes("Page not found") && 
-          !xhr.responseText.includes("404") &&
-          xhr.responseText.trim().length > 0) {
-        console.log(xhr.responseText);
-        window.location.href = "/?p=-kn&q=" + encodeURIComponent(slug);
-      } else {
-        console.log('Page not found or empty response');
-      }
-    } else if (xhr.status == 404) {
-      console.log('Error 404: Page not found');
-    } else {
-      console.log('Error sending request. Status:', xhr.status);
     }
-  }
-};
+    if (finalRulingAnchor) scLink += `&nbsp;<a href="#${finalRulingAnchor}" title="To final rule">Final</a>`;
+    scLink += "</p>";
 
-});
+    const tContainer = document.getElementById('top-links-container');
+    const bContainer = document.getElementById('bottom-links-container');
+    if (tContainer) tContainer.innerHTML = scLink;
+    if (bContainer) bContainer.innerHTML = scLink;
+
+    renderNavigation(slug, slugReady);
+    addToSearchHistory(); 
+
+  }).catch(error => {
+      console.log('Error fetching sutta data:', error);
+      if (typeof window.handleFetchError === 'function') {
+          window.handleFetchError(slug, false); 
+      }
+  });
 }
+
+
+// === Инициализация приложения ===
+if (document.location.search) {
+  let params = new URLSearchParams(document.location.search);
+  let slug = params.get("q");
+  let lang = params.get("lang");
+  if (citation) citation.value = slug;
+  buildSutta(slug);
+  if (lang) {
+    language = lang;
+    setLanguage(lang);
+  } else if (localStorage.paliToggle) {
+    language = localStorage.paliToggle; 
+    setLanguage(language);
+  }
+} else {
+ // alert("[LOG INIT] Параметр ?q= не найден в URL. Отображается главная инструкция.");
+}
+
 
 // initialize the whole app
 if (document.location.search) {
@@ -567,8 +341,7 @@ if (lang) {
     language = lang;
     setLanguage(lang);
   } else if  (localStorage.paliToggle) {
-      language = localStorage.paliToggle; 
-    //  console.log('read from ls ' + language);
+    	language = localStorage.paliToggle; 
 setLanguage(language);
   }
 } else {
@@ -595,13 +368,12 @@ setLanguage(language);
       <li><span class="abbr">dhp</span> Dhammapada</li>
       <li><span class="abbr">thag</span> Theragāthā</li>
       <li><span class="abbr">thig</span> Therīgāthā</li>
-    <li><span class="abbr">kp</span> Khuddakapāṭha</li>
+	  <li><span class="abbr">kp</span> Khuddakapāṭha</li>
   </ul>
   </div>
   
   
   <div>
-  <!-- <h2>Vinaya</h2> -->
   <div class="vinaya">
   <div>
   <h3>Bhikkhu Vinaya</h3>
@@ -682,10 +454,9 @@ function showPaliEnglish() {
   suttaArea.classList.remove("hide-pali");
   suttaArea.classList.remove("hide-english");
   suttaArea.classList.remove("hide-russian");
-    const savedMode = localStorage.getItem('viewMode') || 'alternate'; // Получаем сохранённое значение или 'alternate' по умолчанию
+  const savedMode = localStorage.getItem('viewMode') || 'alternate'; 
   const isColumnView = (savedMode === 'columns');
 
-  // Применяем сохранённый режим
   if (isColumnView) {
     suttaArea.classList.add('column-view');
   }
@@ -694,34 +465,20 @@ function showEnglish() {
   suttaArea.classList.add("hide-pali");
   suttaArea.classList.remove("hide-english");
   suttaArea.classList.remove("hide-russian");
-  suttaArea.classList.remove('column-view'); // Отключаем двухколоночный режим
+  suttaArea.classList.remove('column-view'); 
 }
 function showPali() {
   suttaArea.classList.add("hide-english");
-    suttaArea.classList.remove("hide-pali");
-      suttaArea.classList.add("hide-russian");
-      suttaArea.classList.remove('column-view'); // Отключаем двухколоночный режим
-  
+  suttaArea.classList.remove("hide-pali");
+  suttaArea.classList.add("hide-russian");
+  suttaArea.classList.remove('column-view'); 
 }
 
 
-
-// clicking an abbreviation on the home page will replace the input field with that abbreviation
 const abbreviations = document.querySelectorAll("span.abbr");
 abbreviations.forEach(book => {
   book.addEventListener("click", e => {
     citation.value = e.target.innerHTML;
-    // form.input.setSelectionRange(10, 10);
     citation.focus();
   });
 });
-
-
-
-/*
-for f in *_translation-en-bodhi.json; do
-  mv "$f" "${f/-bodhi/-nanamoli+bodhi}"
-done
-
-
-*/
