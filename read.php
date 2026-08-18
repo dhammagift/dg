@@ -3992,7 +3992,7 @@ clearBtn.style.display = 'block';
 
 		 
 		 <div class="mt-3">
- <span class="level5" id="sn17.3"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn17.3">sn17.3</a> Kummasutta <?php echo $ifEnThanTrn;?> <?php echo $ifRuSvOTrn;?></span>
+ <span class="level5" id="sn17.3"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=sn17.3">sn17.3</a> Kummasutta <?php echo $ifEnThanTrn;?> <?php echo $ifRuLitTrn;?></span>
  </div>
 
 		 
@@ -13995,7 +13995,7 @@ clearBtn.style.display = 'block';
 </div>
  
 <div class="mt-3">
-<span class="level5" id="an4.230"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.230">an4.230</a> Duppaññasutta <?php echo $ifEnSujTrn;?> <?php echo $ifRuSvOTrn;?></span>
+<span class="level5" id="an4.230"><a class="setReader" target="_blank" href="<?php echo $readerPage;?>/?q=an4.230">an4.230</a> Duppaññasutta <?php echo $ifEnSujTrn;?> <?php echo $ifRuLitTrn;?></span>
 </div>
  
 <div class="mt-3">
