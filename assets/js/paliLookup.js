@@ -689,7 +689,6 @@ function createPopup() {
     localStorage.setItem('windowWidth', currentWindowWidth);
     localStorage.setItem('windowHeight', currentWindowHeight);
 
-
     const closeBtn = document.createElement('button');
     closeBtn.classList.add('close-btn');
     closeBtn.title = '(Esc)';
@@ -712,9 +711,9 @@ function createPopup() {
     dictBtn.className = 'dict-btn popup-action-btn popup-dict-btn';
     dictBtn.target = '_blank';
     dictBtn.title = 'Open in dict.dhamma.gift (Right-click or Long-tap for Grammar)';
-    dictBtn.innerHTML = `<img src="/assets/svg/dpd-logo-dark.svg" width="18" height="18">`;
+    dictBtn.innerHTML = `<img src="/assets/svg/dg-logo-dark.svg" width="18" height="18" alt="DG">`;
 
-    // Обработчик правого клика и нативного долгого тапа на мобильных
+    // Обработчик правого клика
     dictBtn.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         const word = dictBtn.dataset.grammarWord || '';
@@ -723,6 +722,22 @@ function createPopup() {
             window.open(url, '_blank');
         }
     });
+
+    // Принудительный обработчик долгого тапа для мобильных устройств
+    let longPressTimer;
+    dictBtn.addEventListener('touchstart', (e) => {
+        longPressTimer = setTimeout(() => {
+            e.preventDefault();
+            const word = dictBtn.dataset.grammarWord || '';
+            if (word) {
+                const url = `https://dharmamitra.org/translate?translate_mode=explain-grammar&input_sentence=${encodeURIComponent(word)}`;
+                window.open(url, '_blank');
+            }
+        }, 600); // 600 миллисекунд для долгого нажатия
+    });
+    
+    dictBtn.addEventListener('touchend', () => clearTimeout(longPressTimer));
+    dictBtn.addEventListener('touchmove', () => clearTimeout(longPressTimer));
 
     // Обработчик клика колесиком мыши
     dictBtn.addEventListener('auxclick', (e) => {
@@ -752,7 +767,6 @@ function createPopup() {
 
     const resizeHandleBottom = document.createElement('div');
     resizeHandleBottom.className = 'resize-handle-bottom';
-
 
     popup.appendChild(header);
     popup.appendChild(dictBtn);
@@ -1217,5 +1231,9 @@ function cleanWord(word) {
         .trim()
         .toLowerCase();
 }
+
+
+
+
 
 
