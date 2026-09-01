@@ -1288,12 +1288,6 @@ if (event.altKey && event.code === "KeyJ") {
   }
 
 
-  if (event.altKey && (event.code === 'KeyQ')) {
-    event.preventDefault();
-
-openDictionaries(event);
-  }
-
     // Если нажат Alt
     if (event.altKey) {
         

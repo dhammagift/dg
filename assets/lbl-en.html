@@ -412,6 +412,13 @@ loadAndCheckRanges();
 <script>
   
  function downloadJson() {
+    // Docs "Translator" help page embeds this exact tool live (?demo=1) — saving (local
+    // download AND the server-side lbl-save.php write below) must not fire from there, or
+    // anyone poking around in the help page could overwrite real translation files.
+    if (new URLSearchParams(window.location.search).get('demo') === '1') {
+        alert('This is the help demo — saving is disabled here. Open the tool directly at /assets/lbl-en.html to save.');
+        return;
+    }
     const language = document.getElementById('languageSelect').value;
     const indexValue = document.getElementById('indexInput').value.trim().toLowerCase();
     const translation = document.getElementById('translationInput').value.trim();

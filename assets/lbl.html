@@ -413,6 +413,13 @@ loadAndCheckRanges();
 
 <script>
 function downloadJson() {
+    // Docs "Редактор переводов" embeds this exact tool live (?demo=1) — sohranenie (local
+    // download AND the server-side lbl-save.php write below) must not fire from there, or
+    // anyone poking around in the help page could overwrite real translation files.
+    if (new URLSearchParams(window.location.search).get('demo') === '1') {
+        alert('Это справка — сохранение здесь отключено. Откройте инструмент по прямой ссылке /assets/lbl.html, чтобы сохранять.');
+        return;
+    }
     const language = document.getElementById('languageSelect').value;
     const indexValue = document.getElementById('indexInput').value.trim().toLowerCase();
     const translation = document.getElementById('translationInput').value.trim();
