@@ -1,1 +1,0 @@
-grep -Ei "(kacchap|adhivacanas|adhiccasam|bāhiy|adhiccasamuppann|seyyathāpi|dukkh|seyyathāpi|adhivacan|ūpama|opama|opamma|adhivacanasamphass|adhivacanapath|ekarūp|tathārūpa|āmarūpa|\brūpa|evarūpa|\banopam|\battūpa|\bnillopa|opamaññ|sukh|sāriputt|moggallān)" pali-sutta.sql > out

@@ -1,4 +1,3 @@
-//TODO починить ссылку 4nt чтобы передавала s param которая вверху страниц с суттами.
 //TODO for Frank чтобы прокидывал остальные параметры не удалял. кроме q
 //TODO сделать чтобы removePunc смотрела на ту же опцию в localStorage что и на дхамма гифт что настройка была общей для /4nt случая
 
@@ -241,6 +240,24 @@ function initExtra() {
         // Привязываем обработчики к статически сгенерированным кнопкам
         const fdgBtn = document.getElementById('fdg-button');
         if (fdgBtn) {
+            // Clean dhamma.gift URL (e.g. /mn1) instead of the old f.dhamma.gift/read?q= link.
+            // basePath === '/4nt' means we're already on dhamma.gift, so a same-origin
+            // relative link is enough; otherwise (s.dhamma.gift, s.4nt.org, old.dhamma.gift/4n...)
+            // it has to be absolute.
+            const fdgSlug = document.getElementById('voiceLinkBtn')?.dataset.slug || getSlug();
+            const updateFdgHref = () => {
+                if (!fdgSlug) return;
+                const target = (basePath === '/4nt' ? '/' : 'https://dhamma.gift/') + fdgSlug;
+                const url = new URL(target, location.origin);
+                const selected = window.getSelection ? window.getSelection().toString().trim() : '';
+                const sVal = selected || new URLSearchParams(location.search).get('s');
+                if (sVal) url.searchParams.set('s', sVal);
+                fdgBtn.href = url.toString();
+            };
+            updateFdgHref();
+            // Re-check right before navigating, so a freshly-selected word is picked up.
+            fdgBtn.addEventListener('click', updateFdgHref, true);
+
             let longPressTimer;
             fdgBtn.addEventListener('contextmenu', function(e) {
                 e.preventDefault(); 
