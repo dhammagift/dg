@@ -14,4 +14,6 @@ config/*.json
 **/node_modules
 nodejs/
 nodejs-indep/
+package-lock.json
+package.json
 .venv

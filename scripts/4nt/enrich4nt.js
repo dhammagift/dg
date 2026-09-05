@@ -2,6 +2,16 @@ const fs = require('fs');
 const path = require('path');
 const cheerio = require('cheerio');
 
+// Replaces `pattern` only on lines that are not a full-line `//` comment,
+// so dead/commented-out code (e.g. on aggregator pages like major/glossary)
+// never gets a live multi-line replacement spliced into it.
+function replaceOnLiveLines(content, pattern, replacement) {
+    return content.split('\n').map(line => {
+        if (/^\s*\/\//.test(line)) return line;
+        return line.replace(pattern, replacement);
+    }).join('\n');
+}
+
 function createSymlinks(dir) {
     const links = [
         { target: '../scripts/4nt/extra', name: 'extra' },
@@ -13,20 +23,20 @@ function createSymlinks(dir) {
     links.forEach(link => {
         const linkPath = path.join(dir, link.name);
         try {
-            const exists = fs.existsSync(linkPath) || 
-                           (fs.lstatSync(linkPath, { throwIfNoEntry: false }) !== undefined);
+            const stat = fs.lstatSync(linkPath, { throwIfNoEntry: false });
 
-            if (exists) {
-                const stat = fs.lstatSync(linkPath);
-                if (stat.isSymbolicLink()) {
-                    const currentTarget = fs.readlinkSync(linkPath);
-                    if (currentTarget === link.target) {
-                        return; 
-                    }
+            if (stat) {
+                if (!stat.isSymbolicLink()) {
+                    // Real file/folder already sits here - never delete real data, just leave it alone.
+                    console.error(`Пропущен симлинк ${link.name}: путь занят реальными данными, не трогаю.`);
+                    return;
                 }
-                fs.rmSync(linkPath, { recursive: true, force: true });
+                if (fs.readlinkSync(linkPath) === link.target) {
+                    return;
+                }
+                fs.rmSync(linkPath, { force: true }); // it's a symlink (possibly broken) - safe to replace
             }
-            
+
             fs.symlinkSync(link.target, linkPath);
             console.log(`Создан симлинк: ${link.name} -> ${link.target}`);
         } catch (err) {
@@ -158,24 +168,35 @@ function processHtml(dir) {
                 }
 
                 // ПАТЧИМ ФУНКЦИЮ buildLeafTable ДЛЯ ВСТАВКИ КЛАССОВ НА ЛЕТУ
+                // Пропускаем строки, закомментированные через //, иначе на страницах-агрегаторах
+                // (major, glossary), где этот код лежит внутри // комментария как мёртвый код,
+                // мы вставляем неэкранированный многострочный JS прямо в комментарий и ломаем весь скрипт.
                 if (scriptContent.includes("const ct=mk('span','ct grw');")) {
-                    scriptContent = scriptContent.replace(
-                        /const ct=mk\('span','ct grw'\);/g,
+                    const patched = replaceOnLiveLines(
+                        scriptContent,
+                        /const ct=mk\('span','ct grw'\);/,
                         `let langCls = /(pali|san|lzh|zh)/.test(key) ? ' pli-lang' : ' eng-lang';
                         const ct=mk('span','ct grw' + langCls);
                         if (langCls.includes('pli-lang')) ct.setAttribute('lang', 'pi');`
                     );
-                    scriptChanged = true;
+                    if (patched !== scriptContent) {
+                        scriptContent = patched;
+                        scriptChanged = true;
+                    }
                 }
 
-                // ПАТЧИМ ФУНКЦИЮ fillLeafRowsTOC ДЛЯ БОКОВОГО МЕНЮ
+                // ПАТЧИМ ФУНКЦИЮ fillLeafRowsTOC ДЛЯ БОКОВОГО МЕНЮ (та же защита от комментариев)
                 if (scriptContent.includes("const snippet=mk('span','tr-pali');")) {
-                    scriptContent = scriptContent.replace(
-                        /const snippet=mk\('span','tr-pali'\);/g,
+                    const patched = replaceOnLiveLines(
+                        scriptContent,
+                        /const snippet=mk\('span','tr-pali'\);/,
                         `const snippet=mk('span','tr-pali pli-lang');
                         snippet.setAttribute('lang', 'pi');`
                     );
-                    scriptChanged = true;
+                    if (patched !== scriptContent) {
+                        scriptContent = patched;
+                        scriptChanged = true;
+                    }
                 }
 
                 if (scriptChanged) {
