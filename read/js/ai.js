@@ -123,9 +123,12 @@ async function buildSutta(slug) {
       const otherRuPath = "/assets/texts/ru_other";
       const scRuPath = `${Sccopy}/sc-data/sc_bilara_data/translation/ru`;
       
+      // Owner: AI mode is exclusive — the second translation must come from ru_other, not the
+      // regular priority ru folder that just happens to carry the same translator id. otherRuPath
+      // now tried first.
       const prioritySources = [
-          { path: `${mainRuPath}/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`, author: translator },
           { path: `${otherRuPath}/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`, author: translator },
+          { path: `${mainRuPath}/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`, author: translator },
           { path: `${scRuPath}/${translator}/${texttype}/${slugReady}_translation-${pathLang}-${translator}.json`, author: translator }
       ];
 
@@ -149,8 +152,8 @@ async function buildSutta(slug) {
 
       for (const author of authorsToTry) {
           const fallbackSources = [
-              { path: `${mainRuPath}/${texttype}/${slugReady}_translation-${pathLang}-${author}.json`, author: author },
               { path: `${otherRuPath}/${texttype}/${slugReady}_translation-${pathLang}-${author}.json`, author: author },
+              { path: `${mainRuPath}/${texttype}/${slugReady}_translation-${pathLang}-${author}.json`, author: author },
               { path: `${scRuPath}/${author}/${texttype}/${slugReady}_translation-${pathLang}-${author}.json`, author: author }
           ];
 

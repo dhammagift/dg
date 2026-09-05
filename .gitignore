@@ -13,4 +13,5 @@ config/*.json
 /4nt
 **/node_modules
 nodejs/
+nodejs-indep/
 .venv
