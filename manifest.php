@@ -137,7 +137,7 @@ echo json_encode([
     ],
     "start_url" => $start_url,
     "scope" => "/",
-    "display" => "minimal-ui",
+    "display" => "standalone",
     "background_color" => "#2E3E50",
     "theme_color" => "#000000",
     "share_target" => [

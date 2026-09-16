@@ -95,13 +95,7 @@
     ],
     "start_url": "/ru/?source=pwa",
     "scope": "/",
-    "display": "minimal-ui",
-    "display_override": [
-        "tabbed",
-        "window-controls-overlay",
-        "minimal-ui",
-        "standalone"
-    ],
+    "display": "standalone",
     "tab_strip": {
         "home_tab": {
             "scope_patterns": [
