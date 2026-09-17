@@ -123,4 +123,9 @@ RewriteRule ^/$ / [L,R=302]
 RewriteCond %{HTTP_USER_AGENT} (AhrefsBot|SemrushBot|PetalBot|DataForSeoBot|MegaIndex.ru|Barkrowler|SeekportBot|SemrushBot|Barkrowler) [NC]
 RewriteRule .* - [F]
 
-
+# dg-node (и тестовый чекаут) лежат ВНУТРИ DocumentRoot легаси-сайта, поэтому Apache отдавал их
+# как обычные файлы: old.dhamma.gift/nodejs/configs/legacy/tts-config.json (ключ Google TTS),
+# old.dhamma.gift/nodejs/dg.db (612 МБ) и т.д. Легаси-сайт сам /nodejs/ нигде не использует —
+# запрещаем отдачу целиком. Правило относится только к этому хосту: на dhamma.gift/test всё
+# проксируется в node (node.dhamma.gift.conf), .htaccess там не участвует.
+RedirectMatch 404 ^/(nodejs|dg-node-test)/
