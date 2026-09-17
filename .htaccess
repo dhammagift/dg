@@ -129,3 +129,9 @@ RewriteRule .* - [F]
 # запрещаем отдачу целиком. Правило относится только к этому хосту: на dhamma.gift/test всё
 # проксируется в node (node.dhamma.gift.conf), .htaccess там не участвует.
 RedirectMatch 404 ^/(nodejs|dg-node-test)/
+
+# Редактор переводов: сохранение теперь только в dg-node (проверка Google-токена на сервере).
+# Легаси-копия страницы уводит на защищённую версию, а легаси-PHP приёмник закрыт: он писал бы
+# в ту же папку offline-data/lbl/ в обход проверки (кто угодно, без входа).
+RedirectMatch 410 ^/assets/lbl-save\.php$
+RedirectMatch 301 ^/assets/lbl(-en)?\.html$ https://dhamma.gift/assets/lbl$1.html
