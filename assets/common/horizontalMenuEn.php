@@ -71,7 +71,7 @@ echo '<!--
  
 <li>
   <div class="dropdown-item">Tipitaka CST:
-    <a class="text-reset" target="_blank"  href="https://apply.paauksociety.org/tipitaka/index.php" title="Paauksociety.org">PA</a>
+    <a class="text-reset" target="_blank"  href="https://tipitaka.paauksociety.org/index_initialization.php?s=1" title="Paauksociety.org">PA</a>
     <a class="text-reset" target="_blank"  href="https://tipitaka.app" title="Tipitaka.app">Tp.app</a>
     <a class="text-reset" target="_blank"  href="https://tipitakapali.org/" title="Tipitaka Pali Online">TPO</a>
     <a class="text-reset" target="_blank"  href="https://americanmonk.org/tipitaka-pali-reader/" title="Tipitaka Pali Reader App">TPR</a>
