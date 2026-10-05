@@ -508,3 +508,36 @@ html.dict-iframe-html.dark::-webkit-scrollbar-thumb:hover {
   background: rgba(150, 150, 150, 0.7);
 }
 
+/* Toast shown while the offline dictionary scripts are still loading (see
+   loadStandaloneDpdScripts()/scriptsToLoad in paliLookup.js, which creates this element and
+   toggles the "show" class) — had no matching CSS at all, so it was created/toggled but never
+   actually visible. Fixed at the bottom center, fades in/out over 0.3s to match the JS's
+   300ms removal delay after el.classList.remove('show'). */
+.dict-loading-indicator {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translate(-50%, 8px);
+  background: #E1EBED;
+  color: #05031B;
+  padding: 10px 18px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  font-size: 14px;
+  z-index: 100001;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.dict-loading-indicator.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+[data-theme="dark"] .dict-loading-indicator,
+.dict-loading-indicator.dark {
+  background: #07021D;
+  color: #E1EAED;
+}
+
