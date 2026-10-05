@@ -128,7 +128,7 @@ RewriteRule .* - [F]
 # old.dhamma.gift/nodejs/dg.db (612 МБ) и т.д. Легаси-сайт сам /nodejs/ нигде не использует —
 # запрещаем отдачу целиком. Правило относится только к этому хосту: на dhamma.gift/test всё
 # проксируется в node (node.dhamma.gift.conf), .htaccess там не участвует.
-RedirectMatch 404 ^/(nodejs|dg-node-test)/
+RedirectMatch 404 ^/nodejs/
 
 # Редактор переводов: сохранение теперь только в dg-node (проверка Google-токена на сервере).
 # Легаси-копия страницы уводит на защищённую версию, а легаси-PHP приёмник закрыт: он писал бы

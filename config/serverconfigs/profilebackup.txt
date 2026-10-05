@@ -509,3 +509,6 @@ ck() {
 }
 export DISABLE_UPDATES=1
 export DISABLE_AUTOUPDATER=1
+
+scr() { screen -xRR "$1"; }
+

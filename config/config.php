@@ -91,7 +91,7 @@ $mainpagethsulink = '/tipitaka.theravada.su/dn_toc_thsu.html' ;
 
 $linkforthsu = '/tipitaka.theravada.su/dn/';
 $linkforthru = '/theravada.ru/Teaching/Canon/Suttanta/Texts/';
-$linkforthai = "/legacy.suttacentral.net/read/th/"; 
+$linkforthai = "https://suttacentral.net/"; 
 $linkforthaiend = '.html';
 //extralinks.php
 
@@ -155,7 +155,7 @@ $thtranslatorlocation = $basedir. '/assets/texts/th/translation/';
 
 $linksc = 'https://suttacentral.net/';
 $anamesc = 'SuttaCentral.net';
-$linksclegacy = '/legacy.suttacentral.net/';
+$linksclegacy = 'https://suttacentral.net/';
 $anamesclegacy = 'SC.net Legacy';
 //api-emulator
 $tbwroottextlocation = $basedir . "/assets/texts/en/";
